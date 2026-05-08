@@ -26,6 +26,11 @@ const players = ref<Player[]>([])
 const loading = ref(true)
 const modalOpen = ref(false)
 const deleteModalOpen = ref(false)
+
+/** Zamykanie modala edycji — zawsze przez funkcję (pewna aktualizacja ref w handlerach). */
+function closeEditModal() {
+  modalOpen.value = false
+}
 const pendingDelete = ref<Player | null>(null)
 const saving = ref(false)
 const deleting = ref(false)
@@ -493,7 +498,7 @@ async function savePlayer() {
       }
     }
 
-    modalOpen.value = false
+    closeEditModal()
     resetForm()
     await loadPlayers()
   } catch (e) {
@@ -721,7 +726,9 @@ watch(
       :dismissible="true"
       :ui="{ content: 'rounded-3xl sm:max-w-3xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl' }"
     >
-      <template #content>
+      <!-- Slot #content w Nuxt UI v4 wyłącza nagłówek z domyślnym „X” i psuje dismiss
+           (overlay/ESC) — używamy #body, żeby Dialog dostał normalny header + close. -->
+      <template #body>
         <div class="slavia-form-modal">
           <form
             class="slavia-form-stack"
@@ -1171,7 +1178,7 @@ watch(
                       color="neutral"
                       variant="outline"
                       size="lg"
-                      @click="modalOpen = false"
+                      @click="closeEditModal"
                     >
                       Anuluj
                     </UButton>
@@ -1197,7 +1204,7 @@ watch(
       description="Tej operacji nie cofniesz."
       :dismissible="true"
     >
-      <template #content>
+      <template #body>
         <div class="slavia-form-modal">
           <p
             v-if="pendingDelete"

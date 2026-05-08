@@ -136,8 +136,13 @@ async function refreshTrainingOverrides() {
 
 watch(selectedAthleteId, () => { void refreshHistory() })
 
-async function submitAttendance() {
-  if (!selectedAthleteId.value) return
+/**
+ * Zapis pojedynczego wpisu obecności. Zwraca `true` gdy udane, dzięki czemu wyższa
+ * warstwa (handler kliknięcia w modalu) wie, czy auto-zamknąć okno — przy błędzie
+ * zostawiamy je otwarte, żeby user mógł poprawić dane bez utraty kontekstu.
+ */
+async function submitAttendance(): Promise<boolean> {
+  if (!selectedAthleteId.value) return false
   try {
     await api(apiRoutes.attendance.collection, {
       method: 'POST',
@@ -151,8 +156,25 @@ async function submitAttendance() {
     toast.add({ title: 'Zapisano obecność', color: 'success' })
     note.value = ''
     await refreshHistory()
+    return true
   } catch (e) {
     toast.add({ title: 'Nie udało się zapisać obecności', description: getApiErrorMessage(e), color: 'error' })
+    return false
+  }
+}
+
+const savingAttendance = ref(false)
+
+async function saveAttendanceFromModal() {
+  if (savingAttendance.value) return
+  savingAttendance.value = true
+  try {
+    const ok = await submitAttendance()
+    if (ok) {
+      attendanceModalOpen.value = false
+    }
+  } finally {
+    savingAttendance.value = false
   }
 }
 
@@ -186,7 +208,7 @@ onMounted(() => {
         </UFormField>
       </div>
       <div class="mt-3">
-        <UButton icon="i-lucide-check" @click="submitAttendance">Zapisz obecność</UButton>
+        <UButton icon="i-lucide-check" @click="() => { void submitAttendance() }">Zapisz obecność</UButton>
       </div>
     </UCard>
 
@@ -351,15 +373,18 @@ onMounted(() => {
             <UInput v-model="note" placeholder="opcjonalnie" />
           </UFormField>
           <div class="flex justify-end gap-2 border-t border-default/60 pt-3">
-            <UButton variant="ghost" color="neutral" @click="attendanceModalOpen = false">
-              Zamknij
+            <UButton
+              variant="ghost"
+              color="neutral"
+              :disabled="savingAttendance"
+              @click="attendanceModalOpen = false"
+            >
+              Anuluj
             </UButton>
             <UButton
               icon="i-lucide-check"
-              @click="
-                submitAttendance();
-                attendanceModalOpen = false
-              "
+              :loading="savingAttendance"
+              @click="saveAttendanceFromModal"
             >
               Zapisz obecność
             </UButton>

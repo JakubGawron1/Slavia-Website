@@ -36,17 +36,26 @@ type PanelSection = {
   links: ManagementLink[]
 }
 
+/** Kalkulatory wydzielone do osobnego dropdownu „Kalkulatory” — żeby nie zaśmiecać
+ *  głównego paska i zawsze mieścić się w jednym wierszu, niezależnie od szerokości ekranu. */
+const calculatorLinks: ManagementLink[] = [
+  { label: 'Kalkulator Sinclair', to: '/kalkulator-sinclair', icon: 'i-lucide-calculator' },
+  { label: 'Kalkulator proporcji', to: '/kalkulator-proporcji', icon: 'i-lucide-sliders-horizontal' }
+]
+
 const items = computed(() => {
+  // Główny pasek: same „strony klubu”. Świadomie ograniczone do 5–6 krótkich etykiet,
+  // żeby nigdy nie powodować przewijania w poziomie ani ucinania ostatniego linku
+  // (testowane na 1024 / 1280 / 1440 / 1920 px).
   const main = [
     ...(auth.isLoggedIn.value ? [{ label: 'Ogłoszenia', to: '/ogloszenia' }] : []),
     { label: 'Aktualności', to: '/aktualnosci' },
     { label: 'Galeria', to: '/galeria' },
-    // „Wyniki” są teraz sekcją na stronie „Zawodnicy” (#wyniki-zawodow).
-    { label: 'Zawodnicy i wyniki', to: '/zawodnicy' },
+    // „Wyniki” są dostępne jako sekcja na stronie „Zawodnicy” (#wyniki-zawodow) —
+    // dlatego skracamy etykietę, najdłuższa pozycja w pasku to wąskie gardło.
+    { label: 'Zawodnicy', to: '/zawodnicy' },
     { label: 'Kalendarz', to: '/kalendarz' },
-    { label: 'Kontakt', to: '/kontakt' },
-    { label: 'Sinclair', to: '/kalkulator-sinclair' },
-    { label: 'Proporcje', to: '/kalkulator-proporcji' },
+    { label: 'Kontakt', to: '/kontakt' }
   ]
 
   const adminLinks: ManagementLink[] = []
@@ -132,6 +141,15 @@ const panelDropdownItems = computed(() =>
     }))
   ])
 )
+
+/** Dropdown „Kalkulatory” — Sinclair + Proporcje, dostępny dla wszystkich (publiczny). */
+const calculatorDropdownItems = [
+  calculatorLinks.map(link => ({
+    label: link.label,
+    icon: link.icon,
+    to: link.to
+  }))
+]
 </script>
 
 <template>
@@ -154,24 +172,46 @@ const panelDropdownItems = computed(() =>
       </NuxtLink>
     </nav>
 
-    <UDropdownMenu
-      v-if="items.panelSections.length > 0"
-      :modal="false"
-      :items="panelDropdownItems"
-      :content="{ align: 'end', collisionPadding: 16 }"
-      :ui="{ content: 'min-w-[14rem]' }"
-      class="shrink-0"
-    >
-      <UButton
-        color="neutral"
-        variant="outline"
-        size="sm"
-        trailing-icon="i-lucide-chevron-down"
-        class="h-9 shrink-0 gap-1.5 rounded-lg px-3 text-xs font-bold uppercase tracking-wide xl:h-10 xl:px-3.5 xl:text-[13px]"
+    <div class="flex shrink-0 items-center gap-1.5 xl:gap-2">
+      <UDropdownMenu
+        :modal="false"
+        :items="calculatorDropdownItems"
+        :content="{ align: 'end', collisionPadding: 16 }"
+        :ui="{ content: 'min-w-[15rem]' }"
       >
-        Panel
-      </UButton>
-    </UDropdownMenu>
+        <UButton
+          color="neutral"
+          variant="ghost"
+          size="sm"
+          icon="i-lucide-calculator"
+          trailing-icon="i-lucide-chevron-down"
+          class="h-9 shrink-0 gap-1.5 rounded-lg px-2.5 text-xs font-bold uppercase tracking-wide xl:h-10 xl:px-3 xl:text-[13px]"
+          aria-label="Kalkulatory"
+        >
+          <span class="hidden xl:inline">Kalkulatory</span>
+        </UButton>
+      </UDropdownMenu>
+
+      <UDropdownMenu
+        v-if="items.panelSections.length > 0"
+        :modal="false"
+        :items="panelDropdownItems"
+        :content="{ align: 'end', collisionPadding: 16 }"
+        :ui="{ content: 'min-w-[14rem]' }"
+      >
+        <UButton
+          color="neutral"
+          variant="outline"
+          size="sm"
+          icon="i-lucide-layout-grid"
+          trailing-icon="i-lucide-chevron-down"
+          class="h-9 shrink-0 gap-1.5 rounded-lg px-2.5 text-xs font-bold uppercase tracking-wide xl:h-10 xl:px-3.5 xl:text-[13px]"
+          aria-label="Panel"
+        >
+          <span class="hidden xl:inline">Panel</span>
+        </UButton>
+      </UDropdownMenu>
+    </div>
   </div>
 
   <div
@@ -227,6 +267,27 @@ const panelDropdownItems = computed(() =>
               >
                 <span>{{ link.label }}</span>
                 <UIcon name="i-lucide-arrow-right" class="size-4 shrink-0 text-muted opacity-60" />
+              </UButton>
+            </div>
+          </div>
+
+          <div class="rounded-2xl border border-default/50 bg-muted/10 p-2 ring-1 ring-default/30">
+            <p class="px-2 pb-2 pt-1 text-[10px] font-bold uppercase tracking-wider text-muted">
+              Kalkulatory
+            </p>
+            <div class="flex flex-col gap-1">
+              <UButton
+                v-for="link in calculatorLinks"
+                :key="'drawer-tools-' + link.to"
+                :to="link.to"
+                :icon="link.icon"
+                variant="outline"
+                color="neutral"
+                block
+                class="min-h-11 justify-start rounded-xl border-default/60 font-semibold shadow-none text-highlighted"
+                active-class="border-primary bg-primary/15 text-primary ring-1 ring-primary/25"
+              >
+                {{ link.label }}
               </UButton>
             </div>
           </div>
