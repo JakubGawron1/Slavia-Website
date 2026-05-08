@@ -279,6 +279,14 @@ const athleteDashboardTiles = [
     iconBg: 'bg-lime-500/15 text-lime-700 dark:text-lime-400'
   },
   {
+    to: '/kalkulator-proporcji',
+    title: 'Proporcje (ratio)',
+    desc: '„Złote proporcje” między bojami',
+    icon: 'i-lucide-sigma',
+    ring: 'ring-emerald-500/20 hover:ring-emerald-500/40',
+    iconBg: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
+  },
+  {
     to: '/aktualnosci',
     title: 'Aktualności klubu',
     desc: 'Aktualności i komunikaty',

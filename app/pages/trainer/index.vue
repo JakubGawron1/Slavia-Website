@@ -168,6 +168,14 @@ const quickLinks = computed(() => {
       bg: 'bg-lime-500/10'
     },
     {
+      title: 'Proporcje (ratio)',
+      description: '„Złote proporcje” i widełki % między bojami',
+      icon: 'i-lucide-sigma',
+      to: '/kalkulator-proporcji',
+      color: 'text-emerald-600',
+      bg: 'bg-emerald-500/10'
+    },
+    {
       title: 'Analiza toru sztangi',
       description: 'Wideo + AI w przeglądarce: tor ruchu i komunikaty techniczne',
       icon: 'i-lucide-scan-line',

@@ -48,6 +48,17 @@ onMounted(() => {
   if (!import.meta.client) return
   window.addEventListener('storage', readStorage)
   window.addEventListener('slavia-dev-viewport-changed', readStorage as EventListener)
+
+  const onKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      closePreview()
+    }
+  }
+  window.addEventListener('keydown', onKeyDown)
+
+  onBeforeUnmount(() => {
+    window.removeEventListener('keydown', onKeyDown)
+  })
 })
 
 onBeforeUnmount(() => {
@@ -68,6 +79,7 @@ watch(
   <div
     v-if="!isIframeContext && mode !== 'off' && iframeSrc"
     class="fixed inset-0 z-200 bg-black/55 backdrop-blur-[2px]"
+    @click.self="closePreview"
   >
     <div class="absolute inset-x-0 top-3 z-20 flex items-center justify-center px-3">
       <div class="flex max-w-[min(92vw,46rem)] items-center gap-2 rounded-full border border-white/10 bg-black/55 px-3 py-2 text-xs text-white shadow-lg">

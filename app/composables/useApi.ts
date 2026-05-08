@@ -7,6 +7,11 @@ export function useApi() {
   return $fetch.create({
     async onRequest({ options }) {
       options.baseURL = auth.apiBase.value
+      // Ochrona przed „wiszącymi” requestami, które w praktyce wyglądają jak zawieszona nawigacja.
+      // ofetch obsługuje timeout (ms) — ustawiamy domyślny, jeśli caller nie podał własnego.
+      if (typeof options.timeout !== 'number') {
+        options.timeout = 20_000
+      }
       const headers = new Headers(options.headers as HeadersInit)
       if (auth.token.value) {
         headers.set('Authorization', `Bearer ${auth.token.value}`)
@@ -20,6 +25,9 @@ export function useApi() {
       }
       options.headers = headers
     },
+    onRequestError({ error }) {
+      console.error('[api] request error', error)
+    },
     onResponseError({ response }) {
       if (response?.status === 401) {
         auth.logout()
@@ -28,7 +36,9 @@ export function useApi() {
         // Jeśli backend blokuje konto (ban), przekieruj na /banned.
         // Nie rób tego dla SuperAdmin (konta super mają być odporne na flagę is_banned).
         if (expBanRedirect.value && !auth.isSuperAdmin.value) {
-          navigateTo('/banned')
+          queueMicrotask(() => {
+            void navigateTo('/banned')
+          })
         }
       }
     }

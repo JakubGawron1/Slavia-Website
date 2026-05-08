@@ -74,6 +74,10 @@ let detector: Awaited<
   ReturnType<typeof import('@tensorflow-models/pose-detection').createDetector>
 > | null = null
 
+// „Token” aktualnej analizy — rośnie przy nowym uruchomieniu lub unmount.
+// Dzięki temu pętle async (seek + estimatePoses) kończą się szybko po zmianie strony.
+let analysisRunId = 0
+
 const hasClip = computed(() => !!clipUrl.value)
 
 function pickVideo() {
@@ -587,6 +591,9 @@ async function analyzeVideo() {
     return
   }
 
+  // Pozwala przerwać długą analizę jeśli użytkownik zmieni stronę lub wgra nowy plik.
+  const runId = ++analysisRunId
+
   busy.value = true
   progress.value = 0
   phaseStep.value = 1
@@ -599,11 +606,13 @@ async function analyzeVideo() {
     const det = await ensureDetector((pct) => {
       progress.value = pct
     })
+    if (runId !== analysisRunId) return
 
     phaseStep.value = 2
     busyLabel.value = 'Wczytywanie i dekodowanie wideo…'
     progress.value = Math.max(progress.value, ANALYSIS_PROGRESS_START)
     await waitVideoDecoded(v, 60_000)
+    if (runId !== analysisRunId) return
 
     let duration = Number.isFinite(v.duration) && v.duration > 0 ? v.duration : 0
     if (duration < 0.15 && v.readyState >= HTMLMediaElement.HAVE_METADATA) {
@@ -634,8 +643,10 @@ async function analyzeVideo() {
     const span = 100 - ANALYSIS_PROGRESS_START
 
     for (let i = 0; i <= steps; i++) {
+      if (runId !== analysisRunId) return
       const t = (i / steps) * duration
       await seekToTime(v, Math.min(t, Math.max(0, duration - 1 / 30)), 15_000)
+      if (runId !== analysisRunId) return
 
       const poses = await det.estimatePoses(v, { maxPoses: 1, flipHorizontal: false })
       const pose = poses[0]
@@ -694,10 +705,17 @@ async function analyzeVideo() {
   }
 }
 
+let rafTimeUpdate: number | null = null
 function onVideoTimeUpdate() {
   const v = videoRef.value
   if (!v || displaySamples.value.length < 2) return
-  drawPath(displaySamples.value, v.currentTime)
+  // timeupdate potrafi strzelać bardzo często — rysujemy max 1× per frame, żeby nie zatykać UI/routera.
+  if (rafTimeUpdate != null) return
+  const t = v.currentTime
+  rafTimeUpdate = window.requestAnimationFrame(() => {
+    rafTimeUpdate = null
+    drawPath(displaySamples.value, t)
+  })
 }
 
 function onVideoEnded() {
@@ -710,7 +728,17 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  analysisRunId++
   window.removeEventListener('resize', resizeCanvasToVideo)
+  if (rafTimeUpdate != null) {
+    window.cancelAnimationFrame(rafTimeUpdate)
+    rafTimeUpdate = null
+  }
+  try {
+    videoRef.value?.pause?.()
+  } catch {
+    /* ignore */
+  }
   try {
     detector?.dispose?.()
   } catch {

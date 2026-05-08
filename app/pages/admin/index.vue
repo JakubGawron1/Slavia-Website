@@ -141,6 +141,15 @@ const quickLinksAll = [
     trainerOnly: false
   },
   {
+    title: 'Proporcje (ratio)',
+    description: '„Złote proporcje” i widełki % między bojami',
+    icon: 'i-lucide-sigma',
+    to: '/kalkulator-proporcji',
+    color: 'text-emerald-600',
+    bg: 'bg-emerald-500/10',
+    trainerOnly: false
+  },
+  {
     title: 'Analiza toru sztangi',
     description: 'Wideo i szkielet ruchu — narzędzie kadry (ścieżka trenera)',
     icon: 'i-lucide-scan-line',

@@ -46,7 +46,7 @@ const items = computed(() => {
     { label: 'Kalendarz', to: '/kalendarz' },
     { label: 'Kontakt', to: '/kontakt' },
     { label: 'Sinclair', to: '/kalkulator-sinclair' },
-    ...(auth.isLoggedIn.value ? [{ label: 'Proporcje', to: '/kalkulator-proporcji' }] : [])
+    // „Proporcje” przeniesione do dashboardów (zamiast osobnej pozycji w top-nav).
   ]
 
   const adminLinks: ManagementLink[] = []
