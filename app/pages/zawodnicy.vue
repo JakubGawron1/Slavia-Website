@@ -20,7 +20,8 @@ function resolveWeightCategoryThreshold(gender: string | null | undefined, bodyw
     ? bodyweight
     : parseWeightCategoryLimitKg(rawCategory ?? undefined)
   if (weight <= 0) return 0
-  return cats.find((c) => weight <= c) ?? cats[cats.length - 1]
+  const fallback = cats[cats.length - 1] ?? 0
+  return cats.find((c) => weight <= c) ?? fallback
 }
 
 function formatWeightCategoryText(threshold: number, bodyweight?: number | null): string {
@@ -68,7 +69,7 @@ const { data: paymentStatuses } = await useAsyncData(
   'players-payment-statuses',
   async () => {
     await auth.ensureSession()
-    if (!auth.isAthlete.value) return [] as AthletePaymentStatusRow[]
+    if (!auth.isLoggedIn.value) return [] as AthletePaymentStatusRow[]
     const q = `?month=${encodeURIComponent(currentMonth())}`
     return await apiFetch<AthletePaymentStatusRow[]>(`${apiRoutes.payments.status}${q}`).catch(() => [])
   },
@@ -156,7 +157,8 @@ function mapToCard(p: AthleteModel, rb: Record<string, CompetitionResult[]>) {
     cleanAndJerk: cjKg,
     total: totalKg,
     sinclair: Number(sc.toFixed(2)),
-    membershipPaid: auth.isAthlete.value ? (paidByAthleteId.value.get(p.id) ?? false) : null,
+    membershipPaid: auth.isLoggedIn.value ? (paidByAthleteId.value.get(p.id) ?? false) : null,
+    isActive: p.is_active !== false,
     description:
       (p.public_bio && String(p.public_bio).trim())
       || (p.profile_tagline && String(p.profile_tagline).trim())

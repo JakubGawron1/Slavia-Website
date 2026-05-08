@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { SinclairGender } from '~/utils/sinclair'
 import { sinclair2025_2028, sinclairCoefficient, sinclairTotal } from '~/utils/sinclair'
+import { parseLiveNumber } from '~/utils/liveNumber'
 
 const gender = ref<SinclairGender>('male')
 const bodyweight = ref<number | undefined>(undefined)
@@ -14,20 +15,15 @@ const coefficient = computed(() => {
   return sinclairCoefficient(bw, gender.value)
 })
 
-// W <script setup> dodaj to:
 const bodyweightRaw = ref('')
+const totalRaw = ref('')
 
-// I watcher, który reaguje na zmiany tekstu:
 watch(bodyweightRaw, (newVal) => {
-  if (typeof newVal !== 'string') return
-  const normalized = newVal.replace(',', '.')
-  const parsed = parseFloat(normalized)
-  // Liczymy tylko jeśli to faktycznie liczba i nie kończy się kropką/przecinkiem (żeby dało się pisać dalej)
-  if (!isNaN(parsed) && !newVal.endsWith(',') && !newVal.endsWith('.')) {
-    bodyweight.value = parsed
-  } else if (newVal === '') {
-    bodyweight.value = undefined
-  }
+  bodyweight.value = parseLiveNumber(newVal)
+})
+
+watch(totalRaw, (newVal) => {
+  total.value = parseLiveNumber(newVal)
 })
 
 const sinclairResult = computed(() => {
@@ -102,13 +98,6 @@ useSeoMeta({
                 size="lg"
                 placeholder="np. 81,4"
                 class="w-full tabular-nums"
-                @update:model-value="val => {
-                  // To wymusi przeliczenie Sinclaira natychmiast
-                  if (val) {
-                    const n = parseFloat(String(val).replace(',', '.'));
-                    if (!isNaN(n)) bodyweight = n;
-                  }
-                }"
               />
             </UFormField>
 
@@ -116,12 +105,11 @@ useSeoMeta({
               label="Dwubój (total)"
               description="kg — suma najlepszego rwania i podrzutu"
             >
-              <UInputNumber
-                v-model="total"
+              <UInput
+                v-model="totalRaw"
+                inputmode="decimal"
                 size="lg"
-                class="w-full"
-                :min="0"
-                :max="600"
+                class="w-full tabular-nums"
                 placeholder="np. 280"
               />
             </UFormField>

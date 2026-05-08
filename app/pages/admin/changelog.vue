@@ -8,6 +8,22 @@ useSeoMeta({
 
 const updates = [
   {
+    version: 'v2.4.0-beta.1',
+    date: '8 Maj 2026',
+    title: 'Beta: shimmer loading, kalkulatory live, devtools iframe i ulepszona analiza sztangi',
+    features: [
+      'Loading UI: spójny shimmer/skeleton zamiast splasha, dopasowany do motywów i konsekwentny w stanach pobierania danych.',
+      'DevTools: podgląd mobilny/desktop w iframe (prawdziwa symulacja viewportu), poprawione zamykanie overlay i porządki w narzędziach.',
+      'DevTools: mapa aplikacji bez duplikatów + poprawki przełamywania długich etykiet; stabilne flagi ukryte z listy eksperymentów.',
+      'Kalkulatory: proporcje (golden ratios), Sinclair i PR liczą „na żywo” w trakcie wpisywania; lepsze UX i walidacje.',
+      'Analiza sztangi: poprawione rysowanie toru + nowe tryby śledzenia (referencje z ciała / talerze) pod flagami eksperymentalnymi.',
+      'Kontakt: przywrócone pole e-mail w publicznym formularzu (frontend + backend + bezpieczna migracja DB).',
+      'Role/ACL: Admin bez roli Trener nie widzi funkcji trenerskich; SuperAdmin zachowuje pełny dostęp (również przy kontach wielorolowych).',
+      'Karty zawodników: większy, współdzielony wykres progresu (karta + profil), kolory zależne od motywu, badge opłaty i status aktywności.'
+    ],
+    type: 'feature'
+  },
+  {
     version: 'v2.3.2',
     date: '7 Maj 2026',
     title: 'Banowanie kont, ochrona backendu i poprawki wpłat',

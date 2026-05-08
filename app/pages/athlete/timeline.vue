@@ -45,9 +45,27 @@ useSeoMeta({
       <UButton variant="soft" icon="i-lucide-refresh-cw" @click="() => void refresh()">Odśwież</UButton>
     </div>
 
-    <div v-if="pending" class="flex items-center gap-2 text-sm text-muted">
-      <UIcon name="i-lucide-loader-2" class="size-4 animate-spin" />
-      Ładowanie osi czasu…
+    <div v-if="pending" class="space-y-3">
+      <div class="rounded-2xl border border-default/60 bg-card px-4 py-3">
+        <div class="flex items-center gap-2">
+          <SlaviaShimmerText width="4.5rem" height="0.85rem" />
+          <SlaviaShimmerText width="7.5rem" height="0.85rem" />
+        </div>
+        <div class="mt-2 space-y-2">
+          <SlaviaShimmerText block width="68%" height="0.95rem" />
+          <SlaviaShimmerText block width="92%" height="0.85rem" />
+        </div>
+      </div>
+      <div class="rounded-2xl border border-default/60 bg-card px-4 py-3">
+        <div class="flex items-center gap-2">
+          <SlaviaShimmerText width="5.25rem" height="0.85rem" />
+          <SlaviaShimmerText width="6.75rem" height="0.85rem" />
+        </div>
+        <div class="mt-2 space-y-2">
+          <SlaviaShimmerText block width="74%" height="0.95rem" />
+          <SlaviaShimmerText block width="88%" height="0.85rem" />
+        </div>
+      </div>
     </div>
 
     <div v-else class="space-y-3">

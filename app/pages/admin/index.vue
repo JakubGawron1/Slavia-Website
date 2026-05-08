@@ -177,7 +177,7 @@ const quickLinksAll = [
     trainerOnly: true
   },
   {
-    title: 'Moje konto',
+    title: 'Ustawienia konta',
     description: 'E-mail, avatar i hasło',
     icon: 'i-lucide-user-cog',
     to: '/profil',
@@ -192,6 +192,14 @@ const quickLinks = computed(() => {
     return quickLinksAll.filter(l => !l.trainerOnly)
   }
   return quickLinksAll
+})
+
+const lowerDashboards = computed(() => {
+  const list: { label: string, to: string, icon: string }[] = []
+  const roles = new Set(auth.roles.value || [])
+  if (roles.has('Trainer')) list.push({ label: 'Panel trenera', to: '/trainer', icon: 'i-lucide-dumbbell' })
+  if (roles.has('Athlete')) list.push({ label: 'Panel zawodnika', to: '/athlete', icon: 'i-lucide-user' })
+  return list
 })
 </script>
 
@@ -296,6 +304,36 @@ const quickLinks = computed(() => {
       >
         Panel SuperAdmin
       </UButton>
+    </div>
+
+    <div
+      v-if="lowerDashboards.length"
+      class="mb-10 rounded-2xl border border-default/70 bg-muted/10 p-4 sm:p-5"
+    >
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p class="text-xs font-bold uppercase tracking-wider text-muted">
+            Inne panele na tym koncie
+          </p>
+          <p class="mt-1 text-sm text-muted">
+            Masz więcej ról — możesz przełączyć dashboard.
+          </p>
+        </div>
+        <div class="flex flex-col gap-2 sm:flex-row">
+          <UButton
+            v-for="d in lowerDashboards"
+            :key="d.to"
+            :to="d.to"
+            :icon="d.icon"
+            variant="outline"
+            color="neutral"
+            size="lg"
+            class="min-h-11 justify-center"
+          >
+            {{ d.label }}
+          </UButton>
+        </div>
+      </div>
     </div>
 
     <h2 class="mb-4 text-xl font-semibold text-highlighted">

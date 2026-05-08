@@ -8,7 +8,7 @@ definePageMeta({ middleware: 'admin' })
 interface ContactMessage {
   id: string
   name: string
-  email: string
+  email?: string | null
   phone?: string | null
   message: string
   created_at: string
@@ -146,17 +146,23 @@ function formatDate(d: string) {
               {{ m.name }}
             </p>
             <p class="text-sm">
-              <a
-                :href="`mailto:${m.email}`"
-                class="text-primary underline-offset-2 hover:underline"
-              >{{ m.email }}</a>
-              <template v-if="m.phone">
-                <span class="text-muted"> · </span>
-                <a
-                  :href="`tel:${m.phone}`"
-                  class="text-muted underline-offset-2 hover:underline"
-                >{{ m.phone }}</a>
-              </template>
+              <span class="flex flex-wrap gap-x-3 gap-y-1">
+                <template v-if="m.email">
+                  <a
+                    :href="`mailto:${m.email}`"
+                    class="text-muted underline-offset-2 hover:underline"
+                  >{{ m.email }}</a>
+                </template>
+                <template v-if="m.phone">
+                  <a
+                    :href="`tel:${m.phone}`"
+                    class="text-muted underline-offset-2 hover:underline"
+                  >{{ m.phone }}</a>
+                </template>
+                <template v-if="!m.email && !m.phone">
+                  <span class="text-muted">Brak danych kontaktowych</span>
+                </template>
+              </span>
             </p>
             <p class="whitespace-pre-wrap text-sm leading-relaxed text-muted">
               {{ m.message }}

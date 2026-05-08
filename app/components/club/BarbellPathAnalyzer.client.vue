@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import type { Pose } from '@tensorflow-models/pose-detection'
-import { buildBiomechanicalFeedback, buildTechniqueMetrics, type BarbellSample, type BarbellTechniqueMetrics } from '~/utils/barbellPathAnalysis'
+import { buildBiomechanicalFeedback, buildTechniqueMetrics, smoothSamplesForFps, type BarbellSample, type BarbellTechniqueMetrics } from '~/utils/barbellPathAnalysis'
 
 const toast = useToast()
+const expPlateTracking = useExperimentalFlag('barbell_plate_tracking')
+const expBodyRefTracking = useExperimentalFlag('barbell_body_reference_tracking')
 
 const videoRef = ref<HTMLVideoElement | null>(null)
 const canvasRef = ref<HTMLCanvasElement | null>(null)
@@ -21,6 +23,52 @@ const analyzedSamples = ref<BarbellSample[]>([])
 const metrics = ref<BarbellTechniqueMetrics | null>(null)
 const stabilizeToHips = ref(true)
 const playbackReady = computed(() => analyzedSamples.value.length >= 2 && !!videoRef.value)
+
+type TrackingMode =
+  | 'bar_center'
+  | 'shoulders'
+  | 'elbows'
+  | 'plates_left'
+  | 'plates_right'
+  | 'plates_axis'
+
+const trackingMode = ref<TrackingMode>('bar_center')
+
+type PlateKeyframe = {
+  t: number
+  left?: { x: number, y: number }
+  right?: { x: number, y: number }
+}
+
+const plateKeyframes = ref<PlateKeyframe[]>([])
+const plateClickMode = ref<'left' | 'right' | 'both'>('both')
+
+const trackingModeItems = computed(() => {
+  const base = [{ label: 'Środek (nadgarstki)', value: 'bar_center' as const }]
+  const body = expBodyRefTracking.value
+    ? [
+        { label: 'Barki (środek)', value: 'shoulders' as const },
+        { label: 'Łokcie (środek)', value: 'elbows' as const }
+      ]
+    : []
+  const plates = expPlateTracking.value
+    ? [
+        { label: 'Talerz lewy (klik)', value: 'plates_left' as const },
+        { label: 'Talerz prawy (klik)', value: 'plates_right' as const },
+        { label: 'Oś sztangi (L+P klik)', value: 'plates_axis' as const }
+      ]
+    : []
+  return [...base, ...body, ...plates]
+})
+
+watch(
+  () => expPlateTracking.value,
+  (on) => {
+    if (!on && trackingMode.value.startsWith('plates')) {
+      trackingMode.value = 'bar_center'
+    }
+  }
+)
 
 let detector: Awaited<
   ReturnType<typeof import('@tensorflow-models/pose-detection').createDetector>
@@ -79,16 +127,48 @@ function resizeCanvasToVideo() {
   }
 }
 
+function videoContentBox(v: HTMLVideoElement) {
+  // Obszar „prawdziwego obrazu” wewnątrz elementu wideo (uwzględnia letterboxing/pillarboxing).
+  // To jest kluczowe dla poprawnego rysowania overlay przy object-fit: contain.
+  const elW = v.clientWidth
+  const elH = v.clientHeight
+  const vidW = v.videoWidth || 0
+  const vidH = v.videoHeight || 0
+  if (!elW || !elH || !vidW || !vidH) {
+    return { x: 0, y: 0, w: elW, h: elH }
+  }
+  const elRatio = elW / elH
+  const vidRatio = vidW / vidH
+  if (vidRatio > elRatio) {
+    // obraz szerszy → pasy góra/dół
+    const w = elW
+    const h = w / vidRatio
+    const y = (elH - h) / 2
+    return { x: 0, y, w, h }
+  }
+  // obraz wyższy → pasy lewo/prawo
+  const h = elH
+  const w = h * vidRatio
+  const x = (elW - w) / 2
+  return { x, y: 0, w, h }
+}
+
 function drawPath(samples: BarbellSample[], untilSec?: number) {
   const v = videoRef.value
   const c = canvasRef.value
   if (!v || !c || samples.length < 2) {
     return
   }
-  const visible = typeof untilSec === 'number'
+  const visibleRaw = typeof untilSec === 'number'
     ? samples.filter(s => s.t <= untilSec)
     : samples
-  if (visible.length < 2) return
+  if (visibleRaw.length < 2) return
+
+  const estimatedFps = visibleRaw.length >= 2
+    ? Math.min(120, Math.max(12, Math.round((visibleRaw.length - 1) / Math.max(0.001, visibleRaw[visibleRaw.length - 1]!.t - visibleRaw[0]!.t))))
+    : 30
+  const visible = smoothSamplesForFps(visibleRaw, estimatedFps)
+
   resizeCanvasToVideo()
   const ctx = c.getContext('2d')
   if (!ctx) {
@@ -96,6 +176,7 @@ function drawPath(samples: BarbellSample[], untilSec?: number) {
   }
   const w = v.clientWidth
   const h = v.clientHeight
+  const box = videoContentBox(v)
   ctx.clearRect(0, 0, w, h)
 
   ctx.strokeStyle = 'rgba(34, 197, 94, 0.45)'
@@ -103,8 +184,8 @@ function drawPath(samples: BarbellSample[], untilSec?: number) {
   ctx.setLineDash([6, 6])
   const hip = visible[Math.floor(visible.length / 2)]!
   ctx.beginPath()
-  ctx.moveTo(hip.hipMidX * w, 0)
-  ctx.lineTo(hip.hipMidX * w, h)
+  ctx.moveTo(box.x + hip.hipMidX * box.w, box.y)
+  ctx.lineTo(box.x + hip.hipMidX * box.w, box.y + box.h)
   ctx.stroke()
   ctx.setLineDash([])
 
@@ -114,8 +195,8 @@ function drawPath(samples: BarbellSample[], untilSec?: number) {
   ctx.beginPath()
   for (let i = 0; i < visible.length; i++) {
     const pt = visible[i]!
-    const x = pt.barX * w
-    const y = pt.barY * h
+    const x = box.x + pt.barX * box.w
+    const y = box.y + pt.barY * box.h
     if (i === 0) {
       ctx.moveTo(x, y)
     } else {
@@ -127,7 +208,7 @@ function drawPath(samples: BarbellSample[], untilSec?: number) {
   ctx.fillStyle = 'rgba(251, 191, 36, 0.9)'
   const last = visible[visible.length - 1]!
   ctx.beginPath()
-  ctx.arc(last.barX * w, last.barY * h, 6, 0, Math.PI * 2)
+  ctx.arc(box.x + last.barX * box.w, box.y + last.barY * box.h, 6, 0, Math.PI * 2)
   ctx.fill()
 }
 
@@ -142,22 +223,34 @@ function extractSample(pose: Pose, videoW: number, videoH: number): BarbellSampl
   const rh = pose.keypoints.find(k => k.name === 'right_hip')
   const ls = pose.keypoints.find(k => k.name === 'left_shoulder')
   const rs = pose.keypoints.find(k => k.name === 'right_shoulder')
+  const le = pose.keypoints.find(k => k.name === 'left_elbow')
+  const re = pose.keypoints.find(k => k.name === 'right_elbow')
   if (!lw || !rw || !lh || !rh) {
     return null
   }
   if ((lw.score ?? 0) < 0.22 || (rw.score ?? 0) < 0.22) {
     return null
   }
-  const barX = mid(lw.x, rw.x) / videoW
-  const barY = mid(lw.y, rw.y) / videoH
+  const wristMidX = mid(lw.x, rw.x) / videoW
+  const wristMidY = mid(lw.y, rw.y) / videoH
+  const barX = wristMidX
+  const barY = wristMidY
   const hipMidX = mid(lh.x, rh.x) / videoW
   const shoulderMidX = ls && rs ? mid(ls.x, rs.x) / videoW : hipMidX
+  const shoulderMidY = ls && rs ? mid(ls.y, rs.y) / videoH : undefined
+  const elbowMidX = le && re ? mid(le.x, re.x) / videoW : undefined
+  const elbowMidY = le && re ? mid(le.y, re.y) / videoH : undefined
   return {
     t: 0,
     barX: clamp01(barX),
     barY: clamp01(barY),
     hipMidX: clamp01(hipMidX),
-    shoulderMidX: clamp01(shoulderMidX)
+    shoulderMidX: clamp01(shoulderMidX),
+    shoulderMidY: shoulderMidY != null ? clamp01(shoulderMidY) : undefined,
+    elbowMidX: elbowMidX != null ? clamp01(elbowMidX) : undefined,
+    elbowMidY: elbowMidY != null ? clamp01(elbowMidY) : undefined,
+    wristMidX: clamp01(wristMidX),
+    wristMidY: clamp01(wristMidY)
   }
 }
 
@@ -198,8 +291,146 @@ function stabilizeSamplesToHipLine(samples: BarbellSample[]): BarbellSample[] {
     ...s,
     barX: clamp01((s.barX - s.hipMidX) + baseHip),
     hipMidX: clamp01(baseHip),
-    shoulderMidX: clamp01((s.shoulderMidX - s.hipMidX) + baseHip)
+    shoulderMidX: clamp01((s.shoulderMidX - s.hipMidX) + baseHip),
+    elbowMidX: s.elbowMidX != null ? clamp01((s.elbowMidX - s.hipMidX) + baseHip) : undefined,
+    wristMidX: s.wristMidX != null ? clamp01((s.wristMidX - s.hipMidX) + baseHip) : undefined
   }))
+}
+
+function sortedPlateKeyframes() {
+  return plateKeyframes.value.slice().sort((a, b) => a.t - b.t)
+}
+
+function upsertPlateKeyframe(t: number, patch: Partial<PlateKeyframe>) {
+  const ts = Math.max(0, Number(t.toFixed(3)))
+  const existing = plateKeyframes.value.find(k => Math.abs(k.t - ts) < 0.0005)
+  if (existing) {
+    if (patch.left) existing.left = patch.left
+    if (patch.right) existing.right = patch.right
+  } else {
+    plateKeyframes.value.push({ t: ts, left: patch.left, right: patch.right })
+  }
+}
+
+function interpPointAt(
+  keyframes: PlateKeyframe[],
+  t: number,
+  side: 'left' | 'right'
+): { x: number, y: number } | null {
+  const kf = keyframes.filter(k => !!k[side])
+  if (kf.length === 0) return null
+  const exact = kf.find(k => Math.abs(k.t - t) < 0.0005)
+  if (exact && exact[side]) return exact[side]!
+  let prev: PlateKeyframe | null = null
+  let next: PlateKeyframe | null = null
+  for (let i = 0; i < kf.length; i++) {
+    const k = kf[i]!
+    if (k.t <= t) prev = k
+    if (k.t >= t) {
+      next = k
+      break
+    }
+  }
+  if (!prev && next && next[side]) return next[side]!
+  if (prev && !next && prev[side]) return prev[side]!
+  if (!prev || !next || !prev[side] || !next[side]) return null
+  const dt = Math.max(0.001, next.t - prev.t)
+  const a = (t - prev.t) / dt
+  const p0 = prev[side]!
+  const p1 = next[side]!
+  return {
+    x: clamp01(p0.x + (p1.x - p0.x) * a),
+    y: clamp01(p0.y + (p1.y - p0.y) * a)
+  }
+}
+
+const displaySamples = computed(() => {
+  const base = analyzedSamples.value
+  if (base.length < 2) return []
+  const m = trackingMode.value
+  if (m === 'plates_left' || m === 'plates_right' || m === 'plates_axis') {
+    const keyframes = sortedPlateKeyframes()
+    const out: BarbellSample[] = []
+    for (const s of base) {
+      const L = interpPointAt(keyframes, s.t, 'left')
+      const R = interpPointAt(keyframes, s.t, 'right')
+      if (m === 'plates_left' && L) {
+        out.push({ ...s, barX: L.x, barY: L.y })
+      } else if (m === 'plates_right' && R) {
+        out.push({ ...s, barX: R.x, barY: R.y })
+      } else if (m === 'plates_axis' && L && R) {
+        out.push({ ...s, barX: mid(L.x, R.x), barY: mid(L.y, R.y) })
+      }
+    }
+    return stabilizeToHips.value ? stabilizeSamplesToHipLine(out) : out
+  }
+
+  const out = base.map((s) => {
+    if (m === 'shoulders') {
+      const y = s.shoulderMidY ?? s.barY
+      return { ...s, barX: s.shoulderMidX, barY: y }
+    }
+    if (m === 'elbows') {
+      const x = s.elbowMidX ?? s.barX
+      const y = s.elbowMidY ?? s.barY
+      return { ...s, barX: x, barY: y }
+    }
+    // bar_center (nadgarstki) – domyślnie już w barX/barY
+    return s
+  })
+  return stabilizeToHips.value ? stabilizeSamplesToHipLine(out) : out
+})
+
+function redrawNow() {
+  const v = videoRef.value
+  if (!v || displaySamples.value.length < 2) return
+  drawPath(displaySamples.value, v.currentTime)
+}
+
+function onCanvasClick(e: MouseEvent) {
+  const v = videoRef.value
+  const c = canvasRef.value
+  if (!v || !c) return
+  const m = trackingMode.value
+  if (m !== 'plates_left' && m !== 'plates_right' && m !== 'plates_axis') return
+
+  const rect = c.getBoundingClientRect()
+  const cx = e.clientX - rect.left
+  const cy = e.clientY - rect.top
+  const box = videoContentBox(v)
+  const nx = (cx - box.x) / Math.max(1, box.w)
+  const ny = (cy - box.y) / Math.max(1, box.h)
+  if (nx < 0 || nx > 1 || ny < 0 || ny > 1) {
+    toast.add({ title: 'Kliknij w obszar wideo', color: 'warning' })
+    return
+  }
+  const t = v.currentTime || 0
+  const pt = { x: clamp01(nx), y: clamp01(ny) }
+  if (plateClickMode.value === 'left') {
+    upsertPlateKeyframe(t, { left: pt })
+    toast.add({ title: 'Zapisano: lewy talerz', color: 'success' })
+  } else if (plateClickMode.value === 'right') {
+    upsertPlateKeyframe(t, { right: pt })
+    toast.add({ title: 'Zapisano: prawy talerz', color: 'success' })
+  } else {
+    // both: pierwszy klik ustawia lewy, drugi prawy dla tej samej klatki
+    const ts = Math.max(0, Number(t.toFixed(3)))
+    const existing = plateKeyframes.value.find(k => Math.abs(k.t - ts) < 0.0005)
+    if (!existing || !existing.left) {
+      upsertPlateKeyframe(t, { left: pt })
+      toast.add({ title: 'Zapisano: lewy talerz (kliknij jeszcze raz: prawy)', color: 'info' })
+    } else if (!existing.right) {
+      upsertPlateKeyframe(t, { right: pt })
+      toast.add({ title: 'Zapisano: prawy talerz', color: 'success' })
+    } else {
+      // nadpisz bliższy (heurystyka)
+      const dl = Math.hypot(existing.left.x - pt.x, existing.left.y - pt.y)
+      const dr = Math.hypot(existing.right.x - pt.x, existing.right.y - pt.y)
+      upsertPlateKeyframe(t, dl <= dr ? { left: pt } : { right: pt })
+      toast.add({ title: 'Zaktualizowano punkt talerza', color: 'success' })
+    }
+  }
+  redrawNow()
 }
 
 /** Klatki UI — bez blokady, jeśli zdarzenie już minęło */
@@ -438,9 +669,9 @@ async function analyzeVideo() {
     }
 
     analyzedSamples.value = activeLift
-    drawPath(activeLift)
-    feedback.value = buildBiomechanicalFeedback(activeLift)
-    metrics.value = buildTechniqueMetrics(activeLift)
+    drawPath(displaySamples.value.length ? displaySamples.value : activeLift)
+    feedback.value = buildBiomechanicalFeedback(displaySamples.value.length ? displaySamples.value : activeLift)
+    metrics.value = buildTechniqueMetrics(displaySamples.value.length ? displaySamples.value : activeLift)
     toast.add({ title: 'Analiza zakończona', color: 'success' })
   } catch (e) {
     console.error(e)
@@ -465,13 +696,13 @@ async function analyzeVideo() {
 
 function onVideoTimeUpdate() {
   const v = videoRef.value
-  if (!v || analyzedSamples.value.length < 2) return
-  drawPath(analyzedSamples.value, v.currentTime)
+  if (!v || displaySamples.value.length < 2) return
+  drawPath(displaySamples.value, v.currentTime)
 }
 
 function onVideoEnded() {
-  if (analyzedSamples.value.length < 2) return
-  drawPath(analyzedSamples.value)
+  if (displaySamples.value.length < 2) return
+  drawPath(displaySamples.value)
 }
 
 onMounted(() => {
@@ -521,7 +752,7 @@ onBeforeUnmount(() => {
                 Analiza offline w przeglądarce
               </h2>
               <p class="mt-2 max-w-xl text-sm leading-relaxed text-muted">
-                Tor sztangi = środek między nadgarstkami. Plik nie jest wysyłany na serwer.
+                Wybierz „Co śledzić” (nadgarstki / barki / łokcie / talerze). Plik nie jest wysyłany na serwer.
               </p>
             </div>
           </div>
@@ -570,6 +801,70 @@ onBeforeUnmount(() => {
             <UCheckbox v-model="stabilizeToHips" class="mr-3" />
             <span class="font-semibold text-highlighted">Stabilizuj względem bioder</span>
             <span class="ml-2 text-xs text-muted">(redukuje „drgania” kamery)</span>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-3 rounded-2xl border border-default/60 bg-muted/5 p-4 sm:flex-row sm:items-end sm:justify-between">
+          <div class="min-w-0">
+            <p class="text-[10px] font-bold uppercase tracking-[0.22em] text-muted">
+              Co śledzić
+            </p>
+            <div class="mt-2 flex flex-wrap items-center gap-2">
+              <USelect
+                v-model="trackingMode"
+                size="sm"
+                :items="trackingModeItems"
+                class="min-w-56"
+              />
+            </div>
+            <p
+              v-if="trackingMode.startsWith('plates')"
+              class="mt-2 text-[11px] text-muted"
+            >
+              Tryb talerzy: klikaj w obraz na wideo, aby dodać punkty. Między klatkami punkty są interpolowane.
+            </p>
+          </div>
+
+          <div
+            v-if="trackingMode.startsWith('plates')"
+            class="flex flex-wrap items-center gap-2"
+          >
+            <UButton
+              size="sm"
+              variant="outline"
+              color="neutral"
+              :icon="plateClickMode === 'left' ? 'i-lucide-check' : 'i-lucide-circle'"
+              @click="plateClickMode = 'left'"
+            >
+              Klik: lewy
+            </UButton>
+            <UButton
+              size="sm"
+              variant="outline"
+              color="neutral"
+              :icon="plateClickMode === 'right' ? 'i-lucide-check' : 'i-lucide-circle'"
+              @click="plateClickMode = 'right'"
+            >
+              Klik: prawy
+            </UButton>
+            <UButton
+              size="sm"
+              variant="outline"
+              color="neutral"
+              :icon="plateClickMode === 'both' ? 'i-lucide-check' : 'i-lucide-circle'"
+              @click="plateClickMode = 'both'"
+            >
+              Klik: oba
+            </UButton>
+            <UButton
+              size="sm"
+              variant="soft"
+              color="warning"
+              icon="i-lucide-trash-2"
+              @click="plateKeyframes = []; toast.add({ title: 'Wyczyszczono punkty talerzy', color: 'info' }); redrawNow()"
+            >
+              Wyczyść
+            </UButton>
           </div>
         </div>
 
@@ -655,7 +950,9 @@ onBeforeUnmount(() => {
           />
           <canvas
             ref="canvasRef"
-            class="pointer-events-none absolute left-0 top-0"
+            class="absolute left-0 top-0"
+            :class="trackingMode.startsWith('plates') ? 'cursor-crosshair' : 'pointer-events-none'"
+            @click="onCanvasClick"
           />
         </div>
 
@@ -667,7 +964,7 @@ onBeforeUnmount(() => {
             name="i-lucide-check-circle"
             class="size-4 text-primary"
           />
-          Wykorzystano {{ samplesCount }} próbek z widoczną sztangą (nadgarstki).
+          Wykorzystano {{ samplesCount }} próbek z widoczną postacią (MoveNet).
         </p>
         <p
           v-if="playbackReady && !busy"

@@ -5,15 +5,36 @@ const auth = useAuth()
 const route = useRoute()
 const appearance = useSlaviaAppearance()
 const clubNotificationBellOn = useExperimentalFlag('club_notification_bell')
+const devViewportIframePreviewOn = useExperimentalFlag('dev_viewport_iframe_preview')
 /** Krótki splash tylko przy pierwszym paint — długi overlay blokował interakcję i powodował „trzeba odświeżyć”. */
 const isAppLoading = ref(true)
 const config = useRuntimeConfig()
+
+const DEV_LS_MOBILE_PREVIEW = 'slavia-dev-mobile-preview'
+const DEV_LS_MOBILE_PREVIEW_WIDTH = 'slavia-dev-mobile-preview-width'
+
+function applyDevMobilePreviewFromStorage() {
+  if (!import.meta.client) return
+  // Podgląd iframe (DevViewportPreview) zastępuje ten stary CSS-only tryb,
+  // ale zostawiamy kompatybilność, jeśli ktoś ma zapisane ustawienia w LS.
+  const raw = localStorage.getItem(DEV_LS_MOBILE_PREVIEW)
+  const on = raw === '1' || raw === 'true'
+  document.documentElement.classList.toggle('slavia-dev-mobile-preview', on)
+
+  const width = (localStorage.getItem(DEV_LS_MOBILE_PREVIEW_WIDTH) || '').trim()
+  if (width) {
+    document.documentElement.style.setProperty('--slavia-dev-mobile-width', width)
+  } else {
+    document.documentElement.style.removeProperty('--slavia-dev-mobile-width')
+  }
+}
 
 onMounted(async () => {
   if (import.meta.client && auth.token.value) {
     await auth.fetchMe()
   }
   appearance.hydrate()
+  applyDevMobilePreviewFromStorage()
   requestAnimationFrame(() => {
     isAppLoading.value = false
   })
@@ -127,6 +148,7 @@ watch(
 
 <template>
   <UApp>
+    <DevViewportPreview v-if="devViewportIframePreviewOn" />
     <!-- Bez overflow-x na tym wrapperze: html/body już mają clip — podwójny clip ucinał obramowania / końcówki belki nawigacji (np. „Aktualności”). -->
     <div class="transition-opacity duration-300 ease-out min-w-0 opacity-100">
       <ClubSiteHeader>
@@ -149,7 +171,7 @@ watch(
               <div class="hidden items-center gap-3 sm:flex sm:gap-4">
                 <NuxtLink
                   :to="dashboardLink"
-                  class="group flex max-w-[11rem] items-center gap-2 rounded-full bg-primary/8 px-3 py-1.5 transition-all hover:bg-primary/14 ring-1 ring-primary/22 lg:max-w-[14rem] lg:px-4"
+                  class="group flex max-w-44 items-center gap-2 rounded-full bg-primary/8 px-3 py-1.5 transition-all hover:bg-primary/14 ring-1 ring-primary/22 lg:max-w-56 lg:px-4"
                 >
                   <UAvatar
                     :src="navAvatarSrc"

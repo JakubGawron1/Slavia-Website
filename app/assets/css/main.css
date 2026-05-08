@@ -121,6 +121,15 @@ svg {
   }
 }
 
+@keyframes slavia-skeleton-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
 @keyframes slavia-plate-pulse {
   0%,
   100% {
@@ -163,8 +172,55 @@ svg {
   animation: slavia-plate-pulse 2.8s ease-in-out infinite;
 }
 
+.slavia-shimmer {
+  position: relative;
+  display: inline-block;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    var(--slavia-shimmer-base, color-mix(in oklab, var(--ui-bg-muted, #f2f6fb) 84%, transparent)),
+    var(--slavia-shimmer-highlight, color-mix(in oklab, var(--ui-primary, #00a155) 18%, var(--ui-bg, #f9fbff))),
+    var(--slavia-shimmer-base, color-mix(in oklab, var(--ui-bg-muted, #f2f6fb) 84%, transparent))
+  );
+  background-size: 240% 100%;
+  animation: slavia-skeleton-shimmer 1.25s ease-in-out infinite;
+  opacity: 0.85;
+  vertical-align: -0.15em;
+}
+
+.slavia-shimmer--block {
+  display: block;
+}
+
+/**
+ * Kolory shimmer per preset — celowo różne „akcenty”, żeby motywy były wyraźnie od siebie inne.
+ * Bazę bierzemy z tła, highlight z akcentu presetu.
+ */
+html[data-slavia-preset] {
+  --slavia-shimmer-base: color-mix(in oklab, var(--ui-bg-muted, #e2e8f0) 86%, transparent);
+  --slavia-shimmer-accent: var(--ui-primary, #00a155);
+  --slavia-shimmer-highlight: color-mix(in oklab, var(--slavia-shimmer-accent) 22%, var(--ui-bg, #f9fbff));
+  --slavia-chart-accent: var(--slavia-shimmer-accent);
+  --slavia-chart-accent-2: #22c55e;
+}
+
+html[data-slavia-preset='slavia'] { --slavia-shimmer-accent: var(--ui-primary, #00a155); }
+html[data-slavia-preset='iron'] { --slavia-shimmer-accent: #38bdf8; }
+html[data-slavia-preset='arena'] { --slavia-shimmer-accent: #fbbf24; }
+html[data-slavia-preset='platform'] { --slavia-shimmer-accent: #34d399; }
+html[data-slavia-preset='midnight'] { --slavia-shimmer-accent: #6366f1; }
+html[data-slavia-preset='ruby'] { --slavia-shimmer-accent: #ef4444; }
+html[data-slavia-preset='neon'] { --slavia-shimmer-accent: #a855f7; }
+html[data-slavia-preset='blackgym'] { --slavia-shimmer-accent: #22c55e; }
+html[data-slavia-preset='pink'] { --slavia-shimmer-accent: #ec4899; }
+html[data-slavia-preset='dark'] { --slavia-shimmer-accent: #60a5fa; }
+
 @media (prefers-reduced-motion: reduce) {
   .animate-page-in {
+    animation: none !important;
+  }
+
+  .slavia-shimmer {
     animation: none !important;
   }
 
@@ -187,6 +243,41 @@ html.slavia-dev-force-reduced-motion *::after {
   animation-iteration-count: 1 !important;
   transition-duration: 0.001ms !important;
   scroll-behavior: auto !important;
+}
+
+/**
+ * Debug (devtools): podgląd mobilny na PC — „ramka” + ograniczenie szerokości aplikacji.
+ * Uwaga: nie zmienia faktycznego viewportu przeglądarki, ale bardzo dobrze symuluje layout
+ * (breakpointy, sticky, formularze, scroll, safe-area).
+ */
+html.slavia-dev-mobile-preview {
+  --slavia-dev-mobile-width: 390px;
+}
+
+html.slavia-dev-mobile-preview body {
+  background-color: color-mix(in oklab, var(--ui-bg, #0f172a) 70%, #000);
+}
+
+html.slavia-dev-mobile-preview #__nuxt {
+  width: min(100%, var(--slavia-dev-mobile-width, 390px));
+  min-height: 100vh;
+  margin-left: auto;
+  margin-right: auto;
+  box-shadow:
+    0 30px 80px rgb(0 0 0 / 0.35),
+    0 12px 30px rgb(0 0 0 / 0.22);
+  border-left: 1px solid color-mix(in oklab, var(--ui-border, #334155) 60%, transparent);
+  border-right: 1px solid color-mix(in oklab, var(--ui-border, #334155) 60%, transparent);
+}
+
+@media (min-width: 640px) {
+  html.slavia-dev-mobile-preview #__nuxt {
+    border-radius: 28px;
+    overflow: clip;
+    margin-top: 18px;
+    margin-bottom: 18px;
+    min-height: calc(100vh - 36px);
+  }
 }
 
 html.light,

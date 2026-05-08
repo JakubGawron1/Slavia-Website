@@ -35,7 +35,7 @@ function publicBase() {
   return String(config.public.apiBase || '').replace(/\/$/, '')
 }
 
-const canManageEvents = computed(() => auth.isAdmin.value || auth.isTrainer.value || auth.isSuperAdmin.value)
+const canManageEvents = computed(() => auth.isTrainer.value || auth.isSuperAdmin.value)
 const canSyncExternalCalendars = computed(() => auth.isAdmin.value || auth.isSuperAdmin.value)
 
 const syncLoading = ref(false)
@@ -586,13 +586,15 @@ function handleDayClick(day: Date) {
 
     <div
       v-if="competitionsPending"
-      class="mb-4 flex items-center gap-2 rounded-xl border border-dashed border-default bg-muted/20 px-4 py-3 text-sm text-muted"
+      class="mb-4 rounded-xl border border-dashed border-default bg-muted/20 px-4 py-3"
     >
-      <UIcon
-        name="i-lucide-loader-2"
-        class="size-4 shrink-0 animate-spin"
-      />
-      Ładowanie wydarzeń z serwera…
+      <div class="flex flex-col gap-2">
+        <div class="flex items-center gap-2">
+          <SlaviaShimmerText width="10rem" height="0.95rem" />
+          <SlaviaShimmerText width="6rem" height="0.95rem" />
+        </div>
+        <SlaviaShimmerText block width="100%" height="0.85rem" />
+      </div>
     </div>
 
     <!-- Calendar Grid -->
@@ -801,6 +803,7 @@ function handleDayClick(day: Date) {
     <UModal
       v-model:open="isModalOpen"
       :title="readOnlyEvent ? 'Szczegóły wydarzenia' : (editingId ? 'Edytuj wydarzenie' : 'Dodaj wydarzenie')"
+      :dismissible="true"
       :ui="{ overlay: 'z-[190]', content: 'z-[200] max-h-[90vh] overflow-y-auto' }"
     >
       <template #content>

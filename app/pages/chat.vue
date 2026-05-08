@@ -132,7 +132,7 @@ async function sendMessage() {
       <p class="text-sm text-muted">Wiadomości 1:1 w obrębie kont klubowych.</p>
     </div>
 
-    <UCard v-if="auth.isTrainer.value || auth.isAdmin.value || auth.isSuperAdmin.value" class="mb-4">
+    <UCard v-if="auth.isTrainer.value || auth.isSuperAdmin.value" class="mb-4">
       <div class="flex flex-wrap items-end gap-2">
         <UFormField label="Rozpocznij wątek z zawodnikiem">
           <USelect v-model="selectedAthleteId" :items="(athleteCandidates || []).map(a => ({ label: a.full_name, value: a.id }))" class="w-full min-w-0 sm:min-w-64" />

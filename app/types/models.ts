@@ -7,7 +7,6 @@ export type UserRole = 'Athlete' | 'Trainer' | 'Admin' | 'SuperAdmin'
 export interface AuthUser {
   id: string
   username: string
-  email?: string | null
   avatar_url?: string | null
   roles: UserRole[]
   is_banned: boolean

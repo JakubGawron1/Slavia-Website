@@ -5,6 +5,12 @@ export interface BarbellSample {
   barY: number
   hipMidX: number
   shoulderMidX: number
+  /** Dodatkowe punkty z detekcji (znormalizowane 0–1) do innych trybów śledzenia. */
+  shoulderMidY?: number
+  elbowMidX?: number
+  elbowMidY?: number
+  wristMidX?: number
+  wristMidY?: number
 }
 
 export interface BarbellTechniqueMetrics {

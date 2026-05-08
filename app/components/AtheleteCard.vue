@@ -22,6 +22,8 @@ export interface Athlete {
   photo?: string
   /** Widoczność tylko dla zalogowanych zawodników (kolory: zielony/czerwony). */
   membershipPaid?: boolean | null
+  /** Jeśli false, profil jest nieaktywny w kadrze (ukryty na liście publicznej). */
+  isActive?: boolean | null
   chartHistory: AthleteChartPoint[]
   maxHistory: number
 }
@@ -175,6 +177,18 @@ function clearHover() {
           </UBadge>
         </div>
 
+        <div
+          v-if="athlete.isActive === false"
+          class="mt-3"
+        >
+          <UBadge color="warning" variant="subtle" size="sm">
+            Nieaktywny w kadrze
+          </UBadge>
+          <p class="mt-1 text-[11px] leading-snug text-muted">
+            Profil jest ukryty na liście publicznej. W historii i panelach może być nadal widoczny.
+          </p>
+        </div>
+
         <h3 class="mt-7 text-xl font-bold text-highlighted leading-tight">
           {{ athlete.name }}
         </h3>
@@ -263,6 +277,7 @@ function clearHover() {
           <div
             v-if="chartPaths"
             class="relative h-29 w-full rounded-xl bg-linear-to-b from-primary/[0.07] via-muted/20 to-muted/5 ring-1 ring-inset ring-primary/10 overflow-visible"
+            @click.stop.prevent
             @mouseleave="clearHover"
           >
             <Transition
@@ -321,17 +336,17 @@ function clearHover() {
                 >
                   <stop
                     offset="0%"
-                    stop-color="rgb(var(--ui-primary))"
+                    stop-color="var(--slavia-chart-accent)"
                     stop-opacity="0.38"
                   />
                   <stop
                     offset="50%"
-                    stop-color="rgb(var(--ui-primary))"
+                    stop-color="var(--slavia-chart-accent)"
                     stop-opacity="0.1"
                   />
                   <stop
                     offset="100%"
-                    stop-color="rgb(var(--ui-primary))"
+                    stop-color="var(--slavia-chart-accent)"
                     stop-opacity="0"
                   />
                 </linearGradient>
@@ -344,11 +359,11 @@ function clearHover() {
                 >
                   <stop
                     offset="0%"
-                    stop-color="rgb(var(--ui-primary))"
+                    stop-color="var(--slavia-chart-accent)"
                   />
                   <stop
                     offset="100%"
-                    stop-color="#22c55e"
+                    stop-color="var(--slavia-chart-accent-2)"
                   />
                 </linearGradient>
                 <filter

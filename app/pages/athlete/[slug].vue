@@ -6,6 +6,7 @@ import type { SinclairGender } from '~/utils/sinclair'
 import { sinclairTotal } from '~/utils/sinclair'
 import { effectiveBodyweightKgForSinclair } from '~/utils/sinclairAthlete'
 import { parseSlugId } from '~/utils/slug'
+import AthleteProgressChart, { type AthleteChartPoint } from '~/components/AthleteProgressChart.vue'
 
 const route = useRoute()
 const apiFetch = useApi()
@@ -81,6 +82,32 @@ function cardGender(g: string | null | undefined): SinclairGender | null {
 
 const approvedResults = computed(() => (results.value || []).filter(r => r.status === 'Approved'))
 
+const progressSeries = computed<AthleteChartPoint[]>(() => {
+  const p = athlete.value
+  if (!p) return []
+  const effectiveWeight = effectiveBodyweightKgForSinclair(p)
+  const sg = cardGender(p.gender ?? undefined)
+  return approvedResults.value
+    .slice()
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .map((r) => {
+      let sinclairPt: number | null = null
+      if (effectiveWeight > 0 && sg) {
+        const c = sinclairTotal(r.total, effectiveWeight, sg)
+        if (!Number.isNaN(c)) sinclairPt = Number(c.toFixed(2))
+      }
+      const raw = r.date || ''
+      const dateShort = raw.length >= 10 ? raw.slice(0, 10) : raw
+      return {
+        date: dateShort,
+        total: r.total,
+        snatch: r.snatch,
+        clean_and_jerk: r.clean_and_jerk,
+        sinclair: sinclairPt
+      }
+    })
+})
+
 const approvedSinclair = computed(() => {
   const p = athlete.value
   if (!p) return null
@@ -115,6 +142,15 @@ const approvedSinclair = computed(() => {
         <h1 class="mt-3 text-3xl font-black tracking-tight text-highlighted sm:text-4xl">
           {{ athlete!.full_name }}
         </h1>
+        <UAlert
+          v-if="athlete && athlete.is_active === false"
+          class="mt-4 max-w-2xl"
+          color="warning"
+          variant="subtle"
+          icon="i-lucide-user-x"
+          title="Profil nieaktywny w kadrze"
+          description="Ten zawodnik jest oznaczony jako nieaktywny — zwykle oznacza to przerwę w treningach lub archiwizację profilu. Dane historyczne mogą pozostać widoczne."
+        />
         <p
           v-if="athlete!.profile_tagline?.trim()"
           class="mt-2 text-lg font-semibold text-primary/90"
@@ -293,6 +329,21 @@ const approvedSinclair = computed(() => {
                     class="text-xs font-semibold text-muted"
                   >pkt</span>
                 </p>
+              </div>
+            </div>
+
+            <div class="rounded-2xl border border-default/60 bg-muted/5 p-5">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <p class="text-xs font-bold uppercase tracking-[0.18em] text-muted flex items-center gap-2">
+                  <UIcon name="i-lucide-trending-up" class="size-4 text-primary" />
+                  Progresja totalu
+                </p>
+                <p class="text-[11px] text-muted">
+                  Najedź punkt na wykresie — szczegóły startu
+                </p>
+              </div>
+              <div class="mt-4">
+                <AthleteProgressChart :series="progressSeries" :height="220" />
               </div>
             </div>
           </div>

@@ -1,4 +1,4 @@
-/** Panel trenera — tylko trener i superadmin (admin bez roli trenera nie ma dostępu). */
+/** Dostęp do narzędzi treningowych: zawodnik, trener, admin, superadmin. */
 export default defineNuxtRouteMiddleware(async (to) => {
   const auth = useAuth()
   await auth.ensureSession()
@@ -7,12 +7,14 @@ export default defineNuxtRouteMiddleware(async (to) => {
   }
 
   const roles = auth.user.value.roles ?? []
-
   const allowed =
-    roles.includes('Trainer')
+    roles.includes('Athlete')
+    || roles.includes('Trainer')
+    || roles.includes('Admin')
     || roles.includes('SuperAdmin')
 
   if (!allowed) {
     return navigateTo('/')
   }
 })
+

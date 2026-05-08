@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ExerciseBoardRow } from '~/types/models'
 import { getApiErrorMessage } from '~/composables/useApi'
+import { parseLiveInt, parseLiveNumber } from '~/utils/liveNumber'
 
 definePageMeta({
   middleware: 'auth'
@@ -36,16 +37,18 @@ const form = reactive({
 // Kalkulator max PR
 const calculatorForm = reactive({
   exercise: 'deadlift' as 'deadlift' | 'bench' | 'squat',
-  weight: null as number | null,
-  reps: null as number | null
+  weightRaw: '',
+  repsRaw: ''
 })
 
 const calculatedMaxPR = computed(() => {
-  if (calculatorForm.weight === null || calculatorForm.reps === null || calculatorForm.weight <= 0 || calculatorForm.reps <= 0) {
+  const w = parseLiveNumber(calculatorForm.weightRaw)
+  const r = parseLiveInt(calculatorForm.repsRaw)
+  if (w == null || r == null || w <= 0 || r <= 0) {
     return null
   }
   // Wzór Epley'a: 1RM = Weight × (1 + Reps/30)
-  const maxPR = calculatorForm.weight * (1 + calculatorForm.reps / 30)
+  const maxPR = w * (1 + r / 30)
   return Math.round(maxPR * 2) / 2 // Zaokrąglij do 0.5 kg
 })
 
@@ -134,10 +137,10 @@ useSeoMeta({
             </select>
           </UFormField>
           <UFormField label="Ciężar (kg)">
-            <UInputNumber v-model="calculatorForm.weight" :min="0" :step="0.5" placeholder="np. 100" class="w-full" />
+            <UInput v-model="calculatorForm.weightRaw" inputmode="decimal" placeholder="np. 100" class="w-full tabular-nums" />
           </UFormField>
           <UFormField label="Ilość powtórzeń">
-            <UInputNumber v-model="calculatorForm.reps" :min="1" :step="1" placeholder="np. 5" class="w-full" />
+            <UInput v-model="calculatorForm.repsRaw" inputmode="numeric" placeholder="np. 5" class="w-full tabular-nums" />
           </UFormField>
           <div class="flex items-end">
             <div v-if="calculatedMaxPR !== null" class="w-full rounded-lg bg-primary/10 px-3 py-2.5 text-center">

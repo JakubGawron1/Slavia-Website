@@ -383,6 +383,7 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
     <UModal
       v-model:open="modalOpen"
       title="Edytuj start"
+      :dismissible="true"
       :ui="{ overlay: 'z-[190]', content: 'z-[200]' }"
     >
       <template #content>
@@ -522,6 +523,7 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
     <UModal
       v-model:open="addModalOpen"
       title="Nowy start (kadra)"
+      :dismissible="true"
       :ui="{ overlay: 'z-[190]', content: 'z-[200]' }"
     >
       <template #content>

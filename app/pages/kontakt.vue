@@ -24,8 +24,12 @@ async function submit() {
   const name = form.name.trim()
   const email = form.email.trim()
   const message = form.message.trim()
-  if (!name || !email || !message) {
+  if (!name || !message || !email) {
     toast.add({ title: 'Uzupełnij wymagane pola', color: 'warning' })
+    return
+  }
+  if (!email.includes('@') || email.length < 5) {
+    toast.add({ title: 'Podaj poprawny e-mail', color: 'warning' })
     return
   }
   sending.value = true
@@ -94,6 +98,7 @@ async function submit() {
               v-model="form.email"
               type="email"
               autocomplete="email"
+              inputmode="email"
               size="lg"
               class="w-full"
             />

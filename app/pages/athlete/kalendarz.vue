@@ -316,6 +316,7 @@ const goToToday = () => {
 
     <UModal
       v-model:open="modalOpen"
+      :dismissible="true"
       :ui="{
         overlay: 'z-[190] bg-neutral-950/75 backdrop-blur-[3px]',
         content:

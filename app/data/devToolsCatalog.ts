@@ -25,10 +25,10 @@ export const DEV_TOOL_LINK_GROUPS: DevToolLinkGroup[] = [
       { to: '/aktualnosci', label: 'Aktualności', description: 'Wpisy i relacje (dawniej „blog”)', icon: 'i-lucide-newspaper' },
       { to: '/galeria', label: 'Galeria', description: 'Zdjęcia klubu', icon: 'i-lucide-images' },
       { to: '/wyniki-zawodow', label: 'Wyniki zawodów', description: 'Publiczna lista zatwierdzonych startów', icon: 'i-lucide-medal' },
-      { to: '/kontakt', label: 'Kontakt', description: 'Formularz do administracji', icon: 'i-lucide-mail' },
-      { to: '/blog', label: 'Legacy /blog', description: 'Przekierowanie → /aktualnosci', icon: 'i-lucide-undo-2' },
+      { to: '/kontakt', label: 'Kontakt', description: 'Formularz do administracji', icon: 'i-lucide-message-square' },
       { to: '/kalendarz', label: 'Kalendarz', description: 'Wydarzenia i zawody', icon: 'i-lucide-calendar' },
       { to: '/kalkulator-sinclair', label: 'Kalkulator Sinclair', description: 'Przelicznik punktów', icon: 'i-lucide-calculator' },
+      { to: '/kalkulator-proporcji', label: 'Kalkulator proporcji', description: '„Złote proporcje” i widełki %', icon: 'i-lucide-sigma' },
       { to: '/logowanie', label: 'Logowanie', description: 'Formularz sesji', icon: 'i-lucide-log-in' }
     ]
   },
@@ -89,7 +89,7 @@ export const DEV_TOOL_LINK_GROUPS: DevToolLinkGroup[] = [
     title: 'Konto i profil',
     description: 'Wspólne ustawienia użytkownika.',
     links: [
-      { to: '/profil', label: 'Profil', description: 'E-mail, avatar, hasło, motyw', icon: 'i-lucide-user-cog' }
+      { to: '/profil', label: 'Ustawienia konta', description: 'Avatar, hasło, motyw', icon: 'i-lucide-user-cog' }
     ]
   },
   {

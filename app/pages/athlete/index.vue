@@ -672,7 +672,7 @@ const pageLead = computed(() => {
           <div class="slavia-form-panel__title">
             <span class="slavia-form-panel__icon">
               <UIcon
-                name="i-lucide-barbell"
+                name="i-lucide-dumbbell"
                 class="size-4"
               />
             </span>

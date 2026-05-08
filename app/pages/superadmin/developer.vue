@@ -198,6 +198,19 @@ const experimentalResolved = computed(() => experimental.enabledMap.value)
 
 const experimentalKillDeploy = computed(() => experimental.killSwitchRaw.value)
 
+const stableExperimentalIds = new Set<string>([
+  'club_notification_bell',
+  'admin_accounts_ban_ui',
+  'athlete_reverse_account_linking',
+  'ban_redirect_on_403',
+  'barbell_pose_analysis',
+  'dev_viewport_iframe_preview'
+])
+
+const experimentalVisibleDefs = computed(() =>
+  (experimental.definitions || []).filter(d => !stableExperimentalIds.has(d.id))
+)
+
 async function setExperimentalFlag(id: string, value: boolean) {
   if (experimental.isForcedOffByDeploy(id)) {
     toast.add({
@@ -224,12 +237,101 @@ const buildMeta = computed(() => `Środowisko: ${import.meta.dev ? 'development'
 
 const devLinkGroups = DEV_TOOL_LINK_GROUPS
 
+const router = useRouter()
+
+function iconForRoute(path: string) {
+  if (path === '/') return 'i-lucide-home'
+  if (path.startsWith('/superadmin')) return 'i-lucide-crown'
+  if (path.startsWith('/admin')) return 'i-lucide-shield'
+  if (path.startsWith('/trainer')) return 'i-lucide-dumbbell'
+  if (path.startsWith('/athlete')) return 'i-lucide-user'
+  if (path.startsWith('/aktualnosci')) return 'i-lucide-newspaper'
+  if (path.startsWith('/ogloszenia')) return 'i-lucide-megaphone'
+  if (path.startsWith('/galeria')) return 'i-lucide-images'
+  if (path.startsWith('/kalendarz')) return 'i-lucide-calendar'
+  if (path.startsWith('/kontakt')) return 'i-lucide-message-square'
+  if (path.startsWith('/logowanie')) return 'i-lucide-log-in'
+  if (path.startsWith('/profil')) return 'i-lucide-user-cog'
+  return 'i-lucide-link'
+}
+
+const autoRouteGroups = computed(() => {
+  const routes = router
+    .getRoutes()
+    .map(r => String(r.path || ''))
+    .filter(p =>
+      p.startsWith('/')
+      && !p.startsWith('/__')
+      && !p.startsWith('/_')
+      && !p.includes(':')
+      && !p.includes('*')
+      && !p.includes('()')
+    )
+  const uniq = [...new Set(routes)].sort((a, b) => a.localeCompare(b, 'pl'))
+
+  const byGroup = new Map<string, string[]>()
+  for (const p of uniq) {
+    const seg = p === '/' ? 'Start' : (p.split('/')[1] || 'Inne')
+    const title =
+      seg === 'athlete' ? 'Trasy (auto): athlete'
+        : seg === 'trainer' ? 'Trasy (auto): trainer'
+          : seg === 'admin' ? 'Trasy (auto): admin'
+            : seg === 'superadmin' ? 'Trasy (auto): superadmin'
+              : 'Trasy (auto): public'
+    const list = byGroup.get(title) || []
+    list.push(p)
+    byGroup.set(title, list)
+  }
+
+  return [...byGroup.entries()].map(([title, paths]) => ({
+    title,
+    description: 'Wygenerowane z routera Nuxt (bez linków zewnętrznych).',
+    links: paths.map((to) => ({
+      to,
+      label: to,
+      description: 'Trasa',
+      icon: iconForRoute(to)
+    }))
+  }))
+})
+
+const devLinkGroupsCombined = computed(() => {
+  // Najpierw auto trasy, potem ręczne grupy (w tym dokumentacja zewnętrzna).
+  // Deduplikacja po `to` (żeby nie było powtórek między auto/manual).
+  const seen = new Set<string>()
+  const groups = [...autoRouteGroups.value, ...devLinkGroups]
+  return groups
+    .map((g) => {
+      const links = (g.links || []).filter((l) => {
+        const key = String(l.to || '')
+        if (!key) return false
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
+      })
+      return { ...g, links }
+    })
+    .filter(g => g.links.length > 0)
+})
+
+function routeChipLabel(to: string) {
+  const t = String(to || '')
+  if (!t) return '—'
+  if (t === '/') return '/'
+  const nice = t.replace(/^\/+/, '')
+  return nice.length > 28 ? `${nice.slice(0, 26)}…` : nice
+}
+
 const apiPingMs = ref<number | null>(null)
 const backendProviderSaving = ref(false)
 const backendProviderServerUpdatedAt = ref<string | null>(null)
 const selectedBackendProvider = ref<'leapcell' | 'render'>(backendProvider.activeProvider.value)
 const activeBackendProvider = computed(() => backendProvider.activeProvider.value)
 const activeBackendApiBase = computed(() => backendProvider.activeApiBase.value)
+const isLocalBackend = computed(() => {
+  const u = String(activeBackendApiBase.value || '').toLowerCase()
+  return u.includes('localhost') || u.includes('127.0.0.1')
+})
 
 watch(
   () => backendProvider.activeProvider.value,
@@ -247,6 +349,8 @@ onMounted(() => {
   if (import.meta.client) {
     userAgentDisplay.value = navigator.userAgent
     refreshDomPresetAttr()
+    syncMobilePreviewFromStorage()
+    applyMobilePreviewDom(mobilePreviewOn.value, mobilePreviewWidth.value)
   }
   void refreshBanUsersCatalog()
   void $fetch<{ active_provider: 'leapcell' | 'render', updated_at?: string | null }>('/api/system/backend-provider', {
@@ -304,6 +408,103 @@ function toggleReducedMotionDev() {
     color: 'info'
   })
 }
+
+const DEV_LS_MOBILE_PREVIEW = 'slavia-dev-mobile-preview'
+const DEV_LS_MOBILE_PREVIEW_WIDTH = 'slavia-dev-mobile-preview-width'
+
+const mobilePreviewOn = ref(false)
+const mobilePreviewWidth = ref('390px')
+
+const DEV_LS_VIEWPORT_MODE = 'slavia-dev-viewport-mode'
+const DEV_LS_VIEWPORT_WIDTH = 'slavia-dev-viewport-width'
+
+const viewportMode = ref<'off' | 'mobile' | 'desktop'>('off')
+const viewportWidth = ref('390')
+
+function syncMobilePreviewFromStorage() {
+  if (!import.meta.client) return
+  const on = (localStorage.getItem(DEV_LS_MOBILE_PREVIEW) || '') === '1'
+  mobilePreviewOn.value = on
+  const w = (localStorage.getItem(DEV_LS_MOBILE_PREVIEW_WIDTH) || '').trim()
+  mobilePreviewWidth.value = w || '390px'
+
+  const vm = (localStorage.getItem(DEV_LS_VIEWPORT_MODE) || 'off').trim()
+  viewportMode.value = vm === 'mobile' || vm === 'desktop' ? vm : 'off'
+  const vw = (localStorage.getItem(DEV_LS_VIEWPORT_WIDTH) || '').trim()
+  viewportWidth.value = vw || (viewportMode.value === 'desktop' ? '1280' : '390')
+}
+
+function applyMobilePreviewDom(on: boolean, width: string) {
+  if (!import.meta.client) return
+  document.documentElement.classList.toggle('slavia-dev-mobile-preview', on)
+  const w = (width || '').trim()
+  if (w) {
+    document.documentElement.style.setProperty('--slavia-dev-mobile-width', w)
+  } else {
+    document.documentElement.style.removeProperty('--slavia-dev-mobile-width')
+  }
+}
+
+function toggleMobilePreview() {
+  if (!import.meta.client) return
+  const next = !mobilePreviewOn.value
+  mobilePreviewOn.value = next
+  localStorage.setItem(DEV_LS_MOBILE_PREVIEW, next ? '1' : '0')
+  localStorage.setItem(DEV_LS_MOBILE_PREVIEW_WIDTH, mobilePreviewWidth.value)
+  applyMobilePreviewDom(next, mobilePreviewWidth.value)
+  toast.add({
+    title: next ? 'Włączono podgląd mobilny' : 'Wyłączono podgląd mobilny',
+    color: 'info'
+  })
+}
+
+function applyViewportPreview(mode: 'off' | 'mobile' | 'desktop', width: string) {
+  if (!import.meta.client) return
+  viewportMode.value = mode
+  viewportWidth.value = width
+  localStorage.setItem(DEV_LS_VIEWPORT_MODE, mode)
+  localStorage.setItem(DEV_LS_VIEWPORT_WIDTH, String(width || '').trim())
+  window.dispatchEvent(new Event('slavia-dev-viewport-changed'))
+}
+
+function toggleViewportMobile() {
+  const next = viewportMode.value === 'mobile' ? 'off' : 'mobile'
+  const w = String(viewportWidth.value || '').trim() || '390'
+  applyViewportPreview(next, w)
+  toast.add({ title: next === 'mobile' ? 'Włączono podgląd Mobile (iframe)' : 'Wyłączono podgląd Mobile', color: 'info' })
+}
+
+function toggleViewportDesktop() {
+  const next = viewportMode.value === 'desktop' ? 'off' : 'desktop'
+  const w = String(viewportWidth.value || '').trim() || '1280'
+  applyViewportPreview(next, w)
+  toast.add({ title: next === 'desktop' ? 'Włączono podgląd Desktop (iframe)' : 'Wyłączono podgląd Desktop', color: 'info' })
+}
+
+function cycleViewportWidth() {
+  const cur = Number.parseInt(String(viewportWidth.value || ''), 10) || (viewportMode.value === 'desktop' ? 1280 : 390)
+  const next = viewportMode.value === 'desktop'
+    ? (cur === 1024 ? 1280 : cur === 1280 ? 1440 : 1024)
+    : (cur === 375 ? 390 : cur === 390 ? 414 : 375)
+  viewportWidth.value = String(next)
+  toast.add({ title: `Iframe: ${next}px`, color: 'info' })
+  if (import.meta.client && viewportMode.value !== 'off') {
+    localStorage.setItem(DEV_LS_VIEWPORT_WIDTH, String(next))
+  }
+}
+
+watch(mobilePreviewWidth, (w) => {
+  if (!import.meta.client) return
+  localStorage.setItem(DEV_LS_MOBILE_PREVIEW_WIDTH, w)
+  if (mobilePreviewOn.value) {
+    applyMobilePreviewDom(true, w)
+  }
+})
+
+watch(viewportWidth, (w) => {
+  if (!import.meta.client) return
+  localStorage.setItem(DEV_LS_VIEWPORT_WIDTH, w)
+})
 
 function logRouteSummary() {
   if (!import.meta.client) {
@@ -452,7 +653,6 @@ function buildEnvDump(): Record<string, unknown> {
           id: u.id,
           username: u.username,
           roles: u.roles,
-          email: u.email,
           ui_theme_preset: u.ui_theme_preset ?? null,
           ui_color_mode: u.ui_color_mode ?? null
         }
@@ -788,40 +988,6 @@ function toastStorageApisAvailability() {
   systemLogs.push({ level: 'info', title: 'Dostępność API przeglądarki', detail })
   toast.add({ title: 'API (IDB / cache / share / geo / vibrate)', description: 'Szczegóły w logach.', color: 'success' })
 }
-
-function testVibrateShort() {
-  if (!import.meta.client || typeof navigator === 'undefined' || typeof navigator.vibrate !== 'function') {
-    toast.add({ title: 'navigator.vibrate niedostępny', description: 'Typowo desktop lub przeglądarka bez API.', color: 'warning' })
-    return
-  }
-  navigator.vibrate(40)
-  toast.add({ title: 'Wysłano krótką wibrację', color: 'success' })
-}
-
-function openCurrentUrlNewTab() {
-  if (!import.meta.client) {
-    return
-  }
-  window.open(window.location.href, '_blank', 'noopener,noreferrer')
-  toast.add({ title: 'Otwarto duplikat karty', color: 'info' })
-}
-
-function downloadDevSelftestFile() {
-  if (!import.meta.client) {
-    return
-  }
-  const blob = new Blob(
-    [`Slavia developer tools — test pobrania pliku\n`, `czas UTC: ${new Date().toISOString()}\n`, `href: ${window.location.href}\n`],
-    { type: 'text/plain;charset=utf-8' }
-  )
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `slavia-dev-download-test-${Date.now()}.txt`
-  a.click()
-  URL.revokeObjectURL(url)
-  toast.add({ title: 'Rozpoczęto pobieranie pliku testowego', color: 'success' })
-}
 </script>
 
 <template>
@@ -914,7 +1080,11 @@ function downloadDevSelftestFile() {
               Globalny provider backendu
             </p>
             <UBadge size="xs" variant="subtle" color="primary">
-              aktywny: {{ activeBackendProvider === 'render' ? 'Render' : 'Leapcell' }}
+              aktywny: {{
+                isLocalBackend
+                  ? 'localhost'
+                  : (activeBackendProvider === 'render' ? 'Render' : 'Leapcell')
+              }}
             </UBadge>
           </div>
           <p class="mt-1 text-[11px] leading-snug text-muted">
@@ -928,6 +1098,7 @@ function downloadDevSelftestFile() {
               size="xs"
               color="neutral"
               class="touch-manipulation"
+              :disabled="isLocalBackend"
               :variant="selectedBackendProvider === 'leapcell' ? 'solid' : 'outline'"
               @click="selectedBackendProvider = 'leapcell'"
             >
@@ -937,6 +1108,7 @@ function downloadDevSelftestFile() {
               size="xs"
               color="neutral"
               class="touch-manipulation"
+              :disabled="isLocalBackend"
               :variant="selectedBackendProvider === 'render' ? 'solid' : 'outline'"
               @click="selectedBackendProvider = 'render'"
             >
@@ -992,7 +1164,7 @@ function downloadDevSelftestFile() {
             </UAlert>
           </div>
           <UButton
-            v-if="experimental.definitions.length > 0"
+            v-if="experimentalVisibleDefs.length > 0"
             size="xs"
             variant="soft"
             color="neutral"
@@ -1005,10 +1177,10 @@ function downloadDevSelftestFile() {
         </div>
 
         <div
-          v-if="experimental.definitions.length === 0"
+          v-if="experimentalVisibleDefs.length === 0"
           class="mt-3 rounded-lg border border-dashed border-default/60 bg-muted/10 px-3 py-4 text-center text-xs text-muted"
         >
-          Brak flag —
+          Brak eksperymentów (pozostałe są już stabilne) —
           <code class="font-mono text-[10px]">experimentalFeaturesCatalog.ts</code>
         </div>
 
@@ -1017,7 +1189,7 @@ function downloadDevSelftestFile() {
           class="mt-3 divide-y divide-default/50 rounded-lg border border-default/60 bg-muted/5"
         >
           <li
-            v-for="def in experimental.definitions"
+            v-for="def in experimentalVisibleDefs"
             :key="def.id"
             class="flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
           >
@@ -1253,15 +1425,6 @@ function downloadDevSelftestFile() {
                 <UButton color="neutral" variant="outline" size="xs" icon="i-lucide-maximize" class="touch-manipulation" @click="toggleFullscreenDev">
                   Fullscreen
                 </UButton>
-                <UButton color="neutral" variant="outline" size="xs" icon="i-lucide-smartphone" class="touch-manipulation" @click="testVibrateShort">
-                  Wibracja
-                </UButton>
-                <UButton color="neutral" variant="outline" size="xs" icon="i-lucide-external-link" class="touch-manipulation" @click="openCurrentUrlNewTab">
-                  Nowa karta
-                </UButton>
-                <UButton color="neutral" variant="outline" size="xs" icon="i-lucide-download" class="touch-manipulation" @click="downloadDevSelftestFile">
-                  .txt test
-                </UButton>
               </div>
             </div>
           </div>
@@ -1349,6 +1512,70 @@ function downloadDevSelftestFile() {
           <UButton color="neutral" variant="outline" size="xs" icon="i-lucide-accessibility" title="Symulacja prefers-reduced-motion" class="touch-manipulation" @click="toggleReducedMotionDev">
             Red. motion
           </UButton>
+          <UButton
+            color="neutral"
+            :variant="mobilePreviewOn ? 'solid' : 'outline'"
+            size="xs"
+            icon="i-lucide-smartphone"
+            title="Podgląd mobilny (ramka + ograniczenie szerokości aplikacji)"
+            class="touch-manipulation"
+            @click="toggleMobilePreview"
+          >
+            Mobile
+          </UButton>
+          <UButton
+            color="neutral"
+            :variant="viewportMode === 'mobile' ? 'solid' : 'outline'"
+            size="xs"
+            icon="i-lucide-smartphone"
+            title="Podgląd Mobile w iframe (prawdziwe breakpointy)"
+            class="touch-manipulation"
+            @click="toggleViewportMobile"
+          >
+            Mobile (iframe)
+          </UButton>
+          <UButton
+            color="neutral"
+            :variant="viewportMode === 'desktop' ? 'solid' : 'outline'"
+            size="xs"
+            icon="i-lucide-monitor"
+            title="Podgląd Desktop w iframe (na telefonie skaluje się do ekranu)"
+            class="touch-manipulation"
+            @click="toggleViewportDesktop"
+          >
+            Desktop (iframe)
+          </UButton>
+          <UButton
+            color="neutral"
+            variant="outline"
+            size="xs"
+            icon="i-lucide-ruler"
+            title="Szerokość podglądu mobilnego (cyklicznie)"
+            class="touch-manipulation"
+            @click="() => {
+              const cur = String(mobilePreviewWidth)
+              const next = cur === '375px'
+                ? '390px'
+                : cur === '390px'
+                  ? '414px'
+                  : '375px'
+              mobilePreviewWidth = next
+              toast.add({ title: `Podgląd mobilny: ${next}`, color: 'info' })
+            }"
+          >
+            {{ mobilePreviewWidth }}
+          </UButton>
+          <UButton
+            color="neutral"
+            variant="outline"
+            size="xs"
+            icon="i-lucide-ruler"
+            title="Szerokość iframe (cyklicznie)"
+            class="touch-manipulation"
+            @click="cycleViewportWidth"
+          >
+            iframe {{ viewportWidth }}px
+          </UButton>
           <UButton color="neutral" variant="outline" size="xs" icon="i-lucide-git-branch" title="Zapisz ścieżkę do logów" class="touch-manipulation" @click="logRouteSummary">
             URL → log
           </UButton>
@@ -1374,9 +1601,9 @@ function downloadDevSelftestFile() {
       <p class="mt-1 text-[11px] text-muted">
         Trasy frontu i linki zewnętrzne (nowa karta).
       </p>
-      <div class="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+        <div class="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
         <div
-          v-for="group in devLinkGroups"
+          v-for="group in devLinkGroupsCombined"
           :key="group.title"
           class="rounded-xl border border-default/40 bg-muted/5 p-3"
         >
@@ -1397,7 +1624,7 @@ function downloadDevSelftestFile() {
               variant="outline"
               color="neutral"
               size="sm"
-              class="h-auto min-h-12 flex-col items-start gap-0.5 py-2 whitespace-normal text-left"
+              class="h-auto min-h-12 flex-col items-start gap-0.5 py-2 whitespace-normal text-left overflow-hidden"
               :target="isExternalHref(link.to) ? '_blank' : undefined"
               :rel="isExternalHref(link.to) ? 'noopener noreferrer' : undefined"
             >
@@ -1406,9 +1633,13 @@ function downloadDevSelftestFile() {
                   :name="link.icon"
                   class="size-4 shrink-0 text-primary"
                 />
-                {{ link.label }}
+                <span class="min-w-0 flex-1 break-all">
+                  {{ routeChipLabel(link.label || link.to) }}
+                </span>
               </span>
-              <span class="w-full text-[11px] font-normal leading-snug text-muted">{{ link.description }}</span>
+              <span class="w-full wrap-break-word text-[11px] font-normal leading-snug text-muted">
+                {{ link.description }}
+              </span>
             </UButton>
           </div>
         </div>

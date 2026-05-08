@@ -71,6 +71,27 @@ export const EXPERIMENTAL_FEATURES: ExperimentalFeatureDefinition[] = [
     description:
       'Dodatkowe przekierowanie na /banned w kliencie API przy odpowiedzi 403 (poza global middleware).',
     defaultEnabled: true
+  },
+  {
+    id: 'dev_viewport_iframe_preview',
+    label: 'Dev: podgląd viewportu (iframe)',
+    description:
+      'Overlay z iframe do symulacji prawdziwych breakpointów Mobile/Desktop (zamiast CSS-only zwężania #__nuxt).',
+    defaultEnabled: true
+  },
+  {
+    id: 'barbell_plate_tracking',
+    label: 'Analiza sztangi: tryb talerzy (klik + interpolacja)',
+    description:
+      'W analizie toru sztangi dodaje tryb śledzenia talerzy (manual: klik na klatce + interpolacja).',
+    defaultEnabled: false
+  },
+  {
+    id: 'barbell_body_reference_tracking',
+    label: 'Analiza sztangi: tryb barki/łokcie',
+    description:
+      'W analizie toru sztangi dodaje tryb śledzenia punktu referencyjnego z ciała (barki i łokcie).',
+    defaultEnabled: true
   }
 ]
 
@@ -81,3 +102,6 @@ export type ExperimentalFeatureId =
   | 'developer_tools_ban_panel'
   | 'athlete_reverse_account_linking'
   | 'ban_redirect_on_403'
+  | 'dev_viewport_iframe_preview'
+  | 'barbell_plate_tracking'
+  | 'barbell_body_reference_tracking'

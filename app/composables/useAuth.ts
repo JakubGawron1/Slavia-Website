@@ -40,10 +40,10 @@ export function useAuth() {
 
   const isSuperAdmin = computed(() => roles.value.includes('SuperAdmin'))
 
-  /** Kadra jak `RequireTrainerOrHigher` — m.in. kalendarz klubu i synchronizacja. */
+  /** Kadra (trener) — admin nie jest już traktowany jako trener. */
   const isTrainer = computed(() =>
     roles.value.some(role =>
-      ['Trainer', 'Admin', 'SuperAdmin'].includes(role)
+      ['Trainer', 'SuperAdmin'].includes(role)
     )
   )
 

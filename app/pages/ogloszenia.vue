@@ -264,6 +264,7 @@ const sortedPublic = computed(() => {
     <UModal
       v-model:open="modalOpen"
       :title="editingId ? 'Edytuj ogłoszenie' : 'Nowe ogłoszenie'"
+      :dismissible="true"
       :ui="{ content: 'max-h-[90vh] overflow-y-auto' }"
     >
       <template #content>

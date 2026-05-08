@@ -45,7 +45,8 @@ const items = computed(() => {
     { label: 'Wyniki', to: '/wyniki-zawodow' },
     { label: 'Kalendarz', to: '/kalendarz' },
     { label: 'Kontakt', to: '/kontakt' },
-    { label: 'Kalkulator', to: '/kalkulator-sinclair' }
+    { label: 'Sinclair', to: '/kalkulator-sinclair' },
+    ...(auth.isLoggedIn.value ? [{ label: 'Proporcje', to: '/kalkulator-proporcji' }] : [])
   ]
 
   const adminLinks: ManagementLink[] = []
@@ -100,7 +101,7 @@ const items = computed(() => {
   }
 
   pushLink(accountLinks, {
-    label: 'Moje konto',
+    label: 'Ustawienia konta',
     to: '/profil',
     icon: 'i-lucide-user-circle'
   })
@@ -112,7 +113,9 @@ const items = computed(() => {
   if (athleteLinks.length) {
     panelSections.push({ heading: 'Panel zawodnika', links: athleteLinks })
   }
-  // Removed account section from panel dropdown
+  if (accountLinks.length) {
+    panelSections.push({ heading: 'Konto', links: accountLinks })
+  }
 
   return { main, panelSections }
 })

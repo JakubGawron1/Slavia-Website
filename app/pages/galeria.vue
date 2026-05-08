@@ -222,12 +222,23 @@ const sortedPhotos = computed(() => {
 
     <div
       v-if="pending"
-      class="flex justify-center py-14"
+      class="py-14"
     >
-      <UIcon
-        name="i-lucide-loader-2"
-        class="size-8 animate-spin text-primary"
-      />
+      <div class="mx-auto grid max-w-5xl grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div
+          v-for="i in 6"
+          :key="`gallery-skel-${i}`"
+          class="overflow-hidden rounded-2xl border border-default bg-card shadow-sm"
+        >
+          <div class="p-3">
+            <SlaviaShimmerText block width="100%" height="10rem" />
+            <div class="mt-3 space-y-2">
+              <SlaviaShimmerText block width="72%" height="0.85rem" />
+              <SlaviaShimmerText block width="58%" height="0.85rem" />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div
@@ -323,6 +334,7 @@ const sortedPhotos = computed(() => {
     <UModal
       v-model:open="modalOpen"
       :title="editingId ? 'Edytuj zdjęcie' : 'Nowe zdjęcie'"
+      :dismissible="true"
       :ui="{ content: 'max-h-[90vh] overflow-y-auto' }"
     >
       <template #content>
@@ -407,6 +419,7 @@ const sortedPhotos = computed(() => {
     <UModal
       v-model:open="mediaPreviewOpen"
       :title="mediaPreviewItem?.caption || (mediaPreviewItem?.media_type === 'video' ? 'Podgląd filmu' : 'Podgląd zdjęcia')"
+      :dismissible="true"
       :ui="{ content: 'max-w-5xl' }"
     >
       <template #content>

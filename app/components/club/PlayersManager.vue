@@ -126,6 +126,7 @@ const assignmentsLoading = ref(false)
 const athleteAccountOptions = ref<{ label: string, value: string }[]>([])
 const athleteAccountSelected = ref<string>('')
 const athleteAccountSaving = ref(false)
+const athleteAccountUsernameById = ref<Record<string, string>>({})
 
 const editingPlayer = computed(() =>
   editingId.value ? players.value.find(p => p.id === editingId.value) ?? null : null
@@ -134,6 +135,7 @@ const editingPlayer = computed(() =>
 async function refreshAthleteAccountCatalog() {
   if (!canManageAthleteLogin.value) {
     athleteAccountOptions.value = [{ label: '— tylko Admin/SuperAdmin —', value: '' }]
+    athleteAccountUsernameById.value = {}
     return
   }
   try {
@@ -151,25 +153,33 @@ async function refreshAthleteAccountCatalog() {
         return true
       })
       .filter(u => Array.isArray(u.roles) && (u.roles as UserRole[]).includes('Athlete'))
-      .map(u => ({ label: `${u.username} · ${u.roles.join(', ')}`, value: u.id }))
+      .map(u => ({ label: `${u.username} · ${u.roles.join(', ')}`, value: u.id, username: u.username }))
       .sort((a, b) => a.label.localeCompare(b.label, 'pl'))
     const linked = editingPlayer.value?.user_id ?? ''
+    athleteAccountUsernameById.value = Object.fromEntries(items.map(i => [i.value, i.username]))
     athleteAccountOptions.value = [
       { label: '— wybierz konto —', value: '' },
       ...items.map(i => ({
-        ...i,
+        value: i.value,
         label: linked && i.value === linked ? `${i.label} (już przypięte)` : i.label
       }))
     ]
   } catch {
     athleteAccountOptions.value = [{ label: '— wybierz konto —', value: '' }]
+    athleteAccountUsernameById.value = {}
   }
 }
 
+const linkedAthleteAccountUsername = computed(() => {
+  const id = editingPlayer.value?.user_id ?? ''
+  if (!id) return ''
+  return athleteAccountUsernameById.value[id] || id
+})
+
 async function attachExistingAccountToAthlete() {
   if (!editingId.value) return
-  const uid = athleteAccountSelected.value.trim()
-  if (!uid) {
+  const selectedUserId = athleteAccountSelected.value.trim()
+  if (!selectedUserId) {
     toast.add({ title: 'Wybierz konto z listy', color: 'warning' })
     return
   }
@@ -177,7 +187,7 @@ async function attachExistingAccountToAthlete() {
   try {
     await api(apiRoutes.athletes.attachUser(editingId.value), {
       method: 'POST',
-      body: { user_id: uid }
+      body: { user_id: selectedUserId }
     })
     toast.add({ title: 'Przypisano konto do zawodnika', color: 'success' })
     await loadPlayers()
@@ -553,12 +563,13 @@ watch(
             <tr v-if="loading">
               <td
                 colspan="8"
-                class="px-4 py-10 text-center text-muted"
+                class="px-4 py-8"
               >
-                <UIcon
-                  name="i-lucide-loader-2"
-                  class="size-6 animate-spin"
-                />
+                <div class="flex flex-col gap-3">
+                  <SlaviaShimmerText block width="100%" height="0.9rem" />
+                  <SlaviaShimmerText block width="92%" height="0.9rem" />
+                  <SlaviaShimmerText block width="86%" height="0.9rem" />
+                </div>
               </td>
             </tr>
             <tr
@@ -661,6 +672,7 @@ watch(
     <UModal
       v-model:open="modalOpen"
       :title="editingId ? 'Edycja zawodnika' : 'Nowy zawodnik'"
+      :dismissible="true"
       :ui="{ content: 'rounded-3xl sm:max-w-3xl md:max-w-4xl' }"
     >
       <template #content>
@@ -906,7 +918,7 @@ watch(
                     </div>
                   </div>
                   <p v-if="editingPlayer?.user_id" class="mt-3 text-[11px] text-muted">
-                    Aktualnie przypięte user_id: <span class="font-mono">{{ editingPlayer.user_id }}</span>
+                    Aktualnie przypięte konto: <span class="font-mono">{{ linkedAthleteAccountUsername }}</span>
                   </p>
                 </div>
 
@@ -937,7 +949,7 @@ watch(
                     >
                       <UInput
                         v-model="form.username"
-                        placeholder="np. jgawron"
+                        placeholder="np. login"
                         size="lg"
                         class="w-full"
                       />
@@ -1123,6 +1135,7 @@ watch(
       v-model:open="deleteModalOpen"
       title="Usunąć zawodnika?"
       description="Tej operacji nie cofniesz."
+      :dismissible="true"
     >
       <template #content>
         <div class="slavia-form-modal">

@@ -5,7 +5,7 @@ import { resolveAuthProfilePhotoSrc } from '~/utils/profilePhoto'
 definePageMeta({ middleware: 'auth' })
 
 useSeoMeta({
-  title: 'Moje konto — Slavia',
+  title: 'Ustawienia konta — Slavia',
   robots: 'noindex, nofollow'
 })
 
@@ -15,7 +15,6 @@ const toast = useToast()
 const { preset, presets, setPreset, colorMode } = useSlaviaAppearance()
 
 const form = reactive({
-  email: '',
   avatar_url: '',
   newPassword: '',
   confirmPassword: ''
@@ -27,7 +26,6 @@ watch(
     if (!u) {
       return
     }
-    form.email = u.email || ''
     /** Wpis w formularzu: jawny avatar konta lub — jak pusty — zdjęcie z profilu zawodnika (`/me`). */
     form.avatar_url = u.avatar_url?.trim() || u.athlete_image_url?.trim() || ''
   },
@@ -56,7 +54,6 @@ function resetForm() {
   if (!u) {
     return
   }
-  form.email = u.email || ''
   form.avatar_url = u.avatar_url?.trim() || u.athlete_image_url?.trim() || ''
   form.newPassword = ''
   form.confirmPassword = ''
@@ -120,8 +117,6 @@ async function save() {
   saving.value = true
   try {
     const payload: Record<string, string> = {}
-    const em = form.email.trim()
-    payload.email = em
     const av = form.avatar_url.trim()
     payload.avatar_url = av
     const pw = form.newPassword.trim()
@@ -173,7 +168,7 @@ async function save() {
                 Konto użytkownika
               </p>
               <h1 class="mt-2 text-3xl font-bold tracking-tight text-highlighted md:text-4xl">
-                Moje konto
+                Ustawienia konta
               </h1>
               <p class="mt-3 max-w-xl text-sm leading-relaxed text-muted">
                 Zmiana loginu jest po stronie administratorów — tutaj ustawiasz e-mail, zdjęcie oraz opcjonalnie nowe hasło.
@@ -325,7 +320,7 @@ async function save() {
                     v-for="p in presets"
                     :key="p.id"
                     type="button"
-                    class="min-h-[3.25rem] touch-manipulation rounded-2xl border px-4 py-3.5 text-left transition-colors ring-1 sm:min-h-0 sm:py-3"
+                    class="min-h-13 touch-manipulation rounded-2xl border px-4 py-3.5 text-left transition-colors ring-1 sm:min-h-0 sm:py-3"
                     :class="
                       preset === p.id
                         ? 'border-primary/60 bg-primary/10 ring-primary/35'
@@ -354,20 +349,6 @@ async function save() {
               </h2>
             </div>
             <div class="space-y-6 p-5 md:p-8">
-              <UFormField
-                label="Adres e-mail"
-                description="Powiadomienia i odzyskiwanie dostępu"
-              >
-                <UInput
-                  v-model="form.email"
-                  type="email"
-                  autocomplete="email"
-                  placeholder="twoj.email@example.com"
-                  size="lg"
-                  class="w-full"
-                />
-              </UFormField>
-
               <UFormField
                 label="Adres URL zdjęcia"
                 description="Opcjonalnie zamiast lub oprócz wgrywania pliku"

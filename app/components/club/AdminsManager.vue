@@ -102,7 +102,6 @@ function rowMatchesSearch(a: AdminAccount): boolean {
   const q = searchQuery.value.trim().toLowerCase()
   if (!q) return true
   if (a.username.toLowerCase().includes(q)) return true
-  if ((a.email ?? '').toLowerCase().includes(q)) return true
   if (roleFilterHaystack(a).includes(q)) return true
   return false
 }
@@ -164,7 +163,6 @@ const accountModalOpen = ref(false)
 const accountSaving = ref(false)
 const accountTarget = ref<AdminAccount | null>(null)
 const accountUsername = ref('')
-const accountEmail = ref('')
 const accountPassword = ref('')
 
 const banModalOpen = ref(false)
@@ -293,7 +291,6 @@ function clearFilters() {
 function openAccountEdit(a: AdminAccount) {
   accountTarget.value = a
   accountUsername.value = a.username
-  accountEmail.value = a.email || ''
   accountPassword.value = ''
   accountModalOpen.value = true
 }
@@ -308,11 +305,6 @@ async function saveAccountEdit() {
   try {
     const body: Record<string, string> = {
       username: accountUsername.value.trim()
-    }
-    if (accountEmail.value.trim()) {
-      body.email = accountEmail.value.trim()
-    } else {
-      body.email = ''
     }
     if (accountPassword.value) {
       body.password = accountPassword.value
@@ -503,7 +495,12 @@ onMounted(() => {
                 W bazie
               </p>
               <p class="text-2xl font-black tabular-nums text-highlighted">
-                {{ loading ? '—' : totalAccountsCount }}
+                <template v-if="loading">
+                  <SlaviaShimmerText width="4.5rem" height="1.35em" />
+                </template>
+                <template v-else>
+                  {{ totalAccountsCount }}
+                </template>
               </p>
             </div>
             <div class="h-10 w-px bg-default/60" />
@@ -512,7 +509,12 @@ onMounted(() => {
                 Po filtrach
               </p>
               <p class="text-2xl font-black tabular-nums text-primary">
-                {{ loading ? '—' : displayedAccounts.length }}
+                <template v-if="loading">
+                  <SlaviaShimmerText width="3.5rem" height="1.35em" />
+                </template>
+                <template v-else>
+                  {{ displayedAccounts.length }}
+                </template>
               </p>
             </div>
           </div>
@@ -673,17 +675,8 @@ onMounted(() => {
                   Zbanowany
                 </UBadge>
               </div>
-              <p
-                v-if="a.email"
-                class="truncate text-sm text-muted"
-              >
-                {{ a.email }}
-              </p>
-              <p
-                v-else
-                class="text-xs italic text-muted"
-              >
-                Brak adresu e-mail
+              <p class="text-xs italic text-muted">
+                Konto bez e-maila
               </p>
             </div>
           </div>
@@ -844,6 +837,7 @@ onMounted(() => {
     <UModal
       v-model:open="modalOpen"
       title="Nowe konto"
+      :dismissible="true"
       :ui="{ content: 'rounded-3xl sm:max-w-md' }"
     >
       <template #content>
@@ -973,6 +967,7 @@ onMounted(() => {
     <UModal
       v-model:open="accountModalOpen"
       title="Edycja konta"
+      :dismissible="true"
       :ui="{ content: 'rounded-3xl sm:max-w-md' }"
     >
       <template #content>
@@ -997,15 +992,6 @@ onMounted(() => {
                 <UInput
                   v-model="accountUsername"
                   autocomplete="username"
-                  size="lg"
-                  class="w-full rounded-xl"
-                />
-              </UFormField>
-              <UFormField label="E-mail (opcjonalnie)">
-                <UInput
-                  v-model="accountEmail"
-                  type="email"
-                  autocomplete="email"
                   size="lg"
                   class="w-full rounded-xl"
                 />
@@ -1047,6 +1033,7 @@ onMounted(() => {
     <UModal
       v-model:open="deleteModalOpen"
       title="Usunąć konto?"
+      :dismissible="true"
       :ui="{ content: 'rounded-3xl sm:max-w-sm' }"
     >
       <template #content>
@@ -1089,6 +1076,7 @@ onMounted(() => {
     <UModal
       v-model:open="banModalOpen"
       title="Zbanować konto?"
+      :dismissible="true"
       :ui="{ content: 'rounded-3xl sm:max-w-md' }"
     >
       <template #content>

@@ -35,7 +35,7 @@ const selectedTrainingDay = ref<Date | null>(null)
 const recurringOverrides = ref<Array<{ session_date: string, status: string }>>([])
 
 const { data: athletes } = await useAsyncData('attendance-athletes', async (): Promise<Athlete[]> => {
-  if (auth.isTrainer.value || auth.isAdmin.value || auth.isSuperAdmin.value) {
+  if (auth.isTrainer.value || auth.isSuperAdmin.value) {
     return api<Athlete[]>('/api/athletes/admin').catch(() => [])
   }
   const me = await api<Athlete | null>('/api/athletes/me').catch(() => null)
@@ -323,6 +323,7 @@ onMounted(() => {
     <UModal
       v-model:open="attendanceModalOpen"
       :title="selectedTrainingDay ? `Trening · ${format(selectedTrainingDay, 'dd.MM.yyyy')}` : 'Zapis obecności'"
+      :dismissible="true"
       :ui="{ content: 'max-w-lg' }"
     >
       <template #content>

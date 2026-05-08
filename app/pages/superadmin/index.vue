@@ -132,7 +132,7 @@ const quickLinks = [
     bg: 'bg-teal-500/10'
   },
   {
-    title: 'Moje konto',
+    title: 'Ustawienia konta',
     description: 'E-mail, avatar i hasło',
     icon: 'i-lucide-user-cog',
     to: '/profil',
