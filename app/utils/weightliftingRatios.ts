@@ -301,7 +301,11 @@ export function computeRatios(inputs: Partial<Record<ExerciseId, number>>): Rati
   })
 
   return edges
-    .filter(e => e.ratio.min !== 1 || e.ratio.max !== 1 || e.to === 'snatch' || e.to === 'clean_jerk')
+    // Bez self-loopów: porównanie ćwiczenia z samym sobą zawsze daje 100% i nic nie wnosi.
+    // Definicje `snatch → snatch` / `clean_jerk → clean_jerk` w `EXERCISES` istnieją
+    // wyłącznie po to, żeby zachować je w katalogu (nazwy, pola wejściowe), ale do
+    // wyników kalkulatora ich nie liczymy.
+    .filter(e => e.to !== e.from)
     .map((e) => {
       const baseRaw = inputs[e.from]
       const base = typeof baseRaw === 'number' ? baseRaw : null

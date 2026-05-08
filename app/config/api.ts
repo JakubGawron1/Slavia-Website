@@ -71,7 +71,9 @@ export const apiRoutes = {
   chat: {
     threads: '/api/chat/threads',
     thread: (threadId: string) => `/api/chat/threads/${encodeURIComponent(threadId)}`,
-    messages: (threadId: string) => `/api/chat/threads/${encodeURIComponent(threadId)}/messages`
+    messages: (threadId: string) => `/api/chat/threads/${encodeURIComponent(threadId)}/messages`,
+    /** Admin-only: ręczne czyszczenie bezczynnych wątków (POST, opcjonalny `?days=N`). */
+    adminPrune: '/api/chat/admin/prune'
   },
   comments: {
     collection: '/api/comments'
@@ -120,16 +122,23 @@ export const apiRoutes = {
     approve: (id: string) => `/api/payments/${encodeURIComponent(id)}/approve`,
     reject: (id: string) => `/api/payments/${encodeURIComponent(id)}/reject`,
     createApprovedForAthlete: (athleteId: string) =>
-      `/api/payments/athlete/${encodeURIComponent(athleteId)}/approved`
+      `/api/payments/athlete/${encodeURIComponent(athleteId)}/approved`,
+    /** Toggle „przelew stały" — backend w razie włączenia od razu robi catch-up za bieżący miesiąc. */
+    standingOrder: (athleteId: string) =>
+      `/api/payments/athlete/${encodeURIComponent(athleteId)}/standing-order`
   },
   results: {
     collection: '/api/results',
-    /** Publiczna tablica (JOIN zawodnik + zawody), bez mutacji. */
+    /** Publiczna tablica (JOIN zawodnik + zawody), bez mutacji — wyłącznie wpisy `kind = competition`. */
     publicBoard: '/api/results/public-board',
     publicBoardOlympic: '/api/results/public-board-olympic',
     pending: '/api/results/pending',
     all: '/api/results/all',
-    athlete: (id: string) => `/api/results/athlete/${encodeURIComponent(id)}`,
+    /** Domyślnie tylko zawody (publiczne). `?kind=training` lub `?kind=all` wymaga zalogowania. */
+    athlete: (id: string, kind?: 'competition' | 'training' | 'all') => {
+      const base = `/api/results/athlete/${encodeURIComponent(id)}`
+      return kind ? `${base}?kind=${encodeURIComponent(kind)}` : base
+    },
     athleteSubmissions: (id: string) =>
       `/api/results/athlete/${encodeURIComponent(id)}/submissions`,
     one: (id: string) => `/api/results/${encodeURIComponent(id)}`,

@@ -9,8 +9,10 @@ export function useApi() {
       options.baseURL = auth.apiBase.value
       // Ochrona przed „wiszącymi” requestami, które w praktyce wyglądają jak zawieszona nawigacja.
       // ofetch obsługuje timeout (ms) — ustawiamy domyślny, jeśli caller nie podał własnego.
+      // Dla FormData (uploady na Cloudinary) zwiększamy timeout — duże zdjęcia/filmy
+      // potrafią przesyłać się znacznie dłużej niż zwykły JSON request.
       if (typeof options.timeout !== 'number') {
-        options.timeout = 20_000
+        options.timeout = options.body instanceof FormData ? 120_000 : 20_000
       }
       const headers = new Headers(options.headers as HeadersInit)
       if (auth.token.value) {

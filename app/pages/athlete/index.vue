@@ -114,6 +114,8 @@ async function submitMembershipPayment() {
 }
 
 const resultForm = reactive<{
+  kind: 'competition' | 'training'
+  location: string
   snatch: number | null
   clean_and_jerk: number | null
   total: number
@@ -122,6 +124,8 @@ const resultForm = reactive<{
   bench_kg: number | null
   deadlift_kg: number | null
 }>({
+  kind: 'competition',
+  location: '',
   snatch: null,
   clean_and_jerk: null,
   total: 0,
@@ -162,7 +166,11 @@ async function submitResult() {
   try {
     const body: Record<string, unknown> = {
       athlete_id: athlete.value.id,
-      date: resultForm.date
+      date: resultForm.date,
+      kind: resultForm.kind
+    }
+    if (resultForm.kind === 'competition' && resultForm.location.trim()) {
+      body.location = resultForm.location.trim()
     }
     if (resultForm.snatch != null && resultForm.snatch > 0) body.snatch = resultForm.snatch
     if (resultForm.clean_and_jerk != null && resultForm.clean_and_jerk > 0) {
@@ -182,11 +190,19 @@ async function submitResult() {
       method: 'POST',
       body
     })
-    toast.add({ title: 'Zgłoszono wynik', description: 'Wynik trafił do oczekujących.', color: 'success' })
+    toast.add({
+      title: 'Zgłoszono wynik',
+      description: resultForm.kind === 'training'
+        ? 'Wpis treningowy trafił do oczekujących.'
+        : 'Wynik z zawodów trafił do oczekujących.',
+      color: 'success'
+    })
     resultForm.snatch = null
     resultForm.clean_and_jerk = null
     resultForm.total = 0
     resultForm.date = new Date().toISOString().substring(0, 10)
+    resultForm.kind = 'competition'
+    resultForm.location = ''
     resultForm.squat_kg = null
     resultForm.bench_kg = null
     resultForm.deadlift_kg = null
@@ -687,12 +703,35 @@ const pageLead = computed(() => {
             Wynik startowy
           </div>
           <p class="slavia-form-panel__desc">
+            Wybierz typ wpisu — <strong>zawody</strong> liczą się do PB, rankingu i wykresu na karcie zawodnika;
+            <strong>trening</strong> jest widoczny tylko po zalogowaniu i nie wpływa na publiczne rekordy.
             Możesz zgłosić sam dwubój, same ćwiczenia siłowe albo oba naraz — brakujące rwanie/podrzut uzupełniamy wartościami z Twojego profilu w bazie.
             Po akceptacji trenera wpis wejdzie do kart i rankingów.
           </p>
         </div>
         <div class="slavia-form-panel__body">
           <div class="grid gap-5 sm:grid-cols-2">
+            <UFormField label="Typ wpisu" description="Zawody trafiają na publiczną listę">
+              <select
+                v-model="resultForm.kind"
+                class="slavia-select w-full py-3 text-[15px]"
+              >
+                <option value="competition">Zawody (publiczne)</option>
+                <option value="training">Trening (po zalogowaniu)</option>
+              </select>
+            </UFormField>
+            <UFormField
+              v-if="resultForm.kind === 'competition'"
+              label="Miejsce zawodów"
+              description="Opcjonalnie"
+            >
+              <UInput
+                v-model="resultForm.location"
+                placeholder="np. Ruda Śląska, Mistrzostwa Śląska"
+                size="lg"
+                class="w-full"
+              />
+            </UFormField>
             <UFormField label="Rwanie (kg)">
               <UInputNumber
                 v-model="resultForm.snatch"
@@ -805,10 +844,16 @@ const pageLead = computed(() => {
                 <th class="px-4 py-3 text-left font-semibold text-muted">
                   Data
                 </th>
+                <th class="px-4 py-3 text-left font-semibold text-muted">
+                  Typ
+                </th>
                 <th class="px-4 py-3 text-center font-semibold text-muted">
                   Suma
                 </th>
-                <th class="px-4 py-3 text-center font-semibold text-muted">
+                <th class="hidden sm:table-cell px-4 py-3 text-left font-semibold text-muted">
+                  Miejsce
+                </th>
+                <th class="hidden lg:table-cell px-4 py-3 text-center font-semibold text-muted">
                   Siła (opcj.)
                 </th>
                 <th class="px-4 py-3 text-center font-semibold text-muted">
@@ -825,10 +870,23 @@ const pageLead = computed(() => {
                 <td class="px-4 py-3 text-muted">
                   {{ r.date }}
                 </td>
+                <td class="px-4 py-3">
+                  <UBadge
+                    :color="(r.kind ?? 'competition') === 'training' ? 'info' : 'primary'"
+                    variant="subtle"
+                    size="sm"
+                  >
+                    {{ (r.kind ?? 'competition') === 'training' ? 'Trening' : 'Zawody' }}
+                  </UBadge>
+                </td>
                 <td class="px-4 py-3 text-center font-bold">
                   {{ r.total }} kg
                 </td>
-                <td class="max-w-40 px-4 py-3 text-center text-[11px] text-muted leading-snug">
+                <td class="hidden sm:table-cell px-4 py-3 text-muted">
+                  <span v-if="r.location">{{ r.location }}</span>
+                  <span v-else class="text-muted/60">—</span>
+                </td>
+                <td class="hidden lg:table-cell max-w-40 px-4 py-3 text-center text-[11px] text-muted leading-snug">
                   <template v-if="r.squat_kg != null || r.bench_kg != null || r.deadlift_kg != null">
                     P {{ r.squat_kg ?? '—' }} · W {{ r.bench_kg ?? '—' }} · M {{ r.deadlift_kg ?? '—' }}
                   </template>

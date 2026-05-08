@@ -41,12 +41,12 @@ const items = computed(() => {
     ...(auth.isLoggedIn.value ? [{ label: 'Ogłoszenia', to: '/ogloszenia' }] : []),
     { label: 'Aktualności', to: '/aktualnosci' },
     { label: 'Galeria', to: '/galeria' },
-    { label: 'Zawodnicy', to: '/zawodnicy' },
-    { label: 'Wyniki', to: '/wyniki-zawodow' },
+    // „Wyniki” są teraz sekcją na stronie „Zawodnicy” (#wyniki-zawodow).
+    { label: 'Zawodnicy i wyniki', to: '/zawodnicy' },
     { label: 'Kalendarz', to: '/kalendarz' },
     { label: 'Kontakt', to: '/kontakt' },
     { label: 'Sinclair', to: '/kalkulator-sinclair' },
-    // „Proporcje” przeniesione do dashboardów (zamiast osobnej pozycji w top-nav).
+    { label: 'Proporcje', to: '/kalkulator-proporcji' },
   ]
 
   const adminLinks: ManagementLink[] = []

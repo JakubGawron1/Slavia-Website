@@ -12,6 +12,7 @@ import {
   type SlaviaThemePreset
 } from '~/composables/useSlaviaAppearance'
 import { getApiDetailedErrorMessage, getApiErrorMessage } from '~/composables/useApi'
+import { apiRoutes } from '~/config/api'
 import type { CompetitionResult, GroupedAdminAccounts } from '~/types/models'
 
 definePageMeta({ middleware: 'superadmin' })
@@ -115,6 +116,46 @@ async function devUnbanUser() {
     toast.add({ title: 'Unban nieudany', description: getApiDetailedErrorMessage(e), color: 'error' })
   } finally {
     banPending.value = false
+  }
+}
+
+// --- Konserwacja czatu: ręczne pruning bezczynnych wątków --------------------
+// Backend ma background-task, ale czasem chcemy „posprzątać natychmiast" (np. po
+// teście / incydencie). Endpoint domyślnie używa progu 30 dni; pole `days` pozwala
+// wymusić agresywniejszy próg (1..=365) bez zmiany kodu.
+const chatPruneDays = ref<number | null>(null)
+const chatPruneRunning = ref(false)
+const chatPruneLastResult = ref<{ deleted: number, inactivity_days: number, at: string } | null>(null)
+
+async function runChatPrune() {
+  if (chatPruneRunning.value) {
+    return
+  }
+  const days = chatPruneDays.value
+  if (days != null && (!Number.isFinite(days) || days < 1 || days > 365)) {
+    toast.add({ title: 'Niepoprawne dni', description: 'Wartość musi być w zakresie 1..365.', color: 'warning' })
+    return
+  }
+  chatPruneRunning.value = true
+  try {
+    const url = days != null
+      ? `${apiRoutes.chat.adminPrune}?days=${encodeURIComponent(days)}`
+      : apiRoutes.chat.adminPrune
+    const res = await apiFetch<{ deleted: number, inactivity_days: number }>(url, { method: 'POST' })
+    chatPruneLastResult.value = {
+      deleted: res?.deleted ?? 0,
+      inactivity_days: res?.inactivity_days ?? (days ?? 30),
+      at: new Date().toLocaleString('pl-PL')
+    }
+    toast.add({
+      title: 'Czyszczenie zakończone',
+      description: `Usunięto ${chatPruneLastResult.value.deleted} wątków (próg ${chatPruneLastResult.value.inactivity_days} dni).`,
+      color: 'success'
+    })
+  } catch (e) {
+    toast.add({ title: 'Czyszczenie nieudane', description: getApiDetailedErrorMessage(e), color: 'error' })
+  } finally {
+    chatPruneRunning.value = false
   }
 }
 
@@ -1592,6 +1633,48 @@ function toastStorageApisAvailability() {
           </p>
           <pre class="mt-1 max-h-28 overflow-auto whitespace-pre-wrap break-all text-[10px] text-highlighted">{{ userAgentDisplay || '—' }}</pre>
         </div>
+      </UCard>
+
+      <UCard class="rounded-2xl border-default/60 p-4 shadow-sm lg:col-span-12">
+        <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+          <div class="min-w-0">
+            <p class="text-[10px] font-bold uppercase tracking-wider text-muted">
+              Konserwacja czatu
+            </p>
+            <p class="mt-1 text-[11px] leading-snug text-muted">
+              Ręczne wymuszenie czyszczenia bezczynnych wątków. Domyślnie usuwane są wątki bez wiadomości od 30 dni — pole „dni" pozwala wymusić agresywniejszy próg (1–365).
+            </p>
+          </div>
+          <div class="flex flex-wrap items-end gap-2">
+            <UFormField label="Dni bezczynności" size="xs" class="w-32">
+              <UInput
+                v-model.number="chatPruneDays"
+                type="number"
+                :min="1"
+                :max="365"
+                size="sm"
+                placeholder="30"
+              />
+            </UFormField>
+            <UButton
+              icon="i-lucide-broom"
+              size="sm"
+              variant="soft"
+              color="warning"
+              :loading="chatPruneRunning"
+              @click="runChatPrune()"
+            >
+              Wyczyść nieaktywne wątki
+            </UButton>
+          </div>
+        </div>
+        <p
+          v-if="chatPruneLastResult"
+          class="mt-3 rounded-lg border border-default/40 bg-muted/10 px-3 py-2 text-[11px] font-mono text-muted"
+        >
+          Ostatni przebieg: usunięto <strong class="font-bold text-highlighted">{{ chatPruneLastResult.deleted }}</strong> wątków
+          (próg: {{ chatPruneLastResult.inactivity_days }} dni · {{ chatPruneLastResult.at }}).
+        </p>
       </UCard>
 
       <UCard class="rounded-2xl border-default/60 p-4 shadow-sm lg:col-span-12">

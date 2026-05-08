@@ -50,6 +50,8 @@ const form = reactive<{
   profile_tagline: string | undefined
   public_bio: string | undefined
   is_active: boolean
+  /** Przelew stały — system co miesiąc automatycznie tworzy Approved-składkę. */
+  has_standing_order: boolean
   create_account: boolean
   username: string
   password: string
@@ -68,11 +70,15 @@ const form = reactive<{
   profile_tagline: undefined,
   public_bio: undefined,
   is_active: true,
+  has_standing_order: false,
   // Account fields
   create_account: false,
   username: '',
   password: ''
 })
+
+/** Stan flagi przy otwarciu modala — żeby przy zapisie wysłać PATCH tylko gdy się zmienił. */
+const standingOrderInitial = ref(false)
 
 const uploadLoading = ref(false)
 
@@ -269,6 +275,8 @@ function resetForm() {
   form.profile_tagline = undefined
   form.public_bio = undefined
   form.is_active = true
+  form.has_standing_order = false
+  standingOrderInitial.value = false
   form.create_account = false
   form.username = ''
   form.password = ''
@@ -350,6 +358,8 @@ function openEdit(p: Player) {
   form.profile_tagline = p.profile_tagline ?? undefined
   form.public_bio = p.public_bio ?? undefined
   form.is_active = p.is_active !== false
+  form.has_standing_order = p.has_standing_order === true
+  standingOrderInitial.value = form.has_standing_order
   athleteAccountSelected.value = p.user_id ?? ''
   modalOpen.value = true
 }
@@ -365,6 +375,7 @@ async function onFileChange(e: Event) {
   const file = input.files[0] as File
   const formData = new FormData()
   formData.append('file', file)
+  formData.append('purpose', 'athletes')
 
   uploadLoading.value = true
   try {
@@ -450,6 +461,32 @@ async function savePlayer() {
       } catch (e) {
         toast.add({
           title: 'Zapisano zawodnika — nie zapisano przypisań do zawodów',
+          description: getApiErrorMessage(e),
+          color: 'warning'
+        })
+      }
+    }
+
+    // „Przelew stały" — wysyłamy patch tylko jeśli wartość się zmieniła (lub przy create + on).
+    const standingOrderChanged = wasEditing
+      ? form.has_standing_order !== standingOrderInitial.value
+      : form.has_standing_order
+    if (standingOrderChanged) {
+      try {
+        await api(apiRoutes.payments.standingOrder(athleteId), {
+          method: 'PATCH',
+          body: { enabled: form.has_standing_order }
+        })
+        if (form.has_standing_order) {
+          toast.add({
+            title: 'Włączono przelew stały',
+            description: 'System automatycznie zapisuje opłaconą składkę co miesiąc.',
+            color: 'success'
+          })
+        }
+      } catch (e) {
+        toast.add({
+          title: 'Zapisano zawodnika — nie udało się zaktualizować przelewu stałego',
           description: getApiErrorMessage(e),
           color: 'warning'
         })
@@ -596,6 +633,15 @@ watch(
                           class="size-3.5 text-primary"
                         />
                       </UTooltip>
+                      <UTooltip
+                        v-if="p.has_standing_order"
+                        text="Przelew stały — auto-składka co miesiąc"
+                      >
+                        <UIcon
+                          name="i-lucide-repeat"
+                          class="size-3.5 text-emerald-500"
+                        />
+                      </UTooltip>
                     </div>
                     <p class="text-[10px] uppercase font-bold text-muted">
                       {{ (p as any).gender === 'male' ? 'Mężczyzna' : 'Kobieta' }}
@@ -673,7 +719,7 @@ watch(
       v-model:open="modalOpen"
       :title="editingId ? 'Edycja zawodnika' : 'Nowy zawodnik'"
       :dismissible="true"
-      :ui="{ content: 'rounded-3xl sm:max-w-3xl md:max-w-4xl' }"
+      :ui="{ content: 'rounded-3xl sm:max-w-3xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl' }"
     >
       <template #content>
         <div class="slavia-form-modal">
@@ -1058,7 +1104,7 @@ watch(
                 >
                   <UInput
                     v-model="form.profile_tagline"
-                    placeholder="np. Junior · waga 73 kg"
+                    placeholder="np. Junior · waga 75 kg"
                     size="lg"
                     class="w-full"
                   />
@@ -1100,10 +1146,24 @@ watch(
                     class="w-full"
                   />
                 </UFormField>
-                <div class="flex flex-col gap-6 border-t border-default/60 pt-5 sm:flex-row sm:items-center sm:justify-between">
-                  <div class="flex items-center gap-3">
-                    <USwitch v-model="form.is_active" />
-                    <span class="text-sm font-semibold text-highlighted">Aktywny w kadrze</span>
+                <div class="flex flex-col gap-4 border-t border-default/60 pt-5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+                  <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
+                    <div class="flex items-center gap-3">
+                      <USwitch v-model="form.is_active" />
+                      <span class="text-sm font-semibold text-highlighted">Aktywny w kadrze</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                      <USwitch v-model="form.has_standing_order" />
+                      <div class="flex flex-col">
+                        <span class="flex items-center gap-1.5 text-sm font-semibold text-highlighted">
+                          <UIcon name="i-lucide-repeat" class="size-3.5 text-emerald-500" />
+                          Przelew stały (auto-składka)
+                        </span>
+                        <span class="text-[11px] text-muted">
+                          Co miesiąc system sam zaznacza składkę jako opłaconą.
+                        </span>
+                      </div>
+                    </div>
                   </div>
                   <div class="slavia-form-actions w-full sm:w-auto">
                     <UButton

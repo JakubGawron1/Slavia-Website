@@ -72,6 +72,7 @@ async function onAvatarFileChange(e: Event) {
   try {
     const fd = new FormData()
     fd.append('file', file)
+    fd.append('purpose', 'avatar')
     const res = await apiFetch<{ url: string }>('/api/upload', { method: 'POST', body: fd })
     const url = (res.url || '').trim()
     if (!url) {

@@ -838,7 +838,7 @@ onMounted(() => {
       v-model:open="modalOpen"
       title="Nowe konto"
       :dismissible="true"
-      :ui="{ content: 'rounded-3xl sm:max-w-md' }"
+      :ui="{ content: 'rounded-3xl sm:max-w-2xl md:max-w-3xl lg:max-w-4xl' }"
     >
       <template #content>
         <div class="slavia-form-modal">
@@ -968,7 +968,7 @@ onMounted(() => {
       v-model:open="accountModalOpen"
       title="Edycja konta"
       :dismissible="true"
-      :ui="{ content: 'rounded-3xl sm:max-w-md' }"
+      :ui="{ content: 'rounded-3xl sm:max-w-2xl md:max-w-3xl lg:max-w-4xl' }"
     >
       <template #content>
         <div class="slavia-form-modal">

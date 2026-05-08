@@ -2,7 +2,8 @@
 import { computeRatios, type ExerciseId } from '~/utils/weightliftingRatios'
 import { parseLiveNumber } from '~/utils/liveNumber'
 
-definePageMeta({ middleware: 'athlete-or-trainer' })
+// Kalkulator jest publiczny — żadna logika nie odpytuje API, wszystko liczy się
+// po stronie klienta na podstawie wprowadzonych przez użytkownika maxów. Stąd brak middleware.
 
 useSeoMeta({
   title: 'Kalkulator złotych proporcji — dwubój — Slavia',

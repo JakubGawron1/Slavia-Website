@@ -45,6 +45,8 @@ export interface Athlete {
   /** Dłuższy opis na publicznej stronie zawodnika. */
   public_bio?: string | null
   is_active: boolean
+  /** Czy zawodnik ma przelew stały — system co miesiąc automatycznie tworzy Approved-składkę. */
+  has_standing_order?: boolean
 }
 
 /** Odpowiedź `GET /api/athletes/:id` — bez powiązania konta i bez notatek wewnętrznych. */
@@ -98,6 +100,13 @@ export interface MyCalendarEntry {
   participants: CalendarParticipantBrief[]
 }
 
+/**
+ * Rozróżnienie wpisu w `results`:
+ * - `competition` — start zawodów (publiczne, ranking, wykres na karcie zawodnika);
+ * - `training` — wynik z treningu (widoczny po zalogowaniu, nie liczy się do PB).
+ */
+export type ResultKind = 'competition' | 'training'
+
 export interface CompetitionResult {
   id: string
   athlete_id: string
@@ -106,6 +115,10 @@ export interface CompetitionResult {
   total: number
   status: 'Pending' | 'Approved' | 'Rejected'
   date: string
+  /** Domyślnie `competition` (po stronie backendu); starsze rekordy bez pola traktujemy jako zawody. */
+  kind?: ResultKind
+  /** Miejsce zawodów — wypełniane tylko dla `kind = 'competition'`. */
+  location?: string | null
   squat_kg?: number | null
   bench_kg?: number | null
   deadlift_kg?: number | null

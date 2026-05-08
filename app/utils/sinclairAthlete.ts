@@ -1,6 +1,6 @@
 /**
  * Wspólna masa (kg) do Sinclaira: najpierw `bodyweight`, inaczej sensowny parse limitu z `weight_category`
- * (np. „U20 M — 73 kg”, „+105 kg”) — bez `replace(/\D/g)`, które psuje wartości typu „U20”.
+ * (np. „U20 M — 75 kg”, „+110 kg”) — bez `replace(/\D/g)`, które psuje wartości typu „U20”.
  */
 export function parseWeightCategoryLimitKg(raw: string | null | undefined): number {
   if (!raw?.trim()) return 0

@@ -324,7 +324,7 @@ onMounted(() => {
       v-model:open="attendanceModalOpen"
       :title="selectedTrainingDay ? `Trening · ${format(selectedTrainingDay, 'dd.MM.yyyy')}` : 'Zapis obecności'"
       :dismissible="true"
-      :ui="{ content: 'max-w-lg' }"
+      :ui="{ content: 'sm:max-w-2xl md:max-w-3xl lg:max-w-4xl' }"
     >
       <template #content>
         <div class="space-y-4 p-4 sm:p-5">

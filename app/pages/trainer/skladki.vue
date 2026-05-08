@@ -46,6 +46,19 @@ const pendingOnly = computed(() => rows.value.filter(r => r.has_pending && !r.ha
 const approvedOnly = computed(() => rows.value.filter(r => r.has_approved))
 const noneOnly = computed(() => rows.value.filter(r => !r.has_pending && !r.has_approved))
 
+/** Mapa id → flaga przelewu stałego, używana do dekoracji ikoną w kartach statusów. */
+const standingOrderById = computed(() => {
+  const map = new Map<string, boolean>()
+  for (const a of athletes.value || []) {
+    if (a.has_standing_order) map.set(a.id, true)
+  }
+  return map
+})
+
+const standingOrderAthletes = computed(() =>
+  (athletes.value || []).filter(a => a.has_standing_order && a.is_active !== false)
+)
+
 async function approvePayment(id: string) {
   try {
     await apiFetch(apiRoutes.payments.approve(id), { method: 'PATCH' })
@@ -150,6 +163,46 @@ async function createApprovedPayment() {
       </div>
     </UCard>
 
+    <UCard class="mb-6 border-emerald-500/30 bg-emerald-500/5">
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <div class="flex items-start gap-3">
+          <div class="rounded-full bg-emerald-500/15 p-2">
+            <UIcon name="i-lucide-repeat" class="size-5 text-emerald-500" />
+          </div>
+          <div>
+            <h2 class="text-lg font-semibold text-highlighted">Przelewy stałe</h2>
+            <p class="text-sm text-muted">
+              {{ standingOrderAthletes.length }}
+              {{ standingOrderAthletes.length === 1 ? 'zawodnik ma' : 'zawodników ma' }}
+              włączony przelew stały — system <strong>co miesiąc</strong> automatycznie zaznacza
+              im składkę jako opłaconą. Włączasz to w panelu zawodnika.
+            </p>
+          </div>
+        </div>
+        <UButton
+          to="/trainer/zawodnicy"
+          size="sm"
+          variant="soft"
+          color="primary"
+          icon="i-lucide-users"
+        >
+          Zarządzaj
+        </UButton>
+      </div>
+      <div v-if="standingOrderAthletes.length > 0" class="mt-4 flex flex-wrap gap-2">
+        <UBadge
+          v-for="a in standingOrderAthletes"
+          :key="a.id"
+          color="success"
+          variant="subtle"
+          class="gap-1"
+        >
+          <UIcon name="i-lucide-repeat" class="size-3" />
+          {{ a.full_name }}
+        </UBadge>
+      </div>
+    </UCard>
+
     <div class="grid gap-4 lg:grid-cols-3">
       <UCard class="border-default/70">
         <div class="flex items-center justify-between gap-2">
@@ -158,7 +211,14 @@ async function createApprovedPayment() {
         </div>
         <div class="mt-3 space-y-2">
           <div v-for="r in noneOnly" :key="r.athlete_id" class="flex items-center justify-between rounded-xl border border-default/60 px-3 py-2">
-            <span class="truncate text-sm text-highlighted">{{ r.full_name }}</span>
+            <span class="flex items-center gap-1.5 truncate text-sm text-highlighted">
+              <UIcon
+                v-if="standingOrderById.get(r.athlete_id)"
+                name="i-lucide-repeat"
+                class="size-3.5 shrink-0 text-emerald-500"
+              />
+              {{ r.full_name }}
+            </span>
             <UBadge color="error" variant="subtle" size="xs">nieopł.</UBadge>
           </div>
           <p v-if="noneOnly.length === 0" class="text-sm text-muted">Brak.</p>
@@ -172,7 +232,14 @@ async function createApprovedPayment() {
         </div>
         <div class="mt-3 space-y-2">
           <div v-for="r in pendingOnly" :key="r.athlete_id" class="flex items-center justify-between rounded-xl border border-default/60 px-3 py-2">
-            <span class="truncate text-sm text-highlighted">{{ r.full_name }}</span>
+            <span class="flex items-center gap-1.5 truncate text-sm text-highlighted">
+              <UIcon
+                v-if="standingOrderById.get(r.athlete_id)"
+                name="i-lucide-repeat"
+                class="size-3.5 shrink-0 text-emerald-500"
+              />
+              {{ r.full_name }}
+            </span>
             <UBadge color="warning" variant="subtle" size="xs">pending</UBadge>
           </div>
           <p v-if="pendingOnly.length === 0" class="text-sm text-muted">Brak.</p>
@@ -186,7 +253,14 @@ async function createApprovedPayment() {
         </div>
         <div class="mt-3 space-y-2">
           <div v-for="r in approvedOnly" :key="r.athlete_id" class="flex items-center justify-between rounded-xl border border-default/60 px-3 py-2">
-            <span class="truncate text-sm text-highlighted">{{ r.full_name }}</span>
+            <span class="flex items-center gap-1.5 truncate text-sm text-highlighted">
+              <UIcon
+                v-if="standingOrderById.get(r.athlete_id)"
+                name="i-lucide-repeat"
+                class="size-3.5 shrink-0 text-emerald-500"
+              />
+              {{ r.full_name }}
+            </span>
             <UBadge color="success" variant="subtle" size="xs">{{ r.approved_amount_pln }} zł</UBadge>
           </div>
           <p v-if="approvedOnly.length === 0" class="text-sm text-muted">Brak.</p>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { getApiErrorMessage } from '~/composables/useApi'
 import { stripHtmlTags } from '~/utils/html'
 import { sanitizeRichHtml } from '~/utils/sanitizeHtml'
 
@@ -76,6 +77,7 @@ async function onFileChange(e: Event) {
 
   const formData = new FormData()
   formData.append('file', file)
+  formData.append('purpose', 'blog')
   uploadLoading.value = true
   try {
     const res = await apiFetch<{ url: string }>('/api/upload', {
@@ -85,7 +87,7 @@ async function onFileChange(e: Event) {
     image_url.value = res.url
     toast.add({ title: 'Zdjęcie przesłane', color: 'success' })
   } catch (err) {
-    toast.add({ title: 'Błąd uploadu', description: String(err), color: 'error' })
+    toast.add({ title: 'Błąd uploadu', description: getApiErrorMessage(err), color: 'error' })
   } finally {
     uploadLoading.value = false
   }

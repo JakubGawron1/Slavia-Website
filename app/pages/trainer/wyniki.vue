@@ -48,6 +48,8 @@ const rows = computed(() => {
   return [...list].sort((a, b) => b.date.localeCompare(a.date))
 })
 
+type ResultKindOption = 'competition' | 'training'
+
 const modalOpen = ref(false)
 const editing = ref<CompetitionResult | null>(null)
 const form = reactive({
@@ -56,6 +58,8 @@ const form = reactive({
   total: 0,
   date: '',
   status: 'Approved' as 'Pending' | 'Approved' | 'Rejected',
+  kind: 'competition' as ResultKindOption,
+  location: '' as string,
   squat_kg: null as number | null,
   bench_kg: null as number | null,
   deadlift_kg: null as number | null
@@ -73,9 +77,21 @@ const formAdd = reactive({
   clean_and_jerk: 0,
   total: 0,
   date: '',
+  kind: 'competition' as ResultKindOption,
+  location: '' as string,
   squat_kg: null as number | null,
   bench_kg: null as number | null,
   deadlift_kg: null as number | null
+})
+
+const kindFilter = ref<'all' | ResultKindOption>('all')
+
+const filteredRows = computed(() => {
+  if (kindFilter.value === 'all') return rows.value
+  return rows.value.filter((r) => {
+    const k = (r.kind ?? 'competition') as ResultKindOption
+    return k === kindFilter.value
+  })
 })
 
 function defaultDateStr() {
@@ -88,6 +104,8 @@ function openAddModal() {
   formAdd.clean_and_jerk = 0
   formAdd.total = 0
   formAdd.date = defaultDateStr()
+  formAdd.kind = 'competition'
+  formAdd.location = ''
   formAdd.squat_kg = null
   formAdd.bench_kg = null
   formAdd.deadlift_kg = null
@@ -110,7 +128,11 @@ async function submitAdd() {
       snatch: formAdd.snatch,
       clean_and_jerk: formAdd.clean_and_jerk,
       total: formAdd.snatch + formAdd.clean_and_jerk,
-      date: formAdd.date
+      date: formAdd.date,
+      kind: formAdd.kind
+    }
+    if (formAdd.kind === 'competition' && formAdd.location.trim()) {
+      body.location = formAdd.location.trim()
     }
     if (formAdd.squat_kg != null && formAdd.squat_kg > 0) body.squat_kg = formAdd.squat_kg
     if (formAdd.bench_kg != null && formAdd.bench_kg > 0) body.bench_kg = formAdd.bench_kg
@@ -121,7 +143,7 @@ async function submitAdd() {
       body
     })
     toast.add({
-      title: 'Start zapisany',
+      title: formAdd.kind === 'training' ? 'Wpis treningowy zapisany' : 'Start zapisany',
       description: 'Wpis kadry jest od razu zatwierdzany — bez kolejki oczekujących.',
       color: 'success'
     })
@@ -129,7 +151,7 @@ async function submitAdd() {
     await refresh()
   } catch (e) {
     toast.add({
-      title: 'Nie udało się dodać startu',
+      title: 'Nie udało się dodać wyniku',
       description: getApiErrorMessage(e),
       color: 'error'
     })
@@ -145,6 +167,8 @@ function openEdit(r: CompetitionResult) {
   form.total = r.total
   form.date = r.date.slice(0, 10)
   form.status = r.status
+  form.kind = ((r.kind ?? 'competition') as ResultKindOption)
+  form.location = r.location ?? ''
   form.squat_kg = r.squat_kg ?? null
   form.bench_kg = r.bench_kg ?? null
   form.deadlift_kg = r.deadlift_kg ?? null
@@ -185,6 +209,7 @@ async function saveEdit() {
   }
   saving.value = true
   try {
+    const trimmedLocation = form.location.trim()
     await apiFetch(`/api/results/${editing.value.id}`, {
       method: 'PATCH',
       body: {
@@ -193,12 +218,14 @@ async function saveEdit() {
         total: form.snatch + form.clean_and_jerk,
         date: form.date,
         status: form.status,
+        kind: form.kind,
+        location: form.kind === 'competition' ? (trimmedLocation || null) : null,
         squat_kg: form.squat_kg != null && form.squat_kg > 0 ? form.squat_kg : null,
         bench_kg: form.bench_kg != null && form.bench_kg > 0 ? form.bench_kg : null,
         deadlift_kg: form.deadlift_kg != null && form.deadlift_kg > 0 ? form.deadlift_kg : null
       }
     })
-    toast.add({ title: 'Zapisano start', color: 'success' })
+    toast.add({ title: 'Zapisano wynik', color: 'success' })
     modalOpen.value = false
     await refresh()
   } catch (e) {
@@ -259,7 +286,7 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
           icon="i-lucide-plus-circle"
           @click="openAddModal"
         >
-          Dodaj start (zatwierdzony)
+          Dodaj wynik (zatwierdzony)
         </UButton>
         <UButton
           icon="i-lucide-refresh-ccw"
@@ -272,15 +299,51 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
       </div>
     </div>
 
+    <div class="mb-4 flex flex-wrap items-center gap-2 rounded-2xl border border-default/60 bg-muted/15 p-1.5">
+      <UButton
+        size="sm"
+        :variant="kindFilter === 'all' ? 'solid' : 'ghost'"
+        :color="kindFilter === 'all' ? 'primary' : 'neutral'"
+        class="min-h-9"
+        @click="kindFilter = 'all'"
+      >
+        Wszystko ({{ rows.length }})
+      </UButton>
+      <UButton
+        size="sm"
+        :variant="kindFilter === 'competition' ? 'solid' : 'ghost'"
+        :color="kindFilter === 'competition' ? 'primary' : 'neutral'"
+        class="min-h-9"
+        @click="kindFilter = 'competition'"
+      >
+        Zawody ({{ rows.filter(r => (r.kind ?? 'competition') === 'competition').length }})
+      </UButton>
+      <UButton
+        size="sm"
+        :variant="kindFilter === 'training' ? 'solid' : 'ghost'"
+        :color="kindFilter === 'training' ? 'primary' : 'neutral'"
+        class="min-h-9"
+        @click="kindFilter = 'training'"
+      >
+        Trening ({{ rows.filter(r => r.kind === 'training').length }})
+      </UButton>
+    </div>
+
     <UCard :ui="{ body: 'p-0 overflow-x-auto' }">
-      <table class="w-full min-w-[760px] text-sm">
+      <table class="w-full min-w-[920px] text-sm">
         <thead class="border-b border-default bg-muted/30">
           <tr>
             <th class="px-4 py-3 text-left font-semibold text-muted">
               Data
             </th>
             <th class="px-4 py-3 text-left font-semibold text-muted">
+              Typ
+            </th>
+            <th class="px-4 py-3 text-left font-semibold text-muted">
               Zawodnik
+            </th>
+            <th class="px-4 py-3 text-left font-semibold text-muted">
+              Miejsce
             </th>
             <th class="px-4 py-3 text-right font-semibold text-muted">
               Rwanie
@@ -305,7 +368,7 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
         <tbody class="divide-y divide-default">
           <tr v-if="pending">
             <td
-              colspan="8"
+              colspan="10"
               class="px-4 py-10 text-center text-muted"
             >
               <UIcon
@@ -314,17 +377,17 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
               />
             </td>
           </tr>
-          <tr v-else-if="rows.length === 0">
+          <tr v-else-if="filteredRows.length === 0">
             <td
-              colspan="8"
+              colspan="10"
               class="px-4 py-10 text-center text-muted"
             >
-              Brak zapisanych startów.
+              Brak zapisanych wyników w tym filtrze.
             </td>
           </tr>
           <template v-else>
             <tr
-              v-for="r in rows"
+              v-for="r in filteredRows"
               :key="r.id"
               class="hover:bg-muted/15 transition-colors"
             >
@@ -332,7 +395,22 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
                 {{ r.date.slice(0, 10) }}
               </td>
               <td class="px-4 py-3">
+                <UBadge
+                  :color="(r.kind ?? 'competition') === 'training' ? 'info' : 'primary'"
+                  variant="subtle"
+                  size="sm"
+                >
+                  {{ (r.kind ?? 'competition') === 'training' ? 'Trening' : 'Zawody' }}
+                </UBadge>
+              </td>
+              <td class="px-4 py-3">
                 {{ nameById.get(r.athlete_id) || r.athlete_id }}
+              </td>
+              <td class="px-4 py-3 text-muted">
+                <span v-if="r.location">
+                  {{ r.location }}
+                </span>
+                <span v-else class="text-muted/60">—</span>
               </td>
               <td class="px-4 py-3 text-right tabular-nums">
                 {{ r.snatch }}
@@ -382,9 +460,9 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
 
     <UModal
       v-model:open="modalOpen"
-      title="Edytuj start"
+      title="Edytuj wynik"
       :dismissible="true"
-      :ui="{ overlay: 'z-[190]', content: 'z-[200]' }"
+      :ui="{ overlay: 'z-[190]', content: 'z-[200] sm:max-w-3xl md:max-w-4xl lg:max-w-5xl' }"
     >
       <template #content>
         <div class="slavia-form-modal">
@@ -397,10 +475,50 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
                     class="size-4"
                   />
                 </span>
-                Wynik startu
+                Dane wyniku
               </div>
             </div>
             <div class="slavia-form-panel__body">
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <UFormField label="Typ wpisu" description="Tylko zawody trafiają na publiczną listę i wykres">
+                  <select
+                    v-model="form.kind"
+                    class="slavia-select w-full py-3 text-[15px]"
+                  >
+                    <option value="competition">
+                      Zawody (publiczne)
+                    </option>
+                    <option value="training">
+                      Trening (tylko po zalogowaniu)
+                    </option>
+                  </select>
+                </UFormField>
+                <UFormField
+                  v-if="form.kind === 'competition'"
+                  label="Miejsce zawodów"
+                  description="Opcjonalnie"
+                >
+                  <UInput
+                    v-model="form.location"
+                    placeholder="np. Ruda Śląska, Mistrzostwa Śląska"
+                    size="lg"
+                    class="w-full"
+                  />
+                </UFormField>
+                <UFormField
+                  v-else
+                  label="Miejsce"
+                  description="Treningi automatycznie oznaczane jako sala klubowa."
+                >
+                  <UInput
+                    model-value="Slavia"
+                    size="lg"
+                    class="w-full"
+                    disabled
+                    icon="i-lucide-dumbbell"
+                  />
+                </UFormField>
+              </div>
               <div class="grid grid-cols-2 gap-4">
                 <UFormField label="Rwanie (kg)">
                   <UInput
@@ -522,15 +640,17 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
 
     <UModal
       v-model:open="addModalOpen"
-      title="Nowy start (kadra)"
+      title="Nowy wynik (kadra)"
       :dismissible="true"
-      :ui="{ overlay: 'z-[190]', content: 'z-[200]' }"
+      :ui="{ overlay: 'z-[190]', content: 'z-[200] sm:max-w-3xl md:max-w-4xl lg:max-w-5xl' }"
     >
       <template #content>
         <div class="slavia-form-modal">
           <p class="rounded-xl border border-default/60 bg-muted/15 px-4 py-3 text-sm text-muted dark:bg-muted/10">
-            Start zapisany przez trenera lub administratora trafia od razu jako
-            <strong class="text-highlighted">zatwierdzony</strong> i liczy się w rankingu oraz na karcie zawodnika.
+            Wynik zapisany przez trenera lub administratora trafia od razu jako
+            <strong class="text-highlighted">zatwierdzony</strong>.
+            Wpisy <strong>z zawodów</strong> liczą się w rankingu, na karcie zawodnika i w publicznej liście wyników.
+            Wpisy <strong>treningowe</strong> są widoczne tylko po zalogowaniu i nie wpływają na PB.
           </p>
           <div class="slavia-form-panel">
             <div class="slavia-form-panel__header">
@@ -541,7 +661,7 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
                     class="size-4"
                   />
                 </span>
-                Dane startu
+                Dane wyniku
               </div>
             </div>
             <div class="slavia-form-panel__body">
@@ -565,6 +685,46 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
                   </option>
                 </select>
               </UFormField>
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <UFormField label="Typ wpisu" description="Tylko zawody trafiają na publiczną listę">
+                  <select
+                    v-model="formAdd.kind"
+                    class="slavia-select w-full py-3 text-[15px]"
+                  >
+                    <option value="competition">
+                      Zawody (publiczne)
+                    </option>
+                    <option value="training">
+                      Trening (tylko po zalogowaniu)
+                    </option>
+                  </select>
+                </UFormField>
+                <UFormField
+                  v-if="formAdd.kind === 'competition'"
+                  label="Miejsce zawodów"
+                  description="Opcjonalnie"
+                >
+                  <UInput
+                    v-model="formAdd.location"
+                    placeholder="np. Ruda Śląska, Mistrzostwa Śląska"
+                    size="lg"
+                    class="w-full"
+                  />
+                </UFormField>
+                <UFormField
+                  v-else
+                  label="Miejsce"
+                  description="Treningi automatycznie oznaczane jako sala klubowa."
+                >
+                  <UInput
+                    model-value="Slavia"
+                    size="lg"
+                    class="w-full"
+                    disabled
+                    icon="i-lucide-dumbbell"
+                  />
+                </UFormField>
+              </div>
               <div class="grid grid-cols-2 gap-4">
                 <UFormField label="Rwanie (kg)">
                   <UInput

@@ -110,6 +110,7 @@ async function onFileChange(e: Event) {
 
   const formData = new FormData()
   formData.append('file', file)
+  formData.append('purpose', 'gallery')
   uploadLoading.value = true
   try {
     const res = await apiFetch<{ url: string }>('/api/upload', {
@@ -335,7 +336,7 @@ const sortedPhotos = computed(() => {
       v-model:open="modalOpen"
       :title="editingId ? 'Edytuj zdjęcie' : 'Nowe zdjęcie'"
       :dismissible="true"
-      :ui="{ content: 'max-h-[90vh] overflow-y-auto' }"
+      :ui="{ content: 'max-h-[90vh] overflow-y-auto sm:max-w-2xl md:max-w-3xl lg:max-w-4xl' }"
     >
       <template #content>
         <div class="flex flex-col gap-4 p-4 sm:p-6">

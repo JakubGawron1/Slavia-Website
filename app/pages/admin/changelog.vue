@@ -8,6 +8,26 @@ useSeoMeta({
 
 const updates = [
   {
+    version: 'v2.9.8-beta',
+    date: '8 Maj 2026',
+    title: 'Profil zawodnika 2.0, automatyzacja czatu i składek, publiczny kalkulator proporcji',
+    features: [
+      'Strona zawodnika przeprojektowana w „magazynowym” stylu: hero z dużym avatarem, KPI strip, sekcja bio i pełna oś czasu startów oraz treningów.',
+      'Nowy wykres łączony zawody+treningi (`AthleteCombinedChart`) z proporcjonalną osią czasu i statystykami formy (PB, trend 90 dni, średni dwubój, najlepszy Sinclair).',
+      'Wyniki: wpisy treningowe automatycznie oznaczane miejscem „Slavia”, backfill istniejących rekordów i widoczność miejsca w panelach trenera/zawodnika.',
+      'Czat: wątki bez aktywności od 30 dni są automatycznie usuwane (background task co 6h), z audit logiem i ręcznym endpointem `POST /api/chat/admin/prune` plus UI w panelu superadmin/developer.',
+      'Składki: nowa flaga „przelew stały” na zawodniku — scheduler raz na 12h tworzy zatwierdzone wpłaty za bieżący miesiąc, idempotentnie i z podsumowaniem w panelu trenera.',
+      'Kalkulator złotych proporcji: pełna publiczna dostępność (bez logowania) + skrót w głównej nawigacji obok kalkulatora Sinclair.',
+      'Powiadomienia: zamiast surowych hashy z bazy pokazują ludzkie nazwy (zawodnik, klub, wątek) — niezależnie od kontekstu.',
+      'Strona główna odświeżona, z większą ilością treści i lepszą hierarchią sekcji.',
+      'Kategorie wagowe zaktualizowane do regulaminu PZPC 2026; wyniki zawodów publiczne, treningi widoczne tylko po zalogowaniu.',
+      'Modale edycji (zawodnik, wynik, ogłoszenie, wydarzenie kalendarza, zdjęcie galerii, obecność, konto admina) poszerzone responsywnie do `xl`/`5xl`/`6xl` — wygodniejsze formularze na desktopie.',
+      'Sprzątanie: usunięte strony robiące tylko redirect (`/wyniki-zawodow`, `/ranking`, `/blog/*`) — kanoniczne URL-e prowadzą wprost do docelowych widoków.',
+      'Naprawiony upload zdjęć w blogu/aktualnościach i pozostałych miejscach, gdzie wcześniej zwracał błąd.'
+    ],
+    type: 'feature'
+  },
+  {
     version: 'v2.4.0-beta.1',
     date: '8 Maj 2026',
     title: 'Beta: shimmer loading, kalkulatory live, devtools iframe i ulepszona analiza sztangi',
