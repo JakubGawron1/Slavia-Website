@@ -122,6 +122,39 @@ const filteredResults = computed(() => {
   })
 })
 
+const filledCount = computed(() => {
+  let n = 0
+  for (const key of ALL_KEYS) {
+    const v = inputs[key]
+    if (typeof v === 'number' && Number.isFinite(v) && v > 0) n++
+  }
+  return n
+})
+
+/** Relacje, gdzie podano oba ćwiczenia (dają feedback + notatkę). */
+const relationAnalyses = computed(() => {
+  const rows = results.value.filter(r => r.actualPct != null)
+  const rank = (s: string) => (s === 'below' ? 0 : s === 'above' ? 1 : s === 'in_range' ? 2 : 3)
+  return [...rows].sort((a, b) => {
+    const ra = rank(a.status)
+    const rb = rank(b.status)
+    if (ra !== rb) return ra - rb
+    const la = `${a.pl} ${a.fromPl}`.toLowerCase()
+    const lb = `${b.pl} ${b.fromPl}`.toLowerCase()
+    return la.localeCompare(lb, 'pl')
+  })
+})
+
+const relationSummary = computed(() => {
+  const rows = relationAnalyses.value
+  return {
+    total: rows.length,
+    inRange: rows.filter(r => r.status === 'in_range').length,
+    below: rows.filter(r => r.status === 'below').length,
+    above: rows.filter(r => r.status === 'above').length
+  }
+})
+
 function fmtKg(n: number | null) {
   if (n == null || Number.isNaN(n)) return '—'
   return `${n.toLocaleString('pl-PL', { maximumFractionDigits: 1 })} kg`
@@ -164,6 +197,10 @@ function rowAccentClass(s: string) {
             Wpisz znane maxy (1RM). Dostaniesz sugerowane <strong class="text-default">widełki</strong> oraz miłe wskazówki,
             co najczęściej poprawia balans między bojami (technika, mobilność, transfer siły).
           </p>
+          <p class="mt-3 max-w-3xl text-sm leading-relaxed text-muted sm:text-base">
+            <strong class="text-default">Możesz wpisać kilka powiązanych ćwiczeń naraz</strong> — dostaniesz feedback dla każdej relacji,
+            gdzie podasz oba ćwiczenia (dotyczy też ćwiczeń dodatkowych).
+          </p>
           <div class="mt-5 flex flex-wrap gap-2">
             <UBadge color="success" variant="subtle" size="sm">
               W widełkach: {{ summary.inRange }}
@@ -176,6 +213,12 @@ function rowAccentClass(s: string) {
             </UBadge>
             <UBadge color="neutral" variant="subtle" size="sm">
               Policzone: {{ summary.computed }} / {{ summary.total }}
+            </UBadge>
+            <UBadge color="neutral" variant="subtle" size="sm">
+              Wpisane: {{ filledCount }}
+            </UBadge>
+            <UBadge color="primary" variant="subtle" size="sm">
+              Analiz relacji: {{ relationAnalyses.length }}
             </UBadge>
           </div>
         </div>
@@ -332,9 +375,49 @@ function rowAccentClass(s: string) {
           </template>
 
           <div class="space-y-3">
+            <UAlert
+              v-if="relationAnalyses.length > 0"
+              color="primary"
+              variant="subtle"
+              icon="i-lucide-sparkles"
+              title="Analiza relacji (dla wpisanych wartości)"
+              :description="`Masz ${relationSummary.total} relacji: ${relationSummary.inRange} w widełkach, ${relationSummary.below} poniżej, ${relationSummary.above} powyżej. Możesz wpisać wiele ćwiczeń naraz — analizujemy wszystkie relacje między nimi.`"
+            />
+
+            <div v-if="relationAnalyses.length > 0" class="grid gap-3 sm:grid-cols-2">
+              <UCard
+                v-for="r in relationAnalyses"
+                :key="`rel-${r.id}-${r.from}`"
+                class="rounded-2xl border border-default/60"
+                :class="rowAccentClass(r.status)"
+              >
+                <div class="flex items-start justify-between gap-3">
+                  <div class="min-w-0">
+                    <p class="text-xs font-bold text-highlighted">
+                      {{ r.pl }} względem {{ r.fromPl }}
+                    </p>
+                    <p class="mt-1 text-xs text-muted">
+                      Masz: <span class="font-mono text-default">{{ fmtKg(r.actualKg) }}</span>
+                      (<span class="font-mono text-default">{{ r.actualPct }}%</span>) · Widełki:
+                      <span class="font-mono text-default">{{ fmtPct(r.ratio.min, r.ratio.max) }}</span>
+                    </p>
+                  </div>
+                  <UBadge :color="statusColor(r.status)" variant="subtle" size="sm" class="shrink-0">
+                    <template v-if="r.status === 'in_range'">W widełkach</template>
+                    <template v-else-if="r.status === 'below'">Poniżej</template>
+                    <template v-else-if="r.status === 'above'">Powyżej</template>
+                    <template v-else>—</template>
+                  </UBadge>
+                </div>
+                <p v-if="r.note" class="mt-3 text-sm text-muted leading-relaxed">
+                  {{ r.note }}
+                </p>
+              </UCard>
+            </div>
+
             <div
               v-for="r in filteredResults"
-              :key="r.id"
+              :key="`${r.id}-${r.from}`"
               class="flex flex-col gap-2 rounded-2xl border px-4 py-3 transition-colors sm:flex-row sm:items-start sm:justify-between"
               :class="rowAccentClass(r.status)"
             >

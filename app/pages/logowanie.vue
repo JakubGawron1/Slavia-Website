@@ -18,7 +18,6 @@ async function submit() {
   loading.value = true
   try {
     const user = await auth.login(username.value.trim(), password.value)
-    await auth.fetchMe()
     const raw = route.query.redirect
     const redirect = typeof raw === 'string' ? raw : undefined
 
@@ -40,7 +39,7 @@ async function submit() {
 </script>
 
 <template>
-  <div class="relative flex min-h-[100dvh] items-center justify-center overflow-hidden bg-linear-to-br from-background via-background to-primary/5 px-4 py-10 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))]">
+  <div class="relative flex min-h-dvh items-center justify-center overflow-hidden bg-linear-to-br from-background via-background to-primary/5 px-4 py-10 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))]">
     <!-- Dekoracyjne tło z animowanymi elementami -->
     <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
       <div class="absolute -top-24 -left-24 h-96 w-96 rounded-full bg-primary/10 blur-3xl" />

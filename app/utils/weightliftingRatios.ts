@@ -43,6 +43,14 @@ export type ExerciseDef = {
   adviceAbove?: string
 }
 
+type RatioEdge = {
+  to: ExerciseId
+  from: ExerciseId
+  ratio: RatioRange
+  adviceBelow?: string
+  adviceAbove?: string
+}
+
 /**
  * „Złote proporcje” / ratio ranges — praktyczne benchmarki do planowania.
  *
@@ -228,6 +236,20 @@ function clampPct(p: number) {
   return Math.max(0, Math.min(999, p))
 }
 
+function invertRatio(r: RatioRange): RatioRange | null {
+  // Odwrócenie relacji: jeśli X = [min..max] * Y, to Y = [1/max .. 1/min] * X
+  if (!Number.isFinite(r.min) || !Number.isFinite(r.max) || r.min <= 0 || r.max <= 0) return null
+  const min = 1 / r.max
+  const max = 1 / r.min
+  if (!Number.isFinite(min) || !Number.isFinite(max)) return null
+  return {
+    min: Math.min(min, max),
+    max: Math.max(min, max),
+    source: `Odwrócone: ${r.source}`,
+    heuristic: r.heuristic
+  }
+}
+
 function buildFriendlyNote(args: {
   status: 'in_range' | 'below' | 'above'
   exercisePl: string
@@ -254,14 +276,38 @@ function buildFriendlyNote(args: {
 export function computeRatios(inputs: Partial<Record<ExerciseId, number>>): RatioResult[] {
   const nameById = new Map(EXERCISES.map(e => [e.id, e.pl] as const))
 
-  return EXERCISES
-    .filter(e => e.ratio.min !== 1 || e.ratio.max !== 1 || e.id === 'snatch' || e.id === 'clean_jerk')
+  const forwardEdges: RatioEdge[] = EXERCISES.map(e => ({
+    to: e.id,
+    from: e.from,
+    ratio: e.ratio,
+    adviceBelow: e.adviceBelow,
+    adviceAbove: e.adviceAbove
+  }))
+
+  const reverseEdges: RatioEdge[] = forwardEdges
+    .map((e) => {
+      if (e.to === e.from) return null
+      const inv = invertRatio(e.ratio)
+      if (!inv) return null
+      // Wersja odwrócona ma sens obliczeniowy i daje feedback, ale wskazówki (advice)
+      // są pisane pod „kierunek” oryginalny — więc w odwróceniu zostawiamy tylko ogólny opis.
+      return { to: e.from, from: e.to, ratio: inv } satisfies RatioEdge
+    })
+    .filter((x): x is RatioEdge => !!x)
+
+  // Dedup: gdyby kiedyś pojawiły się duplikaty w definicjach.
+  const edges = [...forwardEdges, ...reverseEdges].filter((e, idx, arr) => {
+    return arr.findIndex(x => x.to === e.to && x.from === e.from) === idx
+  })
+
+  return edges
+    .filter(e => e.ratio.min !== 1 || e.ratio.max !== 1 || e.to === 'snatch' || e.to === 'clean_jerk')
     .map((e) => {
       const baseRaw = inputs[e.from]
       const base = typeof baseRaw === 'number' ? baseRaw : null
       const minKg = typeof base === 'number' ? base * e.ratio.min : null
       const maxKg = typeof base === 'number' ? base * e.ratio.max : null
-      const actualRaw = inputs[e.id]
+      const actualRaw = inputs[e.to]
       const actual = typeof actualRaw === 'number' ? actualRaw : null
       const actualPct = (typeof base === 'number' && typeof actual === 'number' && base > 0)
         ? clampPct((actual / base) * 100)
@@ -276,7 +322,7 @@ export function computeRatios(inputs: Partial<Record<ExerciseId, number>>): Rati
         else status = 'in_range'
         note = buildFriendlyNote({
           status,
-          exercisePl: e.pl,
+          exercisePl: nameById.get(e.to) || e.to,
           basePl: nameById.get(e.from) || e.from,
           actualPct,
           minPct,
@@ -286,8 +332,8 @@ export function computeRatios(inputs: Partial<Record<ExerciseId, number>>): Rati
         })
       }
       return {
-        id: e.id,
-        pl: e.pl,
+        id: e.to,
+        pl: nameById.get(e.to) || e.to,
         from: e.from,
         fromPl: nameById.get(e.from) || e.from,
         minKg: minKg != null ? Number(minKg.toFixed(1)) : null,
