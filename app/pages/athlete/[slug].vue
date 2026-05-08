@@ -362,14 +362,6 @@ const approvedSinclair = computed(() => {
             >
               Lista zawodników
             </UButton>
-            <UButton
-              to="/ranking"
-              variant="outline"
-              color="neutral"
-              block
-            >
-              Ranking
-            </UButton>
           </div>
           <p class="mt-4 text-xs leading-relaxed text-muted">
             Rozbudowany opis i slogan ustawiają trener, administrator lub superadministrator w panelu kadry.

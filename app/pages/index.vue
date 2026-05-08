@@ -12,9 +12,9 @@
       class="relative overflow-hidden max-md:pb-4"
       :ui="{
         container: 'lg:gap-12 xl:gap-16',
-        title: 'text-pretty max-w-3xl text-3xl leading-tight sm:text-4xl lg:text-5xl xl:text-6xl xl:max-w-4xl',
-        description: 'text-pretty max-w-2xl text-base text-muted sm:text-lg lg:text-xl lg:max-w-3xl lg:leading-relaxed',
-        links: 'flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap lg:gap-4'
+        title: 'text-pretty max-w-3xl text-center mx-auto text-3xl leading-tight sm:text-4xl lg:text-5xl xl:text-6xl xl:max-w-4xl',
+        description: 'text-pretty max-w-2xl text-center mx-auto text-base text-muted sm:text-lg lg:text-xl lg:max-w-3xl lg:leading-relaxed',
+        links: 'flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap lg:gap-4 justify-center'
       }"
     >
       <template #title>

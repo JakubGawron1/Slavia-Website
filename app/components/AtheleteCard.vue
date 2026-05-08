@@ -12,6 +12,8 @@ export interface Athlete {
   name: string
   birthYear: number
   weightCategory: number
+  weightCategoryText: string
+  bodyweight?: number | null
   snatch: number
   cleanAndJerk: number
   total: number
@@ -152,7 +154,7 @@ function clearHover() {
           >
           <div class="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-primary text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg whitespace-nowrap">
             <template v-if="athlete.weightCategory > 0">
-              Kat. {{ athlete.weightCategory }} kg
+              Kat. {{ athlete.weightCategoryText }} kg
             </template>
             <template v-else>
               Kat. —

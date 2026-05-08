@@ -43,16 +43,14 @@ async function submit() {
   <div class="relative flex min-h-[100dvh] items-center justify-center overflow-hidden bg-linear-to-br from-background via-background to-primary/5 px-4 py-10 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))]">
     <!-- Dekoracyjne tło z animowanymi elementami -->
     <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-      <div class="absolute -top-24 -left-24 h-96 w-96 rounded-full bg-primary/10 blur-3xl animate-pulse" />
+      <div class="absolute -top-24 -left-24 h-96 w-96 rounded-full bg-primary/10 blur-3xl" />
       <div
-        class="absolute -bottom-24 -right-24 h-96 w-96 rounded-full bg-primary/5 blur-3xl animate-pulse"
-        style="animation-delay: 2s"
+        class="absolute -bottom-24 -right-24 h-96 w-96 rounded-full bg-primary/5 blur-3xl"
       />
 
       <!-- Pływające ikony -->
       <div
-        class="absolute top-1/4 left-1/10 text-primary/10 animate-bounce"
-        style="animation-duration: 4s"
+        class="absolute top-1/4 left-1/10 text-primary/10"
       >
         <UIcon
           name="i-lucide-dumbbell"
@@ -60,15 +58,14 @@ async function submit() {
         />
       </div>
       <div
-        class="absolute bottom-1/4 right-1/10 text-primary/10 animate-bounce"
-        style="animation-duration: 5s; animation-delay: 1s"
+        class="absolute bottom-1/4 right-1/10 text-primary/10"
       >
         <UIcon
           name="i-lucide-trophy"
           class="size-24 -rotate-12"
         />
       </div>
-      <div class="absolute top-3/4 left-1/4 text-primary/5 animate-pulse">
+      <div class="absolute top-3/4 left-1/4 text-primary/5">
         <UIcon
           name="i-lucide-award"
           class="size-32"
@@ -85,7 +82,7 @@ async function submit() {
           class="inline-block transition-all duration-500 hover:scale-110 hover:rotate-3"
         >
           <div class="relative">
-            <div class="absolute -inset-4 bg-primary/20 blur-xl rounded-full animate-pulse" />
+            <div class="absolute -inset-4 bg-primary/20 blur-xl rounded-full" />
             <img
               src="/logo.png"
               alt="Slavia Logo"

@@ -127,52 +127,8 @@ watch(
 
 <template>
   <UApp>
-    <!-- Splash: pełna nieprzezroczysta warstwa; bez fade-out całego overlay (wtedy „przeświecał” tekst strony). -->
-    <div
-      v-if="isAppLoading"
-      class="fixed inset-0 z-[10050] flex flex-col items-center justify-center bg-[var(--ui-bg)]"
-      aria-busy="true"
-      aria-live="polite"
-    >
-      <Transition
-        appear
-        enter-active-class="transition duration-400 ease-out"
-        enter-from-class="opacity-0 scale-[0.97]"
-        enter-to-class="opacity-100 scale-100"
-      >
-        <div class="relative flex flex-col items-center px-6">
-          <div class="absolute -inset-8 animate-pulse rounded-full bg-primary/20 blur-2xl" />
-          <img
-            src="/logo.png"
-            alt="Slavia Logo"
-            class="relative h-32 w-auto animate-bounce mb-8"
-          >
-          <div class="flex items-center gap-2">
-            <div
-              class="h-2 w-2 animate-bounce rounded-full bg-primary"
-              style="animation-delay: 0.1s"
-            />
-            <div
-              class="h-2 w-2 animate-bounce rounded-full bg-primary"
-              style="animation-delay: 0.2s"
-            />
-            <div
-              class="h-2 w-2 animate-bounce rounded-full bg-primary"
-              style="animation-delay: 0.3s"
-            />
-          </div>
-          <p class="mt-4 text-sm font-bold uppercase tracking-[0.3em] text-primary italic">
-            Ładowanie...
-          </p>
-        </div>
-      </Transition>
-    </div>
-
     <!-- Bez overflow-x na tym wrapperze: html/body już mają clip — podwójny clip ucinał obramowania / końcówki belki nawigacji (np. „Aktualności”). -->
-    <div
-      class="transition-opacity duration-300 ease-out min-w-0"
-      :class="isAppLoading ? 'opacity-0 pointer-events-none select-none' : 'opacity-100'"
-    >
+    <div class="transition-opacity duration-300 ease-out min-w-0 opacity-100">
       <ClubSiteHeader>
         <template #actions>
           <div class="flex shrink-0 items-center gap-1.5 sm:gap-3">
@@ -267,10 +223,18 @@ watch(
               CKS Slavia Ruda Śląska
             </p>
             <div class="flex flex-col text-xs text-muted">
-              <span class="flex items-center gap-2"><UIcon
-                name="i-lucide-map-pin"
-                class="size-3"
-              /> ul. Konopnickiej 13, 41-700 Ruda Śląska</span>
+              <a
+                href="https://maps.app.goo.gl/zqGy466nizCv45c57"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="flex items-center gap-2 hover:text-highlighted transition-colors"
+              >
+                <UIcon
+                  name="i-lucide-map-pin"
+                  class="size-3"
+                />
+                ul. Konopnickiej 13, 41-700 Ruda Śląska
+              </a>
               <span class="flex items-center gap-2"><UIcon
                 name="i-lucide-calendar"
                 class="size-3"
@@ -285,7 +249,7 @@ watch(
               © {{ new Date().getFullYear() }} Slavia Ruda Śląska.
             </p>
             <p class="text-[10px] text-muted/50">
-              Realizacja: Neution Studio · Jakub Gawron
+              Realizacja: Neution Studio · Jakub Gawron · Dawid Węgrzyn
             </p>
             <p
               class="text-[10px] font-mono text-muted/70"

@@ -112,9 +112,7 @@ const items = computed(() => {
   if (athleteLinks.length) {
     panelSections.push({ heading: 'Panel zawodnika', links: athleteLinks })
   }
-  if (accountLinks.length) {
-    panelSections.push({ heading: 'Konto', links: accountLinks })
-  }
+  // Removed account section from panel dropdown
 
   return { main, panelSections }
 })

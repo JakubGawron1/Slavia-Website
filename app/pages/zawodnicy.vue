@@ -4,11 +4,31 @@ import { athleteProfilePath } from '~/utils/slug'
 import type { Athlete as AthleteModel, AthletePaymentStatusRow, CompetitionResult } from '~/types/models'
 import type { SinclairGender } from '~/utils/sinclair'
 import { sinclairTotal } from '~/utils/sinclair'
-import { effectiveBodyweightKgForSinclair } from '~/utils/sinclairAthlete'
+import { effectiveBodyweightKgForSinclair, parseWeightCategoryLimitKg } from '~/utils/sinclairAthlete'
 import { apiRoutes } from '~/config/api'
 
 function cardGender(g: string | null | undefined): SinclairGender | null {
   return g === 'male' || g === 'female' ? g : null
+}
+
+const MALE_WEIGHT_CATEGORIES = [60, 65, 70, 75, 85, 95, 110]
+const FEMALE_WEIGHT_CATEGORIES = [49, 53, 57, 61, 69, 77, 86]
+
+function resolveWeightCategoryThreshold(gender: string | null | undefined, bodyweight?: number | null, rawCategory?: string | null): number {
+  const cats = gender === 'female' ? FEMALE_WEIGHT_CATEGORIES : MALE_WEIGHT_CATEGORIES
+  const weight = bodyweight != null && Number.isFinite(bodyweight) && bodyweight > 0
+    ? bodyweight
+    : parseWeightCategoryLimitKg(rawCategory ?? undefined)
+  if (weight <= 0) return 0
+  return cats.find((c) => weight <= c) ?? cats[cats.length - 1]
+}
+
+function formatWeightCategoryText(threshold: number, bodyweight?: number | null): string {
+  if (threshold <= 0) return '—'
+  if (bodyweight != null && Number.isFinite(bodyweight) && bodyweight > 0 && bodyweight < threshold) {
+    return `${threshold} (${Math.round(bodyweight)})`
+  }
+  return String(threshold)
 }
 
 const config = useRuntimeConfig()
@@ -93,8 +113,8 @@ function mapToCard(p: AthleteModel, rb: Record<string, CompetitionResult[]>) {
   const totalKg = bestRow?.total ?? 0
 
   const effectiveWeight = effectiveBodyweightKgForSinclair(p)
-  const weightCategoryDisplay =
-    effectiveWeight > 0 ? Math.round(effectiveWeight) : 0
+  const weightCategoryDisplay = resolveWeightCategoryThreshold(p.gender ?? undefined, p.bodyweight ?? undefined, p.weight_category ?? undefined)
+  const weightCategoryText = formatWeightCategoryText(weightCategoryDisplay, p.bodyweight ?? undefined)
 
   const sg = cardGender(p.gender ?? undefined)
   let sc = 0
@@ -130,6 +150,8 @@ function mapToCard(p: AthleteModel, rb: Record<string, CompetitionResult[]>) {
     name: p.full_name,
     birthYear: p.birth_year || 0,
     weightCategory: weightCategoryDisplay,
+    weightCategoryText,
+    bodyweight: p.bodyweight ?? null,
     snatch: snatchKg,
     cleanAndJerk: cjKg,
     total: totalKg,
@@ -393,11 +415,11 @@ const filteredRankings = computed(() => {
                     <span class="truncate font-bold text-highlighted group-hover:text-primary">{{ p.name }}</span>
                   </NuxtLink>
                   <p class="mt-0.5 font-mono text-[11px] text-muted md:hidden">
-                    {{ p.weightCategory }} kg
+                    {{ p.weightCategoryText }}
                   </p>
                 </td>
                 <td class="hidden px-3 py-4 text-right font-mono text-muted md:table-cell md:px-6 md:py-6 lg:px-8">
-                  {{ p.weightCategory }} kg
+                  {{ p.weightCategoryText }}
                 </td>
                 <td class="px-3 py-4 text-right font-mono text-sm font-bold text-highlighted sm:px-6 sm:py-6 sm:text-base lg:px-8">
                   {{ p.total }} kg

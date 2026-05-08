@@ -863,7 +863,7 @@ const pageLead = computed(() => {
         <div class="grid gap-3 sm:grid-cols-2">
           <UCard class="rounded-2xl transition-colors hover:bg-muted/15 sm:col-span-2">
             <NuxtLink
-              to="/ranking"
+              to="/zawodnicy"
               class="flex items-center justify-between group"
             >
               <div class="flex items-center gap-3">
