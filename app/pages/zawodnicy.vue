@@ -26,6 +26,37 @@ interface PublicResultBoardRow {
   deadlift_kg?: number | null
 }
 
+function boardRowToCompetitionResult(row: PublicResultBoardRow): CompetitionResult {
+  return {
+    id: row.id,
+    athlete_id: row.athlete_id,
+    snatch: row.snatch,
+    clean_and_jerk: row.clean_and_jerk,
+    total: row.total,
+    status: 'Approved',
+    date: row.date,
+    kind: 'competition',
+    location: row.location ?? null,
+    squat_kg: row.squat_kg ?? null,
+    bench_kg: row.bench_kg ?? null,
+    deadlift_kg: row.deadlift_kg ?? null
+  }
+}
+
+/** Jedno zapytanie zamiast N× `/api/results/athlete/:id` — stabilniejsze na produkcji (SSR, limity równoległych połączeń). */
+function groupBoardRowsByAthlete(rows: PublicResultBoardRow[]): Record<string, CompetitionResult[]> {
+  const out: Record<string, CompetitionResult[]> = {}
+  for (const row of rows) {
+    const aid = row.athlete_id
+    if (!out[aid]) out[aid] = []
+    out[aid].push(boardRowToCompetitionResult(row))
+  }
+  for (const list of Object.values(out)) {
+    list.sort((a, b) => a.date.localeCompare(b.date))
+  }
+  return out
+}
+
 function cardGender(g: string | null | undefined): SinclairGender | null {
   return g === 'male' || g === 'female' ? g : null
 }
@@ -61,40 +92,43 @@ function publicBase() {
 
 const canEditResults = computed(() => auth.isTrainer.value)
 
-const { data: pageBundle, status, error } = await useAsyncData(
+const { data: pageBundle, status, error, pending: bundlePending } = await useAsyncData(
   'players-public-bundle',
   async () => {
     const base = publicBase()
-    const players = await $fetch<AthleteModel[]>(`${base}/api/athletes`).catch(() => [] as AthleteModel[])
-    const resultsByAthlete: Record<string, CompetitionResult[]> = {}
-    await Promise.all(
-      players.map(async (p) => {
-        // Domyślnie endpoint zwraca tylko `kind = competition` (publiczne).
-        resultsByAthlete[p.id] = await $fetch<CompetitionResult[]>(`${base}/api/results/athlete/${p.id}`).catch(
-          () => []
-        )
-      })
-    )
-    return { players, resultsByAthlete }
+    const [players, publicBoardRows] = await Promise.all([
+      $fetch<AthleteModel[]>(`${base}/api/athletes`).catch(() => [] as AthleteModel[]),
+      $fetch<PublicResultBoardRow[]>(`${base}/api/results/public-board`).catch(() => [] as PublicResultBoardRow[])
+    ])
+    const resultsByAthlete = groupBoardRowsByAthlete(publicBoardRows)
+    return { players, resultsByAthlete, publicBoardRows }
   },
-  { default: () => ({ players: [] as AthleteModel[], resultsByAthlete: {} as Record<string, CompetitionResult[]> }) }
+  {
+    default: () => ({
+      players: [] as AthleteModel[],
+      resultsByAthlete: {} as Record<string, CompetitionResult[]>,
+      publicBoardRows: [] as PublicResultBoardRow[]
+    })
+  }
 )
 
 const players = computed(() => pageBundle.value?.players ?? [])
 const resultsByAthlete = computed(() => pageBundle.value?.resultsByAthlete ?? {})
 
 /**
- * Publiczna tablica wyników z zawodów — tak samo jak była strona „Wyniki” (tabela na dole).
- * Endpoint zwraca tylko `kind = 'competition'`, więc tabela nie miesza wpisów treningowych.
+ * Tabela „Wyniki z zawodów” — ten sam zestaw co `/api/results/public-board-olympic`
+ * (dwubój olimpijski, `total >= 20`), liczona lokalnie z jednego pobrania tablicy publicznej.
  */
-const { data: publicResults, pending: publicResultsPending } = await useAsyncData(
-  'players-public-results-board',
-  () =>
-    apiFetch<PublicResultBoardRow[]>('/api/results/public-board-olympic').catch(
-      () => [] as PublicResultBoardRow[]
-    ),
-  { default: () => [] as PublicResultBoardRow[] }
-)
+const publicResults = computed(() => {
+  const rows = pageBundle.value?.publicBoardRows ?? []
+  return [...rows]
+    .filter(r => r.total >= 20)
+    .sort((a, b) => {
+      const byDate = b.date.localeCompare(a.date)
+      if (byDate !== 0) return byDate
+      return b.total - a.total
+    })
+})
 
 /**
  * Wyniki treningowe (wszystkich zawodników) — pobierane wyłącznie po zalogowaniu,
@@ -610,7 +644,7 @@ function formatPlTriple(r: { squat_kg?: number | null, bench_kg?: number | null,
       </div>
 
       <div
-        v-if="publicResultsPending"
+        v-if="bundlePending"
         class="flex justify-center py-14"
       >
         <UIcon

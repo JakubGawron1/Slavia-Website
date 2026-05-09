@@ -26,6 +26,17 @@ export default defineNuxtConfig({
 
   devtools: { enabled: true },
 
+  /** Pełne sourcemapy mocno wydłużają `nuxt build` (Vite + Nitro). Wyłączone domyślnie; ustaw `NUXT_SOURCEMAP=1` przed buildem, gdy potrzebujesz map do Sentry. */
+  sourcemap: {
+    client: process.env.NUXT_SOURCEMAP === '1',
+    server: process.env.NUXT_SOURCEMAP === '1'
+  },
+
+  nitro: {
+    /** Bez map Nitro szybciej pakuje serwer (domyślnie przy wyłączonym `sourcemap.server` i tak zwykle nie są potrzebne lokalnie). */
+    sourceMap: process.env.NUXT_SOURCEMAP === '1'
+  },
+
   css: ['~/assets/css/main.css'],
 
   runtimeConfig: {
@@ -63,6 +74,12 @@ export default defineNuxtConfig({
     }
   },
   vite: {
+    build: {
+      /** Liczenie gzip każdego pliku po bundlu — zbędny koszt czasu przy `pnpm build`. */
+      reportCompressedSize: false,
+      /** Nuxt + Tailwind + UI często przekraczają 500 kB w jednym chunku — bez ręcznego splitu Rollup i tak jest szybszy. */
+      chunkSizeWarningLimit: 1600
+    },
     optimizeDeps: {
       include: [
         'date-fns',
