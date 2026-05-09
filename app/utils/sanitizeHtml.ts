@@ -1,5 +1,5 @@
 import DOMPurify from 'isomorphic-dompurify'
-import type { Config } from 'dompurify'
+import type { Config } from 'isomorphic-dompurify'
 
 /** Tagi zgodne z wyjściem TipTap (StarterKit + Link, TextAlign, Highlight, Color itd.). */
 const RICH_HTML_CONFIG: Config = {
@@ -110,5 +110,5 @@ function ensureRichHtmlHooks(): void {
  */
 export function sanitizeRichHtml(html: string): string {
   ensureRichHtmlHooks()
-  return DOMPurify.sanitize(html ?? '', RICH_HTML_CONFIG)
+  return String(DOMPurify.sanitize(html ?? '', RICH_HTML_CONFIG))
 }

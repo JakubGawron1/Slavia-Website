@@ -481,6 +481,7 @@ async function deleteEvent(id: string) {
   try {
     await apiFetch(apiRoutes.competitions.one(id), { method: 'DELETE' })
     toast.add({ title: 'Usunięto', color: 'success' })
+    isModalOpen.value = false
     await refresh()
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (_err) {
@@ -867,7 +868,7 @@ function handleDayClick(day: Date) {
               :disabled="readOnlyEvent || !!bannerEvent?.external_source || isEditingClubRecurringTraining"
             />
           </UFormField>
-          <div class="grid grid-cols-2 gap-4">
+          <div class="slavia-form-grid grid-cols-1 sm:grid-cols-2">
             <UFormField
               label="Data"
               required

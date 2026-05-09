@@ -4,7 +4,7 @@ import { pl } from 'date-fns/locale'
 import { useBrowserNotifications } from '~/composables/useBrowserNotifications'
 import type { DevSuperadminLogLevel } from '~/composables/useDevSuperadminLogs'
 import { useDevSuperadminLogs } from '~/composables/useDevSuperadminLogs'
-import { DEV_TOOL_LINK_GROUPS } from '~/data/devToolsCatalog'
+import { DEV_TOOL_EXTERNAL_DOCS_GROUP, DEV_TOOL_ROUTE_SUPPLEMENT } from '~/data/devToolsCatalog'
 import type { ExperimentalFeatureId } from '~/data/experimentalFeaturesCatalog'
 import {
   slaviaAppearanceStorageKeys,
@@ -276,8 +276,6 @@ const systemLogRows = computed(() => systemLogs.items.value)
 
 const buildMeta = computed(() => `Środowisko: ${import.meta.dev ? 'development' : 'production'} · klient`)
 
-const devLinkGroups = DEV_TOOL_LINK_GROUPS
-
 const router = useRouter()
 
 function iconForRoute(path: string) {
@@ -296,51 +294,64 @@ function iconForRoute(path: string) {
   return 'i-lucide-link'
 }
 
-const autoRouteGroups = computed(() => {
-  const routes = router
-    .getRoutes()
-    .map(r => String(r.path || ''))
-    .filter(p =>
-      p.startsWith('/')
-      && !p.startsWith('/__')
-      && !p.startsWith('/_')
-      && !p.includes(':')
-      && !p.includes('*')
-      && !p.includes('()')
-    )
-  const uniq = [...new Set(routes)].sort((a, b) => a.localeCompare(b, 'pl'))
+/** Nuxt / Vue Router — trasy wewnętrzne do podglądu na mapie developera. */
+function isInspectRoute(path: string): boolean {
+  if (!path.startsWith('/')) return false
+  if (path.startsWith('/__')) return false
+  if (path.startsWith('/_nuxt')) return false
+  if (path.includes('pathMatch')) return false
+  return true
+}
 
-  const byGroup = new Map<string, string[]>()
-  for (const p of uniq) {
-    const seg = p === '/' ? 'Start' : (p.split('/')[1] || 'Inne')
-    const title =
-      seg === 'athlete' ? 'Trasy (auto): athlete'
-        : seg === 'trainer' ? 'Trasy (auto): trainer'
-          : seg === 'admin' ? 'Trasy (auto): admin'
-            : seg === 'superadmin' ? 'Trasy (auto): superadmin'
-              : 'Trasy (auto): public'
-    const list = byGroup.get(title) || []
-    list.push(p)
-    byGroup.set(title, list)
+/** Grupa alfabetycznie po pierwszym segmencie URL (wspólna skala dla całej aplikacji). */
+function routeMapGroupTitle(path: string): string {
+  if (path === '/') return 'Trasy (auto): /'
+  const seg = path.split('/').filter(Boolean)[0] || 'inne'
+  return `Trasy (auto): /${seg}`
+}
+
+const autoRouteGroups = computed(() => {
+  const records = router.getRoutes().filter(r => isInspectRoute(String(r.path || '')))
+  const descriptionByPath = new Map<string, string>()
+  for (const r of records) {
+    const p = String(r.path || '')
+    if (!descriptionByPath.has(p)) {
+      const named = typeof r.name === 'string' && r.name.trim() ? r.name.trim() : ''
+      descriptionByPath.set(p, named || 'Wygenerowane z routera Nuxt')
+    }
+  }
+  const paths = [...descriptionByPath.keys()].sort((a, b) => a.localeCompare(b, 'pl'))
+
+  const byTitle = new Map<string, Array<{ to: string, label: string, description: string, icon: string }>>()
+  for (const p of paths) {
+    const title = routeMapGroupTitle(p)
+    const link = {
+      to: p,
+      label: p,
+      description: descriptionByPath.get(p) || 'Wygenerowane z routera Nuxt',
+      icon: iconForRoute(p)
+    }
+    const list = byTitle.get(title) || []
+    list.push(link)
+    byTitle.set(title, list)
   }
 
-  return [...byGroup.entries()].map(([title, paths]) => ({
-    title,
-    description: 'Wygenerowane z routera Nuxt (bez linków zewnętrznych).',
-    links: paths.map((to) => ({
-      to,
-      label: to,
-      description: 'Trasa',
-      icon: iconForRoute(to)
+  return [...byTitle.entries()]
+    .sort(([a], [b]) => a.localeCompare(b, 'pl'))
+    .map(([title, links]) => ({
+      title,
+      description: 'Lista tras z `router.getRoutes()` (w tym ścieżki z parametrami, np. `:slug`).',
+      links: links.sort((x, y) => x.to.localeCompare(y.to, 'pl'))
     }))
-  }))
 })
 
 const devLinkGroupsCombined = computed(() => {
-  // Najpierw auto trasy, potem ręczne grupy (w tym dokumentacja zewnętrzna).
-  // Deduplikacja po `to` (żeby nie było powtórek między auto/manual).
   const seen = new Set<string>()
-  const groups = [...autoRouteGroups.value, ...devLinkGroups]
+  const groups = [
+    ...autoRouteGroups.value,
+    ...DEV_TOOL_ROUTE_SUPPLEMENT,
+    DEV_TOOL_EXTERNAL_DOCS_GROUP
+  ]
   return groups
     .map((g) => {
       const links = (g.links || []).filter((l) => {
@@ -1736,7 +1747,7 @@ function toastStorageApisAvailability() {
         Mapa aplikacji
       </p>
       <p class="mt-1 text-[11px] text-muted">
-        Trasy frontu i linki zewnętrzne (nowa karta).
+        Mapa tras jest budowana z <span class="font-mono">router.getRoutes()</span> (w tym dynamiczne <span class="font-mono">:param</span>). Poniżej ewentualne kotwice oraz dokumentacja zewnętrzna — uzupełniaj ręcznie tylko wpisy, których router nie wystawia.
       </p>
         <div class="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
         <div

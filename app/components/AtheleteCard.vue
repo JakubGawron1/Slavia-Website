@@ -472,6 +472,7 @@ function clearHover() {
           <div
             v-else-if="athlete.chartHistory.length === 1"
             class="relative rounded-xl bg-linear-to-b from-primary/[0.07] to-muted/10 ring-1 ring-inset ring-primary/10 overflow-visible px-4 py-6"
+            @click.stop.prevent
             @mouseleave="clearHover"
           >
             <Transition

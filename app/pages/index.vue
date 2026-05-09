@@ -753,7 +753,7 @@ const trainingDays = [
             <div class="overflow-hidden rounded-3xl border border-default/60 shadow-sm ring-1 ring-default/30">
               <iframe
                 title="Mapa — CKS Slavia, ul. Konopnickiej 13, Ruda Śląska"
-                src="https://www.openstreetmap.org/export/embed.html?bbox=18.836%2C50.249%2C18.886%2C50.279&amp;layer=mapnik&amp;marker=50.264%2C18.861"
+                src="https://www.openstreetmap.org/export/embed.html?bbox=18.845%2C50.308%2C18.865%2C50.323&amp;layer=mapnik&amp;marker=50.3156487%2C18.8550812"
                 class="h-[320px] w-full border-0 sm:h-[420px]"
                 loading="lazy"
                 referrerpolicy="no-referrer-when-downgrade"

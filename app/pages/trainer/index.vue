@@ -451,7 +451,7 @@ onMounted(() => {
             {{ g.title }}
           </h2>
         </div>
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <DashboardModuleCard
             v-for="link in g.items"
             :key="typeof link!.to === 'string' ? link!.to : link!.to.path"
@@ -470,7 +470,7 @@ onMounted(() => {
         <h2 class="text-xl font-semibold text-highlighted">Obecności zawodników</h2>
         <UButton size="sm" variant="soft" icon="i-lucide-refresh-cw" @click="loadAttendanceRows">Odśwież</UButton>
       </div>
-      <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+      <div class="slavia-form-grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
         <USelect v-model="attendanceFilters.athlete_id" :items="[{label:'Wszyscy',value:FILTER_ALL}, ...((athletes || []).map(a => ({label:a.full_name, value:a.id})))]" />
         <USelect v-model="attendanceFilters.status" :items="[{label:'Każdy status',value:FILTER_ALL},{label:'Obecny',value:'obecny'},{label:'Nieobecny',value:'nieobecny'}]" />
         <USelect v-model="attendanceFilters.verification_state" :items="[{label:'Każdy stan',value:FILTER_ALL},{label:'Zweryfikowane',value:'verified'},{label:'Oczekujące',value:'pending'}]" />

@@ -240,7 +240,7 @@ function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 
             {{ g.title }}
           </h2>
         </div>
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <DashboardModuleCard
             v-for="link in g.items"
             :key="String(link!.to)"

@@ -605,7 +605,7 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
               </div>
             </div>
             <div class="slavia-form-panel__body">
-              <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div class="slavia-form-grid grid-cols-1 sm:grid-cols-3">
                 <UFormField label="Data">
                   <UInput
                     v-model="form.date"
@@ -654,7 +654,7 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
                 </UFormField>
               </div>
 
-              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div class="slavia-form-grid grid-cols-1 sm:grid-cols-2">
                 <UFormField
                   label="Waga na starcie (kg)"
                   description="Opcjonalnie — jeśli puste, zostanie użyta waga z profilu lub z poprzedniego wpisu."
@@ -687,7 +687,7 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
                 </UFormField>
               </div>
 
-              <div class="grid grid-cols-2 gap-4">
+              <div class="slavia-form-grid grid-cols-1 sm:grid-cols-2">
                 <UFormField label="Rwanie (kg)">
                   <UInput
                     v-model.number="form.snatch"
@@ -711,7 +711,7 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
               <p class="text-xs text-muted">
                 Suma (auto): <strong class="tabular-nums text-highlighted">{{ form.total }}</strong> kg
               </p>
-              <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div class="slavia-form-grid grid-cols-1 sm:grid-cols-3">
                 <UFormField label="Przysiad (kg)">
                   <UInput
                     v-model.number="form.squat_kg"
@@ -810,7 +810,7 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
               </div>
             </div>
             <div class="slavia-form-panel__body">
-              <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div class="slavia-form-grid grid-cols-1 sm:grid-cols-3">
                 <UFormField label="Zawodnik">
                   <select
                     v-model="formAdd.athlete_id"
@@ -856,7 +856,7 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
                 </UFormField>
               </div>
 
-              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div class="slavia-form-grid grid-cols-1 sm:grid-cols-2">
                 <UFormField
                   v-if="formAdd.kind === 'competition'"
                   label="Miejsce zawodów"
@@ -898,7 +898,7 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
                   />
                 </UFormField>
               </div>
-              <div class="grid grid-cols-2 gap-4">
+              <div class="slavia-form-grid grid-cols-1 sm:grid-cols-2">
                 <UFormField label="Rwanie (kg)">
                   <UInput
                     v-model.number="formAdd.snatch"
@@ -923,7 +923,7 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
               <p class="text-xs text-muted">
                 Dwubój (auto): <strong class="tabular-nums text-highlighted">{{ formAdd.total }}</strong> kg
               </p>
-              <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div class="slavia-form-grid grid-cols-1 sm:grid-cols-3">
                 <UFormField label="Przysiad (kg)">
                   <UInput
                     v-model.number="formAdd.squat_kg"

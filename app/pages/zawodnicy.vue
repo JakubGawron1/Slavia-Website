@@ -69,6 +69,37 @@ const players = computed(() => playersRaw.value ?? [])
  */
 const trainingByAthlete = ref<Record<string, CompetitionResult[]>>({})
 
+/**
+ * Wyniki startowe (publiczne, `kind=competition`) — potrzebne do wykresów na kartach.
+ * Backend domyślnie zwraca zawody także dla niezalogowanych.
+ */
+const competitionByAthlete = ref<Record<string, CompetitionResult[]>>({})
+
+function normalizeApprovedCompetition(rows: CompetitionResult[] | null | undefined) {
+  return (rows ?? [])
+    .filter(r => r && r.status === 'Approved')
+    .slice()
+    .sort((a, b) => a.date.localeCompare(b.date))
+}
+
+/** Starty z zawodów (bez treningów); brak `kind` traktujemy jak zawody (starsze rekordy). */
+function approvedCompetitionStarts(rows: CompetitionResult[] | null | undefined) {
+  return normalizeApprovedCompetition(rows).filter(r => r.kind !== 'training')
+}
+
+/** Najlepszy start pod ranking / KPI: maks. total, przy remisie nowsza data. */
+function pickBestCompetitionStart(rows: CompetitionResult[]): CompetitionResult | null {
+  let best: CompetitionResult | null = null
+  for (const r of rows) {
+    if (!best
+      || r.total > best.total
+      || (r.total === best.total && r.date.localeCompare(best.date) > 0)) {
+      best = r
+    }
+  }
+  return best
+}
+
 async function refreshTrainingResults() {
   if (!auth.isLoggedIn.value || players.value.length === 0) {
     trainingByAthlete.value = {}
@@ -85,10 +116,34 @@ async function refreshTrainingResults() {
   trainingByAthlete.value = out
 }
 
+async function refreshCompetitionResults() {
+  if (players.value.length === 0) {
+    competitionByAthlete.value = {}
+    return
+  }
+  const out: Record<string, CompetitionResult[]> = {}
+  await Promise.all(
+    players.value.map(async (p) => {
+      out[p.id] = await apiFetch<CompetitionResult[]>(
+        `/api/results/athlete/${encodeURIComponent(p.id)}`
+      ).catch(() => [] as CompetitionResult[])
+    })
+  )
+  competitionByAthlete.value = out
+}
+
 watch(
   [() => auth.isLoggedIn.value, () => players.value.length],
   () => {
     void refreshTrainingResults()
+  },
+  { immediate: true }
+)
+
+watch(
+  () => players.value.length,
+  () => {
+    void refreshCompetitionResults()
   },
   { immediate: true }
 )
@@ -125,11 +180,20 @@ useSeoMeta({
   twitterCard: 'summary'
 })
 
-/** Karty i ranking: bazują na agregatach w `athletes` (`best_*`, `total_kg`). */
+/**
+ * Karty: wykres = pełna historia startów zawodowych; KPI + ranking = najlepszy start (fallback: agregaty z profilu).
+ */
 function mapToCard(p: AthleteModel) {
-  const snatchKg = Number(p.best_snatch_kg ?? 0)
-  const cjKg = Number(p.best_clean_jerk_kg ?? 0)
-  const totalKg = Number(p.total_kg ?? 0)
+  const fallbackSnatch = Number(p.best_snatch_kg ?? 0)
+  const fallbackCj = Number(p.best_clean_jerk_kg ?? 0)
+  const fallbackTotal = Number(p.total_kg ?? 0)
+
+  const compStarts = approvedCompetitionStarts(competitionByAthlete.value[p.id])
+  const bestStart = pickBestCompetitionStart(compStarts)
+
+  const snatchKg = bestStart?.snatch ?? fallbackSnatch
+  const cjKg = bestStart?.clean_and_jerk ?? fallbackCj
+  const totalKg = bestStart?.total ?? fallbackTotal
 
   const effectiveWeight = effectiveBodyweightKgForSinclair(p)
   const weightCategoryDisplay = resolveWeightCategoryThreshold(p.gender ?? undefined, p.bodyweight ?? undefined, p.weight_category ?? undefined)
@@ -144,15 +208,32 @@ function mapToCard(p: AthleteModel) {
     }
   }
 
-  const chartHistory = totalKg > 0
-    ? [{
-        date: 'PB',
-        total: totalKg,
-        snatch: snatchKg,
-        clean_and_jerk: cjKg,
-        sinclair: effectiveWeight > 0 && sg ? Number(sinclairTotal(totalKg, effectiveWeight, sg).toFixed(2)) : null
-      }]
-    : []
+  const chartHistory = compStarts.length > 0
+    ? compStarts.map((r) => {
+        let sinclairPt: number | null = null
+        if (effectiveWeight > 0 && sg) {
+          const c = sinclairTotal(r.total, effectiveWeight, sg)
+          if (!Number.isNaN(c)) sinclairPt = Number(c.toFixed(2))
+        }
+        const raw = r.date || ''
+        const dateShort = raw.length >= 10 ? raw.slice(0, 10) : raw
+        return {
+          date: dateShort,
+          total: r.total,
+          snatch: r.snatch,
+          clean_and_jerk: r.clean_and_jerk,
+          sinclair: sinclairPt
+        }
+      })
+    : (fallbackTotal > 0
+        ? [{
+            date: 'PB',
+            total: fallbackTotal,
+            snatch: fallbackSnatch,
+            clean_and_jerk: fallbackCj,
+            sinclair: effectiveWeight > 0 && sg ? Number(sinclairTotal(fallbackTotal, effectiveWeight, sg).toFixed(2)) : null
+          }]
+        : [])
 
   const totals = chartHistory.map(x => x.total)
   const maxHistory = totals.length > 0 ? Math.max(...totals) * 1.15 || 300 : 300
@@ -185,7 +266,7 @@ const mappedPlayers = computed(() => {
   return players.value.map(p => mapToCard(p)).sort((a, b) => b.sinclair - a.sinclair)
 })
 
-/** Podium i tabela — tylko osoby z dodatnim PB (agregaty w `athletes`). */
+/** Podium i tabela — zawodnicy z sensownym Sinclair (najlepszy start lub PB z profilu). */
 const rankingPlayers = computed(() => mappedPlayers.value.filter(x => x.total > 0 && x.sinclair > 0))
 
 const podium = computed(() => rankingPlayers.value.slice(0, 3))

@@ -489,7 +489,7 @@ const pageLead = computed(() => {
 
     <div
       v-if="auth.canAccessAthletePortal && athlete"
-      class="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3 lg:gap-4"
+      class="mt-8 grid grid-cols-1 items-stretch gap-3 sm:grid-cols-3 lg:gap-4"
     >
       <DashboardKpiCard
         label="Składka (bieżący miesiąc)"
@@ -523,7 +523,7 @@ const pageLead = computed(() => {
             {{ g.title }}
           </h2>
         </div>
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div class="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <DashboardModuleCard
             v-for="tile in g.items"
             :key="String(tile!.to)"
@@ -590,22 +590,22 @@ const pageLead = computed(() => {
             {{ attendanceSummary.attendance_percent }}%
           </UBadge>
         </div>
-        <div class="mt-4 grid gap-3 sm:grid-cols-4">
-          <div class="rounded-xl border border-default/50 p-3">
-            <p class="text-xs text-muted">Obecności</p>
-            <p class="text-2xl font-black text-success">{{ attendanceSummary.present_count }}</p>
+        <div class="mt-4 grid gap-3 sm:grid-cols-4 sm:items-stretch">
+          <div class="flex min-h-[5.25rem] flex-col justify-between gap-1 rounded-xl border border-default/50 p-3">
+            <p class="text-xs leading-tight text-muted">Obecności</p>
+            <p class="text-2xl font-black tabular-nums leading-none text-success">{{ attendanceSummary.present_count }}</p>
           </div>
-          <div class="rounded-xl border border-default/50 p-3">
-            <p class="text-xs text-muted">Nieobecności</p>
-            <p class="text-2xl font-black text-error">{{ attendanceSummary.absent_count }}</p>
+          <div class="flex min-h-[5.25rem] flex-col justify-between gap-1 rounded-xl border border-default/50 p-3">
+            <p class="text-xs leading-tight text-muted">Nieobecności</p>
+            <p class="text-2xl font-black tabular-nums leading-none text-error">{{ attendanceSummary.absent_count }}</p>
           </div>
-          <div class="rounded-xl border border-default/50 p-3">
-            <p class="text-xs text-muted">Oczekuje</p>
-            <p class="text-2xl font-black text-warning">{{ attendanceSummary.pending_count }}</p>
+          <div class="flex min-h-[5.25rem] flex-col justify-between gap-1 rounded-xl border border-default/50 p-3">
+            <p class="text-xs leading-tight text-muted">Oczekuje</p>
+            <p class="text-2xl font-black tabular-nums leading-none text-warning">{{ attendanceSummary.pending_count }}</p>
           </div>
-          <div class="rounded-xl border border-default/50 p-3">
-            <p class="text-xs text-muted">Frekwencja</p>
-            <p class="text-2xl font-black text-primary">{{ attendanceSummary.attendance_percent }}%</p>
+          <div class="flex min-h-[5.25rem] flex-col justify-between gap-1 rounded-xl border border-default/50 p-3">
+            <p class="text-xs leading-tight text-muted">Frekwencja</p>
+            <p class="text-2xl font-black tabular-nums leading-none text-primary">{{ attendanceSummary.attendance_percent }}%</p>
           </div>
         </div>
       </UCard>
@@ -643,7 +643,7 @@ const pageLead = computed(() => {
           Zgłoś płatność — kadra zatwierdzi ją w systemie. Termin płatności: <span class="font-bold">10</span> każdego miesiąca.
         </p>
 
-        <div class="mt-5 grid gap-4 sm:grid-cols-3">
+        <div class="slavia-form-grid mt-5 grid-cols-1 sm:grid-cols-3">
           <UFormField label="Miesiąc">
             <UInput
               v-model="paymentForm.month"

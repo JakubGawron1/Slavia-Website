@@ -34,10 +34,10 @@ const ringClass = computed(() => {
 <template>
   <NuxtLink
     :to="to"
-    class="group relative block overflow-hidden rounded-2xl border border-default/60 bg-card p-5 shadow-sm ring-1 ring-transparent transition duration-200 hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+    class="group relative flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-default/60 bg-card p-5 shadow-sm ring-1 ring-transparent transition duration-200 hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
     :class="ringClass"
   >
-    <div class="flex items-start justify-between gap-3">
+    <div class="flex min-h-0 flex-1 items-start justify-between gap-3">
       <div class="flex min-w-0 items-start gap-3">
         <div class="flex size-11 shrink-0 items-center justify-center rounded-xl" :class="iconBgClass">
           <UIcon :name="icon" class="size-5" />

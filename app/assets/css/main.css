@@ -892,8 +892,10 @@ html.dark[data-slavia-preset='neon'] {
   -webkit-appearance: none;
   border-radius: 0.75rem;
   border: 1px solid var(--ui-border, #d4d4d8);
+  box-sizing: border-box;
+  min-height: 2.75rem;
   padding: 0.5625rem 2.35rem 0.5625rem 0.875rem;
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   font-weight: 600;
   line-height: 1.35;
   letter-spacing: 0.01em;
@@ -1001,8 +1003,24 @@ html.dark .slavia-select option,
     @apply space-y-5 p-4 sm:p-5;
   }
 
+  /**
+   * Siatka pól formularza: wyrównanie do dołu komórki — pola (input/select) w jednej linii,
+   * mimo różnej wysokości etykiet / opisów UFormField.
+   */
+  .slavia-form-grid {
+    @apply grid items-end gap-4;
+  }
+
+  .slavia-form-grid > * {
+    @apply min-w-0;
+  }
+
   .slavia-form-actions {
-    @apply flex flex-wrap items-center justify-end gap-2 pt-1 sm:gap-3;
+    @apply flex w-full flex-wrap items-center justify-between gap-3 pt-1;
+  }
+
+  .slavia-form-actions:not(:has(> :nth-child(2))) {
+    justify-content: flex-end;
   }
 
   @media (max-width: 639px) {

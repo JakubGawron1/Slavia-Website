@@ -28,13 +28,13 @@ const iconClass = computed(() => {
   <component
     :is="to ? 'NuxtLink' : 'div'"
     :to="to || undefined"
-    class="block focus:outline-none"
+    class="block h-full min-h-0 focus:outline-none"
   >
     <UCard
-      class="rounded-2xl border-default/70 shadow-sm ring-1 ring-default/30 transition-colors"
+      class="h-full min-h-0 rounded-2xl border-default/70 shadow-sm ring-1 ring-default/30 transition-colors"
       :class="to ? 'cursor-pointer hover:bg-muted/10' : ''"
     >
-      <div class="flex items-center gap-4">
+      <div class="flex items-start gap-4 sm:items-center">
         <div class="flex h-12 w-12 items-center justify-center rounded-xl ring-1" :class="iconClass">
           <UIcon :name="icon" class="size-6" />
         </div>
