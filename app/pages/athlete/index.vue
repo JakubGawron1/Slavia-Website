@@ -92,13 +92,25 @@ async function refreshPaymentStatus() {
 }
 
 async function submitMembershipPayment() {
-  if (!auth.canAccessAthletePortal.value || !athlete.value?.id || !auth.isAthlete.value) return
+  if (!auth.canAccessAthletePortal.value) {
+    toast.add({ title: 'Brak dostępu', description: 'Ta sekcja wymaga dostępu do panelu zawodnika.', color: 'warning' })
+    return
+  }
+  if (!athlete.value?.id) {
+    toast.add({ title: 'Brak profilu zawodnika', description: 'Twoje konto nie jest powiązane z profilem w bazie.', color: 'warning' })
+    return
+  }
+  if (!auth.isAthlete.value) {
+    toast.add({ title: 'Brak roli zawodnika', description: 'Tylko konto z rolą Athlete może zgłaszać płatności.', color: 'warning' })
+    return
+  }
   try {
+    const amount = paymentForm.amount_pln != null ? Number(paymentForm.amount_pln) : null
     await apiFetch(apiRoutes.payments.my, {
       method: 'POST',
       body: {
         month: paymentForm.month,
-        amount_pln: paymentForm.amount_pln != null ? Number(paymentForm.amount_pln) : null,
+        amount_pln: amount != null && Number.isFinite(amount) && amount > 0 ? amount : null,
         note: paymentForm.note
       }
     })
