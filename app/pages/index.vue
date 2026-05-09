@@ -32,25 +32,35 @@ function publicBase() {
   return String(config.public.apiBase || '').replace(/\/$/, '')
 }
 
-/** Strona główna jest publiczna — bez tokenu, dlatego używamy `$fetch` (a nie `useApi`). */
-const { data: bundle } = await useAsyncData(
-  'home-public-bundle',
-  async () => {
-    const base = publicBase()
-    const [athletes, posts] = await Promise.all([
-      $fetch<Athlete[]>(`${base}/api/athletes`).catch(() => [] as Athlete[]),
-      $fetch<BlogPost[]>(`${base}/api/posts`).catch(() => [] as BlogPost[])
-    ])
-    return { athletes, posts }
-  },
+/** Strona główna jest publiczna — bez tokenu, dlatego używamy `useLazyFetch` (cache + prefetch) zamiast `useApi`. */
+const base = computed(() => publicBase())
+
+const {
+  data: athletes,
+  pending: athletesPending
+} = await useLazyFetch<Athlete[]>(
+  () => `${base.value}/api/athletes`,
   {
-    default: () => ({ athletes: [] as Athlete[], posts: [] as BlogPost[] }),
+    key: 'home-athletes',
+    default: () => [] as Athlete[],
     server: true
   }
 )
 
-const athletes = computed(() => bundle.value?.athletes ?? [])
-const posts = computed(() => bundle.value?.posts ?? [])
+const {
+  data: posts,
+  pending: postsPending
+} = await useLazyFetch<BlogPost[]>(
+  () => `${base.value}/api/posts`,
+  {
+    key: 'home-posts',
+    default: () => [] as BlogPost[],
+    server: true
+  }
+)
+
+// Zachowujemy “bundle” semantycznie (łatwiej czytać dalej).
+const bundlePending = computed(() => athletesPending.value || postsPending.value)
 
 function genderForSinclair(g?: string | null): SinclairGender | null {
   return g === 'male' || g === 'female' ? g : null

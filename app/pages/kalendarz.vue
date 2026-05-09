@@ -41,21 +41,29 @@ const canSyncExternalCalendars = computed(() => auth.isAdmin.value || auth.isSup
 const syncLoading = ref(false)
 
 // Bez SSR: na hostingu Node często nie ma dostępu do API / złego apiBase — strona się wywalała u gości.
-const { data: competitions, refresh, pending: competitionsPending } = await useAsyncData<Competition[]>(
-  'competitions-public',
-  () => $fetch<Competition[]>(`${publicBase()}${apiRoutes.competitions.collection}`).catch(() => []),
-  { default: () => [], server: false, lazy: true }
+const {
+  data: competitions,
+  refresh,
+  pending: competitionsPending
+} = await useLazyFetch<Competition[]>(
+  () => `${publicBase()}${apiRoutes.competitions.collection}`,
+  {
+    key: 'competitions-public',
+    default: () => [],
+    server: false
+  }
 )
 
-const { data: recurringClubTrainingSessions, refresh: refreshRecurringClubTrainingSessions } = await useAsyncData<
-  RecurringTrainingSession[]
->(
-  'recurring-training-sessions',
-  () =>
-    $fetch<RecurringTrainingSession[]>(`${publicBase()}${apiRoutes.competitions.recurringTrainingCancellations}`).catch(
-      () => []
-    ),
-  { default: () => [], server: false, lazy: true }
+const {
+  data: recurringClubTrainingSessions,
+  refresh: refreshRecurringClubTrainingSessions
+} = await useLazyFetch<RecurringTrainingSession[]>(
+  () => `${publicBase()}${apiRoutes.competitions.recurringTrainingCancellations}`,
+  {
+    key: 'recurring-training-sessions',
+    default: () => [],
+    server: false
+  }
 )
 
 /** yyyy-MM-dd → status z bazy (`scheduled` = brak wiersza). */

@@ -92,35 +92,47 @@ function publicBase() {
 
 const canEditResults = computed(() => auth.isTrainer.value)
 
-const { data: pageBundle, status, error, pending: bundlePending } = await useAsyncData(
-  'players-public-bundle',
-  async () => {
-    const base = publicBase()
-    const [players, publicBoardRows] = await Promise.all([
-      $fetch<AthleteModel[]>(`${base}/api/athletes`).catch(() => [] as AthleteModel[]),
-      $fetch<PublicResultBoardRow[]>(`${base}/api/results/public-board`).catch(() => [] as PublicResultBoardRow[])
-    ])
-    const resultsByAthlete = groupBoardRowsByAthlete(publicBoardRows)
-    return { players, resultsByAthlete, publicBoardRows }
-  },
+const base = computed(() => publicBase())
+
+const {
+  data: playersRaw,
+  pending: playersPending,
+  error: playersError
+} = await useLazyFetch<AthleteModel[]>(
+  () => `${base.value}/api/athletes`,
   {
-    default: () => ({
-      players: [] as AthleteModel[],
-      resultsByAthlete: {} as Record<string, CompetitionResult[]>,
-      publicBoardRows: [] as PublicResultBoardRow[]
-    })
+    key: 'players-public-athletes',
+    default: () => [] as AthleteModel[],
+    server: true
   }
 )
 
-const players = computed(() => pageBundle.value?.players ?? [])
-const resultsByAthlete = computed(() => pageBundle.value?.resultsByAthlete ?? {})
+const {
+  data: publicBoardRowsRaw,
+  pending: boardPending,
+  error: boardError
+} = await useLazyFetch<PublicResultBoardRow[]>(
+  () => `${base.value}/api/results/public-board`,
+  {
+    key: 'players-public-board',
+    default: () => [] as PublicResultBoardRow[],
+    server: true
+  }
+)
+
+const bundlePending = computed(() => playersPending.value || boardPending.value)
+const error = computed(() => playersError.value || boardError.value)
+const status = computed(() => (bundlePending.value ? 'pending' : 'success'))
+
+const players = computed(() => playersRaw.value ?? [])
+const resultsByAthlete = computed(() => groupBoardRowsByAthlete(publicBoardRowsRaw.value ?? []))
 
 /**
  * Tabela „Wyniki z zawodów” — ten sam zestaw co `/api/results/public-board-olympic`
  * (dwubój olimpijski, `total >= 20`), liczona lokalnie z jednego pobrania tablicy publicznej.
  */
 const publicResults = computed(() => {
-  const rows = pageBundle.value?.publicBoardRows ?? []
+  const rows = publicBoardRowsRaw.value ?? []
   return [...rows]
     .filter(r => r.total >= 20)
     .sort((a, b) => {

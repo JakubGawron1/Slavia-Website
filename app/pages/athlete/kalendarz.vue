@@ -31,13 +31,13 @@ function publicCalendarApiBase() {
   return String(runtimeConfig.public.apiBase || '').replace(/\/$/, '')
 }
 
-const { data: clubTrainingOverrides } = await useAsyncData(
-  'athlete-recurring-training-sessions',
-  () =>
-    $fetch<RecurringTrainingSession[]>(
-      `${publicCalendarApiBase()}${apiRoutes.competitions.recurringTrainingCancellations}`
-    ).catch(() => []),
-  { default: () => [], server: false }
+const { data: clubTrainingOverrides } = await useLazyFetch<RecurringTrainingSession[]>(
+  () => `${publicCalendarApiBase()}${apiRoutes.competitions.recurringTrainingCancellations}`,
+  {
+    key: 'athlete-recurring-training-sessions',
+    default: () => [],
+    server: false
+  }
 )
 
 const clubTrainingStatusByDate = computed(() => {
