@@ -37,7 +37,7 @@ const base = computed(() => publicBase())
 
 const {
   data: athletes,
-  pending: athletesPending
+  pending: _athletesPending
 } = await useLazyFetch<Athlete[]>(
   () => `${base.value}/api/athletes`,
   {
@@ -49,7 +49,7 @@ const {
 
 const {
   data: posts,
-  pending: postsPending
+  pending: _postsPending
 } = await useLazyFetch<BlogPost[]>(
   () => `${base.value}/api/posts`,
   {
@@ -58,9 +58,6 @@ const {
     server: true
   }
 )
-
-// Zachowujemy “bundle” semantycznie (łatwiej czytać dalej).
-const bundlePending = computed(() => athletesPending.value || postsPending.value)
 
 function genderForSinclair(g?: string | null): SinclairGender | null {
   return g === 'male' || g === 'female' ? g : null
@@ -328,6 +325,8 @@ const trainingDays = [
           <div class="mt-8 flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-center lg:gap-4">
             <UButton
               to="/zawodnicy"
+              prefetch
+              prefetch-on="interaction"
               size="xl"
               trailing-icon="i-lucide-arrow-right"
               class="min-h-12 justify-center font-bold sm:min-h-0"
@@ -336,6 +335,8 @@ const trainingDays = [
             </UButton>
             <UButton
               to="/aktualnosci"
+              prefetch
+              prefetch-on="interaction"
               size="xl"
               color="neutral"
               variant="subtle"
@@ -346,6 +347,8 @@ const trainingDays = [
             </UButton>
             <UButton
               to="/kontakt"
+              prefetch
+              prefetch-on="interaction"
               size="xl"
               color="neutral"
               variant="outline"
@@ -502,7 +505,7 @@ const trainingDays = [
 
         <div class="mx-auto grid max-w-5xl gap-4 sm:grid-cols-3 sm:items-end sm:gap-6">
           <NuxtLink
-            v-for="(p, idx) in podiumOrder"
+            v-for="p in podiumOrder"
             :key="`pod-${p.id}`"
             :to="athleteProfilePath(p.full_name, p.id)"
             class="group relative overflow-hidden rounded-3xl border border-default/60 bg-linear-to-b from-card to-card/80 p-5 text-center shadow-sm ring-1 ring-default/30 transition-all hover:-translate-y-1 hover:shadow-xl"

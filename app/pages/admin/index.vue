@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import type { Athlete, CompetitionResult } from '~/types/models'
 import { getApiErrorMessage } from '~/composables/useApi'
+import DashboardHero from '~/components/dashboard/DashboardHero.vue'
+import DashboardKpiCard from '~/components/dashboard/DashboardKpiCard.vue'
+import DashboardModuleCard from '~/components/dashboard/DashboardModuleCard.vue'
+import DashboardUrgentList from '~/components/dashboard/DashboardUrgentList.vue'
 
 definePageMeta({ middleware: 'admin' })
 
@@ -203,6 +207,55 @@ const quickLinks = computed(() => {
   return quickLinksAll
 })
 
+const moduleGroups = computed(() => {
+  const list = quickLinks.value
+  const byTo = new Map<string, typeof list[number]>()
+  for (const l of list) byTo.set(String(l.to), l)
+
+  const pick = (to: string) => byTo.get(to)
+  const isTrainerScope = !isPureAdmin.value
+  return [
+    {
+      title: 'Najczęstsze',
+      items: [
+        pick('/admin/zawodnicy'),
+        pick('/admin/konta'),
+        pick('/admin/kontakt-wiadomosci'),
+        pick('/admin/changelog')
+      ].filter(Boolean)
+    },
+    {
+      title: 'Treści publiczne',
+      items: [
+        pick('/aktualnosci'),
+        pick('/ogloszenia'),
+        pick('/galeria'),
+        pick('/kontakt')
+      ].filter(Boolean)
+    },
+    {
+      title: 'Narzędzia',
+      items: [
+        pick('/kalendarz'),
+        pick('/zawodnicy'),
+        pick('/kalkulator-proporcji'),
+        pick('/profil'),
+        ...(isTrainerScope ? [pick('/trainer/wyniki'), pick('/trainer/dziennik'), pick('/trainer/analiza-sztangi')] : [])
+      ].filter(Boolean)
+    }
+  ] as const
+})
+
+function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral' {
+  const s = String(bg || '').toLowerCase()
+  if (s.includes('red')) return 'error'
+  if (s.includes('amber') || s.includes('yellow')) return 'warning'
+  if (s.includes('emerald') || s.includes('green') || s.includes('teal') || s.includes('lime')) return 'success'
+  if (s.includes('sky') || s.includes('cyan') || s.includes('blue') || s.includes('indigo')) return 'info'
+  if (s.includes('violet') || s.includes('purple') || s.includes('fuchsia') || s.includes('primary')) return 'primary'
+  return 'neutral'
+}
+
 const lowerDashboards = computed(() => {
   const list: { label: string, to: string, icon: string }[] = []
   const roles = new Set(auth.roles.value || [])
@@ -214,80 +267,38 @@ const lowerDashboards = computed(() => {
 
 <template>
   <UContainer class="py-8 md:py-14 lg:py-16">
-    <div class="mb-8">
-      <p class="text-sm font-medium uppercase tracking-wider text-primary">
-        Administracja
-      </p>
-      <h1 class="mt-2 text-3xl font-bold tracking-tight text-highlighted">
-        Witaj, {{ auth.user.value?.username || 'Adminie' }}!
-      </h1>
-      <p class="mt-2 max-w-2xl text-muted">
-        To jest twój panel zarządzania klubem CKS Slavia Ruda Śląska. Tutaj masz dostęp do wszystkich kluczowych modułów.
-      </p>
-    </div>
+    <DashboardHero
+      eyebrow="Administracja"
+      :title="`Witaj, ${auth.user.value?.username || 'Adminie'}!`"
+      lead="Szybkie wejścia do modułów i lista rzeczy, które wymagają uwagi."
+      icon="i-lucide-shield"
+      :badges="[
+        { label: `Wyniki do zatwierdzenia: ${pendingCount}`, color: pendingCount ? 'warning' : 'neutral' },
+        { label: `Zawodnicy: ${athletesCount}`, color: 'neutral' }
+      ]"
+      :actions="[
+        { label: 'Zawodnicy', to: '/admin/zawodnicy', icon: 'i-lucide-users', variant: 'soft', color: 'primary' },
+        { label: 'Wiadomości', to: '/admin/kontakt-wiadomosci', icon: 'i-lucide-mail', variant: 'outline', color: 'neutral' }
+      ]"
+    />
 
     <!-- Statystyki — nad banerami i skrótami -->
-    <div class="mb-10 grid grid-cols-1 gap-4 sm:grid-cols-3 lg:gap-6">
-      <UCard>
-        <div class="flex items-center gap-4">
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
-            <UIcon
-              name="i-lucide-users"
-              class="size-6"
-            />
-          </div>
-          <div>
-            <p class="text-sm font-medium text-muted">
-              Zarejestrowani Zawodnicy
-            </p>
-            <p class="text-2xl font-bold text-highlighted">
-              {{ athletesCount }}
-            </p>
-          </div>
-        </div>
-      </UCard>
-      <UCard>
-        <div class="flex items-center gap-4">
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-yellow-500/10 text-yellow-500">
-            <UIcon
-              name="i-lucide-activity"
-              class="size-6"
-            />
-          </div>
-          <div>
-            <p class="text-sm font-medium text-muted">
-              Wyniki oczekujące
-            </p>
-            <p class="text-2xl font-bold text-highlighted">
-              {{ pendingCount }}
-            </p>
-          </div>
-        </div>
-      </UCard>
-      <UCard>
-        <div class="flex items-center gap-4">
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-500/10 text-purple-500">
-            <UIcon
-              name="i-lucide-calendar"
-              class="size-6"
-            />
-          </div>
-          <div>
-            <p class="text-sm font-medium text-muted">
-              Zaplanowane zawody
-            </p>
-            <p class="text-2xl font-bold text-highlighted">
-              {{ competitionsCount }}
-            </p>
-          </div>
-        </div>
-      </UCard>
+    <div class="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3 lg:gap-4">
+      <DashboardKpiCard label="Zawodnicy (aktywni)" :value="athletesCount" icon="i-lucide-users" tone="info" to="/admin/zawodnicy" />
+      <DashboardKpiCard
+        label="Wyniki oczekujące"
+        :value="pendingCount"
+        icon="i-lucide-clipboard-clock"
+        :tone="pendingCount ? 'warning' : 'neutral'"
+        :to="{ path: '/admin', hash: '#wyniki-oczekujace' }"
+      />
+      <DashboardKpiCard label="Zaplanowane zawody" :value="competitionsCount" icon="i-lucide-calendar" tone="primary" to="/kalendarz" />
     </div>
 
     <!-- SuperAdmin Banner -->
     <div
       v-if="isSuperAdmin"
-      class="mb-10 flex flex-col gap-4 rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/10 to-purple-500/10 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5"
+      class="mb-10 flex flex-col gap-4 rounded-2xl border border-primary/20 bg-linear-to-r from-primary/10 to-purple-500/10 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5"
     >
       <div class="flex items-start gap-3 sm:items-center sm:gap-4">
         <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/20 text-primary sm:h-12 sm:w-12">
@@ -345,109 +356,49 @@ const lowerDashboards = computed(() => {
       </div>
     </div>
 
-    <h2 class="mb-4 text-xl font-semibold text-highlighted">
-      Moduły
-    </h2>
-    <div class="mb-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:gap-8">
-      <NuxtLink
-        v-for="link in quickLinks"
-        :key="link.to"
-        :to="link.to"
-        class="group block transition-transform hover:-translate-y-1"
+    <div class="mt-10">
+      <DashboardUrgentList
+        title="Wyniki do zatwierdzenia"
+        icon="i-lucide-clipboard-clock"
+        :count="pendingCount"
+        empty-text="Brak oczekujących zgłoszeń."
+        :footer-link="{ label: 'Wszystkie starty / dodaj wpis', to: '/trainer/wyniki' }"
+        :items="(pendingResults || []).slice(0, 6).map(r => ({
+          key: r.id,
+          title: labelForResult(r),
+          subtitle: `Rwanie ${r.snatch} · Podrzut ${r.clean_and_jerk} · Razem ${r.total} · ${r.date.slice(0,10)}`,
+          badge: { label: 'Pending', color: 'warning' },
+          primaryAction: { label: 'Zatwierdź', onClick: () => { void approveResult(r.id) } }
+        }))"
       >
-        <UCard class="h-full border border-default transition-colors group-hover:border-primary/50 group-hover:shadow-md">
-          <div class="flex items-start gap-4">
-            <div :class="['flex h-10 w-10 shrink-0 items-center justify-center rounded-lg', link.bg, link.color]">
-              <UIcon
-                :name="link.icon"
-                class="size-5"
-              />
-            </div>
-            <div>
-              <h3 class="font-medium text-highlighted group-hover:text-primary transition-colors">
-                {{ link.title }}
-              </h3>
-              <p class="mt-1 text-sm text-muted">
-                {{ link.description }}
-              </p>
-            </div>
-          </div>
-        </UCard>
-      </NuxtLink>
+        <template #actions>
+          <UButton size="sm" variant="soft" icon="i-lucide-refresh-ccw" @click="refreshPending()">Odśwież</UButton>
+        </template>
+      </DashboardUrgentList>
     </div>
 
-    <!-- Wyniki oczekujące — kotwica działa także przy 0 pozycjach -->
-    <div
-      id="wyniki-oczekujace"
-      class="mb-12 scroll-mt-24 rounded-2xl border border-default bg-card p-6"
-    >
-      <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 class="text-lg font-semibold text-highlighted sm:text-xl">
-          <UIcon
-            name="i-lucide-clipboard-clock"
-            class="mr-2 inline"
-          />
-          Wyniki do zatwierdzenia ({{ pendingCount }})
-        </h2>
-        <div class="flex flex-wrap gap-2">
-          <UButton
-            variant="soft"
-            size="sm"
-            icon="i-lucide-refresh-ccw"
-            class="min-h-10 shrink-0"
-            @click="refreshPending()"
-          >
-            Odśwież listę
-          </UButton>
-          <UButton
-            size="sm"
-            variant="outline"
-            to="/trainer/wyniki"
-            class="min-h-10 shrink-0"
-          >
-            Wszystkie starty / dodaj wpis
-          </UButton>
+    <div class="mt-12 space-y-8">
+      <div v-for="g in moduleGroups" :key="g.title">
+        <div class="mb-3 flex items-end justify-between gap-3">
+          <h2 class="text-xl font-semibold text-highlighted">
+            {{ g.title }}
+          </h2>
         </div>
-      </div>
-      <div
-        v-if="pendingCount === 0"
-        class="rounded-xl border border-dashed border-default/70 bg-muted/10 px-4 py-8 text-center text-sm text-muted"
-      >
-        Brak oczekujących zgłoszeń. Start dodany przez kadrę trafia od razu jako zatwierdzony —
-        <NuxtLink
-          to="/trainer/wyniki"
-          class="font-semibold text-primary underline-offset-2 hover:underline"
-        >
-          otwórz listę startów
-        </NuxtLink>
-        .
-      </div>
-      <div
-        v-else
-        class="space-y-3"
-      >
-        <div
-          v-for="result in pendingResults || []"
-          :key="result.id"
-          class="flex flex-col gap-3 rounded-xl border border-default/50 bg-muted/20 p-4 sm:flex-row sm:items-center sm:justify-between"
-        >
-          <div class="min-w-0">
-            <p class="font-medium text-highlighted">
-              {{ labelForResult(result) }}
-            </p>
-            <p class="text-sm text-muted">
-              Rwanie {{ result.snatch }} kg · Podrzut {{ result.clean_and_jerk }} kg · Razem {{ result.total }} kg · {{ result.date.slice(0, 10) }}
-            </p>
-          </div>
-          <UButton
-            size="sm"
-            class="min-h-10 w-full shrink-0 sm:w-auto"
-            @click="approveResult(result.id)"
-          >
-            Zatwierdź
-          </UButton>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <DashboardModuleCard
+            v-for="link in g.items"
+            :key="String(link!.to)"
+            :title="link!.title"
+            :description="link!.description"
+            :icon="link!.icon"
+            :to="link!.to"
+            :tone="toneFromBg(link!.bg)"
+          />
         </div>
       </div>
     </div>
+
+    <!-- Kotwica zachowana dla linków zewnętrznych -->
+    <div id="wyniki-oczekujace" class="sr-only" />
   </UContainer>
 </template>

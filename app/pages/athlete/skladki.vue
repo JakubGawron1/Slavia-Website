@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { apiRoutes } from '~/config/api'
 import { getApiErrorMessage } from '~/composables/useApi'
-import type { PaymentStatusResponse } from '~/types/models'
+import type { PaymentMonthStatusRow, PaymentStatusResponse } from '~/types/models'
 
 definePageMeta({ middleware: 'auth' })
 
@@ -15,6 +15,55 @@ const apiFetch = useApi()
 const toast = useToast()
 
 const paymentStatus = ref<PaymentStatusResponse | null>(null)
+const currentYear = new Date().getFullYear()
+const currentMonth = new Date().getMonth() + 1
+const canPreviewNextYear = computed(() => currentMonth >= 11)
+const allowedYears = computed(() => (canPreviewNextYear.value ? [currentYear, currentYear + 1] : [currentYear]))
+const year = ref<number>(currentYear)
+const loadingYear = ref(false)
+const yearRows = ref<PaymentMonthStatusRow[]>([])
+
+const monthLabelPl = (yyyyMm: string) => {
+  const mm = Number.parseInt(String(yyyyMm || '').slice(5, 7), 10)
+  const months = [
+    'Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec',
+    'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień'
+  ]
+  return months[(mm - 1)] || yyyyMm
+}
+
+function rowStatusLabel(r: PaymentMonthStatusRow) {
+  if (r.is_paid) return 'Opłacone'
+  if (r.has_pending) return 'Oczekuje'
+  if (r.is_overdue) return 'Nieopłacone'
+  return 'Brak'
+}
+
+function rowStatusColor(r: PaymentMonthStatusRow) {
+  if (r.is_paid) return 'success'
+  if (r.is_overdue) return 'error'
+  if (r.has_pending) return 'warning'
+  return 'neutral'
+}
+
+async function refreshYearTable() {
+  if (!auth.canAccessAthletePortal.value || !auth.isAthlete.value) {
+    yearRows.value = []
+    return
+  }
+  // twarde ograniczenie wyboru roku w UI
+  if (!allowedYears.value.includes(year.value)) {
+    year.value = allowedYears.value[0]!
+  }
+  loadingYear.value = true
+  try {
+    const q = `?year=${encodeURIComponent(String(year.value))}`
+    const rows = await apiFetch<PaymentMonthStatusRow[]>(`${apiRoutes.payments.myYear}${q}`).catch(() => [])
+    yearRows.value = Array.isArray(rows) ? rows : []
+  } finally {
+    loadingYear.value = false
+  }
+}
 
 const paymentForm = reactive<{
   month: string
@@ -64,6 +113,7 @@ async function submitMembershipPayment() {
 
 onMounted(() => {
   void refreshPaymentStatus()
+  void refreshYearTable()
 })
 </script>
 
@@ -119,6 +169,89 @@ onMounted(() => {
           Odśwież
         </UButton>
         <p v-if="paymentStatus" class="text-xs text-muted">Termin: {{ paymentStatus.due_date }}</p>
+      </div>
+    </UCard>
+
+    <UCard class="mt-6 rounded-2xl border-default/70">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div class="min-w-0">
+          <h2 class="text-lg font-black text-highlighted">
+            Opłacone miesiące (rok)
+          </h2>
+          <p class="mt-1 text-sm text-muted">
+            Widok roczny pokazuje: opłacone (Approved), oczekujące (Pending) i brak wpłaty.
+          </p>
+        </div>
+        <div class="flex flex-wrap items-end gap-2">
+          <UFormField label="Rok" size="xs" class="w-40">
+            <USelect
+              v-if="allowedYears.length > 1"
+              v-model="year"
+              :items="allowedYears.map(y => ({ label: String(y), value: y }))"
+              class="w-full"
+            />
+            <UInput
+              v-else
+              :model-value="String(allowedYears[0])"
+              disabled
+              size="sm"
+              class="w-full"
+            />
+          </UFormField>
+          <UButton size="sm" variant="soft" icon="i-lucide-refresh-cw" :loading="loadingYear" @click="refreshYearTable">
+            Odśwież
+          </UButton>
+        </div>
+      </div>
+
+      <div class="mt-4 overflow-x-auto">
+        <table class="w-full min-w-[720px] text-sm">
+          <thead class="border-b border-default bg-muted/20">
+            <tr>
+              <th class="px-4 py-3 text-left font-semibold text-muted">Miesiąc</th>
+              <th class="px-4 py-3 text-left font-semibold text-muted">Status</th>
+              <th class="px-4 py-3 text-left font-semibold text-muted">Termin</th>
+              <th class="px-4 py-3 text-right font-semibold text-muted">Akcje</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-default">
+            <tr v-if="loadingYear">
+              <td colspan="4" class="px-4 py-10 text-center text-muted">
+                <UIcon name="i-lucide-loader-2" class="inline size-6 animate-spin" />
+              </td>
+            </tr>
+            <tr v-else-if="yearRows.length === 0">
+              <td colspan="4" class="px-4 py-10 text-center text-muted">
+                Brak danych dla tego roku.
+              </td>
+            </tr>
+            <tr v-for="r in yearRows" v-else :key="r.month" class="hover:bg-muted/10 transition-colors">
+              <td class="px-4 py-3">
+                <span class="font-semibold text-highlighted">{{ monthLabelPl(r.month) }}</span>
+                <span class="ml-2 font-mono text-[11px] text-muted">{{ r.month }}</span>
+              </td>
+              <td class="px-4 py-3">
+                <UBadge :color="rowStatusColor(r)" variant="subtle">
+                  {{ rowStatusLabel(r) }}
+                </UBadge>
+              </td>
+              <td class="px-4 py-3 text-muted font-mono text-[11px]">
+                {{ r.due_date }}
+              </td>
+              <td class="px-4 py-3 text-right">
+                <UButton
+                  size="xs"
+                  variant="outline"
+                  color="neutral"
+                  icon="i-lucide-arrow-right"
+                  @click="paymentForm.month = r.month; refreshPaymentStatus()"
+                >
+                  Ustaw w formularzu
+                </UButton>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </UCard>
   </UContainer>

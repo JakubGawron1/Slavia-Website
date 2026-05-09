@@ -4,6 +4,9 @@ defineOptions({
 })
 
 const error = useError()
+const config = useRuntimeConfig()
+const appReleaseLabel = computed(() => String(config.public.appVersion ?? ''))
+const currentYear = new Date().getFullYear()
 
 /** Runtime (router) ustawia `url`; typ `NuxtError` tego nie deklaruje. */
 function errorRequestUrl(e: typeof error.value): string | undefined {
@@ -86,7 +89,7 @@ function reloadPage() {
 </script>
 
 <template>
-  <div class="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background px-5 py-14 text-center">
+  <div class="relative flex min-h-screen flex-col overflow-hidden bg-background text-center">
     <div
       class="pointer-events-none absolute -left-24 top-16 size-[420px] rounded-full bg-primary/15 blur-3xl dark:bg-primary/25"
       aria-hidden="true"
@@ -96,7 +99,8 @@ function reloadPage() {
       aria-hidden="true"
     />
 
-    <div class="relative z-1 mb-10 max-w-lg">
+    <div class="relative z-1 flex flex-1 flex-col items-center justify-center px-5 py-14">
+      <div class="mb-10 max-w-lg">
       <div class="slavia-deco-barbell mb-8 inline-flex items-center justify-center rounded-full bg-muted/20 px-6 py-4 ring-1 ring-default/60">
         <UIcon
           name="i-lucide-dumbbell"
@@ -137,9 +141,9 @@ function reloadPage() {
           {{ errorPageUrl }}
         </p>
       </div>
-    </div>
+      </div>
 
-    <div class="relative z-1 flex max-w-md flex-col gap-3 sm:flex-row sm:justify-center">
+      <div class="flex max-w-md flex-col gap-3 sm:flex-row sm:justify-center">
       <UButton
         size="xl"
         icon="i-lucide-home"
@@ -158,9 +162,9 @@ function reloadPage() {
       >
         Odśwież stronę
       </UButton>
-    </div>
+      </div>
 
-    <div class="relative z-1 mt-16 flex items-center gap-3 text-muted/40">
+      <div class="mt-16 flex items-center gap-3 text-muted/40">
       <UIcon
         name="i-lucide-dumbbell"
         class="size-8"
@@ -171,5 +175,57 @@ function reloadPage() {
         class="size-8"
       />
     </div>
+    </div>
+
+    <UFooter
+      class="border-t border-default bg-muted/5 py-8 slavia-safe-bottom slavia-safe-x lg:py-10"
+      :ui="{ container: 'flex flex-col gap-8 md:flex-row md:items-center md:justify-between lg:gap-12' }"
+    >
+      <template #left>
+        <div class="flex flex-col gap-2 text-left">
+          <p class="text-sm font-bold text-highlighted uppercase tracking-widest">
+            CKS Slavia Ruda Śląska
+          </p>
+          <div class="flex flex-col text-xs text-muted">
+            <a
+              href="https://maps.app.goo.gl/zqGy466nizCv45c57"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="flex items-center gap-2 hover:text-highlighted transition-colors"
+            >
+              <UIcon
+                name="i-lucide-map-pin"
+                class="size-3"
+              />
+              ul. Konopnickiej 13, 41-700 Ruda Śląska
+            </a>
+            <span class="flex items-center gap-2">
+              <UIcon
+                name="i-lucide-calendar"
+                class="size-3"
+              />
+              Treningi: Pn, Śr, Pt (15:00 - 18:00)
+            </span>
+          </div>
+        </div>
+      </template>
+
+      <template #right>
+        <div class="flex w-full flex-col gap-2 text-left md:w-auto md:items-end md:text-right">
+          <p class="text-xs text-muted">
+            © {{ currentYear }} Slavia Ruda Śląska.
+          </p>
+          <p class="text-[10px] text-muted/50">
+            Realizacja: Neution Studio · Jakub Gawron · Dawid Węgrzyn
+          </p>
+          <p
+            class="text-[10px] font-mono text-muted/70"
+            aria-label="Wersja aplikacji"
+          >
+            Wersja {{ appReleaseLabel }}
+          </p>
+        </div>
+      </template>
+    </UFooter>
   </div>
 </template>

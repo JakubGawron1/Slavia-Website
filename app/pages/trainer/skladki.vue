@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Athlete, AthletePaymentOverviewRow, PendingPaymentRow } from '~/types/models'
+import type { Athlete, AthletePaymentOverviewRow, PaymentMonthStatusRow, PendingPaymentRow } from '~/types/models'
 import { apiRoutes } from '~/config/api'
 import { getApiErrorMessage } from '~/composables/useApi'
 
@@ -14,6 +14,14 @@ const apiFetch = useApi()
 const toast = useToast()
 
 const month = ref(new Date().toISOString().slice(0, 7))
+const currentYear = new Date().getFullYear()
+const currentMonth = new Date().getMonth() + 1
+const canPreviewNextYear = computed(() => currentMonth >= 11)
+const allowedYears = computed(() => (canPreviewNextYear.value ? [currentYear, currentYear + 1] : [currentYear]))
+const year = ref<number>(currentYear)
+const selectedAthleteId = ref<string>('')
+const yearLoading = ref(false)
+const yearRows = ref<PaymentMonthStatusRow[]>([])
 
 const { data: athletes } = await useAsyncData(
   'trainer-athletes-for-fees',
@@ -25,6 +33,62 @@ const { data: athletes } = await useAsyncData(
     }
   }
 )
+
+watch(
+  () => athletes.value,
+  (list) => {
+    if (!selectedAthleteId.value && Array.isArray(list) && list.length > 0) {
+      selectedAthleteId.value = list[0]!.id
+    }
+  },
+  { immediate: true }
+)
+
+const monthLabelPl = (yyyyMm: string) => {
+  const mm = Number.parseInt(String(yyyyMm || '').slice(5, 7), 10)
+  const months = [
+    'Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec',
+    'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień'
+  ]
+  return months[(mm - 1)] || yyyyMm
+}
+
+function rowStatusLabel(r: PaymentMonthStatusRow) {
+  if (r.is_paid) return 'Opłacone'
+  if (r.has_pending) return 'Oczekuje'
+  if (r.is_overdue) return 'Nieopłacone'
+  return 'Brak'
+}
+
+function rowStatusColor(r: PaymentMonthStatusRow) {
+  if (r.is_paid) return 'success'
+  if (r.is_overdue) return 'error'
+  if (r.has_pending) return 'warning'
+  return 'neutral'
+}
+
+async function refreshYearTable() {
+  const aid = selectedAthleteId.value
+  if (!aid) {
+    yearRows.value = []
+    return
+  }
+  if (!allowedYears.value.includes(year.value)) {
+    year.value = allowedYears.value[0]!
+  }
+  yearLoading.value = true
+  try {
+    const q = `?year=${encodeURIComponent(String(year.value))}`
+    const rows = await apiFetch<PaymentMonthStatusRow[]>(`${apiRoutes.payments.athleteYear(aid)}${q}`).catch(() => [])
+    yearRows.value = Array.isArray(rows) ? rows : []
+  } finally {
+    yearLoading.value = false
+  }
+}
+
+watch([selectedAthleteId, year], () => {
+  void refreshYearTable()
+})
 
 const { data: overview, refresh: refreshOverview } = await useAsyncData(
   () => `payments-overview-${month.value}`,
@@ -160,6 +224,96 @@ async function createApprovedPayment() {
         <UFormField label="Opis" description="Opcjonalnie" class="md:col-span-12">
           <UInput v-model="addApprovedPaymentForm.note" placeholder="np. gotówka / przelew" class="w-full" />
         </UFormField>
+      </div>
+    </UCard>
+
+    <UCard class="mb-6 border-default/70">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div class="min-w-0">
+          <h2 class="text-lg font-semibold text-highlighted">
+            Składki zawodnika (rok)
+          </h2>
+          <p class="mt-1 text-sm text-muted">
+            Wybierz zawodnika i rok — zobaczysz status 12 miesięcy.
+          </p>
+        </div>
+        <div class="flex flex-wrap items-end gap-2">
+          <UFormField label="Zawodnik" size="xs" class="min-w-64">
+            <USelect
+              v-model="selectedAthleteId"
+              :items="(athletes || []).map(a => ({ label: a.full_name, value: a.id }))"
+              class="w-full"
+            />
+          </UFormField>
+          <UFormField label="Rok" size="xs" class="w-40">
+            <USelect
+              v-if="allowedYears.length > 1"
+              v-model="year"
+              :items="allowedYears.map(y => ({ label: String(y), value: y }))"
+              class="w-full"
+            />
+            <UInput
+              v-else
+              :model-value="String(allowedYears[0])"
+              disabled
+              size="sm"
+              class="w-full"
+            />
+          </UFormField>
+          <UButton size="sm" variant="soft" icon="i-lucide-refresh-cw" :loading="yearLoading" @click="refreshYearTable">
+            Odśwież
+          </UButton>
+        </div>
+      </div>
+
+      <div class="mt-4 overflow-x-auto">
+        <table class="w-full min-w-[720px] text-sm">
+          <thead class="border-b border-default bg-muted/20">
+            <tr>
+              <th class="px-4 py-3 text-left font-semibold text-muted">Miesiąc</th>
+              <th class="px-4 py-3 text-left font-semibold text-muted">Status</th>
+              <th class="px-4 py-3 text-left font-semibold text-muted">Termin</th>
+              <th class="px-4 py-3 text-right font-semibold text-muted">Szybki podgląd</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-default">
+            <tr v-if="yearLoading">
+              <td colspan="4" class="px-4 py-10 text-center text-muted">
+                <UIcon name="i-lucide-loader-2" class="inline size-6 animate-spin" />
+              </td>
+            </tr>
+            <tr v-else-if="yearRows.length === 0">
+              <td colspan="4" class="px-4 py-10 text-center text-muted">
+                Brak danych dla tego roku.
+              </td>
+            </tr>
+            <tr v-for="r in yearRows" v-else :key="r.month" class="hover:bg-muted/10 transition-colors">
+              <td class="px-4 py-3">
+                <span class="font-semibold text-highlighted">{{ monthLabelPl(r.month) }}</span>
+                <span class="ml-2 font-mono text-[11px] text-muted">{{ r.month }}</span>
+              </td>
+              <td class="px-4 py-3">
+                <UBadge :color="rowStatusColor(r)" variant="subtle">
+                  {{ rowStatusLabel(r) }}
+                </UBadge>
+              </td>
+              <td class="px-4 py-3 text-muted font-mono text-[11px]">
+                {{ r.due_date }}
+              </td>
+              <td class="px-4 py-3 text-right">
+                <UButton
+                  size="xs"
+                  variant="outline"
+                  color="neutral"
+                  icon="i-lucide-eye"
+                  @click="month = r.month; refreshOverview()"
+                >
+                  Ustaw miesiąc
+                </UButton>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </UCard>
 

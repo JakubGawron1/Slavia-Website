@@ -2,6 +2,10 @@
 import type { Athlete, CompetitionResult, PendingPaymentRow } from '~/types/models'
 import { apiRoutes } from '~/config/api'
 import { getApiErrorMessage } from '~/composables/useApi'
+import DashboardHero from '~/components/dashboard/DashboardHero.vue'
+import DashboardKpiCard from '~/components/dashboard/DashboardKpiCard.vue'
+import DashboardModuleCard from '~/components/dashboard/DashboardModuleCard.vue'
+import DashboardUrgentList from '~/components/dashboard/DashboardUrgentList.vue'
 
 definePageMeta({ middleware: 'trainer' })
 
@@ -219,6 +223,54 @@ const quickLinks = computed(() => {
   return links
 })
 
+const moduleGroups = computed(() => {
+  const list = quickLinks.value
+  const byTo = new Map<string, typeof list[number]>()
+  for (const l of list) byTo.set(typeof l.to === 'string' ? l.to : l.to.path, l)
+
+  const pick = (to: string) => byTo.get(to)
+  return [
+    {
+      title: 'Najczęstsze',
+      items: [
+        pick('/trainer/wyniki'),
+        pick('/trainer/zawodnicy'),
+        pick('/trainer/skladki'),
+        pick('/attendance')
+      ].filter(Boolean)
+    },
+    {
+      title: 'Planowanie',
+      items: [
+        pick('/kalendarz'),
+        pick('/trainer/plany'),
+        pick('/trainer/regeneracja'),
+        pick('/trainer/wydarzenia')
+      ].filter(Boolean)
+    },
+    {
+      title: 'Narzędzia',
+      items: [
+        pick('/trainer/analiza-sztangi'),
+        pick('/trainer/exercises'),
+        pick('/kalkulator-proporcji'),
+        pick('/chat'),
+        pick('/profil')
+      ].filter(Boolean)
+    }
+  ] as const
+})
+
+function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral' {
+  const s = String(bg || '').toLowerCase()
+  if (s.includes('red')) return 'error'
+  if (s.includes('amber') || s.includes('yellow')) return 'warning'
+  if (s.includes('emerald') || s.includes('green') || s.includes('teal') || s.includes('lime')) return 'success'
+  if (s.includes('sky') || s.includes('cyan') || s.includes('blue') || s.includes('indigo')) return 'info'
+  if (s.includes('violet') || s.includes('purple') || s.includes('fuchsia') || s.includes('primary')) return 'primary'
+  return 'neutral'
+}
+
 async function approveResult(id: string) {
   try {
     await apiFetch(`/api/results/${id}/approve`, { method: 'PATCH' })
@@ -275,51 +327,6 @@ async function rejectPayment(id: string) {
   }
 }
 
-const addApprovedPaymentForm = reactive<{
-  athlete_id: string | null
-  month: string
-  amount_pln: number | null
-  note: string
-}>({
-  athlete_id: null,
-  month: new Date().toISOString().slice(0, 7),
-  amount_pln: null,
-  note: ''
-})
-
-watch(
-  () => athletes.value,
-  (list) => {
-    if (!addApprovedPaymentForm.athlete_id && Array.isArray(list) && list.length > 0) {
-      addApprovedPaymentForm.athlete_id = list[0]!.id
-    }
-  },
-  { immediate: true }
-)
-
-async function createApprovedPayment() {
-  if (!addApprovedPaymentForm.athlete_id) return
-  try {
-    await apiFetch(apiRoutes.payments.createApprovedForAthlete(addApprovedPaymentForm.athlete_id), {
-      method: 'POST',
-      body: {
-        month: addApprovedPaymentForm.month,
-        amount_pln: addApprovedPaymentForm.amount_pln != null ? Number(addApprovedPaymentForm.amount_pln) : null,
-        note: addApprovedPaymentForm.note
-      }
-    })
-    toast.add({ title: 'Dodano zatwierdzoną płatność', color: 'success' })
-    addApprovedPaymentForm.note = ''
-    await refreshPendingPayments()
-  } catch (e) {
-    toast.add({
-      title: 'Nie udało się dodać płatności',
-      description: getApiErrorMessage(e),
-      color: 'error'
-    })
-  }
-}
-
 async function loadAttendanceRows() {
   const q = new URLSearchParams()
   if (attendanceFilters.athlete_id !== FILTER_ALL) q.set('athlete_id', attendanceFilters.athlete_id)
@@ -338,17 +345,20 @@ onMounted(() => {
 
 <template>
   <UContainer class="py-8 md:py-14 lg:py-16">
-    <div class="mb-8">
-      <p class="text-sm font-medium uppercase tracking-wider text-primary">
-        Panel Trenera
-      </p>
-      <h1 class="mt-2 text-3xl font-bold tracking-tight text-highlighted">
-        Witaj, {{ auth.user.value?.username || 'Trenerze' }}!
-      </h1>
-      <p class="mt-2 max-w-2xl text-muted">
-        Tutaj możesz przeglądać zawodników, sprawdzać zgłoszenia wyników i koordynować harmonogramy.
-      </p>
-    </div>
+    <DashboardHero
+      eyebrow="Panel trenera"
+      :title="`Witaj, ${auth.user.value?.username || 'Trenerze'}!`"
+      lead="Najważniejsze moduły, szybkie akcje i rzeczy do zatwierdzenia w jednym miejscu."
+      icon="i-lucide-dumbbell"
+      :badges="[
+        { label: `Oczekujące wyniki: ${pendingCount}`, color: pendingCount ? 'warning' : 'neutral' },
+        { label: `Oczekujące składki: ${pendingPaymentsCount}`, color: pendingPaymentsCount ? 'warning' : 'neutral' }
+      ]"
+      :actions="[
+        { label: 'Wszystkie starty', to: '/trainer/wyniki', icon: 'i-lucide-list-checks', variant: 'soft', color: 'primary' },
+        { label: 'Składki', to: '/trainer/skladki', icon: 'i-lucide-banknote', variant: 'outline', color: 'neutral' }
+      ]"
+    />
 
     <div
       v-if="lowerDashboards.length"
@@ -380,275 +390,77 @@ onMounted(() => {
       </div>
     </div>
 
-    <div class="mb-10 grid grid-cols-1 gap-4 sm:grid-cols-3">
-      <UCard>
-        <div class="flex items-center gap-4">
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
-            <UIcon
-              name="i-lucide-users"
-              class="size-6"
-            />
-          </div>
-          <div>
-            <p class="text-sm font-medium text-muted">
-              Zawodnicy (aktywni)
-            </p>
-            <p class="text-2xl font-bold text-highlighted">
-              {{ athletesCount }}
-            </p>
-          </div>
-        </div>
-      </UCard>
-      <UCard>
-        <div class="flex items-center gap-4">
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500">
-            <UIcon
-              name="i-lucide-activity"
-              class="size-6"
-            />
-          </div>
-          <div>
-            <p class="text-sm font-medium text-muted">
-              Wyniki oczekujące
-            </p>
-            <p class="text-2xl font-bold text-highlighted">
-              {{ pendingCount }}
-            </p>
-          </div>
-        </div>
-      </UCard>
-      <UCard>
-        <div class="flex items-center gap-4">
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-500/10 text-purple-500">
-            <UIcon
-              name="i-lucide-calendar"
-              class="size-6"
-            />
-          </div>
-          <div>
-            <p class="text-sm font-medium text-muted">
-              Wydarzenia w kalendarzu
-            </p>
-            <p class="text-2xl font-bold text-highlighted">
-              {{ competitionsCount }}
-            </p>
-          </div>
-        </div>
-      </UCard>
+    <div class="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3 lg:gap-4">
+      <DashboardKpiCard label="Zawodnicy (aktywni)" :value="athletesCount" icon="i-lucide-users" tone="info" to="/trainer/zawodnicy" />
+      <DashboardKpiCard
+        label="Wyniki oczekujące"
+        :value="pendingCount"
+        icon="i-lucide-clipboard-clock"
+        :tone="pendingCount ? 'warning' : 'neutral'"
+        :to="{ path: '/trainer', hash: '#wyniki-oczekujace' }"
+      />
+      <DashboardKpiCard label="Wydarzenia w kalendarzu" :value="competitionsCount" icon="i-lucide-calendar" tone="primary" to="/kalendarz" />
     </div>
 
-    <h2 class="mb-4 text-xl font-semibold text-highlighted">
-      Moduły i skróty
-    </h2>
-    <div class="mb-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <NuxtLink
-        v-for="link in quickLinks"
-        :key="link.title"
-        :to="link.to"
-        class="group block transition-transform hover:-translate-y-1"
+    <div class="mt-10 grid gap-4 lg:grid-cols-2">
+      <DashboardUrgentList
+        title="Wyniki do zatwierdzenia"
+        icon="i-lucide-clipboard-clock"
+        :count="pendingCount"
+        empty-text="Brak oczekujących zgłoszeń wyników."
+        :footer-link="{ label: 'Przejdź do wszystkich startów', to: '/trainer/wyniki' }"
+        :items="(pendingResults || []).slice(0, 6).map(r => ({
+          key: r.id,
+          title: labelForResult(r),
+          subtitle: `Rwanie ${r.snatch} · Podrzut ${r.clean_and_jerk} · Razem ${r.total} · ${r.date.slice(0,10)}`,
+          badge: { label: 'Pending', color: 'warning' },
+          primaryAction: { label: 'Zatwierdź', onClick: () => { void approveResult(r.id) } },
+          secondaryAction: { label: 'Odrzuć', color: 'error', onClick: () => { void rejectResult(r.id) } }
+        }))"
       >
-        <UCard class="h-full border border-default transition-colors group-hover:border-primary/50 group-hover:shadow-md">
-          <div class="flex flex-col items-center text-center p-4">
-            <div :class="['mb-3 flex h-14 w-14 items-center justify-center rounded-full', link.bg, link.color]">
-              <UIcon
-                :name="link.icon"
-                class="size-7"
-              />
-            </div>
-            <h3 class="font-medium text-highlighted group-hover:text-primary transition-colors">
-              {{ link.title }}
-            </h3>
-            <p class="mt-2 text-xs text-muted">
-              {{ link.description }}
-            </p>
-          </div>
-        </UCard>
-      </NuxtLink>
+        <template #actions>
+          <UButton size="sm" variant="soft" icon="i-lucide-refresh-ccw" @click="refreshPending()">Odśwież</UButton>
+        </template>
+      </DashboardUrgentList>
+
+      <DashboardUrgentList
+        title="Składki do zatwierdzenia"
+        icon="i-lucide-banknote"
+        :count="pendingPaymentsCount"
+        empty-text="Brak zgłoszeń składek w statusie oczekującym."
+        :footer-link="{ label: 'Przejdź do składek (widok miesiąca)', to: '/trainer/skladki' }"
+        :items="(pendingPayments || []).slice(0, 6).map(p => ({
+          key: p.id,
+          title: p.athlete_name,
+          subtitle: `Miesiąc ${p.month}${p.amount_pln != null ? ` · ${p.amount_pln} PLN` : ''}${p.note && p.note.trim() ? ` · ${p.note}` : ''}`,
+          badge: { label: 'Pending', color: 'warning' },
+          primaryAction: { label: 'Zatwierdź', onClick: () => { void approvePayment(p.id) } },
+          secondaryAction: { label: 'Odrzuć', color: 'error', onClick: () => { void rejectPayment(p.id) } }
+        }))"
+      >
+        <template #actions>
+          <UButton size="sm" variant="soft" icon="i-lucide-refresh-ccw" @click="refreshPendingPayments()">Odśwież</UButton>
+        </template>
+      </DashboardUrgentList>
     </div>
 
-    <!-- Wyniki oczekujące — pod skrótami; kotwica działa także przy 0 pozycjach -->
-    <div
-      id="wyniki-oczekujace"
-      class="mb-12 scroll-mt-24 rounded-2xl border border-default bg-card p-6"
-    >
-      <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 class="text-xl font-semibold text-highlighted">
-          <UIcon
-            name="i-lucide-clipboard-clock"
-            class="mr-2 inline"
+    <div class="mt-12 space-y-8">
+      <div v-for="g in moduleGroups" :key="g.title">
+        <div class="mb-3 flex items-end justify-between gap-3">
+          <h2 class="text-xl font-semibold text-highlighted">
+            {{ g.title }}
+          </h2>
+        </div>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <DashboardModuleCard
+            v-for="link in g.items"
+            :key="typeof link!.to === 'string' ? link!.to : link!.to.path"
+            :title="link!.title"
+            :description="link!.description"
+            :icon="link!.icon"
+            :to="link!.to"
+            :tone="toneFromBg(link!.bg)"
           />
-          Wyniki do zatwierdzenia ({{ pendingCount }})
-        </h2>
-        <div class="flex flex-wrap gap-2">
-          <UButton
-            variant="soft"
-            size="sm"
-            icon="i-lucide-refresh-ccw"
-            @click="refreshPending()"
-          >
-            Odśwież listę
-          </UButton>
-          <UButton
-            size="sm"
-            variant="outline"
-            to="/trainer/wyniki"
-          >
-            Wszystkie starty / dodaj wpis
-          </UButton>
-        </div>
-      </div>
-      <div
-        v-if="pendingCount === 0"
-        class="rounded-xl border border-dashed border-default/70 bg-muted/10 px-4 py-8 text-center text-sm text-muted"
-      >
-        Brak oczekujących zgłoszeń. Możesz dodać start od razu jako zatwierdzony na stronie
-        <NuxtLink
-          to="/trainer/wyniki"
-          class="font-semibold text-primary underline-offset-2 hover:underline"
-        >
-          Wszystkie starty
-        </NuxtLink>
-        .
-      </div>
-      <div
-        v-else
-        class="space-y-3"
-      >
-        <div
-          v-for="result in pendingResults || []"
-          :key="result.id"
-          class="flex flex-col gap-3 rounded-xl border border-default/50 bg-muted/20 p-4 sm:flex-row sm:items-center sm:justify-between"
-        >
-          <div class="min-w-0">
-            <p class="font-medium text-highlighted">
-              {{ labelForResult(result) }}
-            </p>
-            <p class="text-sm text-muted">
-              Rwanie {{ result.snatch }} kg · Podrzut {{ result.clean_and_jerk }} kg · Razem {{ result.total }} kg · {{ result.date.slice(0, 10) }}
-            </p>
-          </div>
-          <UButton
-            size="sm"
-            class="shrink-0"
-            @click="approveResult(result.id)"
-          >
-            Zatwierdź
-          </UButton>
-          <UButton
-            size="sm"
-            color="error"
-            variant="soft"
-            class="shrink-0"
-            @click="rejectResult(result.id)"
-          >
-            Odrzuć
-          </UButton>
-        </div>
-      </div>
-    </div>
-
-    <!-- Składki do zatwierdzenia -->
-    <div
-      id="skladki-oczekujace"
-      class="mb-12 scroll-mt-24 rounded-2xl border border-default bg-card p-6"
-    >
-      <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 class="text-xl font-semibold text-highlighted">
-          <UIcon
-            name="i-lucide-banknote"
-            class="mr-2 inline"
-          />
-          Składki do zatwierdzenia ({{ pendingPaymentsCount }})
-        </h2>
-        <div class="flex flex-wrap gap-2">
-          <UButton
-            variant="soft"
-            size="sm"
-            icon="i-lucide-refresh-ccw"
-            @click="refreshPendingPayments()"
-          >
-            Odśwież listę
-          </UButton>
-        </div>
-      </div>
-
-      <UCard class="mb-5 border-default/60">
-        <div class="grid gap-3 md:grid-cols-12 md:items-end">
-          <UFormField label="Dodaj zatwierdzoną płatność" class="md:col-span-4">
-            <USelect
-              v-model="addApprovedPaymentForm.athlete_id"
-              :items="[{ label: 'Wybierz zawodnika', value: null }, ...((athletes || []).map(a => ({ label: a.full_name, value: a.id })))]"
-              class="w-full"
-            />
-          </UFormField>
-          <UFormField label="Miesiąc" class="md:col-span-3">
-            <UInput v-model="addApprovedPaymentForm.month" type="month" class="w-full" />
-          </UFormField>
-          <UFormField label="Kwota (PLN)" description="Opcjonalnie" class="md:col-span-2">
-            <UInputNumber v-model="addApprovedPaymentForm.amount_pln" :min="0" :step="1" class="w-full" />
-          </UFormField>
-          <UFormField label="Opis" description="Opcjonalnie" class="md:col-span-3">
-            <UInput v-model="addApprovedPaymentForm.note" placeholder="np. gotówka / przelew" class="w-full" />
-          </UFormField>
-        </div>
-        <div class="mt-3">
-          <UButton
-            icon="i-lucide-check"
-            :disabled="!addApprovedPaymentForm.athlete_id"
-            @click="createApprovedPayment"
-          >
-            Dodaj jako zatwierdzone
-          </UButton>
-        </div>
-      </UCard>
-
-      <div
-        v-if="pendingPaymentsCount === 0"
-        class="rounded-xl border border-dashed border-default/70 bg-muted/10 px-4 py-8 text-center text-sm text-muted"
-      >
-        Brak zgłoszeń składek w statusie oczekującym.
-      </div>
-
-      <div
-        v-else
-        class="space-y-3"
-      >
-        <div
-          v-for="p in pendingPayments || []"
-          :key="p.id"
-          class="flex flex-col gap-3 rounded-xl border border-default/50 bg-muted/20 p-4 sm:flex-row sm:items-center sm:justify-between"
-        >
-          <div class="min-w-0">
-            <p class="font-medium text-highlighted">
-              {{ p.athlete_name }}
-            </p>
-            <p class="text-sm text-muted">
-              Miesiąc: <span class="font-mono">{{ p.month }}</span>
-              <span v-if="p.amount_pln != null"> · Kwota: <span class="font-mono">{{ p.amount_pln }}</span> PLN</span>
-              <span v-if="p.note && p.note.trim()"> · {{ p.note }}</span>
-            </p>
-            <p class="mt-1 text-[11px] text-muted">
-              Zgłoszono: <span class="font-mono">{{ p.created_at }}</span>
-            </p>
-          </div>
-          <div class="flex shrink-0 flex-wrap gap-2">
-            <UButton
-              size="sm"
-              class="shrink-0"
-              @click="approvePayment(p.id)"
-            >
-              Zatwierdź
-            </UButton>
-            <UButton
-              size="sm"
-              color="error"
-              variant="soft"
-              class="shrink-0"
-              @click="rejectPayment(p.id)"
-            >
-              Odrzuć
-            </UButton>
-          </div>
         </div>
       </div>
     </div>

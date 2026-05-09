@@ -179,12 +179,26 @@ const sortedPublic = computed(() => {
 
     <div
       v-if="pending"
-      class="flex justify-center py-14"
+      class="py-14"
     >
-      <UIcon
-        name="i-lucide-loader-2"
-        class="size-8 animate-spin text-primary"
-      />
+      <div class="mx-auto max-w-4xl space-y-4">
+        <div
+          v-for="i in 4"
+          :key="`ann-skel-${i}`"
+          class="rounded-2xl border border-default bg-card p-5 shadow-sm"
+        >
+          <div class="flex flex-wrap items-center gap-2">
+            <div class="h-5 w-16 rounded bg-muted/30 animate-pulse" />
+            <div class="h-4 w-28 rounded bg-muted/25 animate-pulse" />
+          </div>
+          <div class="mt-3 h-6 w-[70%] rounded bg-muted/35 animate-pulse" />
+          <div class="mt-4 space-y-2">
+            <div class="h-4 w-full rounded bg-muted/25 animate-pulse" />
+            <div class="h-4 w-[92%] rounded bg-muted/25 animate-pulse" />
+            <div class="h-4 w-[78%] rounded bg-muted/25 animate-pulse" />
+          </div>
+        </div>
+      </div>
     </div>
 
     <div

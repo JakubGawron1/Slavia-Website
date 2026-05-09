@@ -117,7 +117,42 @@ function goToToday() {
 
 function statusColor(s: string) {
   if (s === 'obecny') return 'success'
-  return 'error'
+  if (s === 'nieobecny') return 'error'
+  return 'neutral'
+}
+
+function statusLabelPl(s: string) {
+  if (s === 'obecny') return 'Obecny'
+  if (s === 'nieobecny') return 'Nieobecny'
+  return s || '—'
+}
+
+function trainingStatusLabelPl(s: string) {
+  if (s === 'scheduled') return 'Planowy'
+  if (s === 'cancelled') return 'Odwołany'
+  return s || '—'
+}
+
+function trainingStatusColor(s: string) {
+  if (s === 'scheduled') return 'success'
+  if (s === 'cancelled') return 'warning'
+  return 'neutral'
+}
+
+function dayAccentClass(day: Date) {
+  const inMonth = isSameMonth(day, monthStart.value)
+  const isT = isTrainingDay(day)
+  const key = format(day, 'yyyy-MM-dd')
+  const rec = recordsByDate.value.get(key)
+  const tStatus = trainingStatusForDate(day)
+
+  const base = inMonth ? 'bg-card' : 'bg-muted/10 opacity-60'
+  if (!isT) return base
+
+  if (tStatus !== 'scheduled') return `${base} ring-1 ring-warning/20`
+  if (rec?.status === 'obecny') return `${base} ring-1 ring-emerald-500/25 bg-emerald-500/5`
+  if (rec?.status === 'nieobecny') return `${base} ring-1 ring-red-500/25 bg-red-500/5`
+  return `${base} ring-1 ring-primary/15`
 }
 
 async function refreshHistory() {
@@ -248,38 +283,74 @@ onMounted(() => {
         </div>
       </div>
 
-      <template v-if="calendarView === 'grid'">
-        <div class="grid grid-cols-7 border border-default/60 text-center text-[10px] font-bold uppercase tracking-wide text-muted">
-          <div v-for="w in weekDays" :key="w" class="border-r border-default/40 py-2 last:border-r-0">{{ w }}</div>
+      <div class="mb-4 grid gap-2 rounded-2xl border border-default/60 bg-muted/10 p-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="flex items-center gap-2">
+          <UBadge color="success" variant="subtle" size="sm">Planowy</UBadge>
+          <span class="text-xs text-muted">trening</span>
         </div>
-        <div class="grid grid-cols-7 border-x border-b border-default/60">
+        <div class="flex items-center gap-2">
+          <UBadge color="warning" variant="subtle" size="sm">Odwołany</UBadge>
+          <span class="text-xs text-muted">trening</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <UBadge color="success" variant="subtle" size="sm">Obecny</UBadge>
+          <span class="text-xs text-muted">wpis</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <UBadge color="error" variant="subtle" size="sm">Nieobecny</UBadge>
+          <span class="text-xs text-muted">wpis</span>
+        </div>
+      </div>
+
+      <template v-if="calendarView === 'grid'">
+        <div class="grid grid-cols-7 overflow-hidden rounded-2xl border border-default/60 text-center text-[10px] font-black uppercase tracking-wide text-muted">
+          <div v-for="w in weekDays" :key="w" class="border-r border-default/40 bg-muted/20 py-2.5 last:border-r-0">
+            {{ w }}
+          </div>
+        </div>
+        <div class="grid grid-cols-7 overflow-hidden rounded-2xl border border-default/60 border-t-0">
           <button
             v-for="day in days"
             :key="day.toISOString()"
             type="button"
-            class="min-h-[92px] border-r border-t border-default/40 p-2 text-left last:border-r-0"
+            class="min-h-[98px] border-r border-t border-default/40 p-2.5 text-left last:border-r-0 hover:bg-muted/15 transition-colors"
             :class="[
-              isSameMonth(day, monthStart) ? 'bg-card' : 'bg-muted/10 opacity-60',
-              isToday(day) ? 'ring-1 ring-primary/35' : ''
+              dayAccentClass(day),
+              isToday(day) ? 'ring-2 ring-primary/35' : ''
             ]"
             @click="openTrainingModal(day)"
           >
-            <div class="mb-1 text-xs font-semibold text-highlighted">{{ format(day, 'd') }}</div>
-            <div v-if="isTrainingDay(day)" class="text-[10px] text-muted">
-              Trening:
-              <span :class="trainingStatusForDate(day) === 'scheduled' ? 'text-success' : 'text-warning'">
-                {{ trainingStatusForDate(day) === 'scheduled' ? 'planowy' : trainingStatusForDate(day) }}
-              </span>
+            <div class="mb-2 flex items-start justify-between gap-2">
+              <div class="text-sm font-black text-highlighted tabular-nums">{{ format(day, 'd') }}</div>
+              <UBadge
+                v-if="isTrainingDay(day)"
+                size="xs"
+                variant="subtle"
+                :color="trainingStatusColor(trainingStatusForDate(day))"
+                class="shrink-0"
+              >
+                {{ trainingStatusLabelPl(trainingStatusForDate(day)) }}
+              </UBadge>
             </div>
-            <UBadge
-              v-if="recordsByDate.get(format(day, 'yyyy-MM-dd'))"
-              size="xs"
-              variant="subtle"
-              class="mt-2"
-              :color="statusColor(recordsByDate.get(format(day, 'yyyy-MM-dd'))?.status || 'nieobecny')"
-            >
-              {{ recordsByDate.get(format(day, 'yyyy-MM-dd'))?.status }}
-            </UBadge>
+
+            <div class="mt-1">
+              <UBadge
+                v-if="recordsByDate.get(format(day, 'yyyy-MM-dd'))"
+                size="xs"
+                variant="subtle"
+                :color="statusColor(recordsByDate.get(format(day, 'yyyy-MM-dd'))?.status || '')"
+              >
+                {{ statusLabelPl(recordsByDate.get(format(day, 'yyyy-MM-dd'))?.status || '') }}
+              </UBadge>
+              <UBadge
+                v-else-if="isTrainingDay(day)"
+                size="xs"
+                variant="subtle"
+                color="neutral"
+              >
+                Brak wpisu
+              </UBadge>
+            </div>
           </button>
         </div>
       </template>
@@ -315,7 +386,7 @@ onMounted(() => {
                 variant="subtle"
                 :color="statusColor(recordsByDate.get(format(day, 'yyyy-MM-dd'))?.status || 'nieobecny')"
               >
-                {{ recordsByDate.get(format(day, 'yyyy-MM-dd'))?.status }}
+                {{ statusLabelPl(recordsByDate.get(format(day, 'yyyy-MM-dd'))?.status || '') }}
               </UBadge>
               <UBadge
                 v-else
@@ -352,22 +423,43 @@ onMounted(() => {
         <div class="space-y-4 p-4 sm:p-5">
           <UAlert
             v-if="selectedTrainingDay"
-            color="primary"
+            :color="trainingStatusColor(trainingStatusForDate(selectedTrainingDay))"
             variant="subtle"
-            :title="`Status treningu: ${trainingStatusForDate(selectedTrainingDay) === 'scheduled' ? 'planowy' : trainingStatusForDate(selectedTrainingDay)}`"
+            :title="`Status treningu: ${trainingStatusLabelPl(trainingStatusForDate(selectedTrainingDay))}`"
             description="Treningi są importowane z bazy wydarzeń (siatka Pn/Śr/Pt + wyjątki)."
           />
           <UFormField label="Data treningu">
             <UInput v-model="sessionDate" type="date" class="w-full" />
           </UFormField>
           <UFormField label="Status obecności">
-            <USelect
-              v-model="status"
-              :items="[
-                { label: 'Obecny', value: 'obecny' },
-                { label: 'Nieobecny', value: 'nieobecny' }
-              ]"
-            />
+            <div class="flex flex-wrap gap-2">
+              <UButton
+                size="sm"
+                :variant="status === 'obecny' ? 'solid' : 'outline'"
+                color="success"
+                icon="i-lucide-check"
+                @click="status = 'obecny'"
+              >
+                Obecny
+              </UButton>
+              <UButton
+                size="sm"
+                :variant="status === 'nieobecny' ? 'solid' : 'outline'"
+                color="error"
+                icon="i-lucide-x"
+                @click="status = 'nieobecny'"
+              >
+                Nieobecny
+              </UButton>
+              <UBadge
+                size="sm"
+                variant="subtle"
+                :color="statusColor(status)"
+                class="ml-auto"
+              >
+                Wybrane: {{ statusLabelPl(status) }}
+              </UBadge>
+            </div>
           </UFormField>
           <UFormField label="Notatka">
             <UInput v-model="note" placeholder="opcjonalnie" />

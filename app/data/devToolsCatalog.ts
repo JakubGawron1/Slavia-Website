@@ -15,7 +15,7 @@ export interface DevToolLinkGroup {
 
 export const DEV_TOOL_LINK_GROUPS: DevToolLinkGroup[] = [
   {
-    title: 'Strona publiczna',
+    title: 'Public: strona i narzędzia',
     description: 'Widok dostępny bez paneli — treści klubu i narzędzia dla gości.',
     links: [
       { to: '/', label: 'Start', description: 'Strona główna klubu', icon: 'i-lucide-home' },
@@ -32,7 +32,7 @@ export const DEV_TOOL_LINK_GROUPS: DevToolLinkGroup[] = [
     ]
   },
   {
-    title: 'Aktualności (CMS wpisy)',
+    title: 'CMS: aktualności (wpisy)',
     description: 'Wpisy HTML — edycja wymaga roli Admin/SuperAdmin (`/aktualnosci/*`).',
     links: [
       { to: '/aktualnosci', label: 'Lista wpisów', description: 'Karty i slugi `--uuid`', icon: 'i-lucide-newspaper' },
@@ -40,30 +40,35 @@ export const DEV_TOOL_LINK_GROUPS: DevToolLinkGroup[] = [
     ]
   },
   {
-    title: 'Panel zawodnika',
+    title: 'Panel: zawodnik',
     description: 'Ścieżki `/athlete/*` po zalogowaniu kontem z rolą zawodnika.',
     links: [
-      { to: '/athlete', label: 'Dashboard', description: 'Profil, wyniki, skróty', icon: 'i-lucide-dumbbell' },
+      { to: '/athlete', label: 'Dashboard', description: 'Profil, wyniki, skróty', icon: 'i-lucide-user' },
+      { to: '/athlete/skladki', label: 'Składka', description: 'Status i widok roczny składek', icon: 'i-lucide-banknote' },
       { to: '/athlete/kalendarz', label: 'Mój kalendarz', description: 'Przypisane starty', icon: 'i-lucide-calendar-heart' },
+      { to: '/attendance', label: 'Obecność', description: 'Kalendarz obecności (badges + modale)', icon: 'i-lucide-user-check' },
+      { to: '/chat', label: 'Czat', description: 'Wiadomości 1:1', icon: 'i-lucide-messages-square' },
       { to: '/dziennik', label: 'Dziennik', description: 'Wpisy treningowe', icon: 'i-lucide-book-marked' },
+      { to: '/athlete/timeline', label: 'Historia', description: 'Oś czasu: wyniki, obecność, dziennik', icon: 'i-lucide-timeline' },
       { to: '/athlete/analiza-sztangi', label: 'Analiza sztangi', description: 'Tor sztangi (wideo)', icon: 'i-lucide-scan-line' },
-      { to: '/athlete/exercises', label: 'Inne ćwiczenia', description: 'Przysiady, martwy, wyciskanie — ranking', icon: 'i-lucide-dumbbell' }
+      { to: '/athlete/exercises', label: 'Inne ćwiczenia', description: 'Przysiady, martwy, wyciskanie — ranking', icon: 'i-lucide-bar-chart-3' }
     ]
   },
   {
-    title: 'Panel trenera',
+    title: 'Panel: trener',
     description: 'Narzędzia kadry — trener, admin z dostępem trenera, superadmin.',
     links: [
       { to: '/trainer', label: 'Dashboard trenera', description: 'Podsumowanie i skróty', icon: 'i-lucide-layout-dashboard' },
       { to: '/trainer/zawodnicy', label: 'Zawodnicy (trener)', description: 'CRUD profili — konto logowania przez admina lub prośba', icon: 'i-lucide-users' },
       { to: '/trainer/wyniki', label: 'Wszystkie starty', description: 'Lista i edycja wyników', icon: 'i-lucide-list-checks' },
+      { to: '/trainer/skladki', label: 'Składki', description: 'Podgląd miesiąca i widok roczny zawodnika', icon: 'i-lucide-banknote' },
       { to: '/trainer/dziennik', label: 'Dzienniki (lista)', description: 'Wybór zawodnika (`…/imię--uuid`)', icon: 'i-lucide-book-open' },
       { to: '/trainer/analiza-sztangi', label: 'Analiza sztangi', description: 'Wersja kadry', icon: 'i-lucide-scan-line' },
       { to: '/trainer/exercises', label: 'Inne ćwiczenia', description: 'Ranking przysiadów, martwego itp.', icon: 'i-lucide-bar-chart-3' }
     ]
   },
   {
-    title: 'Panel administratora',
+    title: 'Panel: administrator',
     description: 'Zarządzanie treścią i kontami (`/admin/*`).',
     links: [
       { to: '/admin', label: 'Dashboard admina', description: 'Statystyki i oczekujące wyniki', icon: 'i-lucide-shield' },

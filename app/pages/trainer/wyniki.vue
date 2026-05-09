@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { Athlete, CompetitionResult } from '~/types/models'
 import { getApiErrorMessage } from '~/composables/useApi'
+import { sinclairTotal } from '~/utils/sinclair'
+import { effectiveBodyweightKgForSinclair } from '~/utils/sinclairAthlete'
 
 definePageMeta({ middleware: 'trainer' })
 
@@ -43,10 +45,52 @@ const nameById = computed(() => {
   return m
 })
 
+const athleteById = computed(() => {
+  const m = new Map<string, Athlete>()
+  for (const a of athletes.value || []) {
+    m.set(a.id, a)
+  }
+  return m
+})
+
+function rowSinclair(r: CompetitionResult): number | null {
+  const a = athleteById.value.get(r.athlete_id)
+  const gender = a?.gender
+  if (gender !== 'male' && gender !== 'female') return null
+  const bw = (r.bodyweight_kg != null && r.bodyweight_kg > 0)
+    ? Number(r.bodyweight_kg)
+    : (a?.bodyweight != null && a.bodyweight > 0 ? Number(a.bodyweight) : effectiveBodyweightKgForSinclair(a ?? ({} as Athlete)))
+  const total = Number(r.total ?? 0)
+  if (!Number.isFinite(bw) || bw <= 0 || !Number.isFinite(total) || total <= 0) return null
+  const s = sinclairTotal(total, bw, gender)
+  if (!Number.isFinite(s) || Number.isNaN(s)) return null
+  return Number(s.toFixed(2))
+}
+
 const rows = computed(() => {
   const list = rawResults.value || []
   return [...list].sort((a, b) => b.date.localeCompare(a.date))
 })
+
+const lastBodyweightByAthleteId = computed(() => {
+  const m = new Map<string, number>()
+  for (const r of (rows.value || [])) {
+    const aid = r.athlete_id
+    if (!aid || m.has(aid)) continue
+    const bw = (r.bodyweight_kg != null && Number(r.bodyweight_kg) > 0) ? Number(r.bodyweight_kg) : 0
+    if (bw > 0) m.set(aid, bw)
+  }
+  return m
+})
+
+function suggestedBodyweightKg(athleteId: string): number | null {
+  const fromLast = lastBodyweightByAthleteId.value.get(athleteId)
+  if (fromLast != null && fromLast > 0) return fromLast
+  const a = athleteById.value.get(athleteId)
+  const fromProfile = a?.bodyweight
+  if (fromProfile != null && Number(fromProfile) > 0) return Number(fromProfile)
+  return null
+}
 
 type ResultKindOption = 'competition' | 'training'
 
@@ -60,6 +104,7 @@ const form = reactive({
   status: 'Approved' as 'Pending' | 'Approved' | 'Rejected',
   kind: 'competition' as ResultKindOption,
   location: '' as string,
+  bodyweight_kg: null as number | null,
   squat_kg: null as number | null,
   bench_kg: null as number | null,
   deadlift_kg: null as number | null
@@ -79,6 +124,7 @@ const formAdd = reactive({
   date: '',
   kind: 'competition' as ResultKindOption,
   location: '' as string,
+  bodyweight_kg: null as number | null,
   squat_kg: null as number | null,
   bench_kg: null as number | null,
   deadlift_kg: null as number | null
@@ -86,12 +132,32 @@ const formAdd = reactive({
 
 const kindFilter = ref<'all' | ResultKindOption>('all')
 
+const ATHLETE_ALL = '__all__'
+const selectedAthleteId = ref<string>(ATHLETE_ALL)
+
 const filteredRows = computed(() => {
   if (kindFilter.value === 'all') return rows.value
   return rows.value.filter((r) => {
     const k = (r.kind ?? 'competition') as ResultKindOption
     return k === kindFilter.value
   })
+})
+
+watch(
+  athleteSelectOptions,
+  (list) => {
+    if (selectedAthleteId.value === ATHLETE_ALL) return
+    if (!Array.isArray(list) || !list.some(a => a.id === selectedAthleteId.value)) {
+      selectedAthleteId.value = ATHLETE_ALL
+    }
+  },
+  { immediate: true }
+)
+
+const visibleRows = computed(() => {
+  const list = filteredRows.value
+  if (selectedAthleteId.value === ATHLETE_ALL) return list
+  return list.filter(r => r.athlete_id === selectedAthleteId.value)
 })
 
 function defaultDateStr() {
@@ -106,19 +172,43 @@ function openAddModal() {
   formAdd.date = defaultDateStr()
   formAdd.kind = 'competition'
   formAdd.location = ''
+  formAdd.bodyweight_kg = formAdd.athlete_id ? suggestedBodyweightKg(formAdd.athlete_id) : null
   formAdd.squat_kg = null
   formAdd.bench_kg = null
   formAdd.deadlift_kg = null
   addModalOpen.value = true
 }
 
+watch(
+  () => formAdd.athlete_id,
+  (aid) => {
+    if (!aid) return
+    // Nie nadpisuj, jeśli użytkownik już coś wpisał.
+    if (formAdd.bodyweight_kg != null && formAdd.bodyweight_kg > 0) return
+    formAdd.bodyweight_kg = suggestedBodyweightKg(aid)
+  }
+)
+
 async function submitAdd() {
   if (!formAdd.athlete_id) {
     toast.add({ title: 'Wybierz zawodnika', color: 'warning' })
     return
   }
-  if (formAdd.snatch <= 0 || formAdd.clean_and_jerk <= 0) {
-    toast.add({ title: 'Podaj dodatnie ciężary (rwanie i podrzut)', color: 'warning' })
+  if (formAdd.snatch < 0 || formAdd.clean_and_jerk < 0) {
+    toast.add({ title: 'Ciężary nie mogą być ujemne', color: 'warning' })
+    return
+  }
+  const hasOlyPositive = formAdd.snatch > 0 || formAdd.clean_and_jerk > 0
+  const hasSbdPositive =
+    (formAdd.squat_kg != null && formAdd.squat_kg > 0)
+    || (formAdd.bench_kg != null && formAdd.bench_kg > 0)
+    || (formAdd.deadlift_kg != null && formAdd.deadlift_kg > 0)
+  if (!hasOlyPositive && !hasSbdPositive) {
+    toast.add({
+      title: 'Uzupełnij wynik',
+      description: 'Podaj dodatnie rwanie i/lub podrzut (0 dozwolone przy kontuzji/jednoboju) albo przynajmniej jedno ćwiczenie siłowe.',
+      color: 'warning'
+    })
     return
   }
   savingAdd.value = true
@@ -134,6 +224,7 @@ async function submitAdd() {
     if (formAdd.kind === 'competition' && formAdd.location.trim()) {
       body.location = formAdd.location.trim()
     }
+    if (formAdd.bodyweight_kg != null && formAdd.bodyweight_kg > 0) body.bodyweight_kg = formAdd.bodyweight_kg
     if (formAdd.squat_kg != null && formAdd.squat_kg > 0) body.squat_kg = formAdd.squat_kg
     if (formAdd.bench_kg != null && formAdd.bench_kg > 0) body.bench_kg = formAdd.bench_kg
     if (formAdd.deadlift_kg != null && formAdd.deadlift_kg > 0) body.deadlift_kg = formAdd.deadlift_kg
@@ -169,6 +260,7 @@ function openEdit(r: CompetitionResult) {
   form.status = r.status
   form.kind = ((r.kind ?? 'competition') as ResultKindOption)
   form.location = r.location ?? ''
+  form.bodyweight_kg = r.bodyweight_kg ?? null
   form.squat_kg = r.squat_kg ?? null
   form.bench_kg = r.bench_kg ?? null
   form.deadlift_kg = r.deadlift_kg ?? null
@@ -220,6 +312,7 @@ async function saveEdit() {
         status: form.status,
         kind: form.kind,
         location: form.kind === 'competition' ? (trimmedLocation || null) : null,
+        bodyweight_kg: form.bodyweight_kg != null && form.bodyweight_kg > 0 ? form.bodyweight_kg : null,
         squat_kg: form.squat_kg != null && form.squat_kg > 0 ? form.squat_kg : null,
         bench_kg: form.bench_kg != null && form.bench_kg > 0 ? form.bench_kg : null,
         deadlift_kg: form.deadlift_kg != null && form.deadlift_kg > 0 ? form.deadlift_kg : null
@@ -329,6 +422,27 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
       </UButton>
     </div>
 
+    <div class="mb-4 flex flex-wrap items-end justify-between gap-3">
+      <UFormField label="Widok">
+        <select
+          v-model="selectedAthleteId"
+          class="slavia-select min-w-72 py-2.5 text-[14px]"
+        >
+          <option :value="ATHLETE_ALL">Wszyscy zawodnicy</option>
+          <option
+            v-for="a in athleteSelectOptions"
+            :key="a.id"
+            :value="a.id"
+          >
+            {{ a.full_name }}
+          </option>
+        </select>
+      </UFormField>
+      <p class="text-xs text-muted">
+        Wierszy: <strong class="font-mono text-highlighted">{{ visibleRows.length }}</strong>
+      </p>
+    </div>
+
     <UCard :ui="{ body: 'p-0 overflow-x-auto' }">
       <table class="w-full min-w-[920px] text-sm">
         <thead class="border-b border-default bg-muted/30">
@@ -354,6 +468,9 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
             <th class="px-4 py-3 text-right font-semibold text-muted">
               Razem
             </th>
+            <th class="px-4 py-3 text-right font-semibold text-muted">
+              Sinclair
+            </th>
             <th class="px-4 py-3 text-left font-semibold text-muted">
               Status
             </th>
@@ -368,7 +485,7 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
         <tbody class="divide-y divide-default">
           <tr v-if="pending">
             <td
-              colspan="10"
+              colspan="11"
               class="px-4 py-10 text-center text-muted"
             >
               <UIcon
@@ -377,9 +494,9 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
               />
             </td>
           </tr>
-          <tr v-else-if="filteredRows.length === 0">
+          <tr v-else-if="visibleRows.length === 0">
             <td
-              colspan="10"
+              colspan="11"
               class="px-4 py-10 text-center text-muted"
             >
               Brak zapisanych wyników w tym filtrze.
@@ -387,7 +504,7 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
           </tr>
           <template v-else>
             <tr
-              v-for="r in filteredRows"
+              v-for="r in visibleRows"
               :key="r.id"
               class="hover:bg-muted/15 transition-colors"
             >
@@ -420,6 +537,15 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
               </td>
               <td class="px-4 py-3 text-right font-semibold tabular-nums">
                 {{ r.total }}
+              </td>
+              <td class="px-4 py-3 text-right">
+                <span
+                  v-if="rowSinclair(r) != null"
+                  class="inline-block rounded-full bg-primary/15 px-2 py-1 font-mono text-xs font-black text-primary"
+                >
+                  {{ rowSinclair(r) }}
+                </span>
+                <span v-else class="text-muted/60">—</span>
               </td>
               <td class="px-4 py-3">
                 <UBadge
@@ -479,7 +605,15 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
               </div>
             </div>
             <div class="slavia-form-panel__body">
-              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <UFormField label="Data">
+                  <UInput
+                    v-model="form.date"
+                    type="date"
+                    size="lg"
+                    class="w-full"
+                  />
+                </UFormField>
                 <UFormField label="Typ wpisu" description="Tylko zawody trafiają na publiczną listę i wykres">
                   <select
                     v-model="form.kind"
@@ -519,6 +653,40 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
                   />
                 </UFormField>
               </div>
+
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <UFormField
+                  label="Waga na starcie (kg)"
+                  description="Opcjonalnie — jeśli puste, zostanie użyta waga z profilu lub z poprzedniego wpisu."
+                >
+                  <UInput
+                    v-model.number="form.bodyweight_kg"
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    placeholder="auto"
+                    size="lg"
+                    class="w-full"
+                  />
+                </UFormField>
+                <UFormField label="Status">
+                  <select
+                    v-model="form.status"
+                    class="slavia-select w-full py-3 text-[15px]"
+                  >
+                    <option value="Pending">
+                      Oczekuje na akceptację
+                    </option>
+                    <option value="Approved">
+                      Zatwierdzony
+                    </option>
+                    <option value="Rejected">
+                      Odrzucony
+                    </option>
+                  </select>
+                </UFormField>
+              </div>
+
               <div class="grid grid-cols-2 gap-4">
                 <UFormField label="Rwanie (kg)">
                   <UInput
@@ -539,30 +707,7 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
                   />
                 </UFormField>
               </div>
-              <UFormField label="Data">
-                <UInput
-                  v-model="form.date"
-                  type="date"
-                  size="lg"
-                  class="w-full"
-                />
-              </UFormField>
-              <UFormField label="Status">
-                <select
-                  v-model="form.status"
-                  class="slavia-select w-full py-3 text-[15px]"
-                >
-                  <option value="Pending">
-                    Oczekuje na akceptację
-                  </option>
-                  <option value="Approved">
-                    Zatwierdzony
-                  </option>
-                  <option value="Rejected">
-                    Odrzucony
-                  </option>
-                </select>
-              </UFormField>
+
               <p class="text-xs text-muted">
                 Suma (auto): <strong class="tabular-nums text-highlighted">{{ form.total }}</strong> kg
               </p>
@@ -665,27 +810,37 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
               </div>
             </div>
             <div class="slavia-form-panel__body">
-              <UFormField label="Zawodnik">
-                <select
-                  v-model="formAdd.athlete_id"
-                  class="slavia-select w-full py-3 text-[15px]"
-                >
-                  <option
-                    disabled
-                    value=""
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <UFormField label="Zawodnik">
+                  <select
+                    v-model="formAdd.athlete_id"
+                    class="slavia-select w-full py-3 text-[15px]"
                   >
-                    — wybierz —
-                  </option>
-                  <option
-                    v-for="a in athleteSelectOptions"
-                    :key="a.id"
-                    :value="a.id"
-                  >
-                    {{ a.full_name }}
-                  </option>
-                </select>
-              </UFormField>
-              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <option
+                      disabled
+                      value=""
+                    >
+                      — wybierz —
+                    </option>
+                    <option
+                      v-for="a in athleteSelectOptions"
+                      :key="a.id"
+                      :value="a.id"
+                    >
+                      {{ a.full_name }}
+                    </option>
+                  </select>
+                </UFormField>
+
+                <UFormField label="Data startu">
+                  <UInput
+                    v-model="formAdd.date"
+                    type="date"
+                    size="lg"
+                    class="w-full"
+                  />
+                </UFormField>
+
                 <UFormField label="Typ wpisu" description="Tylko zawody trafiają na publiczną listę">
                   <select
                     v-model="formAdd.kind"
@@ -699,6 +854,9 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
                     </option>
                   </select>
                 </UFormField>
+              </div>
+
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <UFormField
                   v-if="formAdd.kind === 'competition'"
                   label="Miejsce zawodów"
@@ -724,6 +882,21 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
                     icon="i-lucide-dumbbell"
                   />
                 </UFormField>
+
+                <UFormField
+                  label="Waga na starcie (kg)"
+                  description="Opcjonalnie — domyślnie podpowiadamy wagę z ostatniego wpisu zawodnika."
+                >
+                  <UInput
+                    v-model.number="formAdd.bodyweight_kg"
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    placeholder="auto"
+                    size="lg"
+                    class="w-full"
+                  />
+                </UFormField>
               </div>
               <div class="grid grid-cols-2 gap-4">
                 <UFormField label="Rwanie (kg)">
@@ -747,14 +920,6 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
                   />
                 </UFormField>
               </div>
-              <UFormField label="Data startu">
-                <UInput
-                  v-model="formAdd.date"
-                  type="date"
-                  size="lg"
-                  class="w-full"
-                />
-              </UFormField>
               <p class="text-xs text-muted">
                 Dwubój (auto): <strong class="tabular-nums text-highlighted">{{ formAdd.total }}</strong> kg
               </p>

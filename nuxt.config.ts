@@ -1,5 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
-import { readFileSync } from 'node:fs'
+import { mkdirSync, readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 function readPackageJsonVersion(): string {
@@ -14,6 +15,14 @@ function formatPublicAppVersion(raw: string): string {
 }
 
 const packageJsonVersion = readPackageJsonVersion()
+const nitroPayloadCacheBase = resolve(process.cwd(), '.nuxt', 'cache', 'nuxt', 'payload')
+
+// Windows+dev: Nitro potrafi próbować zapisać payload cache (ISR) zanim katalog istnieje.
+try {
+  mkdirSync(nitroPayloadCacheBase, { recursive: true })
+} catch {
+  // ignore
+}
 
 export default defineNuxtConfig({
   // Najnowsze domyślne zachowanie Nitro / presetów modułów dla wybranej osi czasu (bump przy większych upgrade’ach Nuxt).
@@ -34,7 +43,54 @@ export default defineNuxtConfig({
 
   nitro: {
     /** Bez map Nitro szybciej pakuje serwer (domyślnie przy wyłączonym `sourcemap.server` i tak zwykle nie są potrzebne lokalnie). */
-    sourceMap: process.env.NUXT_SOURCEMAP === '1'
+    sourceMap: process.env.NUXT_SOURCEMAP === '1',
+    /**
+     * Dev-only stabilizacja na Windows: ustawiamy jawnie storage dla payload cache (ISR),
+     * żeby zapisy nie waliły `ENOENT` na relatywnej ścieżce.
+     */
+    storage: {
+      payload: {
+        driver: 'fs',
+        base: nitroPayloadCacheBase
+      }
+    }
+  },
+
+  /**
+   * Strategia pod Vercel: minimalizujemy cold starty i koszt SSR.
+   *
+   * Zasada bezpieczeństwa: SWR/ISR tylko dla tras, które NIE zależą od tokena/roli użytkownika.
+   * W przeciwnym wypadku cache może “pomieszać” widoki publiczne i adminowe.
+   */
+  routeRules: {
+    // Publiczne i identyczne dla wszystkich → ISR (najszybciej na Vercel: cache HTML, mniej cold startów).
+    '/': { isr: 600 },
+    '/zawodnicy': { isr: 900 },
+    '/galeria': { isr: 1800 },
+    '/aktualnosci': { isr: 600 },
+    '/aktualnosci/**': { isr: 600 },
+
+    // Publiczne i bez danych wrażliwych → static shell.
+    '/kalendarz': { static: true },
+    '/kontakt': { static: true },
+    '/logowanie': { static: true },
+    '/banned': { static: true },
+    '/kalkulator-proporcji': { static: true },
+    '/kalkulator-sinclair': { static: true },
+
+    // Trasy wymagające auth/roli → zawsze no-store (unikamy cache per-user).
+    '/ogloszenia': { headers: { 'cache-control': 'private, no-store' } },
+
+    // Strefy po auth / role → zawsze no-store (unikamy cache per-user).
+    '/athlete/**': { headers: { 'cache-control': 'private, no-store' } },
+    '/trainer/**': { headers: { 'cache-control': 'private, no-store' } },
+    '/admin/**': { headers: { 'cache-control': 'private, no-store' } },
+    '/superadmin/**': { headers: { 'cache-control': 'private, no-store' } },
+    '/chat': { headers: { 'cache-control': 'private, no-store' } },
+    '/profil': { headers: { 'cache-control': 'private, no-store' } },
+    '/attendance': { headers: { 'cache-control': 'private, no-store' } },
+    '/powiadomienia': { headers: { 'cache-control': 'private, no-store' } },
+    '/dziennik': { headers: { 'cache-control': 'private, no-store' } }
   },
 
   css: ['~/assets/css/main.css'],

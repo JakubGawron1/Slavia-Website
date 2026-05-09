@@ -747,6 +747,16 @@ function copyViewportString() {
   void copyToClipboard(s, 'Skopiowano rozmiar viewport')
 }
 
+async function copyAuthBearerToken() {
+  if (!import.meta.client) return
+  const t = String(auth.token.value || '').trim()
+  if (!t) {
+    toast.add({ title: 'Brak tokena', description: 'Zaloguj się ponownie, jeśli sesja jest pusta.', color: 'warning' })
+    return
+  }
+  await copyToClipboard(`Bearer ${t}`, 'Skopiowano token Bearer (uwaga: wrażliwe)')
+}
+
 async function copyMemoryHint() {
   if (!import.meta.client) {
     return
@@ -853,6 +863,44 @@ async function clearBrowserCachesApi() {
     })
   } catch {
     toast.add({ title: 'Nie udało się wyczyścić Cache Storage', color: 'error' })
+  }
+}
+
+async function clearIndexedDbDatabases() {
+  if (!import.meta.client || !('indexedDB' in window)) {
+    toast.add({ title: 'indexedDB niedostępne', color: 'warning' })
+    return
+  }
+  const idb = indexedDB as IDBFactory & { databases?: () => Promise<Array<{ name?: string }>> }
+  if (typeof idb.databases !== 'function') {
+    toast.add({
+      title: 'Brak listy baz IDB',
+      description: 'Ta przeglądarka nie obsługuje indexedDB.databases().',
+      color: 'warning'
+    })
+    return
+  }
+  try {
+    const dbs = (await idb.databases()) || []
+    const names = [...new Set(dbs.map(d => d?.name).filter(Boolean) as string[])]
+    if (names.length === 0) {
+      toast.add({ title: 'Brak baz IndexedDB', color: 'success' })
+      return
+    }
+    await Promise.all(names.map((name) => new Promise<void>((resolve) => {
+      const req = indexedDB.deleteDatabase(name)
+      req.onsuccess = () => resolve()
+      req.onerror = () => resolve()
+      req.onblocked = () => resolve()
+    })))
+    systemLogs.push({
+      level: 'change',
+      title: 'Wyczyszczono IndexedDB',
+      detail: names.join('\n')
+    })
+    toast.add({ title: `IndexedDB usunięte (${names.length})`, description: 'Szczegóły w logach.', color: 'success' })
+  } catch (e) {
+    toast.add({ title: 'Nie udało się wyczyścić IndexedDB', description: String(e), color: 'error' })
   }
 }
 
@@ -1484,6 +1532,9 @@ function toastStorageApisAvailability() {
               <UButton color="neutral" variant="outline" size="xs" icon="i-lucide-list-tree" class="touch-manipulation" @click="copyLocalStorageKeys">
                 Klucze LS
               </UButton>
+              <UButton color="neutral" variant="outline" size="xs" icon="i-lucide-key-round" class="touch-manipulation" @click="copyAuthBearerToken">
+                Token
+              </UButton>
               <UButton color="neutral" variant="outline" size="xs" icon="i-lucide-activity" class="touch-manipulation" @click="logOnlineStatus">
                 onLine
               </UButton>
@@ -1546,6 +1597,9 @@ function toastStorageApisAvailability() {
           </UButton>
           <UButton color="warning" variant="soft" size="xs" icon="i-lucide-trash-2" title="Wyczyść localStorage i sessionStorage" class="touch-manipulation" @click="clearWebStorage">
             Wyczyść LS
+          </UButton>
+          <UButton color="warning" variant="soft" size="xs" icon="i-lucide-database" title="Usuń bazy IndexedDB (Chrome/Edge)" class="touch-manipulation" @click="clearIndexedDbDatabases">
+            Wyczyść IDB
           </UButton>
           <UButton color="warning" variant="soft" size="xs" icon="i-lucide-rotate-ccw" title="Wyrejestruj service workery" class="touch-manipulation" @click="unregisterServiceWorkers">
             Wyrej. SW

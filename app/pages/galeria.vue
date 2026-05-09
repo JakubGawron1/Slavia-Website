@@ -21,23 +21,40 @@ useSeoMeta({
 const auth = useAuth()
 const apiFetch = useApi()
 const toast = useToast()
+const config = useRuntimeConfig()
 
 const isAdmin = computed(() => auth.isAdmin.value || auth.isSuperAdmin.value)
 
-async function fetchPhotos(): Promise<GalleryPhoto[]> {
-  if (isAdmin.value && auth.token.value) {
-    try {
-      return await apiFetch<GalleryPhoto[]>('/api/gallery/manage')
-    } catch {
-      return await apiFetch<GalleryPhoto[]>('/api/gallery').catch(() => [])
-    }
-  }
-  return await apiFetch<GalleryPhoto[]>('/api/gallery').catch(() => [])
+function publicBase() {
+  return String(config.public.apiBase || '').replace(/\/$/, '')
 }
 
-const { data: photos, refresh, pending } = await useAsyncData('club-gallery', fetchPhotos, {
-  watch: [() => isAdmin.value, () => auth.token.value],
-  default: () => [] as GalleryPhoto[]
+const base = computed(() => publicBase())
+
+// SSR zawsze renderuje publiczną galerię (bez ryzyka cache per-user).
+const { data: photos, refresh: refreshPublic, pending } = await useLazyFetch<GalleryPhoto[]>(
+  () => `${base.value}/api/gallery`,
+  {
+    key: 'club-gallery-public',
+    default: () => [] as GalleryPhoto[],
+    server: true
+  }
+)
+
+async function refreshList() {
+  // Adminowe “manage” ładujemy tylko na kliencie (token w localStorage) — nie wpływa na cache SSR.
+  if (import.meta.client && isAdmin.value && auth.token.value) {
+    const list = await apiFetch<GalleryPhoto[]>('/api/gallery/manage').catch(() => null)
+    if (Array.isArray(list)) {
+      photos.value = list
+      return
+    }
+  }
+  await refreshPublic()
+}
+
+onMounted(() => {
+  void refreshList()
 })
 
 const modalOpen = ref(false)
@@ -162,7 +179,7 @@ async function save() {
       toast.add({ title: 'Dodano zdjęcie', color: 'success' })
     }
     modalOpen.value = false
-    await refresh()
+    await refreshList()
   } catch (e) {
     console.error('[gallery] save failed', e)
     toast.add({
@@ -179,7 +196,7 @@ async function remove(id: string) {
   try {
     await apiFetch(`/api/gallery/${id}`, { method: 'DELETE' })
     toast.add({ title: 'Usunięto', color: 'success' })
-    await refresh()
+    await refreshList()
   } catch (e) {
     console.error('[gallery] delete failed', e)
     toast.add({
@@ -203,12 +220,18 @@ const sortedPhotos = computed(() => {
   <UContainer class="animate-page-in py-8 sm:py-12 lg:py-14">
     <div class="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
       <div class="min-w-0">
-        <h1 class="text-2xl font-bold tracking-tight text-highlighted sm:text-3xl lg:text-4xl">
-          Galeria zdjęć
-        </h1>
-        <p class="mt-2 text-sm text-muted sm:text-base lg:leading-relaxed">
-          Klub w obiektywie — podgląd dla wszystkich; zdjęcia dodaje administrator (np. po wgraniu na CDN).
-        </p>
+        <div v-if="pending" class="space-y-2">
+          <SlaviaShimmerText block width="16rem" height="2rem" />
+          <SlaviaShimmerText block width="28rem" height="1rem" />
+        </div>
+        <template v-else>
+          <h1 class="text-2xl font-bold tracking-tight text-highlighted sm:text-3xl lg:text-4xl">
+            Galeria zdjęć
+          </h1>
+          <p class="mt-2 text-sm text-muted sm:text-base lg:leading-relaxed">
+            Klub w obiektywie — podgląd dla wszystkich; zdjęcia dodaje administrator (np. po wgraniu na CDN).
+          </p>
+        </template>
       </div>
       <UButton
         v-if="isAdmin"

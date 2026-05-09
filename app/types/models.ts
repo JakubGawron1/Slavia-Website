@@ -119,6 +119,8 @@ export interface CompetitionResult {
   kind?: ResultKind
   /** Miejsce zawodów — wypełniane tylko dla `kind = 'competition'`. */
   location?: string | null
+  /** Waga ciała na starcie (kg) — jeśli podana, używana m.in. do liczenia Sinclaira dla tego startu. */
+  bodyweight_kg?: number | null
   squat_kg?: number | null
   bench_kg?: number | null
   deadlift_kg?: number | null
@@ -174,6 +176,14 @@ export interface PaymentStatusResponse {
   month: string
   due_date: string // YYYY-MM-10
   is_paid: boolean
+  is_overdue: boolean
+}
+
+export interface PaymentMonthStatusRow {
+  month: string // YYYY-MM
+  due_date: string // YYYY-MM-10
+  is_paid: boolean
+  has_pending: boolean
   is_overdue: boolean
 }
 

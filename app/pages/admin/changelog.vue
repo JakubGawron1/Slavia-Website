@@ -6,7 +6,29 @@ useSeoMeta({
   robots: 'noindex, nofollow'
 })
 
+type UpdateType = 'feature' | 'bugfix' | 'fix' | 'release'
+type ChangelogUpdate = {
+  version: string
+  date: string
+  title: string
+  features: string[]
+  type: UpdateType
+}
+
 const updates = [
+  {
+    version: 'v2.10.0-beta',
+    date: '9 Maj 2026',
+    title: 'Spójne dashboardy, klikalne KPI, składki roczne z ograniczeniem roku i kolorowa obecność',
+    features: [
+      'Dashboardy: admin/superadmin/trener/zawodnik mają spójny układ (hero + KPI na górze + pogrupowane moduły) oraz konsekwentne kolory ikon i przycisków.',
+      'KPI: karty statystyk na dashboardach są klikalne i prowadzą do najczęstszych widoków (baza zawodników, oczekujące, kalendarz, składki, obecność).',
+      'Składki (rok): domyślnie dostępny tylko bieżący rok, a od listopada pojawia się podgląd roku następnego — zarówno u zawodnika, jak i u trenera.',
+      'Panel zawodnika: uproszczony widok startowy (bez sekcji „Klub i narzędzia”), a „Ostatnie zgłoszenia” ograniczone do 7 ostatnich wpisów.',
+      'Obecność: odświeżony widok kalendarza z kolorowymi badge i modalami szczegółów dnia.'
+    ],
+    type: 'feature'
+  },
   {
     version: 'v2.9.8-beta',
     date: '8 Maj 2026',
@@ -299,68 +321,243 @@ const updates = [
     ],
     type: 'release'
   }
-]
+] satisfies ChangelogUpdate[]
+
+const query = ref('')
+const typeFilter = ref<'all' | UpdateType>('all')
+const expandedVersions = ref<Set<string>>(new Set())
+
+function typeLabel(t: UpdateType) {
+  if (t === 'feature') return 'Nowości'
+  if (t === 'bugfix') return 'Bugfix'
+  if (t === 'fix') return 'Poprawki'
+  return 'Wydanie'
+}
+
+function typeColor(t: UpdateType) {
+  if (t === 'feature') return 'primary'
+  if (t === 'bugfix') return 'warning'
+  if (t === 'fix') return 'success'
+  return 'info'
+}
+
+function typeIcon(t: UpdateType) {
+  if (t === 'feature') return 'i-lucide-sparkles'
+  if (t === 'bugfix') return 'i-lucide-bug'
+  if (t === 'fix') return 'i-lucide-wrench'
+  return 'i-lucide-tag'
+}
+
+function toggleExpanded(version: string) {
+  const next = new Set(expandedVersions.value)
+  if (next.has(version)) next.delete(version)
+  else next.add(version)
+  expandedVersions.value = next
+}
+
+const totalByType = computed(() => {
+  const m = new Map<UpdateType, number>([
+    ['feature', 0],
+    ['bugfix', 0],
+    ['fix', 0],
+    ['release', 0]
+  ])
+  for (const u of updates) m.set(u.type, (m.get(u.type) || 0) + 1)
+  return m
+})
+
+const filteredUpdates = computed(() => {
+  const q = query.value.trim().toLowerCase()
+  return updates.filter((u) => {
+    if (typeFilter.value !== 'all' && u.type !== typeFilter.value) return false
+    if (!q) return true
+    const hay = `${u.version} ${u.date} ${u.title} ${u.features.join(' ')}`.toLowerCase()
+    return hay.includes(q)
+  })
+})
 </script>
 
 <template>
   <UContainer class="py-8 md:py-14 lg:py-16">
-    <div class="mb-8">
-      <div class="flex items-center gap-2 mb-2">
-        <UIcon
-          name="i-lucide-file-text"
-          class="size-5 text-primary"
-        />
-        <p class="text-sm font-medium uppercase tracking-wider text-primary">
-          Administracja
-        </p>
-      </div>
-      <h1 class="text-3xl font-bold tracking-tight text-highlighted">
-        Changelog (Dziennik Zmian)
-      </h1>
-      <p class="mt-2 max-w-2xl text-muted">
-        Bądź na bieżąco z najnowszymi aktualizacjami w systemie zarządzania klubem CKS Slavia.
-      </p>
-    </div>
-
-    <div class="space-y-8 max-w-4xl">
-      <UCard
-        v-for="(update, index) in updates"
-        :key="index"
-        class="relative overflow-hidden border-l-4"
-        :class="{
-          'border-l-primary': update.type === 'feature',
-          'border-l-yellow-500': update.type === 'bugfix',
-          'border-l-blue-500': update.type === 'release'
-        }"
-      >
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
-          <div class="flex items-center gap-3">
-            <span class="inline-flex items-center rounded-md bg-primary/10 px-2.5 py-1 text-sm font-medium text-primary">
-              {{ update.version }}
+    <div class="mx-auto max-w-5xl">
+      <div class="relative overflow-hidden rounded-3xl border border-default/60 bg-linear-to-br from-primary/10 via-card to-card p-6 shadow-sm ring-1 ring-primary/10 sm:p-8">
+        <div class="pointer-events-none absolute -right-20 -top-24 size-72 rounded-full bg-primary/20 blur-3xl" />
+        <div class="relative">
+          <div class="flex items-start justify-between gap-4">
+            <div class="min-w-0">
+              <p class="text-[11px] font-black uppercase tracking-[0.25em] text-primary">
+                Administracja
+              </p>
+              <h1 class="mt-2 text-3xl font-black tracking-tight text-highlighted sm:text-4xl">
+                Changelog
+              </h1>
+              <p class="mt-3 max-w-3xl text-sm leading-relaxed text-muted sm:text-base">
+                Historia zmian w aplikacji — szybkie wyszukiwanie i filtrowanie po typie aktualizacji.
+              </p>
+            </div>
+            <span class="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary/12 text-primary ring-1 ring-primary/20">
+              <UIcon name="i-lucide-file-text" class="size-5" />
             </span>
-            <h3 class="text-xl font-bold text-highlighted">
-              {{ update.title }}
-            </h3>
           </div>
-          <p class="text-sm text-muted mt-2 sm:mt-0 font-medium">
-            {{ update.date }}
-          </p>
-        </div>
 
-        <ul class="space-y-2 text-muted">
-          <li
-            v-for="(feature, fIndex) in update.features"
-            :key="fIndex"
-            class="flex items-start gap-2"
-          >
-            <UIcon
-              name="i-lucide-check-circle-2"
-              class="size-5 text-emerald-500 shrink-0 mt-0.5"
+          <div class="mt-5 flex flex-wrap gap-2">
+            <UBadge color="primary" variant="subtle" size="sm">
+              Nowości: {{ totalByType.get('feature') || 0 }}
+            </UBadge>
+            <UBadge color="warning" variant="subtle" size="sm">
+              Bugfix: {{ totalByType.get('bugfix') || 0 }}
+            </UBadge>
+            <UBadge color="success" variant="subtle" size="sm">
+              Poprawki: {{ totalByType.get('fix') || 0 }}
+            </UBadge>
+            <UBadge color="info" variant="subtle" size="sm">
+              Wydania: {{ totalByType.get('release') || 0 }}
+            </UBadge>
+            <UBadge color="neutral" variant="subtle" size="sm">
+              Łącznie: {{ updates.length }}
+            </UBadge>
+          </div>
+        </div>
+      </div>
+
+      <UCard class="mt-8 rounded-3xl border-default/70 shadow-sm ring-1 ring-default/40">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div class="min-w-0">
+            <p class="text-[10px] font-black uppercase tracking-[0.22em] text-muted">
+              Filtry
+            </p>
+            <h2 class="mt-1 text-lg font-bold text-highlighted">
+              Znajdź zmianę
+            </h2>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <UInput
+              v-model="query"
+              size="sm"
+              icon="i-lucide-search"
+              placeholder="Szukaj: wersja, tytuł, fraza…"
+              class="min-w-60"
             />
-            <span>{{ feature }}</span>
-          </li>
-        </ul>
+            <UButton
+              size="sm"
+              color="neutral"
+              variant="outline"
+              :icon="typeFilter === 'all' ? 'i-lucide-check' : 'i-lucide-circle'"
+              @click="typeFilter = 'all'"
+            >
+              Wszystkie
+            </UButton>
+            <UButton
+              size="sm"
+              :color="typeFilter === 'feature' ? 'primary' : 'neutral'"
+              :variant="typeFilter === 'feature' ? 'soft' : 'outline'"
+              :icon="typeFilter === 'feature' ? 'i-lucide-check' : 'i-lucide-circle'"
+              @click="typeFilter = typeFilter === 'feature' ? 'all' : 'feature'"
+            >
+              Nowości
+            </UButton>
+            <UButton
+              size="sm"
+              :color="typeFilter === 'bugfix' ? 'warning' : 'neutral'"
+              :variant="typeFilter === 'bugfix' ? 'soft' : 'outline'"
+              :icon="typeFilter === 'bugfix' ? 'i-lucide-check' : 'i-lucide-circle'"
+              @click="typeFilter = typeFilter === 'bugfix' ? 'all' : 'bugfix'"
+            >
+              Bugfix
+            </UButton>
+            <UButton
+              size="sm"
+              :color="typeFilter === 'release' ? 'info' : 'neutral'"
+              :variant="typeFilter === 'release' ? 'soft' : 'outline'"
+              :icon="typeFilter === 'release' ? 'i-lucide-check' : 'i-lucide-circle'"
+              @click="typeFilter = typeFilter === 'release' ? 'all' : 'release'"
+            >
+              Wydania
+            </UButton>
+          </div>
+        </div>
       </UCard>
+
+      <div class="mt-8 space-y-4">
+        <UCard
+          v-for="u in filteredUpdates"
+          :key="u.version"
+          class="rounded-3xl border-default/70 shadow-sm ring-1 ring-default/30"
+        >
+          <button
+            type="button"
+            class="w-full text-left"
+            @click="toggleExpanded(u.version)"
+          >
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div class="min-w-0">
+                <div class="flex flex-wrap items-center gap-2">
+                  <UBadge :color="typeColor(u.type)" variant="subtle" size="sm">
+                    <span class="inline-flex items-center gap-1.5">
+                      <UIcon :name="typeIcon(u.type)" class="size-4" />
+                      {{ typeLabel(u.type) }}
+                    </span>
+                  </UBadge>
+                  <UBadge color="neutral" variant="subtle" size="sm" class="font-mono">
+                    {{ u.version }}
+                  </UBadge>
+                  <span class="text-xs font-semibold text-muted">
+                    {{ u.date }}
+                  </span>
+                </div>
+                <h3 class="mt-2 text-lg font-bold leading-snug text-highlighted sm:text-xl">
+                  {{ u.title }}
+                </h3>
+                <p class="mt-1 text-xs text-muted">
+                  Zmian: <strong class="font-mono text-highlighted">{{ u.features.length }}</strong>
+                </p>
+              </div>
+              <div class="shrink-0">
+                <UButton
+                  size="sm"
+                  color="neutral"
+                  variant="ghost"
+                  :icon="expandedVersions.has(u.version) ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
+                >
+                  {{ expandedVersions.has(u.version) ? 'Zwiń' : 'Rozwiń' }}
+                </UButton>
+              </div>
+            </div>
+          </button>
+
+          <div v-if="expandedVersions.has(u.version)" class="mt-4">
+            <USeparator class="mb-4" />
+            <ul class="space-y-2 text-sm text-muted">
+              <li
+                v-for="f in u.features"
+                :key="`${u.version}-${f}`"
+                class="flex items-start gap-2"
+              >
+                <UIcon
+                  name="i-lucide-check-circle-2"
+                  class="mt-0.5 size-5 shrink-0 text-emerald-500"
+                />
+                <span>{{ f }}</span>
+              </li>
+            </ul>
+          </div>
+        </UCard>
+
+        <UCard
+          v-if="filteredUpdates.length === 0"
+          class="rounded-3xl border-default/70 shadow-sm ring-1 ring-default/30"
+        >
+          <div class="py-10 text-center">
+            <UIcon name="i-lucide-search-x" class="mx-auto size-7 text-muted" />
+            <p class="mt-3 text-sm font-semibold text-highlighted">
+              Brak wyników
+            </p>
+            <p class="mt-1 text-sm text-muted">
+              Zmień filtr lub wpisz inną frazę.
+            </p>
+          </div>
+        </UCard>
+      </div>
     </div>
   </UContainer>
 </template>

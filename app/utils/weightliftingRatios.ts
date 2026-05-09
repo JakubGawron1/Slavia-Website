@@ -174,7 +174,7 @@ export const EXERCISES: ExerciseDef[] = [
   },
   {
     id: 'snatch_push_press',
-    pl: 'Wybijanie do rwania',
+    pl: 'Wycisko-wybijanie rwaniowe (chwyt rwaniowy)',
     en: 'Snatch Push Press',
     from: 'push_press',
     ratio: { min: 0.85, max: 1.05, source: 'Snatch-grip zwykle trochę słabszy od klasycznego push press (widełki)', heuristic: true }

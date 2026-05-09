@@ -300,7 +300,7 @@ function rowAccentClass(s: string) {
               <UFormField label="Wyciskanie żołnierskie">
                 <UInput v-model="raw.strict_press" inputmode="decimal" class="w-full tabular-nums" />
               </UFormField>
-              <UFormField label="Wybijanie do rwania">
+              <UFormField label="Wycisko-wybijanie rwaniowe (chwyt rwaniowy)">
                 <UInput v-model="raw.snatch_push_press" inputmode="decimal" class="w-full tabular-nums" />
               </UFormField>
               <UFormField label="Wybijanie w nożyce z przodu">

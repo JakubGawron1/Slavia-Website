@@ -3,6 +3,8 @@ import { getApiErrorMessage } from '~/composables/useApi'
 import type { Athlete, CompetitionResult, MyCalendarEntry, PaymentStatusResponse } from '~/types/models'
 import { apiRoutes } from '~/config/api'
 import { resolveAuthProfilePhotoSrc } from '~/utils/profilePhoto'
+import DashboardModuleCard from '~/components/dashboard/DashboardModuleCard.vue'
+import DashboardKpiCard from '~/components/dashboard/DashboardKpiCard.vue'
 
 definePageMeta({ middleware: 'auth' })
 
@@ -51,6 +53,8 @@ const { data: bundle, refresh: refreshAthletePage } = await useAsyncData(
 
 const athlete = computed(() => bundle.value?.athlete ?? null)
 const results = computed(() => bundle.value?.results ?? [])
+const recentResults = computed(() => results.value.slice(0, 7))
+const myPendingResultsCount = computed(() => results.value.filter(r => r.status === 'Pending').length)
 const attendanceSummary = ref<AttendanceSummary | null>(null)
 const paymentStatus = ref<PaymentStatusResponse | null>(null)
 
@@ -147,6 +151,14 @@ async function submitResult() {
     toast.add({ title: 'Brak profilu zawodnika', color: 'warning' })
     return
   }
+  if (resultForm.snatch != null && resultForm.snatch < 0) {
+    toast.add({ title: 'Rwanie nie może być ujemne', color: 'warning' })
+    return
+  }
+  if (resultForm.clean_and_jerk != null && resultForm.clean_and_jerk < 0) {
+    toast.add({ title: 'Podrzut nie może być ujemny', color: 'warning' })
+    return
+  }
   const hasOly =
     (resultForm.snatch != null && resultForm.snatch > 0)
     || (resultForm.clean_and_jerk != null && resultForm.clean_and_jerk > 0)
@@ -172,16 +184,10 @@ async function submitResult() {
     if (resultForm.kind === 'competition' && resultForm.location.trim()) {
       body.location = resultForm.location.trim()
     }
-    if (resultForm.snatch != null && resultForm.snatch > 0) body.snatch = resultForm.snatch
-    if (resultForm.clean_and_jerk != null && resultForm.clean_and_jerk > 0) {
-      body.clean_and_jerk = resultForm.clean_and_jerk
-    }
-    if (
-      resultForm.snatch != null && resultForm.snatch > 0
-      && resultForm.clean_and_jerk != null && resultForm.clean_and_jerk > 0
-    ) {
-      body.total = resultForm.total
-    }
+    // 0 jest dozwolone (np. kontuzja / jednobój), ale null oznacza „nie podano”.
+    if (resultForm.snatch != null && resultForm.snatch >= 0) body.snatch = resultForm.snatch
+    if (resultForm.clean_and_jerk != null && resultForm.clean_and_jerk >= 0) body.clean_and_jerk = resultForm.clean_and_jerk
+    if (resultForm.snatch != null || resultForm.clean_and_jerk != null) body.total = resultForm.total
     if (resultForm.squat_kg != null && resultForm.squat_kg > 0) body.squat_kg = resultForm.squat_kg
     if (resultForm.bench_kg != null && resultForm.bench_kg > 0) body.bench_kg = resultForm.bench_kg
     if (resultForm.deadlift_kg != null && resultForm.deadlift_kg > 0) body.deadlift_kg = resultForm.deadlift_kg
@@ -229,29 +235,21 @@ const portalHeroAvatarSrc = computed(() => {
   return img || undefined
 })
 
-const stats = computed(() => [
-  {
-    label: 'Najlepsze rwanie',
-    shortLabel: 'Rwanie',
-    value: athlete.value?.best_snatch_kg ? `${athlete.value.best_snatch_kg}` : '—',
-    unit: athlete.value?.best_snatch_kg ? 'kg' : '',
-    icon: 'i-game-icons-weight-lifting-up'
-  },
-  {
-    label: 'Najlepszy podrzut',
-    shortLabel: 'Podrzut',
-    value: athlete.value?.best_clean_jerk_kg ? `${athlete.value.best_clean_jerk_kg}` : '—',
-    unit: athlete.value?.best_clean_jerk_kg ? 'kg' : '',
-    icon: 'i-game-icons-weight-lifting-down'
-  },
-  {
-    label: 'Suma (dwubój)',
-    shortLabel: 'Dwubój',
-    value: athlete.value?.total_kg ? `${athlete.value.total_kg}` : '—',
-    unit: athlete.value?.total_kg ? 'kg' : '',
-    icon: 'i-lucide-trophy'
+const paymentKpi = computed(() => {
+  if (!isAthleteRole.value) {
+    return { value: '—', tone: 'neutral' as const, hint: 'Dostępne tylko dla roli zawodnika' }
   }
-])
+  if (!paymentStatus.value) {
+    return { value: '—', tone: 'neutral' as const, hint: 'Brak danych (odśwież)' }
+  }
+  if (paymentStatus.value.is_paid) {
+    return { value: 'Opłacona', tone: 'success' as const, hint: paymentStatus.value.month }
+  }
+  if (paymentStatus.value.is_overdue) {
+    return { value: 'Nieopłacona', tone: 'error' as const, hint: paymentStatus.value.month }
+  }
+  return { value: 'Oczekuje', tone: 'warning' as const, hint: paymentStatus.value.month }
+})
 
 const athleteDashboardTiles = [
   {
@@ -352,6 +350,52 @@ const athleteDashboardTiles = [
   }
 ] as const
 
+const athleteModuleGroups = computed(() => {
+  const list = athleteDashboardTiles
+  const byTo = new Map<string, typeof list[number]>()
+  for (const l of list) byTo.set(String(l.to), l)
+  const pick = (to: string) => byTo.get(to)
+  return [
+    {
+      title: 'Najczęstsze',
+      items: [
+        pick('/athlete/skladki'),
+        pick('/athlete/kalendarz'),
+        pick('/attendance'),
+        pick('/chat')
+      ].filter(Boolean)
+    },
+    {
+      title: 'Trening i progres',
+      items: [
+        pick('/dziennik'),
+        pick('/athlete/timeline'),
+        pick('/athlete/plany'),
+        pick('/athlete/regeneracja')
+      ].filter(Boolean)
+    },
+    {
+      title: 'Narzędzia',
+      items: [
+        pick('/athlete/analiza-sztangi'),
+        pick('/athlete/exercises'),
+        pick('/kalkulator-proporcji'),
+        pick('/aktualnosci')
+      ].filter(Boolean)
+    }
+  ] as const
+})
+
+function toneFromIconBg(iconBg?: string): 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral' {
+  const s = String(iconBg || '').toLowerCase()
+  if (s.includes('rose') || s.includes('red')) return 'error'
+  if (s.includes('amber') || s.includes('yellow')) return 'warning'
+  if (s.includes('emerald') || s.includes('green') || s.includes('teal') || s.includes('lime')) return 'success'
+  if (s.includes('sky') || s.includes('cyan') || s.includes('blue') || s.includes('indigo')) return 'info'
+  if (s.includes('violet') || s.includes('purple') || s.includes('fuchsia') || s.includes('primary')) return 'primary'
+  return 'neutral'
+}
+
 /** Wydarzenia z przypisań kadry — bez wpisów kategorii „trening” (stałe jednostki w klubie liczą się osobno w kalendarzu). */
 const assignedCompetitionStartsCount = computed(() => {
   const entries = bundle.value?.calendarEntries ?? []
@@ -428,73 +472,57 @@ const pageLead = computed(() => {
             </p>
           </div>
         </div>
-
-        <!-- Skrócone PB w hero (tylko przy pełnym profilu) -->
-        <div
-          v-if="auth.canAccessAthletePortal && athlete"
-          class="flex shrink-0 flex-wrap gap-2 lg:flex-col lg:items-stretch xl:flex-row"
-        >
-          <div
-            v-for="s in stats"
-            :key="s.shortLabel"
-            class="flex items-center gap-3 rounded-2xl border border-default/50 bg-background/80 px-4 py-3 shadow-sm backdrop-blur-sm sm:min-w-38"
-          >
-            <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary">
-              <UIcon
-                :name="s.icon"
-                class="size-5"
-              />
-            </div>
-            <div class="min-w-0">
-              <p class="text-[10px] font-bold uppercase tracking-wider text-muted">
-                {{ s.shortLabel }}
-              </p>
-              <p class="truncate text-lg font-black tabular-nums text-highlighted">
-                {{ s.value }}<span
-                  v-if="s.unit"
-                  class="ml-0.5 text-sm font-bold text-primary"
-                >{{ s.unit }}</span>
-              </p>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
 
-    <!-- Szybkie kafle (bento) -->
     <div
       v-if="auth.canAccessAthletePortal && athlete"
-      class="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+      class="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3 lg:gap-4"
     >
-      <NuxtLink
-        v-for="tile in athleteDashboardTiles"
-        :key="tile.title"
-        :to="tile.to"
-        class="group relative overflow-hidden rounded-2xl border border-default/60 bg-card p-5 shadow-sm ring-1 ring-transparent transition duration-200 hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-        :class="tile.ring"
-      >
-        <div class="flex items-start justify-between gap-3">
-          <div
-            class="flex size-11 shrink-0 items-center justify-center rounded-xl transition-colors"
-            :class="tile.iconBg"
-          >
-            <UIcon
-              :name="tile.icon"
-              class="size-5"
-            />
-          </div>
-          <UIcon
-            name="i-lucide-arrow-up-right"
-            class="size-5 shrink-0 text-muted opacity-0 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:opacity-100"
+      <DashboardKpiCard
+        label="Składka (bieżący miesiąc)"
+        :value="paymentKpi.value"
+        icon="i-lucide-banknote"
+        :tone="paymentKpi.tone"
+        :hint="paymentKpi.hint"
+        to="/athlete/skladki"
+      />
+      <DashboardKpiCard
+        label="Frekwencja"
+        :value="attendanceSummary ? `${attendanceSummary.attendance_percent}%` : '—'"
+        icon="i-lucide-user-check"
+        :tone="attendanceSummary ? 'primary' : 'neutral'"
+        :hint="attendanceSummary ? `${attendanceSummary.present_count} obecności · ${attendanceSummary.absent_count} nieob.` : null"
+        to="/attendance"
+      />
+      <DashboardKpiCard
+        label="Wyniki (oczekujące)"
+        :value="myPendingResultsCount"
+        icon="i-lucide-clipboard-clock"
+        :tone="myPendingResultsCount ? 'warning' : 'neutral'"
+        :to="{ path: '/athlete', hash: '#ostatnie-zgloszenia' }"
+      />
+    </div>
+
+    <div v-if="auth.canAccessAthletePortal && athlete" class="mb-10 space-y-8">
+      <div v-for="g in athleteModuleGroups" :key="g.title">
+        <div class="mb-3 flex items-end justify-between gap-3">
+          <h2 class="text-xl font-semibold text-highlighted">
+            {{ g.title }}
+          </h2>
+        </div>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <DashboardModuleCard
+            v-for="tile in g.items"
+            :key="String(tile!.to)"
+            :title="tile!.title"
+            :description="tile!.desc"
+            :icon="tile!.icon"
+            :to="tile!.to"
+            :tone="toneFromIconBg(tile!.iconBg)"
           />
         </div>
-        <p class="mt-4 font-bold text-highlighted">
-          {{ tile.title }}
-        </p>
-        <p class="mt-1 text-xs leading-relaxed text-muted">
-          {{ tile.desc }}
-        </p>
-      </NuxtLink>
+      </div>
     </div>
 
     <!-- Licznik startów (statystyki PB są wyżej w hero — bez duplikatu kart) -->
@@ -831,10 +859,10 @@ const pageLead = computed(() => {
               class="size-[1.35rem]"
             />
           </span>
-          <span class="text-lg font-black tracking-tight text-highlighted sm:text-xl">Ostatnie zgłoszenia</span>
+          <span id="ostatnie-zgloszenia" class="text-lg font-black tracking-tight text-highlighted sm:text-xl">Ostatnie zgłoszenia</span>
         </h2>
         <UCard
-          v-if="results && results.length > 0"
+          v-if="recentResults && recentResults.length > 0"
           class="overflow-hidden rounded-2xl ring-1 ring-default/40"
           :ui="{ body: 'p-0' }"
         >
@@ -863,7 +891,7 @@ const pageLead = computed(() => {
             </thead>
             <tbody class="divide-y divide-default">
               <tr
-                v-for="r in results"
+                v-for="r in recentResults"
                 :key="r.id"
                 class="hover:bg-muted/20"
               >
@@ -915,91 +943,6 @@ const pageLead = computed(() => {
         </div>
       </section>
 
-      <!-- Skróty publiczne (bez duplikatów kafli powyżej) -->
-      <section>
-        <h2 class="mb-5 flex items-center gap-3">
-          <span class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary ring-1 ring-primary/15">
-            <UIcon
-              name="i-lucide-compass"
-              class="size-[1.35rem]"
-            />
-          </span>
-          <span class="text-lg font-black tracking-tight text-highlighted sm:text-xl">Klub i narzędzia</span>
-        </h2>
-        <div class="grid gap-3 sm:grid-cols-2">
-          <UCard class="rounded-2xl transition-colors hover:bg-muted/15 sm:col-span-2">
-            <NuxtLink
-              to="/zawodnicy"
-              class="flex items-center justify-between group"
-            >
-              <div class="flex items-center gap-3">
-                <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                  <UIcon
-                    name="i-lucide-trending-up"
-                    class="size-5"
-                  />
-                </div>
-                <div>
-                  <h3 class="font-medium group-hover:text-primary transition-colors">Ranking Klubowy</h3>
-                  <p class="text-xs text-muted">Zobacz jak wypadasz na tle innych zawodników</p>
-                </div>
-              </div>
-              <UIcon
-                name="i-lucide-chevron-right"
-                class="size-5 text-muted group-hover:text-primary"
-              />
-            </NuxtLink>
-          </UCard>
-
-          <UCard class="rounded-2xl transition-colors hover:bg-muted/15">
-            <NuxtLink
-              to="/kalkulator-sinclair"
-              class="flex items-center justify-between group"
-            >
-              <div class="flex items-center gap-3">
-                <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500">
-                  <UIcon
-                    name="i-lucide-calculator"
-                    class="size-5"
-                  />
-                </div>
-                <div>
-                  <h3 class="font-medium group-hover:text-emerald-500 transition-colors">Kalkulator Sinclair</h3>
-                  <p class="text-xs text-muted">Przelicz swoje wyniki na punkty Sinclaira</p>
-                </div>
-              </div>
-              <UIcon
-                name="i-lucide-chevron-right"
-                class="size-5 text-muted group-hover:text-emerald-500"
-              />
-            </NuxtLink>
-          </UCard>
-
-          <UCard class="rounded-2xl transition-colors hover:bg-muted/15">
-            <NuxtLink
-              to="/kalendarz"
-              class="flex items-center justify-between group"
-            >
-              <div class="flex items-center gap-3">
-                <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-500/10 text-purple-500">
-                  <UIcon
-                    name="i-lucide-calendar"
-                    class="size-5"
-                  />
-                </div>
-                <div>
-                  <h3 class="font-medium group-hover:text-purple-500 transition-colors">Nadchodzące starty</h3>
-                  <p class="text-xs text-muted">Sprawdź kalendarz zawodów klubowych</p>
-                </div>
-              </div>
-              <UIcon
-                name="i-lucide-chevron-right"
-                class="size-5 text-muted group-hover:text-purple-500"
-              />
-            </NuxtLink>
-          </UCard>
-        </div>
-      </section>
       </div>
     </div>
   </UContainer>

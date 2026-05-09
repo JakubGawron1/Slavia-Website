@@ -16,6 +16,7 @@ useSeoMeta({
 const auth = useAuth()
 const apiFetch = useApi()
 const toast = useToast()
+const config = useRuntimeConfig()
 
 const isAdmin = computed(() => auth.isAdmin.value || auth.isSuperAdmin.value)
 
@@ -28,39 +29,93 @@ interface BlogPost {
   published?: boolean
 }
 
-async function fetchBlogPostsList(): Promise<BlogPost[]> {
-  const wantsManage = auth.isAdmin.value && !!auth.token.value
-  if (wantsManage) {
-    try {
-      return await apiFetch<BlogPost[]>('/api/posts/manage')
-    } catch {
-      try {
-        return await apiFetch<BlogPost[]>('/api/posts')
-      } catch {
-        return []
-      }
-    }
+function publicBase() {
+  return String(config.public.apiBase || '').replace(/\/$/, '')
+}
+
+const base = computed(() => publicBase())
+
+// SSR zawsze renderuje publiczną listę (bez ryzyka cache per-user).
+const { data: posts, refresh: refreshPublic, pending } = await useLazyFetch<BlogPost[]>(
+  () => `${base.value}/api/posts`,
+  {
+    key: 'aktualnosci-posts-public',
+    default: () => [] as BlogPost[],
+    server: true
   }
-  try {
-    return await apiFetch<BlogPost[]>('/api/posts')
-  } catch {
-    return []
+)
+
+// Prefetch danych wpisu na hover/focus (limit + debounce), żeby przejście na `/aktualnosci/[slug]` było instant.
+const prefetchedIds = new Set<string>()
+const inFlightIds = new Set<string>()
+const hoverTimers = new Map<string, number>()
+const PREFETCH_DELAY_MS = 140
+const MAX_PREFETCH_IN_FLIGHT = 2
+
+function prefetchPostData(post: BlogPost) {
+  const id = String(post?.id || '')
+  if (!id) return
+  if (prefetchedIds.has(id) || inFlightIds.has(id)) return
+  if (inFlightIds.size >= MAX_PREFETCH_IN_FLIGHT) return
+
+  const key = `aktualnosci-post-public-${id}`
+  const existing = useNuxtData<BlogPost | null>(key).data.value
+  if (existing) {
+    prefetchedIds.add(id)
+    return
+  }
+
+  inFlightIds.add(id)
+  $fetch<BlogPost>(`${base.value}/api/posts/${encodeURIComponent(id)}`)
+    .then((res) => {
+      if (!res) return
+      useNuxtData<BlogPost | null>(key).data.value = res
+      prefetchedIds.add(id)
+    })
+    .catch(() => {
+      // cicho: prefetch ma nie przeszkadzać
+    })
+    .finally(() => {
+      inFlightIds.delete(id)
+    })
+}
+
+function schedulePrefetch(post: BlogPost) {
+  const id = String(post?.id || '')
+  if (!id) return
+  if (hoverTimers.has(id)) return
+  const t = window.setTimeout(() => {
+    hoverTimers.delete(id)
+    prefetchPostData(post)
+  }, PREFETCH_DELAY_MS)
+  hoverTimers.set(id, t)
+}
+
+function cancelScheduledPrefetch(post: BlogPost) {
+  const id = String(post?.id || '')
+  if (!id) return
+  const t = hoverTimers.get(id)
+  if (t != null) {
+    window.clearTimeout(t)
+    hoverTimers.delete(id)
   }
 }
 
-const { data: posts, refresh, pending } = await useAsyncData(
-  'aktualnosci-posts-list',
-  fetchBlogPostsList,
-  {
-    watch: [
-      () => auth.isAdmin.value,
-      () => auth.token.value,
-      () => auth.user.value?.id,
-      () => auth.rolesDisplayShort.value
-    ],
-    default: () => [] as BlogPost[]
+async function refreshList() {
+  // Adminowe “manage” ładujemy tylko na kliencie (token w localStorage).
+  if (import.meta.client && (auth.isAdmin.value || auth.isSuperAdmin.value) && auth.token.value) {
+    const list = await apiFetch<BlogPost[]>('/api/posts/manage').catch(() => null)
+    if (Array.isArray(list)) {
+      posts.value = list
+      return
+    }
   }
-)
+  await refreshPublic()
+}
+
+onMounted(() => {
+  void refreshList()
+})
 
 async function deletePost(id: string) {
   if (!isAdmin.value) {
@@ -73,7 +128,7 @@ async function deletePost(id: string) {
   try {
     await apiFetch(`/api/posts/${id}`, { method: 'DELETE' })
     toast.add({ title: 'Wpis usunięty', color: 'success' })
-    await refresh()
+    await refreshList()
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (_error) {
     toast.add({ title: 'Błąd usuwania', color: 'error' })
@@ -122,12 +177,27 @@ function editPostUrl(post: BlogPost) {
 
     <div
       v-if="pending"
-      class="flex justify-center py-10"
+      class="py-10"
     >
-      <UIcon
-        name="i-lucide-loader-2"
-        class="animate-spin size-8 text-primary"
-      />
+      <div class="grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3 xl:gap-10">
+        <div
+          v-for="i in 6"
+          :key="`posts-skel-${i}`"
+          class="overflow-hidden rounded-2xl border border-default bg-card p-5 shadow-sm"
+        >
+          <div class="h-44 rounded-lg bg-muted/30 animate-pulse sm:h-48" />
+          <div class="mt-4 space-y-2">
+            <div class="h-3.5 w-44 rounded bg-primary/15 animate-pulse" />
+            <div class="h-6 w-[88%] rounded bg-muted/35 animate-pulse" />
+            <div class="h-6 w-[72%] rounded bg-muted/30 animate-pulse" />
+            <div class="mt-3 space-y-2">
+              <div class="h-4 w-full rounded bg-muted/25 animate-pulse" />
+              <div class="h-4 w-[92%] rounded bg-muted/25 animate-pulse" />
+              <div class="h-4 w-[78%] rounded bg-muted/25 animate-pulse" />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div
@@ -154,6 +224,8 @@ function editPostUrl(post: BlogPost) {
         v-for="post in posts"
         :key="post.id"
         class="group flex flex-col overflow-hidden border-transparent transition-colors hover:border-primary/50"
+        @pointerenter="schedulePrefetch(post)"
+        @pointerleave="cancelScheduledPrefetch(post)"
       >
         <div class="relative mb-4 flex h-44 items-center justify-center overflow-hidden rounded-lg bg-neutral-800 sm:h-48">
           <img
@@ -200,10 +272,13 @@ function editPostUrl(post: BlogPost) {
           <div class="mt-auto flex flex-col gap-3 border-t border-default pt-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
             <UButton
               :to="postUrl(post)"
+              prefetch
+              prefetch-on="interaction"
               variant="link"
               color="primary"
               trailing-icon="i-lucide-arrow-right"
               class="min-h-10 justify-start px-0"
+              @focus="schedulePrefetch(post)"
             >
               Czytaj więcej
             </UButton>
@@ -214,6 +289,8 @@ function editPostUrl(post: BlogPost) {
             >
               <UButton
                 :to="editPostUrl(post)"
+                prefetch
+                prefetch-on="interaction"
                 size="sm"
                 color="neutral"
                 variant="soft"

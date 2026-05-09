@@ -9,54 +9,6 @@ import { sinclairTotal } from '~/utils/sinclair'
 import { effectiveBodyweightKgForSinclair, parseWeightCategoryLimitKg } from '~/utils/sinclairAthlete'
 import { apiRoutes } from '~/config/api'
 
-interface PublicResultBoardRow {
-  id: string
-  athlete_id: string
-  athlete_name: string
-  competition_id?: string | null
-  competition_title?: string | null
-  snatch: number
-  clean_and_jerk: number
-  total: number
-  date: string
-  kind?: 'competition' | 'training'
-  location?: string | null
-  squat_kg?: number | null
-  bench_kg?: number | null
-  deadlift_kg?: number | null
-}
-
-function boardRowToCompetitionResult(row: PublicResultBoardRow): CompetitionResult {
-  return {
-    id: row.id,
-    athlete_id: row.athlete_id,
-    snatch: row.snatch,
-    clean_and_jerk: row.clean_and_jerk,
-    total: row.total,
-    status: 'Approved',
-    date: row.date,
-    kind: 'competition',
-    location: row.location ?? null,
-    squat_kg: row.squat_kg ?? null,
-    bench_kg: row.bench_kg ?? null,
-    deadlift_kg: row.deadlift_kg ?? null
-  }
-}
-
-/** Jedno zapytanie zamiast N× `/api/results/athlete/:id` — stabilniejsze na produkcji (SSR, limity równoległych połączeń). */
-function groupBoardRowsByAthlete(rows: PublicResultBoardRow[]): Record<string, CompetitionResult[]> {
-  const out: Record<string, CompetitionResult[]> = {}
-  for (const row of rows) {
-    const aid = row.athlete_id
-    if (!out[aid]) out[aid] = []
-    out[aid].push(boardRowToCompetitionResult(row))
-  }
-  for (const list of Object.values(out)) {
-    list.sort((a, b) => a.date.localeCompare(b.date))
-  }
-  return out
-}
-
 function cardGender(g: string | null | undefined): SinclairGender | null {
   return g === 'male' || g === 'female' ? g : null
 }
@@ -90,8 +42,6 @@ function publicBase() {
   return String(config.public.apiBase || '').replace(/\/$/, '')
 }
 
-const canEditResults = computed(() => auth.isTrainer.value)
-
 const base = computed(() => publicBase())
 
 const {
@@ -107,40 +57,11 @@ const {
   }
 )
 
-const {
-  data: publicBoardRowsRaw,
-  pending: boardPending,
-  error: boardError
-} = await useLazyFetch<PublicResultBoardRow[]>(
-  () => `${base.value}/api/results/public-board`,
-  {
-    key: 'players-public-board',
-    default: () => [] as PublicResultBoardRow[],
-    server: true
-  }
-)
-
-const bundlePending = computed(() => playersPending.value || boardPending.value)
-const error = computed(() => playersError.value || boardError.value)
+const bundlePending = computed(() => playersPending.value)
+const error = computed(() => playersError.value)
 const status = computed(() => (bundlePending.value ? 'pending' : 'success'))
 
 const players = computed(() => playersRaw.value ?? [])
-const resultsByAthlete = computed(() => groupBoardRowsByAthlete(publicBoardRowsRaw.value ?? []))
-
-/**
- * Tabela „Wyniki z zawodów” — ten sam zestaw co `/api/results/public-board-olympic`
- * (dwubój olimpijski, `total >= 20`), liczona lokalnie z jednego pobrania tablicy publicznej.
- */
-const publicResults = computed(() => {
-  const rows = publicBoardRowsRaw.value ?? []
-  return [...rows]
-    .filter(r => r.total >= 20)
-    .sort((a, b) => {
-      const byDate = b.date.localeCompare(a.date)
-      if (byDate !== 0) return byDate
-      return b.total - a.total
-    })
-})
 
 /**
  * Wyniki treningowe (wszystkich zawodników) — pobierane wyłącznie po zalogowaniu,
@@ -196,34 +117,19 @@ const paidByAthleteId = computed(() => {
 })
 
 useSeoMeta({
-  title: 'Zawodnicy, ranking i wyniki — Slavia Ruda Śląska',
+  title: 'Zawodnicy i ranking — Slavia Ruda Śląska',
   description:
-    'Kadra CKS Slavia Ruda Śląska, ranking Sinclair oraz lista zatwierdzonych wyników z zawodów. Po zalogowaniu dodatkowo wyniki treningowe.',
-  ogTitle: 'Zawodnicy, ranking i wyniki CKS Slavia',
-  ogDescription: 'Poznaj kadrę Slavia, sprawdź klasyfikację Sinclair i zatwierdzone starty zawodników.',
+    'Kadra CKS Slavia Ruda Śląska oraz ranking Sinclair. Po zalogowaniu dodatkowo wewnętrzne wyniki treningowe.',
+  ogTitle: 'Zawodnicy i ranking CKS Slavia',
+  ogDescription: 'Poznaj kadrę Slavia i sprawdź klasyfikację Sinclair.',
   twitterCard: 'summary'
 })
 
-/** Karty i ranking: wyłącznie zatwierdzone zgłoszenia (`/api/results/athlete/:id`). */
-function mapToCard(p: AthleteModel, rb: Record<string, CompetitionResult[]>) {
-  const approved = (rb[p.id] ?? [])
-    .slice()
-    .sort((a, b) => a.date.localeCompare(b.date))
-
-  let bestRow: CompetitionResult | null = null
-  for (const r of approved) {
-    if (
-      !bestRow
-      || r.total > bestRow.total
-      || (r.total === bestRow.total && r.date.localeCompare(bestRow.date) > 0)
-    ) {
-      bestRow = r
-    }
-  }
-
-  const snatchKg = bestRow?.snatch ?? 0
-  const cjKg = bestRow?.clean_and_jerk ?? 0
-  const totalKg = bestRow?.total ?? 0
+/** Karty i ranking: bazują na agregatach w `athletes` (`best_*`, `total_kg`). */
+function mapToCard(p: AthleteModel) {
+  const snatchKg = Number(p.best_snatch_kg ?? 0)
+  const cjKg = Number(p.best_clean_jerk_kg ?? 0)
+  const totalKg = Number(p.total_kg ?? 0)
 
   const effectiveWeight = effectiveBodyweightKgForSinclair(p)
   const weightCategoryDisplay = resolveWeightCategoryThreshold(p.gender ?? undefined, p.bodyweight ?? undefined, p.weight_category ?? undefined)
@@ -238,22 +144,15 @@ function mapToCard(p: AthleteModel, rb: Record<string, CompetitionResult[]>) {
     }
   }
 
-  const chartHistory = approved.map((r) => {
-    let sinclairPt: number | null = null
-    if (effectiveWeight > 0 && sg) {
-      const c = sinclairTotal(r.total, effectiveWeight, sg)
-      if (!Number.isNaN(c)) sinclairPt = Number(c.toFixed(2))
-    }
-    const raw = r.date || ''
-    const dateShort = raw.length >= 10 ? raw.slice(0, 10) : raw
-    return {
-      date: dateShort,
-      total: r.total,
-      snatch: r.snatch,
-      clean_and_jerk: r.clean_and_jerk,
-      sinclair: sinclairPt
-    }
-  })
+  const chartHistory = totalKg > 0
+    ? [{
+        date: 'PB',
+        total: totalKg,
+        snatch: snatchKg,
+        clean_and_jerk: cjKg,
+        sinclair: effectiveWeight > 0 && sg ? Number(sinclairTotal(totalKg, effectiveWeight, sg).toFixed(2)) : null
+      }]
+    : []
 
   const totals = chartHistory.map(x => x.total)
   const maxHistory = totals.length > 0 ? Math.max(...totals) * 1.15 || 300 : 300
@@ -283,12 +182,11 @@ function mapToCard(p: AthleteModel, rb: Record<string, CompetitionResult[]>) {
 }
 
 const mappedPlayers = computed(() => {
-  const rb = resultsByAthlete.value
-  return players.value.map(p => mapToCard(p, rb)).sort((a, b) => b.sinclair - a.sinclair)
+  return players.value.map(p => mapToCard(p)).sort((a, b) => b.sinclair - a.sinclair)
 })
 
-/** Podium i tabela — tylko osoby z co najmniej jednym zatwierdzonym wynikiem. */
-const rankingPlayers = computed(() => mappedPlayers.value.filter(x => x.chartHistory.length > 0))
+/** Podium i tabela — tylko osoby z dodatnim PB (agregaty w `athletes`). */
+const rankingPlayers = computed(() => mappedPlayers.value.filter(x => x.total > 0 && x.sinclair > 0))
 
 const podium = computed(() => rankingPlayers.value.slice(0, 3))
 
@@ -301,13 +199,12 @@ const categories = [
 const selectedCategory = ref('all')
 
 const filteredRankings = computed(() => {
-  const rb = resultsByAthlete.value
   const genderOk = (p: AthleteModel) =>
     selectedCategory.value === 'all' || p.gender === selectedCategory.value
   return players.value
     .filter(genderOk)
-    .map(p => mapToCard(p, rb))
-    .filter(x => x.chartHistory.length > 0)
+    .map(p => mapToCard(p))
+    .filter(x => x.total > 0 && x.sinclair > 0)
     .sort((a, b) => b.sinclair - a.sinclair)
 })
 
@@ -627,126 +524,6 @@ function formatPlTriple(r: { squat_kg?: number | null, bench_kg?: number | null,
       </UCard>
     </div>
 
-    <!-- Public Competition Results Board (z dawnej strony /wyniki-zawodow) -->
-    <div id="wyniki-zawodow" class="mb-20 scroll-mt-24">
-      <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div class="min-w-0">
-          <h2 class="flex items-center gap-3 text-2xl font-black uppercase italic tracking-tight text-highlighted sm:gap-4 sm:text-3xl lg:text-4xl">
-            <UIcon
-              name="i-lucide-medal"
-              class="size-7 shrink-0 text-primary sm:size-8"
-            />
-            Wyniki z zawodów
-          </h2>
-          <p class="mt-2 max-w-3xl font-medium text-muted">
-            Lista zatwierdzonych startów naszych zawodników. Wpisy treningowe są tu pomijane —
-            widoczne są wyłącznie wyniki uzyskane na zawodach.
-          </p>
-        </div>
-        <UButton
-          v-if="canEditResults"
-          to="/trainer/wyniki"
-          icon="i-lucide-pencil-line"
-          variant="outline"
-          color="neutral"
-          class="min-h-11 w-full shrink-0 justify-center md:w-auto"
-        >
-          Edytuj w panelu trenera
-        </UButton>
-      </div>
-
-      <div
-        v-if="bundlePending"
-        class="flex justify-center py-14"
-      >
-        <UIcon
-          name="i-lucide-loader-2"
-          class="size-8 animate-spin text-primary"
-        />
-      </div>
-
-      <div
-        v-else-if="!publicResults?.length"
-        class="rounded-2xl border border-dashed border-default bg-muted/10 px-6 py-14 text-center text-muted"
-      >
-        Brak opublikowanych wyników z zawodów.
-      </div>
-
-      <div
-        v-else
-        class="overflow-x-auto rounded-2xl border border-default"
-      >
-        <table class="w-full min-w-[880px] text-left text-sm">
-          <thead class="border-b border-default bg-muted/40 text-xs font-semibold uppercase tracking-wide text-muted">
-            <tr>
-              <th class="px-4 py-3">
-                Data
-              </th>
-              <th class="px-4 py-3">
-                Zawodnik
-              </th>
-              <th class="px-4 py-3">
-                Miejsce
-              </th>
-              <th class="px-4 py-3 text-right">
-                Rwanie
-              </th>
-              <th class="px-4 py-3 text-right">
-                Podrzut
-              </th>
-              <th class="px-4 py-3 text-right font-semibold text-highlighted">
-                Razem
-              </th>
-              <th
-                class="hidden px-4 py-3 text-right lg:table-cell"
-                title="Przysiad / wycisk / martwy"
-              >
-                Siła (kg)
-              </th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-default">
-            <tr
-              v-for="r in publicResults"
-              :key="r.id"
-              class="bg-card hover:bg-muted/20"
-            >
-              <td class="whitespace-nowrap px-4 py-3 text-muted">
-                {{ formatBoardDate(r.date) }}
-              </td>
-              <td class="px-4 py-3 font-medium text-highlighted">
-                <NuxtLink
-                  :to="athleteProfilePath(r.athlete_name, r.athlete_id)"
-                  class="hover:text-primary"
-                >
-                  {{ r.athlete_name }}
-                </NuxtLink>
-              </td>
-              <td class="px-4 py-3 text-muted">
-                <span v-if="r.location" class="inline-flex items-center gap-1.5">
-                  <UIcon name="i-lucide-map-pin" class="size-3.5 shrink-0 text-muted/70" />
-                  {{ r.location }}
-                </span>
-                <span v-else class="text-muted/50">—</span>
-              </td>
-              <td class="px-4 py-3 text-right tabular-nums">
-                {{ r.snatch }} kg
-              </td>
-              <td class="px-4 py-3 text-right tabular-nums">
-                {{ r.clean_and_jerk }} kg
-              </td>
-              <td class="px-4 py-3 text-right tabular-nums font-semibold text-primary">
-                {{ r.total }} kg
-              </td>
-              <td class="hidden px-4 py-3 text-right text-xs tabular-nums text-muted lg:table-cell">
-                {{ formatPlTriple(r) }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
     <!-- Sekcja TRENINGOWA (tylko dla zalogowanych) -->
     <div
       v-if="showTrainingSection"
@@ -887,12 +664,48 @@ function formatPlTriple(r: { squat_kg?: number | null, bench_kg?: number | null,
           v-for="player in mappedPlayers"
           :key="player.id"
           :to="athleteProfilePath(player.name, player.id)"
+          prefetch
+          prefetch-on="interaction"
           class="block"
         >
           <AtheleteCard
             :model-value="player"
           />
         </NuxtLink>
+      </div>
+    </div>
+
+    <div
+      v-else-if="bundlePending"
+      class="mb-20"
+    >
+      <h2 class="mb-8 flex items-center gap-3 text-2xl font-black uppercase italic tracking-tight text-highlighted sm:mb-12 sm:gap-4 sm:text-3xl lg:text-4xl">
+        <UIcon
+          name="i-lucide-users"
+          class="size-7 shrink-0 text-primary sm:size-8"
+        />
+        Karty Zawodników
+      </h2>
+      <div class="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12 xl:gap-14">
+        <div
+          v-for="i in 6"
+          :key="`player-skel-${i}`"
+          class="rounded-2xl border border-default bg-card p-6 shadow-sm"
+        >
+          <div class="flex items-start gap-4">
+            <div class="size-14 shrink-0 rounded-2xl bg-muted/35 animate-pulse" />
+            <div class="min-w-0 flex-1 space-y-2">
+              <div class="h-5 w-[62%] rounded bg-muted/35 animate-pulse" />
+              <div class="h-4 w-[42%] rounded bg-muted/25 animate-pulse" />
+              <div class="h-4 w-[70%] rounded bg-muted/25 animate-pulse" />
+            </div>
+          </div>
+          <div class="mt-5 grid grid-cols-3 gap-3">
+            <div class="h-12 rounded-xl bg-muted/25 animate-pulse" />
+            <div class="h-12 rounded-xl bg-muted/25 animate-pulse" />
+            <div class="h-12 rounded-xl bg-muted/25 animate-pulse" />
+          </div>
+        </div>
       </div>
     </div>
 

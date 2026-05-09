@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import DashboardHero from '~/components/dashboard/DashboardHero.vue'
+import DashboardKpiCard from '~/components/dashboard/DashboardKpiCard.vue'
+import DashboardModuleCard from '~/components/dashboard/DashboardModuleCard.vue'
+
 definePageMeta({ middleware: 'superadmin' })
 
 useSeoMeta({
@@ -156,113 +160,98 @@ const quickLinks = [
     bg: 'bg-orange-500/10'
   }
 ]
+
+const moduleGroups = computed(() => {
+  const byTo = new Map<string, typeof quickLinks[number]>()
+  for (const l of quickLinks) byTo.set(String(l.to), l)
+  const pick = (to: string) => byTo.get(to)
+  return [
+    {
+      title: 'System i bezpieczeństwo',
+      items: [
+        pick('/superadmin/administratorzy'),
+        pick('/superadmin/developer'),
+        pick('/superadmin/zawodnicy')
+      ].filter(Boolean)
+    },
+    {
+      title: 'Przejścia i operacje',
+      items: [
+        pick('/admin'),
+        pick('/trainer'),
+        pick('/athlete'),
+        pick('/kalendarz')
+      ].filter(Boolean)
+    },
+    {
+      title: 'Narzędzia i treści',
+      items: [
+        pick('/admin/changelog'),
+        pick('/trainer/wyniki'),
+        pick('/trainer/dziennik'),
+        pick('/trainer/exercises'),
+        pick('/trainer/analiza-sztangi'),
+        pick('/aktualnosci'),
+        pick('/profil'),
+        pick('/kalkulator-proporcji')
+      ].filter(Boolean)
+    }
+  ] as const
+})
+
+function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral' {
+  const s = String(bg || '').toLowerCase()
+  if (s.includes('red')) return 'error'
+  if (s.includes('amber') || s.includes('yellow')) return 'warning'
+  if (s.includes('emerald') || s.includes('green') || s.includes('teal') || s.includes('lime')) return 'success'
+  if (s.includes('sky') || s.includes('cyan') || s.includes('blue') || s.includes('indigo')) return 'info'
+  if (s.includes('violet') || s.includes('purple') || s.includes('fuchsia') || s.includes('primary')) return 'primary'
+  return 'neutral'
+}
 </script>
 
 <template>
   <UContainer class="py-8 md:py-14 lg:py-16">
-    <div class="mb-8">
-      <p class="text-sm font-medium uppercase tracking-wider text-primary flex items-center gap-2">
-        <UIcon
-          name="i-lucide-crown"
-          class="size-4"
-        />
-        SuperAdministracja
-      </p>
-      <h1 class="mt-2 text-3xl font-bold tracking-tight text-highlighted">
-        Witaj, Władco Absolutny! ({{ auth.user.value?.username || 'Superadminie' }})
-      </h1>
-      <p class="mt-2 max-w-2xl text-muted">
-        To jest główny panel zarządzania całym systemem klubu. Masz pełne uprawnienia do wszystkich zasobów i ról.
-      </p>
+    <DashboardHero
+      eyebrow="Superadministracja"
+      :title="`Witaj, ${auth.user.value?.username || 'Superadminie'}!`"
+      lead="Panel systemowy: role, bezpieczeństwo, narzędzia i szybkie przejścia."
+      icon="i-lucide-crown"
+      :badges="[
+        { label: `Konta admin: ${adminsCount}`, color: 'neutral' },
+        { label: `Zawodnicy: ${athletesCount}`, color: 'neutral' }
+      ]"
+      :actions="[
+        { label: 'Konta i role', to: '/superadmin/administratorzy', icon: 'i-lucide-shield-alert', variant: 'soft', color: 'primary' },
+        { label: 'Dev tools', to: '/superadmin/developer', icon: 'i-lucide-terminal', variant: 'outline', color: 'neutral' }
+      ]"
+    />
+
+    <div class="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3 lg:gap-4">
+      <DashboardKpiCard label="Konta administracyjne" :value="adminsCount" icon="i-lucide-shield-check" tone="error" to="/superadmin/administratorzy" />
+      <DashboardKpiCard label="Zawodnicy (aktywni)" :value="athletesCount" icon="i-lucide-users" tone="info" to="/superadmin/zawodnicy" />
+      <DashboardKpiCard label="Wydarzenia (kalendarz)" :value="competitionsCount" icon="i-lucide-calendar" tone="primary" to="/kalendarz" />
     </div>
 
-    <h2 class="mb-3 text-lg font-semibold text-highlighted">
-      Statystyki
-    </h2>
-    <div class="mb-10 grid grid-cols-1 gap-4 sm:grid-cols-3">
-      <UCard>
-        <div class="flex items-center gap-4">
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-red-500/10 text-red-500">
-            <UIcon
-              name="i-lucide-shield-check"
-              class="size-6"
-            />
-          </div>
-          <div>
-            <p class="text-sm font-medium text-muted">
-              Konta administracyjne
-            </p>
-            <p class="text-2xl font-bold text-highlighted">
-              {{ adminsCount }}
-            </p>
-          </div>
+    <div class="mt-12 space-y-8">
+      <div v-for="g in moduleGroups" :key="g.title">
+        <div class="mb-3 flex items-end justify-between gap-3">
+          <h2 class="text-xl font-semibold text-highlighted">
+            {{ g.title }}
+          </h2>
         </div>
-      </UCard>
-      <UCard>
-        <div class="flex items-center gap-4">
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
-            <UIcon
-              name="i-lucide-users"
-              class="size-6"
-            />
-          </div>
-          <div>
-            <p class="text-sm font-medium text-muted">
-              Zawodnicy
-            </p>
-            <p class="text-2xl font-bold text-highlighted">
-              {{ athletesCount }}
-            </p>
-          </div>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <DashboardModuleCard
+            v-for="link in g.items"
+            :key="String(link!.to)"
+            :title="link!.title"
+            :description="link!.description"
+            :icon="link!.icon"
+            :to="link!.to"
+            :tone="toneFromBg(link!.bg)"
+          />
         </div>
-      </UCard>
-      <UCard>
-        <div class="flex items-center gap-4">
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-500/10 text-purple-500">
-            <UIcon
-              name="i-lucide-calendar"
-              class="size-6"
-            />
-          </div>
-          <div>
-            <p class="text-sm font-medium text-muted">
-              Wydarzenia łącznie
-            </p>
-            <p class="text-2xl font-bold text-highlighted">
-              {{ competitionsCount }}
-            </p>
-          </div>
-        </div>
-      </UCard>
-    </div>
-
-    <h2 class="mb-4 text-xl font-semibold text-highlighted">
-      Moduły i przejścia
-    </h2>
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <NuxtLink
-        v-for="link in quickLinks"
-        :key="link.to"
-        :to="link.to"
-        class="group block transition-transform hover:-translate-y-1"
-      >
-        <UCard class="h-full border border-default transition-colors group-hover:border-primary/50 group-hover:shadow-md">
-          <div class="flex flex-col items-center text-center p-2">
-            <div :class="['mb-3 flex h-14 w-14 items-center justify-center rounded-full', link.bg, link.color]">
-              <UIcon
-                :name="link.icon"
-                class="size-7"
-              />
-            </div>
-            <h3 class="font-medium text-highlighted group-hover:text-primary transition-colors">
-              {{ link.title }}
-            </h3>
-            <p class="mt-2 text-xs text-muted">
-              {{ link.description }}
-            </p>
-          </div>
-        </UCard>
-      </NuxtLink>
+      </div>
     </div>
   </UContainer>
 </template>

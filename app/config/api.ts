@@ -116,6 +116,7 @@ export const apiRoutes = {
   payments: {
     my: '/api/payments/my',
     myStatus: '/api/payments/my/status',
+    myYear: '/api/payments/my/year',
     status: '/api/payments/status',
     overview: '/api/payments/overview',
     pending: '/api/payments/pending',
@@ -123,6 +124,8 @@ export const apiRoutes = {
     reject: (id: string) => `/api/payments/${encodeURIComponent(id)}/reject`,
     createApprovedForAthlete: (athleteId: string) =>
       `/api/payments/athlete/${encodeURIComponent(athleteId)}/approved`,
+    athleteYear: (athleteId: string) =>
+      `/api/payments/athlete/${encodeURIComponent(athleteId)}/year`,
     /** Toggle „przelew stały" — backend w razie włączenia od razu robi catch-up za bieżący miesiąc. */
     standingOrder: (athleteId: string) =>
       `/api/payments/athlete/${encodeURIComponent(athleteId)}/standing-order`

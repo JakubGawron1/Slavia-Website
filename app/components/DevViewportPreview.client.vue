@@ -37,6 +37,12 @@ const scale = computed(() => {
   return Math.min(1, Math.max(0.2, s))
 })
 
+const availableHeightCss = computed(() => {
+  // `svh` lepiej zachowuje się na mobile (adres bar / UI przeglądarki).
+  // Zapas na pasek „Podgląd ...” u góry.
+  return 'calc(100svh - 6.5rem)'
+})
+
 function closePreview() {
   if (!import.meta.client) return
   localStorage.setItem(DEV_LS_VIEWPORT_MODE, 'off')
@@ -104,13 +110,13 @@ watch(
       </div>
     </div>
 
-    <div class="absolute inset-0 z-10 flex items-center justify-center p-4">
+    <div class="absolute inset-0 z-10 flex items-start justify-center overflow-auto p-4 pt-16">
       <div
         class="origin-top rounded-[28px] bg-black shadow-[0_30px_80px_rgba(0,0,0,0.45)] ring-1 ring-white/10"
         :style="{
           width: `${widthPx}px`,
           transform: `scale(${scale})`,
-          height: `calc((100vh - 6.5rem) / ${scale})`
+          height: `calc(${availableHeightCss} / ${scale})`
         }"
       >
         <iframe
