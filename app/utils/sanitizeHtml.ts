@@ -1,7 +1,7 @@
 import DOMPurify from 'isomorphic-dompurify'
 import type { Config } from 'isomorphic-dompurify'
 
-/** Tagi zgodne z wyjściem TipTap (StarterKit + Link, TextAlign, Highlight, Color itd.). */
+/** Tagi zgodne z wyjściem TipTap (StarterKit + Link, TextAlign, Highlight, Color, Image itd.). */
 const RICH_HTML_CONFIG: Config = {
   ALLOWED_TAGS: [
     'p',
@@ -26,14 +26,63 @@ const RICH_HTML_CONFIG: Config = {
     'code',
     'pre',
     'div',
-    'mark'
+    'mark',
+    'img'
   ],
-  ALLOWED_ATTR: ['href', 'title', 'target', 'rel', 'class', 'style'],
+  ALLOWED_ATTR: [
+    'href',
+    'title',
+    'target',
+    'rel',
+    'class',
+    'style',
+    'src',
+    'alt',
+    'width',
+    'height',
+    'loading',
+    'decoding'
+  ],
   ALLOW_DATA_ATTR: false,
   ALLOW_ARIA_ATTR: false
 }
 
 const SAFE_STYLE_PROPS = new Set(['color', 'background-color', 'text-align'])
+
+/** Zezwala na http(s), ścieżki od roota i względne bez schematu — odrzuca m.in. javascript:, data:, //host. */
+function imgSrcIsSafe(raw: string): boolean {
+  const v = raw.trim()
+  if (!v) {
+    return false
+  }
+  const lower = v.toLowerCase()
+  if (
+    lower.startsWith('javascript:') ||
+    lower.startsWith('vbscript:') ||
+    lower.startsWith('data:') ||
+    lower.startsWith('file:')
+  ) {
+    return false
+  }
+  if (v.startsWith('//')) {
+    return false
+  }
+  if (/^https?:\/\//i.test(v)) {
+    return true
+  }
+  if (v.startsWith('/')) {
+    return true
+  }
+  if (!/^[a-z][a-z\d+.-]*:/i.test(v)) {
+    return true
+  }
+  return false
+}
+
+function imgNumericDimensionIsSafe(raw: string): boolean {
+  const v = raw.trim()
+  return /^\d+(\.\d+)?(px|%)?$/i.test(v) || v.toLowerCase() === 'auto'
+}
 
 function styleDeclarationIsSafe(propRaw: string, valueRaw: string): boolean {
   const prop = propRaw.trim().toLowerCase()
@@ -60,7 +109,34 @@ function ensureRichHtmlHooks(): void {
   }
   richHtmlHooksInstalled = true
 
-  DOMPurify.addHook('uponSanitizeAttribute', (_node, data) => {
+  DOMPurify.addHook('uponSanitizeAttribute', (node, data) => {
+    if (node.nodeName === 'IMG') {
+      const name = data.attrName
+      if (name === 'src') {
+        if (!imgSrcIsSafe(String(data.attrValue ?? ''))) {
+          data.keepAttr = false
+        }
+        return
+      }
+      if (name === 'width' || name === 'height') {
+        if (!imgNumericDimensionIsSafe(String(data.attrValue ?? ''))) {
+          data.keepAttr = false
+        }
+        return
+      }
+      if (name === 'loading') {
+        if (!/^(lazy|eager)$/i.test(String(data.attrValue ?? '').trim())) {
+          data.keepAttr = false
+        }
+        return
+      }
+      if (name === 'decoding') {
+        if (!/^(async|auto|sync)$/i.test(String(data.attrValue ?? '').trim())) {
+          data.keepAttr = false
+        }
+        return
+      }
+    }
     if (data.attrName !== 'style') {
       return
     }
