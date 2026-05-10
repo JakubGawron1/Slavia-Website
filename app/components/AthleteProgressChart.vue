@@ -145,7 +145,7 @@ const tooltipLeftPct = computed(() => {
             {{ fmtPlDate(tooltipPoint.date) }}
           </p>
           <div class="flex items-baseline gap-2 flex-wrap">
-            <span class="text-lg font-mono font-black text-emerald-400">{{ tooltipPoint.total }}</span>
+            <span class="text-lg font-mono font-black text-success">{{ tooltipPoint.total }}</span>
             <span class="text-[11px] font-semibold text-muted">kg total</span>
           </div>
           <div class="mt-1.5 grid grid-cols-2 gap-x-4 gap-y-0.5 text-[11px]">
@@ -230,7 +230,7 @@ const tooltipLeftPct = computed(() => {
         :cy="pt.y"
         :r="chartHoverIndex === i ? 7 : 5"
         class="pointer-events-none fill-white stroke-2 stroke-primary dark:fill-neutral-950 transition-all duration-150"
-        :class="chartHoverIndex === i ? 'stroke-emerald-400' : ''"
+        :class="chartHoverIndex === i ? 'stroke-success' : ''"
       />
       <circle
         v-for="(pt, i) in chartPaths.pts"

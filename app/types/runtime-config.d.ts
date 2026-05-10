@@ -5,7 +5,7 @@ declare module 'nuxt/schema' {
     apiBaseLeapcell: string
     apiBaseRender: string
     siteUrl: string
-    /** Z `package.json` → `version`, z prefiksem `v` (build-time). */
+    /** Z `package.json` → `version`, z prefiksem `v` (build-time), np. `v3.0.0-dev`. */
     appVersion: string
     /** Lista rozdzielona przecinkami — identyfikatory funkcji eksperymentalnych wymuszonych jako wyłączone. */
     experimentalKillSwitch: string

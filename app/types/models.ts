@@ -11,6 +11,8 @@ export interface AuthUser {
   roles: UserRole[]
   is_banned: boolean
   banned_reason?: string | null
+  /** Opcjonalne 2FA (TOTP) — z `GET /api/auth/me`. */
+  totp_enabled?: boolean
   /** Preset kolorystyczny zapisany na koncie (`slavia`, `iron`, …). */
   ui_theme_preset?: string | null
   /** Jasny / ciemny / system — zsynchronizowany z backendem. */
@@ -19,6 +21,8 @@ export interface AuthUser {
   athlete_gender?: string | null
   /** Zdjęcie z `athletes.image_url` (Cloudinary), gdy konto jest powiązane ze zawodnikiem. */
   athlete_image_url?: string | null
+  /** `athletes.id` powiązany profil (`GET /api/auth/me`). */
+  athlete_id?: string | null
 }
 
 export interface LoginResponse {
@@ -105,7 +109,8 @@ export interface MyCalendarEntry {
  * - `competition` — start zawodów (publiczne, ranking, wykres na karcie zawodnika);
  * - `training` — wynik z treningu (widoczny po zalogowaniu, nie liczy się do PB).
  */
-export type ResultKind = 'competition' | 'training'
+/** `import` — rekordy z importu danych (jeśli backend je oznacza). */
+export type ResultKind = 'competition' | 'training' | 'import'
 
 export interface CompetitionResult {
   id: string
@@ -177,6 +182,8 @@ export interface PaymentStatusResponse {
   due_date: string // YYYY-MM-10
   is_paid: boolean
   is_overdue: boolean
+  /** Z API — przy braku pola (cache/stary backend) traktuj jak false. */
+  has_standing_order?: boolean
 }
 
 export interface PaymentMonthStatusRow {

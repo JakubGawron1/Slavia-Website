@@ -112,8 +112,8 @@ const quickLinks = computed(() => {
       description: 'Lista oczekujących na tej stronie (sekcja poniżej) lub dodaj start w „Wszystkie starty”',
       icon: 'i-lucide-check-circle',
       to: { path: '/trainer', hash: '#wyniki-oczekujace' },
-      color: 'text-emerald-500',
-      bg: 'bg-emerald-500/10'
+      color: 'text-success',
+      bg: 'bg-success/12'
     },
     {
       title: 'Składki klubowe',
@@ -144,8 +144,8 @@ const quickLinks = computed(() => {
       description: 'Tworzenie planów i monitoring progresu',
       icon: 'i-lucide-clipboard-list',
       to: '/trainer/plany',
-      color: 'text-emerald-600',
-      bg: 'bg-emerald-500/10'
+      color: 'text-success',
+      bg: 'bg-success/12'
     },
     {
       title: 'Regeneracja zawodników',
@@ -176,8 +176,8 @@ const quickLinks = computed(() => {
       description: '„Złote proporcje” i widełki % między bojami',
       icon: 'i-lucide-sigma',
       to: '/kalkulator-proporcji',
-      color: 'text-emerald-600',
-      bg: 'bg-emerald-500/10'
+      color: 'text-success',
+      bg: 'bg-success/12'
     },
     {
       title: 'Analiza toru sztangi',
@@ -208,8 +208,8 @@ const quickLinks = computed(() => {
       description: 'Wiadomości 1:1 i szybki kontakt',
       icon: 'i-lucide-messages-square',
       to: '/chat',
-      color: 'text-sky-600',
-      bg: 'bg-sky-500/10'
+      color: 'text-info',
+      bg: 'bg-info/12'
     },
     {
       title: 'Lista obecności',
@@ -264,10 +264,13 @@ const moduleGroups = computed(() => {
 function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral' {
   const s = String(bg || '').toLowerCase()
   if (s.includes('red')) return 'error'
+  if (s.includes('rose')) return 'error'
+  if (s.includes('orange')) return 'warning'
   if (s.includes('amber') || s.includes('yellow')) return 'warning'
+  if (s.includes('fuchsia')) return 'primary'
   if (s.includes('emerald') || s.includes('green') || s.includes('teal') || s.includes('lime')) return 'success'
   if (s.includes('sky') || s.includes('cyan') || s.includes('blue') || s.includes('indigo')) return 'info'
-  if (s.includes('violet') || s.includes('purple') || s.includes('fuchsia') || s.includes('primary')) return 'primary'
+  if (s.includes('violet') || s.includes('purple') || s.includes('primary')) return 'primary'
   return 'neutral'
 }
 
@@ -396,7 +399,7 @@ onMounted(() => {
         label="Wyniki oczekujące"
         :value="pendingCount"
         icon="i-lucide-clipboard-clock"
-        :tone="pendingCount ? 'warning' : 'neutral'"
+        :tone="pendingCount ? 'warning' : 'info'"
         :to="{ path: '/trainer', hash: '#wyniki-oczekujace' }"
       />
       <DashboardKpiCard label="Wydarzenia w kalendarzu" :value="competitionsCount" icon="i-lucide-calendar" tone="primary" to="/kalendarz" />
@@ -460,6 +463,7 @@ onMounted(() => {
             :icon="link!.icon"
             :to="link!.to"
             :tone="toneFromBg(link!.bg)"
+            :icon-wrapper-class="`${link!.bg} ${link!.color}`"
           />
         </div>
       </div>

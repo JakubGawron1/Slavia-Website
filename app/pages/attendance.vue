@@ -150,7 +150,7 @@ function dayAccentClass(day: Date) {
   if (!isT) return base
 
   if (tStatus !== 'scheduled') return `${base} ring-1 ring-warning/20`
-  if (rec?.status === 'obecny') return `${base} ring-1 ring-emerald-500/25 bg-emerald-500/5`
+  if (rec?.status === 'obecny') return `${base} ring-1 ring-success/25 bg-success/5`
   if (rec?.status === 'nieobecny') return `${base} ring-1 ring-red-500/25 bg-red-500/5`
   return `${base} ring-1 ring-primary/15`
 }

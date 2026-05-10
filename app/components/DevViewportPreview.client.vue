@@ -43,11 +43,24 @@ const availableHeightCss = computed(() => {
   return 'calc(100svh - 6.5rem)'
 })
 
+/** Resztki znacznika iframe w sessionStorage (współdzielone okno rodzica + iframe) – czyść przy zamykaniu. */
+function clearDevIframeSessionFlag() {
+  if (!import.meta.client) return
+  try {
+    sessionStorage.removeItem('slavia-dev__iframe_active')
+  } catch {
+    /* ignore */
+  }
+}
+
 function closePreview() {
   if (!import.meta.client) return
   localStorage.setItem(DEV_LS_VIEWPORT_MODE, 'off')
   mode.value = 'off'
+  clearDevIframeSessionFlag()
 }
+
+const overlayOpen = computed(() => !isIframeContext.value && mode.value !== 'off' && Boolean(iframeSrc.value))
 
 onMounted(() => {
   readStorage()
@@ -82,50 +95,53 @@ watch(
 </script>
 
 <template>
-  <div
-    v-if="!isIframeContext && mode !== 'off' && iframeSrc"
-    class="fixed inset-0 z-200 bg-black/55 backdrop-blur-[2px]"
-    @click.self="closePreview"
-  >
-    <div class="absolute inset-x-0 top-3 z-20 flex items-center justify-center px-3">
-      <div class="flex max-w-[min(92vw,46rem)] items-center gap-2 rounded-full border border-white/10 bg-black/55 px-3 py-2 text-xs text-white shadow-lg">
-        <span class="font-black uppercase tracking-wider">
-          Podgląd: {{ mode === 'mobile' ? 'Mobile' : 'Desktop' }}
-        </span>
-        <span class="text-white/75 font-mono">
-          {{ widthPx }}px · skala {{ Math.round(scale * 100) }}%
-        </span>
-        <div class="ml-auto flex items-center gap-1">
-          <UButton
-            size="xs"
-            color="neutral"
-            variant="soft"
-            icon="i-lucide-x"
-            class="rounded-full"
-            @click.stop="closePreview"
-          >
-            Zamknij
-          </UButton>
+  <!-- `v-if` na Teleport: unikamy pustego roota; treść ponad UApp (body). -->
+  <Teleport v-if="overlayOpen" to="body">
+    <div
+      class="fixed inset-0 z-[470] bg-black/55 backdrop-blur-[2px]"
+      role="presentation"
+      @click.self="closePreview"
+    >
+      <div class="pointer-events-none absolute inset-x-0 top-3 z-[480] flex items-center justify-center px-3">
+        <div class="pointer-events-auto flex max-w-[min(92vw,46rem)] items-center gap-2 rounded-full border border-white/10 bg-black/55 px-3 py-2 text-xs text-white shadow-lg">
+          <span class="font-black uppercase tracking-wider">
+            Podgląd: {{ mode === 'mobile' ? 'Mobile' : 'Desktop' }}
+          </span>
+          <span class="font-mono text-white/75">
+            {{ widthPx }}px · skala {{ Math.round(scale * 100) }}%
+          </span>
+          <div class="ml-auto flex items-center gap-1">
+            <UButton
+              size="xs"
+              color="neutral"
+              variant="soft"
+              icon="i-lucide-x"
+              class="rounded-full"
+              @click.stop="closePreview"
+            >
+              Zamknij
+            </UButton>
+          </div>
+        </div>
+      </div>
+
+      <div class="absolute inset-0 z-[460] flex items-start justify-center overflow-auto p-4 pt-16">
+        <div
+          class="origin-top rounded-[28px] bg-black shadow-[0_30px_80px_rgba(0,0,0,0.45)] ring-1 ring-white/10"
+          :style="{
+            width: `${widthPx}px`,
+            transform: `scale(${scale})`,
+            height: `calc(${availableHeightCss} / ${scale})`
+          }"
+        >
+          <iframe
+            :src="iframeSrc"
+            class="h-full w-full rounded-[28px] bg-white"
+            style="border: 0;"
+          />
         </div>
       </div>
     </div>
-
-    <div class="absolute inset-0 z-10 flex items-start justify-center overflow-auto p-4 pt-16">
-      <div
-        class="origin-top rounded-[28px] bg-black shadow-[0_30px_80px_rgba(0,0,0,0.45)] ring-1 ring-white/10"
-        :style="{
-          width: `${widthPx}px`,
-          transform: `scale(${scale})`,
-          height: `calc(${availableHeightCss} / ${scale})`
-        }"
-      >
-        <iframe
-          :src="iframeSrc"
-          class="h-full w-full rounded-[28px] bg-white"
-          style="border: 0;"
-        />
-      </div>
-    </div>
-  </div>
+  </Teleport>
 </template>
 

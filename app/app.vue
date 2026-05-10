@@ -148,12 +148,18 @@ watch(
 
 <template>
   <UApp>
+    <a
+      href="#main-content"
+      class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-200 focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-sm focus:font-bold focus:text-white focus:ring-2 focus:ring-offset-2 focus:ring-white"
+    >Przejdź do treści</a>
+    <ClubWelcomeOnboarding />
     <DevViewportPreview v-if="devViewportIframePreviewOn" />
     <!-- Bez overflow-x na tym wrapperze: html/body już mają clip — podwójny clip ucinał obramowania / końcówki belki nawigacji (np. „Aktualności”). -->
     <div class="transition-opacity duration-300 ease-out min-w-0 opacity-100">
       <ClubSiteHeader>
         <template #actions>
           <div class="flex shrink-0 items-center gap-1.5 sm:gap-3">
+            <ClubGlobalSearch />
             <template v-if="auth.isLoggedIn.value">
               <ClubNotificationBell v-if="clubNotificationBellOn" />
               <NuxtLink
@@ -231,7 +237,11 @@ watch(
         @click="goBack"
       />
 
-      <UMain class="slavia-safe-x">
+      <UMain
+        id="main-content"
+        tabindex="-1"
+        class="slavia-safe-x outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+      >
         <NuxtPage />
       </UMain>
 

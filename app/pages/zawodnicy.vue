@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { format, parseISO } from 'date-fns'
-import { pl } from 'date-fns/locale'
 import AtheleteCard from '~/components/AtheleteCard.vue'
 import { athleteProfilePath } from '~/utils/slug'
 import type { Athlete as AthleteModel, AthletePaymentStatusRow, CompetitionResult } from '~/types/models'
@@ -38,6 +36,9 @@ const config = useRuntimeConfig()
 const auth = useAuth()
 const apiFetch = useApi()
 
+/** Pełny ranking/podium treningowy klubu — tylko kadra (trener / admin / superadmin). Zawodnik bez tych ról widzi tylko własny trening na swoim profilu. */
+const canSeeClubTrainingRanking = computed(() => auth.isTrainer.value || auth.isAdmin.value)
+
 function publicBase() {
   return String(config.public.apiBase || '').replace(/\/$/, '')
 }
@@ -47,7 +48,8 @@ const base = computed(() => publicBase())
 const {
   data: playersRaw,
   pending: playersPending,
-  error: playersError
+  error: playersError,
+  refresh: refreshPlayersPublic
 } = await useLazyFetch<AthleteModel[]>(
   () => `${base.value}/api/athletes`,
   {
@@ -56,6 +58,16 @@ const {
     server: true
   }
 )
+
+if (import.meta.client) {
+  onMounted(() => {
+    const onFocus = () => {
+      void refreshPlayersPublic()
+    }
+    window.addEventListener('focus', onFocus)
+    onUnmounted(() => window.removeEventListener('focus', onFocus))
+  })
+}
 
 const bundlePending = computed(() => playersPending.value)
 const error = computed(() => playersError.value)
@@ -101,19 +113,29 @@ function pickBestCompetitionStart(rows: CompetitionResult[]): CompetitionResult 
 }
 
 async function refreshTrainingResults() {
-  if (!auth.isLoggedIn.value || players.value.length === 0) {
-    trainingByAthlete.value = {}
+  trainingByAthlete.value = {}
+  if (!auth.isLoggedIn.value || players.value.length === 0) return
+
+  if (canSeeClubTrainingRanking.value) {
+    const out: Record<string, CompetitionResult[]> = {}
+    await Promise.all(
+      players.value.map(async (p) => {
+        out[p.id] = await apiFetch<CompetitionResult[]>(
+          `/api/results/athlete/${encodeURIComponent(p.id)}?kind=training`
+        ).catch(() => [] as CompetitionResult[])
+      })
+    )
+    trainingByAthlete.value = out
     return
   }
-  const out: Record<string, CompetitionResult[]> = {}
-  await Promise.all(
-    players.value.map(async (p) => {
-      out[p.id] = await apiFetch<CompetitionResult[]>(
-        `/api/results/athlete/${encodeURIComponent(p.id)}?kind=training`
-      ).catch(() => [] as CompetitionResult[])
-    })
-  )
-  trainingByAthlete.value = out
+
+  await auth.ensureSession()
+  const myAthleteId = auth.user.value?.athlete_id
+  if (!myAthleteId) return
+  const rows = await apiFetch<CompetitionResult[]>(
+    `/api/results/athlete/${encodeURIComponent(myAthleteId)}?kind=training`
+  ).catch(() => [] as CompetitionResult[])
+  trainingByAthlete.value = { [myAthleteId]: rows }
 }
 
 async function refreshCompetitionResults() {
@@ -124,16 +146,23 @@ async function refreshCompetitionResults() {
   const out: Record<string, CompetitionResult[]> = {}
   await Promise.all(
     players.value.map(async (p) => {
-      out[p.id] = await apiFetch<CompetitionResult[]>(
+      const rows = await apiFetch<CompetitionResult[]>(
         `/api/results/athlete/${encodeURIComponent(p.id)}`
       ).catch(() => [] as CompetitionResult[])
+      /* Domyślny endpoint może zwracać też treningi — publiczne karty i ranking tylko ze zawodów. */
+      out[p.id] = rows.filter(r => r.kind !== 'training')
     })
   )
   competitionByAthlete.value = out
 }
 
 watch(
-  [() => auth.isLoggedIn.value, () => players.value.length],
+  [
+    () => auth.isLoggedIn.value,
+    () => players.value.length,
+    () => auth.user.value?.athlete_id,
+    () => canSeeClubTrainingRanking.value
+  ],
   () => {
     void refreshTrainingResults()
   },
@@ -174,7 +203,7 @@ const paidByAthleteId = computed(() => {
 useSeoMeta({
   title: 'Zawodnicy i ranking — Slavia Ruda Śląska',
   description:
-    'Kadra CKS Slavia Ruda Śląska oraz ranking Sinclair. Po zalogowaniu dodatkowo wewnętrzne wyniki treningowe.',
+    'Kadra CKS Slavia Ruda Śląska oraz ranking Sinclair. Kadra po zalogowaniu widzi wewnętrzny ranking treningowy klubu.',
   ogTitle: 'Zawodnicy i ranking CKS Slavia',
   ogDescription: 'Poznaj kadrę Slavia i sprawdź klasyfikację Sinclair.',
   twitterCard: 'summary'
@@ -238,6 +267,24 @@ function mapToCard(p: AthleteModel) {
   const totals = chartHistory.map(x => x.total)
   const maxHistory = totals.length > 0 ? Math.max(...totals) * 1.15 || 300 : 300
 
+  const trainingApproved = (trainingByAthlete.value[p.id] ?? []).filter(r => r.status === 'Approved')
+  const bestTraining = pickBestCompetitionStart(trainingApproved)
+  const trainingStrip = trainingApproved.length > 0 && bestTraining && bestTraining.total > 0
+    ? (() => {
+        let tsc = 0
+        if (effectiveWeight > 0 && sg) {
+          const calc = sinclairTotal(bestTraining.total, effectiveWeight, sg)
+          if (!Number.isNaN(calc)) tsc = calc
+        }
+        return {
+          snatch: bestTraining.snatch,
+          cleanAndJerk: bestTraining.clean_and_jerk,
+          total: bestTraining.total,
+          sinclair: Number(tsc.toFixed(2))
+        }
+      })()
+    : null
+
   return {
     id: p.id,
     name: p.full_name,
@@ -249,7 +296,9 @@ function mapToCard(p: AthleteModel) {
     cleanAndJerk: cjKg,
     total: totalKg,
     sinclair: Number(sc.toFixed(2)),
+    trainingStrip,
     membershipPaid: auth.isLoggedIn.value ? (paidByAthleteId.value.get(p.id) ?? false) : null,
+    hasStandingOrder: auth.isLoggedIn.value ? p.has_standing_order === true : false,
     isActive: p.is_active !== false,
     description:
       (p.public_bio && String(p.public_bio).trim())
@@ -262,16 +311,7 @@ function mapToCard(p: AthleteModel) {
   }
 }
 
-const mappedPlayers = computed(() => {
-  return players.value.map(p => mapToCard(p)).sort((a, b) => b.sinclair - a.sinclair)
-})
-
-/** Podium i tabela — zawodnicy z sensownym Sinclair (najlepszy start lub PB z profilu). */
-const rankingPlayers = computed(() => mappedPlayers.value.filter(x => x.total > 0 && x.sinclair > 0))
-
-const podium = computed(() => rankingPlayers.value.slice(0, 3))
-
-// Kategorie dla rankingu
+// Kategorie dla rankingu i kart (płeć)
 const categories = [
   { label: 'Wszyscy', value: 'all' },
   { label: 'Mężczyźni', value: 'male' },
@@ -279,11 +319,66 @@ const categories = [
 ]
 const selectedCategory = ref('all')
 
+const filterActiveOnly = ref(false)
+const filterWeightThreshold = ref<string>('all')
+const filterPaymentStaff = ref<'all' | 'paid' | 'unpaid' | 'standing'>('all')
+
+const canUseStaffFilters = computed(() =>
+  auth.isLoggedIn.value && (auth.isTrainer.value || auth.isAdmin.value)
+)
+
+const weightCategoryFilterOptions = computed(() => {
+  const set = new Set<number>()
+  for (const p of players.value) {
+    const t = resolveWeightCategoryThreshold(p.gender ?? undefined, p.bodyweight ?? undefined, p.weight_category ?? undefined)
+    if (t > 0) set.add(t)
+  }
+  return [...set].sort((a, b) => a - b)
+})
+
+function playerPassesListFilters(p: AthleteModel): boolean {
+  if (selectedCategory.value !== 'all' && p.gender !== selectedCategory.value) {
+    return false
+  }
+  if (filterActiveOnly.value && p.is_active === false) {
+    return false
+  }
+  if (filterWeightThreshold.value !== 'all') {
+    const want = Number(filterWeightThreshold.value)
+    const t = resolveWeightCategoryThreshold(p.gender ?? undefined, p.bodyweight ?? undefined, p.weight_category ?? undefined)
+    if (!Number.isFinite(want) || t !== want) {
+      return false
+    }
+  }
+  if (canUseStaffFilters.value && filterPaymentStaff.value !== 'all') {
+    const paid = paidByAthleteId.value.get(p.id) ?? false
+    const so = p.has_standing_order === true
+    if (filterPaymentStaff.value === 'paid' && !paid) {
+      return false
+    }
+    if (filterPaymentStaff.value === 'unpaid' && paid) {
+      return false
+    }
+    if (filterPaymentStaff.value === 'standing' && !so) {
+      return false
+    }
+  }
+  return true
+}
+
+const playersFiltered = computed(() => players.value.filter(playerPassesListFilters))
+
+const mappedPlayers = computed(() => {
+  return playersFiltered.value.map(p => mapToCard(p)).sort((a, b) => b.sinclair - a.sinclair)
+})
+
+/** Podium i tabela — zawodnicy z sensownym Sinclair (najlepszy start lub PB z profilu). */
+const rankingPlayers = computed(() => mappedPlayers.value.filter(x => x.total > 0 && x.sinclair > 0))
+
+const podium = computed(() => rankingPlayers.value.slice(0, 3))
+
 const filteredRankings = computed(() => {
-  const genderOk = (p: AthleteModel) =>
-    selectedCategory.value === 'all' || p.gender === selectedCategory.value
-  return players.value
-    .filter(genderOk)
+  return playersFiltered.value
     .map(p => mapToCard(p))
     .filter(x => x.total > 0 && x.sinclair > 0)
     .sort((a, b) => b.sinclair - a.sinclair)
@@ -295,7 +390,7 @@ const filteredRankings = computed(() => {
  */
 const trainingRanking = computed(() => {
   if (!auth.isLoggedIn.value) return []
-  return players.value
+  return playersFiltered.value
     .map((p) => {
       const approved = (trainingByAthlete.value[p.id] ?? [])
         .slice()
@@ -329,42 +424,20 @@ const trainingRanking = computed(() => {
     .sort((a, b) => b.sinclair - a.sinclair)
 })
 
-const showTrainingSection = computed(() => auth.isLoggedIn.value)
+const showTrainingSection = computed(() => auth.isLoggedIn.value && canSeeClubTrainingRanking.value)
 
-/** Spłaszczone wyniki treningowe (dla wszystkich zawodników) — tabela dla zalogowanych. */
-const trainingFlat = computed(() => {
-  if (!auth.isLoggedIn.value) return [] as Array<CompetitionResult & { athlete_name: string }>
-  const nameById = new Map<string, string>()
-  for (const p of players.value) nameById.set(p.id, p.full_name)
-  const flat: Array<CompetitionResult & { athlete_name: string }> = []
-  for (const [aid, list] of Object.entries(trainingByAthlete.value)) {
-    const name = nameById.get(aid) || aid
-    for (const r of list) {
-      if (r.status !== 'Approved') continue
-      flat.push({ ...r, athlete_name: name })
-    }
-  }
-  return flat.sort((a, b) => b.date.localeCompare(a.date))
+/** Pierwsza trójka wewnętrznego rankingu treningowego — podium jak przy zawodach. */
+const trainingPodium = computed(() => trainingRanking.value.slice(0, 3))
+
+const terms = useSlaviaCopy()
+const runtimePublic = useRuntimeConfig().public
+const publicFeaturesMap = usePublicFeatures()
+/** `NUXT_PUBLIC_FEATURE_ATHLETE_COMPARE=0` lub `featuresJson.athleteCompare: false` wyłącza link. */
+const showAthleteCompareLink = computed(() => {
+  if (!runtimePublic.featureAthleteCompare) return false
+  return publicFeaturesMap.value.athleteCompare !== false
 })
 
-function formatBoardDate(d: string) {
-  try {
-    return format(parseISO(d.slice(0, 10)), 'd MMM yyyy', { locale: pl })
-  } catch {
-    return d.slice(0, 10)
-  }
-}
-
-function formatKg(v: number | null | undefined) {
-  if (v == null || Number.isNaN(v)) return '\u2014'
-  return `${v}`
-}
-
-function formatPlTriple(r: { squat_kg?: number | null, bench_kg?: number | null, deadlift_kg?: number | null }) {
-  const has = r.squat_kg != null || r.bench_kg != null || r.deadlift_kg != null
-  if (!has) return '\u2014'
-  return `${formatKg(r.squat_kg)} / ${formatKg(r.bench_kg)} / ${formatKg(r.deadlift_kg)}`
-}
 </script>
 
 <template>
@@ -404,6 +477,12 @@ function formatPlTriple(r: { squat_kg?: number | null, bench_kg?: number | null,
             <div class="relative mb-4">
               <img
                 :src="podium[1].photo || '/athlete-placeholder.svg'"
+                alt=""
+                width="128"
+                height="128"
+                loading="lazy"
+                decoding="async"
+                sizes="(max-width: 768px) 128px, 128px"
                 class="size-32 rounded-full border-4 border-slate-400/50 object-cover shadow-xl grayscale-[0.3] group-hover:grayscale-0 transition-all duration-500 group-hover:scale-105"
               >
               <div class="absolute -bottom-2 -right-2 bg-slate-400 text-slate-950 size-10 rounded-full flex items-center justify-center font-black text-xl shadow-lg ring-4 ring-background">
@@ -440,6 +519,12 @@ function formatPlTriple(r: { squat_kg?: number | null, bench_kg?: number | null,
               </div>
               <img
                 :src="podium[0].photo || '/athlete-placeholder.svg'"
+                alt=""
+                width="192"
+                height="192"
+                loading="lazy"
+                decoding="async"
+                sizes="(max-width: 768px) 192px, 192px"
                 class="size-48 rounded-full border-4 border-yellow-500 object-cover shadow-[0_0_30px_rgba(234,179,8,0.3)] ring-6 ring-yellow-500/10 group-hover:scale-110 transition-all duration-700"
               >
               <div class="absolute -bottom-2 -right-2 bg-yellow-500 text-yellow-950 size-14 rounded-full flex items-center justify-center font-black text-2xl shadow-xl ring-4 ring-background">
@@ -470,6 +555,12 @@ function formatPlTriple(r: { squat_kg?: number | null, bench_kg?: number | null,
             <div class="relative mb-4">
               <img
                 :src="podium[2].photo || '/athlete-placeholder.svg'"
+                alt=""
+                width="112"
+                height="112"
+                loading="lazy"
+                decoding="async"
+                sizes="(max-width: 768px) 112px, 112px"
                 class="size-28 rounded-full border-4 border-amber-700/50 object-cover shadow-lg grayscale-[0.5] group-hover:grayscale-0 transition-all duration-500 group-hover:scale-105"
               >
               <div class="absolute -bottom-2 -right-2 bg-amber-700 text-white size-8 rounded-full flex items-center justify-center font-black text-lg shadow-lg ring-4 ring-background">
@@ -523,6 +614,73 @@ function formatPlTriple(r: { squat_kg?: number | null, bench_kg?: number | null,
             {{ c.label }}
           </UButton>
         </div>
+      </div>
+
+      <div
+        class="mb-6 flex flex-col gap-4 rounded-2xl border border-default/60 bg-muted/15 p-4 sm:flex-row sm:flex-wrap sm:items-end"
+      >
+        <UFormField
+          label="Kategoria wagowa (limit)"
+          class="w-full min-w-0 sm:w-52"
+        >
+          <select
+            v-model="filterWeightThreshold"
+            class="slavia-select min-h-11 w-full rounded-lg border border-default bg-background px-3 py-2 text-sm"
+          >
+            <option value="all">
+              Dowolna
+            </option>
+            <option
+              v-for="w in weightCategoryFilterOptions"
+              :key="`wc-${w}`"
+              :value="String(w)"
+            >
+              {{ w }} kg
+            </option>
+          </select>
+        </UFormField>
+        <div class="flex min-h-11 w-full items-center gap-2 sm:w-auto">
+          <input
+            id="zaw-filter-active"
+            v-model="filterActiveOnly"
+            type="checkbox"
+            class="size-4 shrink-0 accent-primary"
+          >
+          <label
+            for="zaw-filter-active"
+            class="text-sm font-medium text-muted"
+          >Tylko aktywni w systemie</label>
+        </div>
+        <UFormField
+          v-if="canUseStaffFilters"
+          label="Składka (bieżący miesiąc)"
+          class="w-full min-w-0 sm:w-56"
+        >
+          <select
+            v-model="filterPaymentStaff"
+            class="slavia-select min-h-11 w-full rounded-lg border border-default bg-background px-3 py-2 text-sm"
+          >
+            <option value="all">
+              Dowolnie
+            </option>
+            <option value="paid">
+              Opłacona
+            </option>
+            <option value="unpaid">
+              Brak zatwierdzonej wpłaty
+            </option>
+            <option value="standing">
+              {{ terms.paymentStandingOrder() }}
+            </option>
+          </select>
+        </UFormField>
+        <NuxtLink
+          v-if="showAthleteCompareLink"
+          to="/zawodnicy/porownanie"
+          class="ms-auto inline-flex min-h-11 items-center justify-center rounded-xl border border-primary/30 bg-primary/10 px-4 text-sm font-bold text-primary hover:bg-primary/15"
+        >
+          Porównaj zawodników
+        </NuxtLink>
       </div>
 
       <UAlert
@@ -630,49 +788,176 @@ function formatPlTriple(r: { squat_kg?: number | null, bench_kg?: number | null,
         </div>
       </div>
 
+      <!-- Podium treningowe — stonowana paleta, więcej oddechu pod nagłówkiem -->
+      <div
+        v-if="trainingPodium.length > 0"
+        class="relative mb-14 pt-4 sm:mb-16"
+      >
+        <div class="pointer-events-none absolute inset-0 -z-10 bg-linear-to-b from-info/5 via-transparent to-transparent blur-3xl opacity-50" />
+        <p class="mb-8 text-center text-[10px] font-bold uppercase tracking-[0.2em] text-muted">
+          Podium treningowe (Sinclair z najlepszego treningu)
+        </p>
+        <div class="mx-auto grid max-w-4xl grid-cols-1 items-end gap-10 px-3 sm:gap-12 sm:px-6 md:grid-cols-3 md:gap-8 lg:gap-10">
+          <NuxtLink
+            v-if="trainingPodium[1]"
+            :to="athleteProfilePath(trainingPodium[1].name, trainingPodium[1].id)"
+            class="order-2 md:order-1 group block rounded-3xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-info/40"
+          >
+            <div class="flex flex-col items-center">
+              <div class="relative mb-5">
+                <img
+                  :src="trainingPodium[1].photo || '/athlete-placeholder.svg'"
+                  class="size-32 rounded-full border-2 border-default/50 object-cover shadow-md grayscale-[0.2] transition-all duration-500 group-hover:border-info/30 group-hover:shadow-lg group-hover:grayscale-0"
+                >
+                <div class="absolute -bottom-1.5 -right-1.5 flex size-9 items-center justify-center rounded-full border border-default/40 bg-muted font-black text-sm text-highlighted shadow-sm ring-2 ring-background">
+                  2
+                </div>
+              </div>
+              <div class="w-full rounded-t-2xl border border-b-0 border-default/45 bg-muted/25 px-4 py-5 text-center sm:px-5">
+                <h3 class="truncate text-base font-black uppercase italic leading-snug text-highlighted">
+                  {{ trainingPodium[1].name }}
+                </h3>
+                <p class="mt-1.5 font-mono text-base font-bold tabular-nums text-info/85 dark:text-info/90 sm:text-lg">
+                  {{ trainingPodium[1].sinclair }}
+                </p>
+              </div>
+              <div class="flex h-20 w-full items-center justify-center rounded-b-2xl border border-t-0 border-default/40 bg-linear-to-b from-muted/50 to-muted/25">
+                <span class="text-[10px] font-bold uppercase tracking-[0.28em] text-muted">Sala</span>
+              </div>
+            </div>
+          </NuxtLink>
+
+          <NuxtLink
+            v-if="trainingPodium[0]"
+            :to="athleteProfilePath(trainingPodium[0].name, trainingPodium[0].id)"
+            class="order-1 md:order-2 group block rounded-3xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-info/40 md:-mt-3"
+          >
+            <div class="flex flex-col items-center pt-8 md:pt-10">
+              <div class="relative mb-6">
+                <div class="absolute -top-7 left-1/2 flex -translate-x-1/2 text-info/50 dark:text-info/45 md:-top-8">
+                  <UIcon name="i-lucide-dumbbell" class="size-9 md:size-10" />
+                </div>
+                <img
+                  :src="trainingPodium[0].photo || '/athlete-placeholder.svg'"
+                  class="size-40 rounded-full border-2 border-info/35 object-cover shadow-md ring-1 ring-info/10 transition-all duration-500 group-hover:border-info/50 group-hover:shadow-lg md:size-44"
+                >
+                <div class="absolute -bottom-1.5 -right-1.5 flex size-11 items-center justify-center rounded-full border border-info/25 bg-info/90 font-black text-xl text-white shadow-md ring-2 ring-background dark:bg-info/85">
+                  1
+                </div>
+              </div>
+              <div class="w-full rounded-t-2xl border border-b-0 border-default/50 bg-muted/35 px-5 py-6 text-center sm:px-6">
+                <h3 class="truncate text-lg font-black uppercase italic leading-snug text-highlighted md:text-xl">
+                  {{ trainingPodium[0].name }}
+                </h3>
+                <p class="mt-2 font-mono text-xl font-bold tabular-nums text-info/90 dark:text-info/90 md:text-2xl">
+                  {{ trainingPodium[0].sinclair }}
+                </p>
+              </div>
+              <div class="flex h-28 w-full items-center justify-center rounded-b-2xl border border-t-0 border-default/45 bg-linear-to-b from-info/18 to-info/12 dark:from-info/14 dark:to-muted/35">
+                <span class="text-[10px] font-bold uppercase tracking-[0.28em] text-muted">Trening</span>
+              </div>
+            </div>
+          </NuxtLink>
+
+          <NuxtLink
+            v-if="trainingPodium[2]"
+            :to="athleteProfilePath(trainingPodium[2].name, trainingPodium[2].id)"
+            class="order-3 group block rounded-3xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-info/40"
+          >
+            <div class="flex flex-col items-center">
+              <div class="relative mb-5">
+                <img
+                  :src="trainingPodium[2].photo || '/athlete-placeholder.svg'"
+                  class="size-28 rounded-full border-2 border-default/55 object-cover shadow-md grayscale-[0.25] transition-all duration-500 group-hover:border-default/80 group-hover:grayscale-0"
+                >
+                <div class="absolute -bottom-1.5 -right-1.5 flex size-8 items-center justify-center rounded-full border border-default/45 bg-muted font-black text-sm text-highlighted shadow-sm ring-2 ring-background">
+                  3
+                </div>
+              </div>
+              <div class="w-full rounded-t-2xl border border-b-0 border-default/45 bg-muted/20 px-4 py-4 text-center sm:px-5">
+                <h3 class="truncate text-base font-black uppercase italic leading-snug text-highlighted">
+                  {{ trainingPodium[2].name }}
+                </h3>
+                <p class="mt-1.5 font-mono text-base font-bold tabular-nums text-info/85 dark:text-info/90 sm:text-lg">
+                  {{ trainingPodium[2].sinclair }}
+                </p>
+              </div>
+              <div class="flex h-16 w-full items-center justify-center rounded-b-2xl border border-t-0 border-default/40 bg-linear-to-b from-muted/45 to-muted/20">
+                <span class="text-[10px] font-bold uppercase tracking-[0.24em] text-muted">Sala</span>
+              </div>
+            </div>
+          </NuxtLink>
+        </div>
+      </div>
+
       <UCard
         v-if="trainingRanking.length > 0"
-        class="mb-6 overflow-hidden border-info/20 bg-info/5"
+        class="mb-6 overflow-hidden border-info/25 bg-linear-to-b from-info/8 via-background to-background shadow-xl ring-1 ring-info/15 backdrop-blur-md"
       >
-        <p class="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-info">
-          Top zawodników (Sinclair z najlepszego treningowego totalu)
-        </p>
+        <div class="border-b border-default/50 bg-muted/30 px-4 py-3 sm:px-6">
+          <p class="text-xs font-bold uppercase tracking-[0.18em] text-info">
+            Top 12 — ranking treningowy (Sinclair)
+          </p>
+        </div>
         <div class="overflow-x-auto">
-          <table class="w-full text-left text-sm">
-            <thead class="border-b border-default/70 text-[11px] font-bold uppercase tracking-wider text-muted">
-              <tr>
-                <th class="px-3 py-2.5">Msc.</th>
-                <th class="px-3 py-2.5">Zawodnik</th>
-                <th class="hidden md:table-cell px-3 py-2.5 text-right">Waga</th>
-                <th class="px-3 py-2.5 text-right">Trening total</th>
-                <th class="px-3 py-2.5 text-right">Sinclair</th>
-                <th class="px-3 py-2.5 text-right text-muted/70">Wpisów</th>
+          <table class="w-full border-collapse text-left text-sm">
+            <thead>
+              <tr class="border-b border-default/60 bg-muted/40">
+                <th class="px-3 py-3 text-[10px] font-black uppercase tracking-wider text-muted sm:px-6 sm:py-4 sm:text-xs">
+                  Msc.
+                </th>
+                <th class="px-3 py-3 text-[10px] font-black uppercase tracking-wider text-muted sm:px-6 sm:py-4 sm:text-xs">
+                  Zawodnik
+                </th>
+                <th class="hidden px-3 py-3 text-right text-[10px] font-black uppercase tracking-wider text-muted md:table-cell md:px-6 md:py-4 md:text-xs">
+                  Waga
+                </th>
+                <th class="px-3 py-3 text-right text-[10px] font-black uppercase tracking-wider text-muted sm:px-6 sm:py-4 sm:text-xs">
+                  Trening total
+                </th>
+                <th class="px-3 py-3 text-right text-[10px] font-black uppercase tracking-wider text-muted sm:px-6 sm:py-4 sm:text-xs">
+                  Sinclair
+                </th>
+                <th class="px-3 py-3 text-right text-[10px] font-black uppercase tracking-wider text-muted/70 sm:px-6 sm:py-4 sm:text-xs">
+                  Wpisów
+                </th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-default/40">
+            <tbody class="divide-y divide-default/50">
               <tr
                 v-for="(p, idx) in trainingRanking.slice(0, 12)"
                 :key="`tr-${p.id}`"
-                class="hover:bg-info/10"
+                class="group transition-colors hover:bg-info/8"
               >
-                <td class="px-3 py-2.5 font-mono text-muted">{{ (idx + 1).toString().padStart(2, '0') }}</td>
-                <td class="px-3 py-2.5">
+                <td class="px-3 py-4 font-mono text-base font-black text-muted/60 transition-colors group-hover:text-info dark:group-hover:text-info sm:px-6 sm:py-5">
+                  {{ (idx + 1).toString().padStart(2, '0') }}
+                </td>
+                <td class="min-w-0 px-3 py-4 sm:px-6 sm:py-5">
                   <NuxtLink
                     :to="athleteProfilePath(p.name, p.id)"
-                    class="flex items-center gap-2 hover:text-info"
+                    class="flex items-center gap-2 rounded-lg outline-offset-2 hover:text-info focus-visible:outline-2 focus-visible:outline-info dark:hover:text-info"
                   >
-                    <UAvatar :src="p.photo" :alt="p.name" size="2xs" class="shrink-0" />
-                    <span class="truncate font-semibold text-highlighted">{{ p.name }}</span>
+                    <UAvatar :src="p.photo" :alt="p.name" size="sm" class="shrink-0 ring-1 ring-default/30" />
+                    <span class="truncate font-bold text-highlighted">{{ p.name }}</span>
                   </NuxtLink>
+                  <p class="mt-0.5 font-mono text-[11px] text-muted md:hidden">
+                    {{ p.weightCategoryText }}
+                  </p>
                 </td>
-                <td class="hidden md:table-cell px-3 py-2.5 text-right font-mono text-muted">{{ p.weightCategoryText }}</td>
-                <td class="px-3 py-2.5 text-right font-mono font-bold text-highlighted">{{ p.total }} kg</td>
-                <td class="px-3 py-2.5 text-right">
-                  <span class="rounded-full bg-info/20 px-2 py-0.5 font-mono text-xs font-black text-info">
+                <td class="hidden px-3 py-4 text-right font-mono text-muted md:table-cell md:px-6 md:py-5">
+                  {{ p.weightCategoryText }}
+                </td>
+                <td class="px-3 py-4 text-right font-mono text-sm font-bold text-highlighted sm:px-6 sm:py-5 sm:text-base">
+                  {{ p.total }} kg
+                </td>
+                <td class="px-3 py-4 text-right sm:px-6 sm:py-5">
+                  <span class="inline-block rounded-full bg-info/15 px-3 py-1 font-mono text-sm font-black text-info ring-1 ring-info/25 dark:text-info">
                     {{ p.sinclair }}
                   </span>
                 </td>
-                <td class="px-3 py-2.5 text-right text-xs text-muted/80">{{ p.entries }}</td>
+                <td class="px-3 py-4 text-right text-xs text-muted sm:px-6 sm:py-5">
+                  {{ p.entries }}
+                </td>
               </tr>
             </tbody>
           </table>
@@ -680,51 +965,10 @@ function formatPlTriple(r: { squat_kg?: number | null, bench_kg?: number | null,
       </UCard>
 
       <div
-        v-if="trainingFlat.length === 0"
+        v-if="trainingRanking.length === 0"
         class="rounded-2xl border border-dashed border-info/30 bg-info/5 px-6 py-12 text-center text-sm text-muted"
       >
         Brak zatwierdzonych wpisów treningowych w bazie. Dodaj pierwszy w panelu zawodnika lub jako trener.
-      </div>
-
-      <div
-        v-else
-        class="overflow-x-auto rounded-2xl border border-info/25"
-      >
-        <table class="w-full min-w-[760px] text-left text-sm">
-          <thead class="border-b border-info/20 bg-info/10 text-xs font-semibold uppercase tracking-wide text-info">
-            <tr>
-              <th class="px-4 py-3">Data</th>
-              <th class="px-4 py-3">Zawodnik</th>
-              <th class="px-4 py-3 text-right">Rwanie</th>
-              <th class="px-4 py-3 text-right">Podrzut</th>
-              <th class="px-4 py-3 text-right font-semibold">Razem</th>
-              <th class="hidden lg:table-cell px-4 py-3 text-right">Siła (kg)</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-default/40">
-            <tr
-              v-for="r in trainingFlat.slice(0, 60)"
-              :key="`tflat-${r.id}`"
-              class="bg-card hover:bg-info/5"
-            >
-              <td class="whitespace-nowrap px-4 py-3 text-muted">{{ formatBoardDate(r.date) }}</td>
-              <td class="px-4 py-3 font-medium text-highlighted">
-                <NuxtLink
-                  :to="athleteProfilePath(r.athlete_name, r.athlete_id)"
-                  class="hover:text-info"
-                >
-                  {{ r.athlete_name }}
-                </NuxtLink>
-              </td>
-              <td class="px-4 py-3 text-right tabular-nums">{{ r.snatch }} kg</td>
-              <td class="px-4 py-3 text-right tabular-nums">{{ r.clean_and_jerk }} kg</td>
-              <td class="px-4 py-3 text-right tabular-nums font-semibold text-info">{{ r.total }} kg</td>
-              <td class="hidden lg:table-cell px-4 py-3 text-right text-xs tabular-nums text-muted">
-                {{ formatPlTriple(r) }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
       </div>
     </div>
 
@@ -771,20 +1015,30 @@ function formatPlTriple(r: { squat_kg?: number | null, bench_kg?: number | null,
         <div
           v-for="i in 6"
           :key="`player-skel-${i}`"
-          class="rounded-2xl border border-default bg-card p-6 shadow-sm"
+          class="overflow-hidden rounded-3xl border border-default/40 bg-card shadow-sm ring-1 ring-default/3"
         >
-          <div class="flex items-start gap-4">
-            <div class="size-14 shrink-0 rounded-2xl bg-muted/35 animate-pulse" />
-            <div class="min-w-0 flex-1 space-y-2">
-              <div class="h-5 w-[62%] rounded bg-muted/35 animate-pulse" />
-              <div class="h-4 w-[42%] rounded bg-muted/25 animate-pulse" />
-              <div class="h-4 w-[70%] rounded bg-muted/25 animate-pulse" />
+          <div class="animate-pulse">
+            <div class="flex flex-col gap-4 border-b border-default/35 p-4 sm:flex-row sm:items-start sm:p-5">
+              <div class="mx-auto h-28 w-28 shrink-0 rounded-xl bg-muted/35 ring-2 ring-default/20 sm:mx-0 sm:h-32 sm:w-32" />
+              <div class="min-w-0 flex-1 space-y-3">
+                <div class="mx-auto h-7 w-[70%] max-w-xs rounded-lg bg-muted/40 sm:mx-0 sm:ml-0" />
+                <div class="mx-auto h-4 w-24 rounded bg-muted/25 sm:mx-0" />
+                <div class="flex justify-center gap-2 sm:justify-start">
+                  <div class="h-6 w-28 rounded-full bg-muted/30" />
+                  <div class="h-6 w-24 rounded-full bg-muted/25" />
+                </div>
+              </div>
             </div>
-          </div>
-          <div class="mt-5 grid grid-cols-3 gap-3">
-            <div class="h-12 rounded-xl bg-muted/25 animate-pulse" />
-            <div class="h-12 rounded-xl bg-muted/25 animate-pulse" />
-            <div class="h-12 rounded-xl bg-muted/25 animate-pulse" />
+            <div class="border-b border-default/30">
+              <div class="h-10 border-l-4 border-default/35 bg-muted/20" />
+              <div class="grid grid-cols-4 divide-x divide-default/25 bg-muted/15">
+                <div v-for="j in 4" :key="`sk-${i}-${j}`" class="min-h-20 bg-muted/20" />
+              </div>
+            </div>
+            <div class="p-4 sm:p-5">
+              <div class="mb-3 h-5 w-40 rounded bg-muted/25" />
+              <div class="h-29 rounded-xl border border-default/30 bg-muted/15" />
+            </div>
           </div>
         </div>
       </div>

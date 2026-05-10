@@ -122,8 +122,8 @@ const quickLinksAll = [
     description: 'Skrzynka z publicznego formularza',
     icon: 'i-lucide-mail',
     to: '/admin/kontakt-wiadomosci',
-    color: 'text-sky-500',
-    bg: 'bg-sky-500/10',
+    color: 'text-info',
+    bg: 'bg-info/12',
     trainerOnly: false
   },
   {
@@ -140,8 +140,8 @@ const quickLinksAll = [
     description: 'Zobacz nowości w systemie',
     icon: 'i-lucide-file-text',
     to: '/admin/changelog',
-    color: 'text-emerald-500',
-    bg: 'bg-emerald-500/10',
+    color: 'text-success',
+    bg: 'bg-success/12',
     trainerOnly: false
   },
   {
@@ -149,8 +149,8 @@ const quickLinksAll = [
     description: '„Złote proporcje” i widełki % między bojami',
     icon: 'i-lucide-sigma',
     to: '/kalkulator-proporcji',
-    color: 'text-emerald-600',
-    bg: 'bg-emerald-500/10',
+    color: 'text-success',
+    bg: 'bg-success/12',
     trainerOnly: false
   },
   {
@@ -249,10 +249,13 @@ const moduleGroups = computed(() => {
 function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral' {
   const s = String(bg || '').toLowerCase()
   if (s.includes('red')) return 'error'
+  if (s.includes('rose')) return 'error'
+  if (s.includes('orange')) return 'warning'
   if (s.includes('amber') || s.includes('yellow')) return 'warning'
+  if (s.includes('fuchsia')) return 'primary'
   if (s.includes('emerald') || s.includes('green') || s.includes('teal') || s.includes('lime')) return 'success'
   if (s.includes('sky') || s.includes('cyan') || s.includes('blue') || s.includes('indigo')) return 'info'
-  if (s.includes('violet') || s.includes('purple') || s.includes('fuchsia') || s.includes('primary')) return 'primary'
+  if (s.includes('violet') || s.includes('purple') || s.includes('primary')) return 'primary'
   return 'neutral'
 }
 
@@ -289,7 +292,7 @@ const lowerDashboards = computed(() => {
         label="Wyniki oczekujące"
         :value="pendingCount"
         icon="i-lucide-clipboard-clock"
-        :tone="pendingCount ? 'warning' : 'neutral'"
+        :tone="pendingCount ? 'warning' : 'info'"
         :to="{ path: '/admin', hash: '#wyniki-oczekujace' }"
       />
       <DashboardKpiCard label="Zaplanowane zawody" :value="competitionsCount" icon="i-lucide-calendar" tone="primary" to="/kalendarz" />
@@ -393,6 +396,7 @@ const lowerDashboards = computed(() => {
             :icon="link!.icon"
             :to="link!.to"
             :tone="toneFromBg(link!.bg)"
+            :icon-wrapper-class="`${link!.bg} ${link!.color}`"
           />
         </div>
       </div>

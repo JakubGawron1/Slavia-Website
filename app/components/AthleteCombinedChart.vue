@@ -140,7 +140,7 @@ const tooltipLeftPct = computed(() => {
 <template>
   <div
     v-if="chartPaths && chartPaths.points.length >= 1"
-    class="relative w-full rounded-xl bg-linear-to-b from-primary/5 via-sky-500/5 to-muted/5 ring-1 ring-inset ring-default/40 overflow-visible"
+    class="relative w-full rounded-xl bg-linear-to-b from-primary/5 via-info/6 to-muted/5 ring-1 ring-inset ring-default/40 overflow-visible"
     :style="{ height: `${height}px` }"
     @mouseleave="hoverIndex = null"
   >
@@ -161,11 +161,11 @@ const tooltipLeftPct = computed(() => {
           <div class="flex items-center gap-2 mb-1.5">
             <span
               class="size-2 rounded-full"
-              :class="tooltipPoint.src.kind === 'competition' ? 'bg-primary' : 'bg-sky-500'"
+              :class="tooltipPoint.src.kind === 'competition' ? 'bg-primary' : 'bg-info'"
             />
             <span
               class="text-[10px] font-bold uppercase tracking-wide"
-              :class="tooltipPoint.src.kind === 'competition' ? 'text-primary' : 'text-sky-600 dark:text-sky-400'"
+              :class="tooltipPoint.src.kind === 'competition' ? 'text-primary' : 'text-info'"
             >
               {{ tooltipPoint.src.kind === 'competition' ? 'Zawody' : 'Trening' }}
             </span>
@@ -175,7 +175,7 @@ const tooltipLeftPct = computed(() => {
           <div class="flex items-baseline gap-2 flex-wrap">
             <span
               class="text-lg font-mono font-black"
-              :class="tooltipPoint.src.kind === 'competition' ? 'text-primary' : 'text-sky-600 dark:text-sky-400'"
+              :class="tooltipPoint.src.kind === 'competition' ? 'text-primary' : 'text-info'"
             >{{ tooltipPoint.src.total }}</span>
             <span class="text-[11px] font-semibold text-muted">kg total</span>
           </div>
@@ -233,7 +233,7 @@ const tooltipLeftPct = computed(() => {
         stroke-linecap="round"
         stroke-linejoin="round"
         opacity="0.9"
-        class="pointer-events-none text-sky-500 dark:text-sky-400"
+        class="pointer-events-none text-info"
       />
       <path
         v-if="compLineD"
@@ -264,7 +264,7 @@ const tooltipLeftPct = computed(() => {
         :cy="pt.y"
         :r="hoverIndex === i ? 6.5 : 4.5"
         class="pointer-events-none fill-white dark:fill-neutral-950 transition-all duration-150 stroke-2"
-        :class="pt.src.kind === 'competition' ? 'stroke-primary' : 'stroke-sky-500'"
+        :class="pt.src.kind === 'competition' ? 'stroke-primary' : 'stroke-info'"
       />
       <circle
         v-for="(pt, i) in chartPaths.points"
@@ -273,7 +273,7 @@ const tooltipLeftPct = computed(() => {
         :cy="pt.y"
         :r="hoverIndex === i ? 3 : 2"
         class="pointer-events-none transition-all duration-150"
-        :class="pt.src.kind === 'competition' ? 'fill-primary' : 'fill-sky-500'"
+        :class="pt.src.kind === 'competition' ? 'fill-primary' : 'fill-info'"
       />
     </svg>
   </div>

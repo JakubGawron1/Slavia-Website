@@ -1,8 +1,17 @@
 <script setup lang="ts">
 const config = useRuntimeConfig()
 
-/** Jedno źródło: `package.json` → `runtimeConfig.public.appVersion` (np. v2.3.1-beta). */
-const showNavBetaBadge = computed(() => /\bbeta\b/i.test(String(config.public.appVersion ?? '')))
+/** Jedno źródło: `package.json` → `runtimeConfig.public.appVersion` (np. v3.0.0-dev). */
+const navPreReleaseBadge = computed(() => {
+  const v = String(config.public.appVersion ?? '')
+  if (/\bdev\b/i.test(v)) {
+    return { label: 'Dev', color: 'info' as const, title: 'Wersja rozwojowa (dev) — funkcje i API mogą się zmieniać.' }
+  }
+  if (/\bbeta\b/i.test(v)) {
+    return { label: 'Beta', color: 'warning' as const, title: 'Aplikacja w fazie beta — funkcje i dane mogą się zmieniać.' }
+  }
+  return null
+})
 </script>
 
 <template>
@@ -17,15 +26,15 @@ const showNavBetaBadge = computed(() => /\bbeta\b/i.test(String(config.public.ap
         <div class="flex min-w-0 items-center gap-2">
           <ClubBrand />
           <UBadge
-            v-if="showNavBetaBadge"
-            color="warning"
+            v-if="navPreReleaseBadge"
+            :color="navPreReleaseBadge.color"
             variant="subtle"
             size="sm"
             class="shrink-0 font-bold uppercase tracking-wide"
-            title="Aplikacja w fazie beta — funkcje i dane mogą się zmieniać."
+            :title="navPreReleaseBadge.title"
           >
-            <span class="sr-only">Wersja beta aplikacji. </span>
-            Beta
+            <span class="sr-only">{{ navPreReleaseBadge.title }} </span>
+            {{ navPreReleaseBadge.label }}
           </UBadge>
         </div>
         <ClubSiteNav

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { pickPostLoginPath } from '~/composables/useAuth'
+import { getApiErrorMessage } from '~/composables/useApi'
 
 const auth = useAuth()
 const route = useRoute()
@@ -7,7 +8,14 @@ const toast = useToast()
 
 const username = ref('')
 const password = ref('')
+const totpCode = ref('')
+const totpStep = ref(false)
 const loading = ref(false)
+
+watch([username, password], () => {
+  totpStep.value = false
+  totpCode.value = ''
+})
 
 useSeoMeta({
   title: 'Logowanie — Slavia Ruda Śląska',
@@ -17,7 +25,11 @@ useSeoMeta({
 async function submit() {
   loading.value = true
   try {
-    const user = await auth.login(username.value.trim(), password.value)
+    const user = await auth.login(
+      username.value.trim(),
+      password.value,
+      totpStep.value ? totpCode.value : null
+    )
     const raw = route.query.redirect
     const redirect = typeof raw === 'string' ? raw : undefined
 
@@ -27,11 +39,21 @@ async function submit() {
       await navigateTo(pickPostLoginPath(user?.roles ?? []))
     }
   } catch (e) {
-    toast.add({
-      title: 'Błąd logowania',
-      description: getApiErrorMessage(e, 'Sprawdź dane logowania i połączenie z API.'),
-      color: 'error'
-    })
+    const msg = getApiErrorMessage(e, '')
+    if (!totpStep.value && msg === 'totp_required') {
+      totpStep.value = true
+      toast.add({
+        title: 'Wymagane dwuskładnikowe logowanie',
+        description: 'Wpisz 6-cyfrowy kod z aplikacji authenticator.',
+        color: 'warning'
+      })
+    } else {
+      toast.add({
+        title: 'Błąd logowania',
+        description: getApiErrorMessage(e, 'Sprawdź dane logowania i połączenie z API.'),
+        color: 'error'
+      })
+    }
   } finally {
     loading.value = false
   }
@@ -136,6 +158,24 @@ async function submit() {
             />
           </UFormField>
 
+          <UFormField
+            v-if="totpStep"
+            label="Kod 2FA (authenticator)"
+            required
+          >
+            <UInput
+              v-model="totpCode"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+              placeholder="000000"
+              maxlength="8"
+              size="xl"
+              icon="i-lucide-shield"
+              class="w-full"
+              :ui="{ base: 'bg-white/5 border-white/10 focus:ring-primary/50' }"
+            />
+          </UFormField>
+
           <UButton
             type="submit"
             block
@@ -148,7 +188,15 @@ async function submit() {
         </form>
 
         <template #footer>
-          <div class="text-center py-2">
+          <div class="space-y-2 py-2 text-center">
+            <p class="text-xs text-muted">
+              Opcjonalne logowanie dwuskładnikowe (2FA) włączysz po zalogowaniu w
+              <NuxtLink
+                to="/profil"
+                class="font-semibold text-primary underline-offset-2 hover:underline"
+              >ustawieniach konta</NuxtLink>
+              — domyślnie jest wyłączone.
+            </p>
             <p class="text-sm text-muted font-medium">
               Problemy z dostępem?
               <span class="text-primary font-bold">Zgłoś to trenerowi.</span>

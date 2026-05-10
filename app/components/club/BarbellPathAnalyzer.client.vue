@@ -942,7 +942,7 @@ onBeforeUnmount(() => {
           </div>
           <div class="h-3 overflow-hidden rounded-full bg-muted ring-1 ring-default/30">
             <div
-              class="h-full rounded-full bg-linear-to-r from-primary via-primary to-emerald-400/90 transition-[width] duration-200 ease-out"
+              class="h-full rounded-full bg-linear-to-r from-primary via-primary to-success/92 transition-[width] duration-200 ease-out"
               :style="{ width: `${progress}%` }"
             />
           </div>

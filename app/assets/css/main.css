@@ -27,6 +27,18 @@ body {
   box-sizing: border-box;
 }
 
+/* Kontrastowy focus (klawiatura) — uzupełnienie komponentów Nuxt UI. */
+:focus-visible {
+  outline: 2px solid var(--ui-primary, rgb(14 165 233));
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse {
+    animation: none !important;
+  }
+}
+
 img,
 video,
 canvas,
@@ -737,6 +749,10 @@ html[data-slavia-preset] .border-default {
   border-color: var(--ui-border, #e2e8f0);
 }
 
+html[data-slavia-preset] .text-default {
+  color: var(--ui-text, #334155);
+}
+
 /**
  * Akcent „primary” (skala green z UI) — spójność przycisków i pierścieni w każdym presecie.
  */
@@ -979,6 +995,15 @@ html.dark .slavia-select option,
     @apply max-h-[min(88vh,900px)] space-y-6 overflow-y-auto p-5 sm:p-6;
   }
 
+  /**
+   * UModal slot #body — Nuxt UI nadaje na body `overflow-y-auto` (scrollable: false).
+   * Zostawiamy jeden kontener przewijania; wewnętrzne max-h/overflow dawały drugi pasek i psuły m.in. USwitch.
+   */
+  .slavia-form-modal.slavia-form-modal--umodal-body {
+    max-height: none;
+    overflow: visible;
+  }
+
   .slavia-form-stack {
     @apply flex flex-col gap-6;
   }
@@ -1006,6 +1031,11 @@ html.dark .slavia-select option,
   /**
    * Siatka pól formularza: wyrównanie do dołu komórki — pola (input/select) w jednej linii,
    * mimo różnej wysokości etykiet / opisów UFormField.
+   *
+   * Konwencja (żeby po zmianie selecta nic nie „skakało” między kolumnami):
+   * — pola zależne od wyboru (np. miejsce zawodów vs sala treningowa) trzymaj w osobnej `.slavia-form-grid`
+   *   albo w jednej komórce (`v-if` / `v-else` na tym samym slocie), a nie obok „stałych” liczb w tej samej siatce;
+   * — stabilne bloki (np. rwanie / podrzut / data) w stałej liczbie kolumn w osobnej siatce.
    */
   .slavia-form-grid {
     @apply grid items-end gap-4;

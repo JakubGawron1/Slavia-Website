@@ -35,11 +35,11 @@ const ROLE_FILTER_META: Record<UserRole, { hint: string, pillClass: string }> = 
   },
   Admin: {
     hint: 'Panel administracyjny',
-    pillClass: 'border-sky-500/35 bg-sky-500/10 text-sky-800 dark:text-sky-300'
+    pillClass: 'border-info/35 bg-info/10 text-info'
   },
   Trainer: {
     hint: 'Panel trenera',
-    pillClass: 'border-emerald-500/35 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300'
+    pillClass: 'border-success/35 bg-success/10 text-success'
   },
   Athlete: {
     hint: 'Strefa zawodnika',

@@ -17,6 +17,21 @@ type ChangelogUpdate = {
 
 const updates = [
   {
+    version: 'v3.0.0-dev',
+    date: '10 Maj 2026',
+    title: 'Seria 3.x (dev): kolorowe panele, modal zawodnika, kalendarz importu zewnętrznego',
+    features: [
+      'Start linii v3 w trybie developerskim (`3.0.0-dev`) — backend i frontend zsynchronizowane wersją w `package.json` / `Cargo.toml`.',
+      'Dashboardy: kafelki modułów używają kolorów z danych (`iconWrapperClass`) zamiast „szarego” neutral; rozszerzone mapowanie tonów obramowania kart.',
+      'Zawodnik (modal kadry): jeden obszar przewijania w `UModal` — naprawa podwójnego scrolla i działania przełącznika „przelew stały (auto-składka)”.',
+      'Kalendarz: import PZPC / podnoszenieciezarow.pl — lepsze rozpoznawanie mistrzostw vs liga (heurystyka po tytule i kolorze), nierozpoznane zawody z importu mają różnorodną paletę chipów zamiast jednego koloru.',
+      'Nagłówek witryny: odznaka „Dev” dla wersji z sufiksem `-dev` (Beta pozostaje przy wersjach beta).',
+      'Onboarding: pierwsze wejście na `/athlete`, panel kadry (`/trainer`, `/admin`) lub `/superadmin` — modal ze skrótami; „Nie pokazuj więcej” w localStorage (osobny klucz dla SuperAdmin).',
+      'Wyszukiwarka globalna w belce (lupa, Ctrl+K / ⌘K zawsze, dodatkowo `/` gdy fokus nie jest w polu formularza): zawodnicy, kalendarz, aktualności z publicznego API.'
+    ],
+    type: 'release'
+  },
+  {
     version: 'v2.10.0-beta',
     date: '9 Maj 2026',
     title: 'Spójne dashboardy, klikalne KPI, składki roczne z ograniczeniem roku i kolorowa obecność',
@@ -535,7 +550,7 @@ const filteredUpdates = computed(() => {
               >
                 <UIcon
                   name="i-lucide-check-circle-2"
-                  class="mt-0.5 size-5 shrink-0 text-emerald-500"
+                  class="mt-0.5 size-5 shrink-0 text-success"
                 />
                 <span>{{ f }}</span>
               </li>

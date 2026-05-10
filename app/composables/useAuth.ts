@@ -137,10 +137,15 @@ export function useAuth() {
     }
   }
 
-  async function login(username: string, password: string) {
+  async function login(username: string, password: string, totpCode?: string | null) {
+    const code = totpCode?.trim()
     const res = await $fetch<LoginResponse>(`${apiBase.value}${apiRoutes.auth.login}`, {
       method: 'POST',
-      body: { username, password }
+      body: {
+        username,
+        password,
+        ...(code ? { totp_code: code } : {})
+      }
     })
     token.value = res.token
 

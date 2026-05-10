@@ -13,7 +13,23 @@ const route = useRoute()
 const apiFetch = useApi()
 const auth = useAuth()
 
+/** Udostępniany „lekki” widok profilu — bez sekcji treningowych (np. `?share=1`). */
+const shareLite = computed(() => {
+  const q = route.query.share
+  return q === '1' || q === 'public'
+})
+
 const athleteId = computed(() => parseSlugId(String(route.params.slug || '')))
+
+/** Trening (lista, wykres łączony, KPI sala): tylko kadra albo zalogowany zawodnik na własnym profilu (`/me` → `athlete_id`). */
+const canViewAthleteTraining = computed(() => {
+  if (shareLite.value) return false
+  if (!auth.isLoggedIn.value) return false
+  if (auth.isTrainer.value || auth.isAdmin.value) return true
+  const linked = auth.user.value?.athlete_id
+  return !!(linked && linked === athleteId.value)
+})
+
 const canEditAthlete = computed(() => auth.isTrainer.value)
 
 const athleteDetailKey = computed(() => `athlete-detail-${athleteId.value}`)
@@ -45,21 +61,31 @@ const { data: results } = await useAsyncData(
 )
 
 /**
- * Wyniki treningowe — widoczne tylko dla zalogowanych użytkowników.
- * Backend wymaga sesji dla `?kind=training`; dla niezalogowanych zwracamy pustą listę.
+ * Wyniki treningowe — tylko po stronie API gdy viewer to kadra lub właściciel profilu; tutaj nie pobieramy przy braku uprawnień.
  */
 const athleteTrainingKey = computed(() => `athlete-training-${athleteId.value}`)
-const { data: trainingResults } = await useAsyncData(
+const { data: trainingResults } = await useLazyAsyncData(
   athleteTrainingKey,
   async () => {
-    if (!athleteId.value) return []
+    if (!athleteId.value || shareLite.value) return []
     await auth.ensureSession()
     if (!auth.isLoggedIn.value) return []
+    if (!canViewAthleteTraining.value) return []
     return await apiFetch<CompetitionResult[]>(
       `/api/results/athlete/${encodeURIComponent(athleteId.value)}?kind=training`
     ).catch(() => [] as CompetitionResult[])
   },
-  { watch: [athleteId, () => auth.isLoggedIn.value], default: () => [] }
+  {
+    watch: [
+      athleteId,
+      () => auth.isLoggedIn.value,
+      shareLite,
+      () => auth.user.value?.athlete_id,
+      () => auth.isTrainer.value,
+      () => auth.isAdmin.value
+    ],
+    default: () => []
+  }
 )
 
 if (error.value || !athlete.value) {
@@ -89,6 +115,25 @@ function formatDate(dateStr: string) {
   }
 }
 
+function formatBoardDate(d: string) {
+  try {
+    return format(parseISO(d.slice(0, 10)), 'd MMM yyyy', { locale: pl })
+  } catch {
+    return d.slice(0, 10)
+  }
+}
+
+function formatKg(v: number | null | undefined) {
+  if (v == null || Number.isNaN(v)) return '\u2014'
+  return `${v}`
+}
+
+function formatPlTriple(r: { squat_kg?: number | null, bench_kg?: number | null, deadlift_kg?: number | null }) {
+  const has = r.squat_kg != null || r.bench_kg != null || r.deadlift_kg != null
+  if (!has) return '\u2014'
+  return `${formatKg(r.squat_kg)} / ${formatKg(r.bench_kg)} / ${formatKg(r.deadlift_kg)}`
+}
+
 function genderLabel(g: string | null | undefined) {
   if (g === 'male') return 'Mężczyzna'
   if (g === 'female') return 'Kobieta'
@@ -99,8 +144,80 @@ function cardGender(g: string | null | undefined): SinclairGender | null {
   return g === 'male' || g === 'female' ? g : null
 }
 
-const approvedResults = computed(() => (results.value || []).filter(r => r.status === 'Approved'))
+/** Wpis z zawodów (publiczny); `kind` brak lub `competition` — trening ma osobne zapytanie. */
+function isCompetitionResultRow(r: CompetitionResult): boolean {
+  return r.kind !== 'training'
+}
+
+const approvedResults = computed(() =>
+  (results.value || []).filter(r => r.status === 'Approved' && isCompetitionResultRow(r))
+)
 const approvedTraining = computed(() => (trainingResults.value || []).filter(r => r.status === 'Approved'))
+
+/** Wpisy treningowe od najnowszych — tabela jak wcześniej na `/zawodnicy`. */
+const approvedTrainingSorted = computed(() =>
+  [...approvedTraining.value].sort((a, b) => b.date.localeCompare(a.date))
+)
+
+/** Najlepszy zatwierdzony start z zawodów (max total, przy remisie nowsza data). */
+function pickBestCompetitionRow(rows: CompetitionResult[]): CompetitionResult | null {
+  let best: CompetitionResult | null = null
+  for (const r of rows) {
+    if (
+      !best
+      || r.total > best.total
+      || (r.total === best.total && r.date.localeCompare(best.date) > 0)
+    ) {
+      best = r
+    }
+  }
+  return best
+}
+
+/** KPI z profilu nadpisane najlepszym startem z zawodów, gdy mamy historię — żeby trening z API nie „podmieniał” publicznych liczb. */
+const competitionPbDisplay = computed(() => {
+  const rows = approvedResults.value
+  const p = athlete.value
+  if (!p) {
+    return { snatch: null as number | null, cleanJerk: null as number | null, total: null as number | null }
+  }
+  const best = pickBestCompetitionRow(rows)
+  if (!best) {
+    return {
+      snatch: p.best_snatch_kg ?? null,
+      cleanJerk: p.best_clean_jerk_kg ?? null,
+      total: p.total_kg ?? null
+    }
+  }
+  return {
+    snatch: best.snatch,
+    cleanJerk: best.clean_and_jerk,
+    total: best.total
+  }
+})
+
+/** Pas KPI treningowego — tylko gdy viewer widzi wpisy sali na tym profilu. */
+const trainingStripKpi = computed(() => {
+  if (!canViewAthleteTraining.value) return null
+  const rows = approvedTraining.value
+  const p = athlete.value
+  if (!p || rows.length === 0) return null
+  const best = pickBestCompetitionRow(rows)
+  if (!best || best.total <= 0) return null
+  const sg = cardGender(p.gender ?? undefined)
+  const eff = effectiveBodyweightKgForSinclair(p)
+  let sinclairVal: number | null = null
+  if (eff > 0 && sg) {
+    const c = sinclairTotal(best.total, eff, sg)
+    if (!Number.isNaN(c)) sinclairVal = Number(c.toFixed(2))
+  }
+  return {
+    snatch: best.snatch,
+    cleanJerk: best.clean_and_jerk,
+    total: best.total,
+    sinclair: sinclairVal
+  }
+})
 
 const progressSeries = computed<AthleteChartPoint[]>(() => {
   const p = athlete.value
@@ -154,9 +271,12 @@ const combinedSeries = computed<CombinedChartPoint[]>(() => {
       kind
     }
   }
+  const trainPts = canViewAthleteTraining.value
+    ? approvedTraining.value.map(r => toPoint(r, 'training'))
+    : []
   return [
     ...approvedResults.value.map(r => toPoint(r, 'competition')),
-    ...approvedTraining.value.map(r => toPoint(r, 'training'))
+    ...trainPts
   ].sort((a, b) => a.date.localeCompare(b.date))
 })
 
@@ -206,7 +326,7 @@ function bestSinclairOf(rows: CompetitionResult[]): number | null {
 
 const combinedStats = computed<CombinedStats>(() => {
   const comp = approvedResults.value
-  const train = approvedTraining.value
+  const train = canViewAthleteTraining.value ? approvedTraining.value : []
   const all = combinedSeries.value
 
   const compTotals = comp.map(r => r.total).filter(v => Number.isFinite(v) && v > 0)
@@ -288,8 +408,8 @@ const combinedStats = computed<CombinedStats>(() => {
   }
 })
 
-const showCombinedSection = computed(() =>
-  auth.isLoggedIn.value && combinedSeries.value.length > 0
+const showCombinedSection = computed(
+  () => auth.isLoggedIn.value && !shareLite.value && combinedSeries.value.length > 0
 )
 
 /** Publiczne, lekkie statystyki ze startów — używane w hero/KPI strip dla wszystkich. */
@@ -338,17 +458,7 @@ const approvedSinclair = computed(() => {
   const p = athlete.value
   if (!p) return null
   const sg = cardGender(p.gender ?? undefined)
-  const approved = approvedResults.value
-  let bestRow: CompetitionResult | null = null
-  for (const r of approved) {
-    if (
-      !bestRow
-      || r.total > bestRow.total
-      || (r.total === bestRow.total && r.date.localeCompare(bestRow.date) > 0)
-    ) {
-      bestRow = r
-    }
-  }
+  const bestRow = pickBestCompetitionRow(approvedResults.value)
   const totalKg = bestRow?.total ?? p.total_kg ?? 0
   const effectiveWeight = effectiveBodyweightKgForSinclair(p)
   if (totalKg <= 0 || effectiveWeight <= 0 || !sg) return null
@@ -399,7 +509,7 @@ const approvedSinclair = computed(() => {
         <div class="grid gap-8 lg:grid-cols-[minmax(0,18rem)_1fr] lg:gap-12">
           <!-- AVATAR / FOTO -->
           <div class="relative mx-auto w-full max-w-[18rem] lg:mx-0">
-            <div class="absolute -inset-3 rounded-4xl bg-linear-to-br from-primary/40 via-primary/10 to-sky-500/20 opacity-60 blur-2xl" />
+            <div class="absolute -inset-3 rounded-4xl bg-linear-to-br from-primary/40 via-primary/10 to-info/18 opacity-60 blur-2xl" />
             <div class="relative aspect-4/5 overflow-hidden rounded-3xl border border-white/10 bg-slate-950 shadow-2xl shadow-primary/15 ring-1 ring-primary/15">
               <img
                 v-if="athlete!.image_url"
@@ -427,7 +537,7 @@ const approvedSinclair = computed(() => {
                 </span>
                 <span
                   v-else
-                  class="rounded-full bg-emerald-500/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg"
+                  class="rounded-full bg-success/95 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg"
                 >
                   Aktywny
                 </span>
@@ -485,7 +595,7 @@ const approvedSinclair = computed(() => {
               </span>
               <span
                 v-if="publicStats.totalStarts > 0"
-                class="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 font-semibold text-emerald-600 dark:text-emerald-400"
+                class="inline-flex items-center gap-1.5 rounded-full border border-success/40 bg-success/10 px-3 py-1.5 font-semibold text-success dark:text-success"
               >
                 <UIcon name="i-lucide-medal" class="size-3.5" />
                 {{ publicStats.totalStarts }} {{ publicStats.totalStarts === 1 ? 'start' : 'startów' }}
@@ -540,9 +650,15 @@ const approvedSinclair = computed(() => {
       </UContainer>
     </section>
 
-    <!-- ========== KPI STRIP ========== -->
+    <!-- ========== KPI STRIP (zawody / publiczne) ========== -->
     <section class="border-b border-default/60 bg-muted/5">
       <UContainer class="py-0">
+        <p
+          v-if="approvedResults.length > 0"
+          class="border-b border-default/40 bg-muted/30 px-5 py-2 text-center text-[10px] font-bold uppercase tracking-[0.2em] text-primary/90 sm:px-6"
+        >
+          Rekordy z zatwierdzonych startów zawodowych
+        </p>
         <div class="grid grid-cols-2 gap-px bg-default/40 lg:grid-cols-4">
           <div class="bg-background/95 px-5 py-6 sm:px-6 sm:py-7">
             <p class="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-primary/80">
@@ -550,9 +666,9 @@ const approvedSinclair = computed(() => {
               Rwanie · PB
             </p>
             <p class="mt-2 font-mono text-3xl font-black text-primary sm:text-4xl">
-              {{ athlete!.best_snatch_kg ?? '—' }}
+              {{ competitionPbDisplay.snatch ?? '—' }}
               <span
-                v-if="athlete!.best_snatch_kg != null"
+                v-if="competitionPbDisplay.snatch != null"
                 class="text-sm font-semibold text-muted"
               >kg</span>
             </p>
@@ -563,22 +679,22 @@ const approvedSinclair = computed(() => {
               Podrzut · PB
             </p>
             <p class="mt-2 font-mono text-3xl font-black text-primary sm:text-4xl">
-              {{ athlete!.best_clean_jerk_kg ?? '—' }}
+              {{ competitionPbDisplay.cleanJerk ?? '—' }}
               <span
-                v-if="athlete!.best_clean_jerk_kg != null"
+                v-if="competitionPbDisplay.cleanJerk != null"
                 class="text-sm font-semibold text-muted"
               >kg</span>
             </p>
           </div>
           <div class="bg-background/95 px-5 py-6 sm:px-6 sm:py-7">
-            <p class="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-600 dark:text-emerald-400">
+            <p class="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-success dark:text-success">
               <UIcon name="i-lucide-trophy" class="size-4" />
               Total · rekord
             </p>
-            <p class="mt-2 font-mono text-3xl font-black text-emerald-600 dark:text-emerald-400 sm:text-4xl">
-              {{ athlete!.total_kg ?? '—' }}
+            <p class="mt-2 font-mono text-3xl font-black text-success dark:text-success sm:text-4xl">
+              {{ competitionPbDisplay.total ?? '—' }}
               <span
-                v-if="athlete!.total_kg != null"
+                v-if="competitionPbDisplay.total != null"
                 class="text-sm font-semibold text-muted"
               >kg</span>
             </p>
@@ -592,6 +708,67 @@ const approvedSinclair = computed(() => {
               {{ approvedSinclair ?? '—' }}
               <span
                 v-if="approvedSinclair != null"
+                class="text-sm font-semibold text-muted"
+              >pkt</span>
+            </p>
+          </div>
+        </div>
+      </UContainer>
+    </section>
+
+    <!-- ========== KPI TRENING (tylko zalogowani) — ta sama siatka co zawody, inna etykieta ========== -->
+    <section
+      v-if="canViewAthleteTraining && trainingStripKpi && !shareLite"
+      class="border-b border-default/60 bg-muted/5"
+    >
+      <UContainer class="py-0">
+        <p class="border-b border-default/40 bg-muted/30 px-5 py-2.5 text-center sm:px-6">
+          <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-primary/90">Trening (sala)</span>
+          <span class="mx-2 hidden text-default/35 sm:inline">·</span>
+          <span class="mt-1 block text-[11px] font-medium leading-snug tracking-normal text-muted sm:mt-0 sm:inline">
+            Osobno od zawodów — bez wpływu na PB i ranking publiczny.
+          </span>
+        </p>
+        <div class="grid grid-cols-2 gap-px bg-default/40 lg:grid-cols-4">
+          <div class="bg-background/95 px-5 py-6 sm:px-6 sm:py-7">
+            <p class="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-primary/80">
+              <UIcon name="i-game-icons-weight-lifting-up" class="size-4" />
+              Rwanie · trening
+            </p>
+            <p class="mt-2 font-mono text-3xl font-black text-primary sm:text-4xl">
+              {{ trainingStripKpi.snatch }}
+              <span class="text-sm font-semibold text-muted">kg</span>
+            </p>
+          </div>
+          <div class="bg-background/95 px-5 py-6 sm:px-6 sm:py-7">
+            <p class="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-primary/80">
+              <UIcon name="i-game-icons-weight-lifting-down" class="size-4" />
+              Podrzut · trening
+            </p>
+            <p class="mt-2 font-mono text-3xl font-black text-primary sm:text-4xl">
+              {{ trainingStripKpi.cleanJerk }}
+              <span class="text-sm font-semibold text-muted">kg</span>
+            </p>
+          </div>
+          <div class="bg-background/95 px-5 py-6 sm:px-6 sm:py-7">
+            <p class="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-success dark:text-success">
+              <UIcon name="i-lucide-dumbbell" class="size-4 opacity-90" />
+              Total · trening
+            </p>
+            <p class="mt-2 font-mono text-3xl font-black text-success dark:text-success sm:text-4xl">
+              {{ trainingStripKpi.total }}
+              <span class="text-sm font-semibold text-muted">kg</span>
+            </p>
+          </div>
+          <div class="bg-background/95 px-5 py-6 sm:px-6 sm:py-7">
+            <p class="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-600 dark:text-amber-400">
+              <UIcon name="i-lucide-star" class="size-4" />
+              Sinclair · trening
+            </p>
+            <p class="mt-2 font-mono text-3xl font-black text-amber-600 dark:text-amber-300 sm:text-4xl">
+              {{ trainingStripKpi.sinclair ?? '—' }}
+              <span
+                v-if="trainingStripKpi.sinclair != null"
                 class="text-sm font-semibold text-muted"
               >pkt</span>
             </p>
@@ -635,7 +812,7 @@ const approvedSinclair = computed(() => {
                 {{ publicStats.totalStarts }}
               </p>
               <p class="mt-1 text-[11px] text-muted">
-                Wszystkie zatwierdzone wyniki publiczne.
+                Zatwierdzone starty z zawodów (bez treningów salowych).
               </p>
             </div>
             <div class="rounded-2xl border border-default/60 bg-background/80 p-5 transition hover:border-primary/30 hover:shadow-sm">
@@ -649,11 +826,11 @@ const approvedSinclair = computed(() => {
                 Średnia z zatwierdzonych startów.
               </p>
             </div>
-            <div class="rounded-2xl border border-emerald-500/30 bg-linear-to-br from-emerald-500/10 to-emerald-500/5 p-5 transition hover:shadow-sm">
-              <p class="text-[10px] font-bold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
+            <div class="rounded-2xl border border-success/30 bg-linear-to-br from-success/12 to-success/6 p-5 transition hover:shadow-sm">
+              <p class="text-[10px] font-bold uppercase tracking-wide text-success dark:text-success">
                 Najlepszy total
               </p>
-              <p class="mt-2 font-mono text-3xl font-bold text-emerald-600 dark:text-emerald-300">
+              <p class="mt-2 font-mono text-3xl font-bold text-success dark:text-success">
                 {{ publicStats.bestTotal ?? '—' }}<span v-if="publicStats.bestTotal != null" class="ml-1 text-sm font-semibold text-muted">kg</span>
               </p>
               <p class="mt-1 text-[11px] text-muted">
@@ -710,9 +887,9 @@ const approvedSinclair = computed(() => {
         <section v-if="showCombinedSection" id="analiza" class="scroll-mt-24">
           <header class="mb-5 flex flex-wrap items-end justify-between gap-3">
             <div class="flex items-center gap-3">
-              <span class="h-8 w-1 rounded-full bg-emerald-500" />
+              <span class="h-8 w-1 rounded-full bg-success" />
               <div>
-                <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">
+                <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-success dark:text-success">
                   Trening + zawody
                 </p>
                 <h2 class="mt-0.5 text-xl font-bold tracking-tight text-highlighted sm:text-2xl">
@@ -727,7 +904,7 @@ const approvedSinclair = computed(() => {
                 <span class="text-muted">({{ combinedStats.competitions }})</span>
               </span>
               <span class="flex items-center gap-1.5">
-                <span class="inline-block h-1 w-3 rounded-full bg-sky-500" />
+                <span class="inline-block h-1 w-3 rounded-full bg-info" />
                 <span class="font-semibold text-highlighted">Trening</span>
                 <span class="text-muted">({{ combinedStats.trainings }})</span>
               </span>
@@ -742,11 +919,11 @@ const approvedSinclair = computed(() => {
           </div>
 
           <div class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <div class="rounded-2xl border border-emerald-500/30 bg-linear-to-br from-emerald-500/10 to-emerald-500/5 p-4">
-              <p class="text-[10px] font-bold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
+            <div class="rounded-2xl border border-success/30 bg-linear-to-br from-success/12 to-success/6 p-4">
+              <p class="text-[10px] font-bold uppercase tracking-wide text-success dark:text-success">
                 Najlepszy total (łącznie)
               </p>
-              <p class="mt-1.5 font-mono text-2xl font-bold text-emerald-600 dark:text-emerald-300">
+              <p class="mt-1.5 font-mono text-2xl font-bold text-success dark:text-success">
                 {{ combinedStats.bestCombinedTotal ?? '—' }}<span v-if="combinedStats.bestCombinedTotal != null" class="ml-1 text-xs font-semibold text-muted">kg</span>
               </p>
               <p class="mt-1 text-[11px] text-muted">
@@ -782,9 +959,9 @@ const approvedSinclair = computed(() => {
                 :class="combinedStats.trendKgLast90Days == null
                   ? 'text-muted'
                   : combinedStats.trendKgLast90Days > 0
-                    ? 'text-emerald-500'
+                    ? 'text-success'
                     : combinedStats.trendKgLast90Days < 0
-                      ? 'text-rose-500'
+                      ? 'text-error'
                       : 'text-highlighted'"
               >
                 <template v-if="combinedStats.trendKgLast90Days == null">—</template>
@@ -800,7 +977,7 @@ const approvedSinclair = computed(() => {
               <p class="text-[10px] font-bold uppercase tracking-wide text-muted">
                 Pobite rekordy
               </p>
-              <p class="mt-1.5 font-mono text-2xl font-bold text-emerald-500">
+              <p class="mt-1.5 font-mono text-2xl font-bold text-success">
                 {{ combinedStats.pbCount }} <span class="text-xs font-normal text-muted">razy ↑</span>
               </p>
               <p class="mt-1 text-[11px] text-muted">
@@ -817,7 +994,7 @@ const approvedSinclair = computed(() => {
               <p class="mt-1 font-mono text-sm font-semibold text-highlighted">
                 <span class="text-primary">Z</span> {{ combinedStats.avgCompetitionTotal ?? '—' }}
                 <span class="mx-1 text-muted">/</span>
-                <span class="text-sky-500">T</span> {{ combinedStats.avgTrainingTotal ?? '—' }}
+                <span class="font-semibold text-info">T</span> {{ combinedStats.avgTrainingTotal ?? '—' }}
               </p>
             </div>
             <div class="rounded-xl border border-default/50 bg-background/60 p-3">
@@ -827,7 +1004,7 @@ const approvedSinclair = computed(() => {
               <p class="mt-1 font-mono text-sm font-semibold text-amber-500 dark:text-amber-300">
                 <span class="text-primary">Z</span> {{ combinedStats.bestSinclairCompetition ?? '—' }}
                 <span class="mx-1 text-muted">/</span>
-                <span class="text-sky-500">T</span> {{ combinedStats.bestSinclairTraining ?? '—' }}
+                <span class="font-semibold text-info">T</span> {{ combinedStats.bestSinclairTraining ?? '—' }}
               </p>
             </div>
             <div class="rounded-xl border border-default/50 bg-background/60 p-3">
@@ -859,10 +1036,10 @@ const approvedSinclair = computed(() => {
 
           <div
             class="grid gap-6"
-            :class="auth.isLoggedIn.value ? 'lg:grid-cols-2' : ''"
+            :class="canViewAthleteTraining ? 'lg:grid-cols-2' : ''"
           >
             <!-- ZAWODY -->
-            <div class="rounded-3xl border border-default/60 bg-background/95 p-5 sm:p-6 shadow-sm">
+            <div class="min-h-0 min-w-0 rounded-3xl border border-default/60 bg-background/95 p-5 sm:p-6 shadow-sm">
               <div class="mb-4 flex items-center justify-between gap-4">
                 <div>
                   <p class="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-primary">
@@ -877,6 +1054,9 @@ const approvedSinclair = computed(() => {
                   {{ approvedResults.length }} {{ approvedResults.length === 1 ? 'wpis' : 'wpisów' }}
                 </span>
               </div>
+              <div
+                class="min-h-0 max-h-[min(70vh,34rem)] overflow-y-auto overscroll-y-contain [-webkit-overflow-scrolling:touch] pr-0.5"
+              >
               <ol class="relative space-y-3 border-l-2 border-primary/20 pl-5">
                 <li
                   v-for="result in approvedResults.slice(0, 12)"
@@ -919,6 +1099,7 @@ const approvedSinclair = computed(() => {
                   Brak zatwierdzonych wyników z zawodów.
                 </li>
               </ol>
+              </div>
               <p
                 v-if="approvedResults.length > 12"
                 class="mt-3 text-center text-[11px] text-muted"
@@ -927,72 +1108,87 @@ const approvedSinclair = computed(() => {
               </p>
             </div>
 
-            <!-- TRENING (auth only) -->
+            <!-- TRENING (auth only) — tabela ostatnich wpisów (tylko ten zawodnik) -->
             <div
-              v-if="auth.isLoggedIn.value"
-              class="rounded-3xl border border-sky-500/30 bg-sky-500/5 p-5 sm:p-6 shadow-sm"
+              v-if="canViewAthleteTraining"
+              class="min-h-0 min-w-0 rounded-3xl border border-default/60 bg-background/95 p-5 shadow-sm sm:p-6"
             >
-              <div class="mb-4 flex items-center justify-between gap-4">
+              <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                 <div>
-                  <p class="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-sky-600 dark:text-sky-400">
-                    <UIcon name="i-lucide-dumbbell" class="size-4" />
-                    Treningi
+                  <p class="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-primary">
+                    <UIcon name="i-lucide-dumbbell" class="size-4 text-primary/85" />
+                    Ostatnie wpisy treningowe
                   </p>
                   <p class="mt-0.5 text-xs text-muted">
-                    Tylko dla zalogowanych — nie wpływają na PB i ranking publiczny.
+                    Widok kadry lub Twój własny profil — wpisy nie zmieniają publicznego PB ani rankingu zawodów.
                   </p>
                 </div>
-                <span class="rounded-full bg-sky-500/10 px-3 py-1 text-xs font-semibold text-sky-600 dark:text-sky-400">
+                <span class="shrink-0 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
                   {{ approvedTraining.length }} {{ approvedTraining.length === 1 ? 'wpis' : 'wpisów' }}
                 </span>
               </div>
-              <ol class="relative space-y-3 border-l-2 border-sky-500/30 pl-5">
-                <li
-                  v-for="result in approvedTraining.slice(0, 12)"
-                  :key="result.id"
-                  class="relative"
-                >
-                  <span class="absolute left-[-27px] top-2 size-3 rounded-full border-2 border-sky-500 bg-background" />
-                  <div class="rounded-xl border border-sky-500/20 bg-background/70 p-4 transition hover:border-sky-500/50 hover:shadow-sm">
-                    <div class="flex items-start justify-between gap-4">
-                      <div class="min-w-0">
-                        <p class="text-sm font-semibold text-highlighted">
-                          {{ formatDate(result.date) }}
-                        </p>
-                        <p
-                          v-if="result.location"
-                          class="mt-0.5 flex items-center gap-1 text-xs text-muted"
+
+              <div
+                v-if="approvedTrainingSorted.length === 0"
+                class="rounded-xl border border-dashed border-info/30 bg-info/5 px-4 py-10 text-center text-sm text-muted"
+              >
+                Brak zatwierdzonych wyników treningowych.
+              </div>
+
+              <div
+                v-else
+                class="overflow-hidden rounded-xl border border-info/25 bg-linear-to-b from-info/6 to-background shadow-lg ring-1 ring-info/12"
+              >
+                <div class="border-b border-default/50 bg-muted/30 px-3 py-2 sm:px-4">
+                  <p class="text-[11px] font-bold uppercase tracking-wide text-info">
+                    Kronika sali
+                  </p>
+                </div>
+                <div class="max-h-[min(70vh,36rem)] overflow-auto overscroll-y-contain [-webkit-overflow-scrolling:touch]">
+                  <div class="min-w-0 overflow-x-auto">
+                    <table class="w-full min-w-[520px] text-left text-sm">
+                      <thead>
+                        <tr class="border-b border-default/60 bg-muted/40 text-[10px] font-black uppercase tracking-wider text-muted">
+                          <th class="px-3 py-3 sm:px-4">Data</th>
+                          <th class="hidden px-3 py-3 sm:table-cell sm:px-4">Miejsce</th>
+                          <th class="px-3 py-3 text-right sm:px-4">Rwanie</th>
+                          <th class="px-3 py-3 text-right sm:px-4">Podrzut</th>
+                          <th class="px-3 py-3 text-right font-semibold sm:px-4">Razem</th>
+                          <th class="hidden px-3 py-3 text-right lg:table-cell lg:px-4">Siła (kg)</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-default/50">
+                        <tr
+                          v-for="r in approvedTrainingSorted.slice(0, 12)"
+                          :key="`train-row-${r.id}`"
+                          class="bg-background/80 transition-colors hover:bg-info/8"
                         >
-                          <UIcon name="i-lucide-dumbbell" class="size-3.5 shrink-0" />
-                          <span class="truncate">{{ result.location }}</span>
-                        </p>
-                      </div>
-                      <p class="font-mono text-lg font-bold text-sky-600 dark:text-sky-400">
-                        {{ result.total }} <span class="text-xs font-semibold text-muted">kg</span>
-                      </p>
-                    </div>
-                    <div class="mt-3 grid grid-cols-2 gap-3 text-xs">
-                      <p class="rounded-md bg-muted/10 px-2 py-1 text-muted">
-                        Rwanie <span class="font-mono font-semibold text-highlighted">{{ result.snatch }}</span>
-                      </p>
-                      <p class="rounded-md bg-muted/10 px-2 py-1 text-muted">
-                        Podrzut <span class="font-mono font-semibold text-highlighted">{{ result.clean_and_jerk }}</span>
-                      </p>
-                    </div>
+                          <td class="whitespace-nowrap px-3 py-3 text-muted sm:px-4">
+                            {{ formatBoardDate(r.date) }}
+                          </td>
+                          <td class="hidden max-w-40 truncate px-3 py-3 text-xs text-muted sm:table-cell sm:px-4">
+                            <template v-if="r.location">{{ r.location }}</template>
+                            <template v-else>—</template>
+                          </td>
+                          <td class="px-3 py-3 text-right tabular-nums text-muted sm:px-4">{{ r.snatch }} kg</td>
+                          <td class="px-3 py-3 text-right tabular-nums text-muted sm:px-4">{{ r.clean_and_jerk }} kg</td>
+                          <td class="px-3 py-3 text-right tabular-nums font-bold text-info sm:px-4">
+                            {{ r.total }} kg
+                          </td>
+                          <td class="hidden px-3 py-3 text-right text-xs tabular-nums text-muted lg:table-cell lg:px-4">
+                            {{ formatPlTriple(r) }}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
-                </li>
-                <li
-                  v-if="approvedTraining.length === 0"
-                  class="rounded-xl border border-dashed border-sky-500/30 p-5 text-center text-sm text-muted"
-                >
-                  Brak zatwierdzonych wyników treningowych.
-                </li>
-              </ol>
+                </div>
+              </div>
               <p
-                v-if="approvedTraining.length > 12"
+                v-if="approvedTrainingSorted.length > 12"
                 class="mt-3 text-center text-[11px] text-muted"
               >
-                Pokazano 12 najnowszych z {{ approvedTraining.length }}.
+                Pokazano 12 najnowszych z {{ approvedTrainingSorted.length }}.
               </p>
             </div>
           </div>

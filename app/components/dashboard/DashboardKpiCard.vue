@@ -16,10 +16,10 @@ const tone = computed<Tone>(() => props.tone ?? 'neutral')
 
 const iconClass = computed(() => {
   if (tone.value === 'primary') return 'bg-primary/12 text-primary ring-primary/20'
-  if (tone.value === 'success') return 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 ring-emerald-500/20'
+  if (tone.value === 'success') return 'bg-success/15 text-success ring-success/25'
   if (tone.value === 'warning') return 'bg-amber-500/15 text-amber-700 dark:text-amber-400 ring-amber-500/20'
   if (tone.value === 'error') return 'bg-red-500/15 text-red-600 dark:text-red-400 ring-red-500/20'
-  if (tone.value === 'info') return 'bg-sky-500/15 text-sky-700 dark:text-sky-400 ring-sky-500/20'
+  if (tone.value === 'info') return 'bg-info/14 text-info ring-info/22'
   return 'bg-muted/30 text-highlighted ring-default/30'
 })
 </script>

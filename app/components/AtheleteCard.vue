@@ -22,10 +22,19 @@ export interface Athlete {
   photo?: string
   /** Widoczność tylko dla zalogowanych zawodników (kolory: zielony/czerwony). */
   membershipPaid?: boolean | null
+  /** Gdy true a brak wpłaty za miesiąc — badge „Przelew stały” (info), nie „Nieopłacony”. */
+  hasStandingOrder?: boolean | null
   /** Jeśli false, profil jest nieaktywny w kadrze (ukryty na liście publicznej). */
   isActive?: boolean | null
   chartHistory: AthleteChartPoint[]
   maxHistory: number
+  /** Najlepszy trening (tylko dla zalogowanych) — osobny pas KPI w kolorze treningowym. */
+  trainingStrip?: {
+    snatch: number
+    cleanAndJerk: number
+    total: number
+    sinclair: number
+  } | null
 }
 
 const athlete = defineModel<Athlete>({
@@ -141,146 +150,193 @@ const tooltipLeftPct = computed(() => {
 function clearHover() {
   chartHoverIndex.value = null
 }
+
+const membershipBadgeLabel = computed(() => {
+  const a = athlete.value
+  if (a.membershipPaid === true) return 'Opłacony'
+  if (a.hasStandingOrder === true) return 'Przelew stały'
+  return 'Nieopłacony'
+})
+
+const membershipBadgeColor = computed(() => {
+  const a = athlete.value
+  if (a.membershipPaid === true) return 'success' as const
+  if (a.hasStandingOrder === true) return 'info' as const
+  return 'error' as const
+})
 </script>
 
 <template>
-  <UCard class="h-full overflow-visible border-default/60 shadow-lg transition-all duration-300 hover:border-primary/30 hover:shadow-primary/10 cursor-pointer">
-    <div class="grid gap-6 md:grid-cols-12">
-      <div class="md:col-span-4 flex flex-col items-center text-center">
-        <div class="relative group">
-          <div class="absolute inset-0 rounded-xl bg-primary/20 blur-lg opacity-0 group-hover:opacity-100 transition-opacity" />
+  <UCard
+    class="group/card h-full cursor-pointer overflow-hidden rounded-2xl border border-default/55 bg-card text-default shadow-sm ring-1 ring-default/15 transition-[box-shadow,transform,border-color] duration-200 hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-md hover:ring-primary/20 dark:border-default/45 dark:bg-card dark:ring-default/15 dark:hover:border-primary/40 dark:hover:ring-primary/25"
+    :ui="{ body: 'p-0' }"
+  >
+    <!-- Nagłówek: spójny z motywem UI (jasny / ciemny) -->
+    <div
+      class="flex flex-col gap-4 border-b border-default/45 bg-muted/12 p-4 sm:flex-row sm:items-start sm:gap-5 sm:p-5 dark:border-default/50 dark:bg-muted/15"
+    >
+      <div
+        class="mx-auto w-28 shrink-0 overflow-hidden rounded-xl bg-muted/25 ring-2 ring-default/20 sm:mx-0 sm:w-32 dark:bg-muted/30 dark:ring-default/35"
+      >
+        <div class="aspect-square w-full">
           <img
             :src="athlete.photo || '/athlete-placeholder.svg'"
             :alt="athlete.name"
-            class="relative h-44 w-44 rounded-xl object-cover border-2 border-primary/20 group-hover:border-primary transition-all shadow-md"
+            width="176"
+            height="176"
+            loading="lazy"
+            decoding="async"
+            class="block h-full w-full object-cover object-center transition duration-200 group-hover/card:scale-[1.03]"
           >
-          <div class="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-primary text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg whitespace-nowrap">
+        </div>
+      </div>
+
+      <div class="min-w-0 flex-1 text-center sm:text-left">
+        <h3 class="text-balance text-xl font-bold leading-tight tracking-tight text-highlighted sm:text-2xl">
+          {{ athlete.name }}
+        </h3>
+        <p class="mt-1 text-sm text-muted">
+          Rocznik {{ athlete.birthYear }}
+        </p>
+        <div class="mt-3 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+          <UBadge color="primary" variant="subtle" size="sm" class="font-medium">
             <template v-if="athlete.weightCategory > 0">
               Kat. {{ athlete.weightCategoryText }} kg
             </template>
             <template v-else>
               Kat. —
             </template>
-          </div>
-        </div>
-
-        <div
-          v-if="athlete.membershipPaid !== undefined && athlete.membershipPaid !== null"
-          class="mt-5"
-        >
+          </UBadge>
           <UBadge
-            :color="athlete.membershipPaid ? 'success' : 'error'"
+            v-if="athlete.membershipPaid !== undefined && athlete.membershipPaid !== null"
+            :color="membershipBadgeColor"
             variant="subtle"
             size="sm"
           >
-            {{ athlete.membershipPaid ? 'Opłacony' : 'Nieopłacony' }}
+            {{ membershipBadgeLabel }}
           </UBadge>
         </div>
 
         <div
           v-if="athlete.isActive === false"
-          class="mt-3"
+          class="mt-3 rounded-lg border border-warning/35 bg-warning/6 px-3 py-2 text-left dark:border-warning/40 dark:bg-warning/12"
         >
           <UBadge color="warning" variant="subtle" size="sm">
             Nieaktywny w kadrze
           </UBadge>
-          <p class="mt-1 text-[11px] leading-snug text-muted">
-            Profil jest ukryty na liście publicznej. W historii i panelach może być nadal widoczny.
+          <p class="mt-1.5 text-[11px] leading-snug text-muted">
+            Ukryty na liście publicznej.
           </p>
         </div>
 
-        <h3 class="mt-7 text-xl font-bold text-highlighted leading-tight">
-          {{ athlete.name }}
-        </h3>
-        <p class="text-sm text-muted font-medium mt-0.5">
-          Rocznik: {{ athlete.birthYear }}
-        </p>
-
-        <div class="mt-4 w-full rounded-xl border border-default/40 bg-muted/20 p-3 text-sm text-muted text-left leading-relaxed wrap-break-word">
+        <p
+          v-if="athlete.description"
+          class="mt-3 text-pretty text-sm leading-relaxed text-muted line-clamp-3"
+        >
           {{ athlete.description }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Zawody -->
+    <div class="border-b border-default/40 dark:border-default/45">
+      <div class="flex items-center gap-2 border-l-4 border-primary bg-primary/5 px-3 py-2 dark:bg-primary/10">
+        <UIcon name="i-lucide-trophy" class="size-4 shrink-0 text-primary" />
+        <div class="min-w-0">
+          <p class="text-xs font-bold uppercase tracking-wide text-highlighted">
+            Zawody
+          </p>
+          <p class="text-[11px] text-muted">
+            Oficjalne PB
+          </p>
         </div>
       </div>
+      <div class="grid min-w-0 grid-cols-2 divide-x divide-y divide-default/35 bg-muted/10 sm:grid-cols-4 sm:divide-y-0 dark:divide-default/45 dark:bg-muted/20">
+        <div class="flex min-h-24 min-w-0 flex-col items-center justify-center gap-0.5 bg-elevated/75 px-2 py-3 text-center dark:bg-elevated/50">
+          <UIcon name="i-game-icons-weight-lifting-up" class="size-4 text-primary" />
+          <span class="text-[10px] font-medium uppercase tracking-wide text-muted">Rwanie</span>
+          <span class="min-w-0 truncate font-mono text-lg font-bold tabular-nums text-highlighted">{{ athlete.snatch }}</span>
+          <span class="text-[10px] text-muted">kg</span>
+        </div>
+        <div class="flex min-h-24 min-w-0 flex-col items-center justify-center gap-0.5 bg-elevated/75 px-2 py-3 text-center dark:bg-elevated/50">
+          <UIcon name="i-game-icons-weight-lifting-down" class="size-4 text-primary" />
+          <span class="text-[10px] font-medium uppercase tracking-wide text-muted">Podrzut</span>
+          <span class="min-w-0 truncate font-mono text-lg font-bold tabular-nums text-highlighted">{{ athlete.cleanAndJerk }}</span>
+          <span class="text-[10px] text-muted">kg</span>
+        </div>
+        <div class="flex min-h-24 min-w-0 flex-col items-center justify-center gap-0.5 bg-primary/10 px-2 py-3 text-center dark:bg-primary/15">
+          <span class="text-[10px] font-bold uppercase tracking-wide text-primary">Total</span>
+          <span class="min-w-0 truncate font-mono text-lg font-bold tabular-nums text-highlighted">{{ athlete.total }}</span>
+          <span class="text-[10px] text-muted">kg</span>
+        </div>
+        <div class="flex min-h-24 min-w-0 flex-col items-center justify-center gap-0.5 bg-warning/8 px-2 py-3 text-center dark:bg-warning/12">
+          <span class="text-[10px] font-bold uppercase tracking-wide text-warning">Sinclair</span>
+          <span class="min-w-0 truncate font-mono text-lg font-bold tabular-nums text-highlighted">{{ athlete.sinclair }}</span>
+          <span class="text-[10px] text-muted">pkt</span>
+        </div>
+      </div>
+    </div>
 
-      <div class="md:col-span-8 space-y-5">
-        <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <div class="min-h-28 rounded-xl border border-primary/20 bg-linear-to-br from-primary/5 to-primary/10 p-3 text-center flex flex-col justify-center gap-1">
-            <p class="flex items-center justify-center gap-1 text-[10px] uppercase tracking-wide text-primary/70 font-bold">
-              <UIcon
-                name="i-game-icons-weight-lifting-up"
-                class="size-4 shrink-0 opacity-95"
-              />
-              Rwanie
+    <!-- Trening -->
+    <template v-if="athlete.trainingStrip">
+      <div class="border-b border-default/40 dark:border-default/45">
+        <div class="flex items-center gap-2 border-l-4 border-info bg-info/6 px-3 py-2 dark:bg-info/12">
+          <UIcon name="i-lucide-dumbbell" class="size-4 shrink-0 text-info" />
+          <div class="min-w-0">
+            <p class="text-xs font-bold uppercase tracking-wide text-highlighted">
+              Trening
             </p>
-            <p class="text-xl sm:text-2xl font-mono font-bold text-primary leading-none wrap-break-word">
-              {{ athlete.snatch }}
-            </p>
-            <p class="text-[11px] text-primary/60 font-medium">
-              kg
-            </p>
-          </div>
-
-          <div class="min-h-28 rounded-xl border border-primary/20 bg-linear-to-br from-primary/5 to-primary/10 p-3 text-center flex flex-col justify-center gap-1">
-            <p class="flex items-center justify-center gap-1 text-[10px] uppercase tracking-wide text-primary/70 font-bold">
-              <UIcon
-                name="i-game-icons-weight-lifting-down"
-                class="size-4 shrink-0 opacity-95"
-              />
-              Podrzut
-            </p>
-            <p class="text-xl sm:text-2xl font-mono font-bold text-primary leading-none wrap-break-word">
-              {{ athlete.cleanAndJerk }}
-            </p>
-            <p class="text-[11px] text-primary/60 font-medium">
-              kg
-            </p>
-          </div>
-
-          <div class="min-h-28 rounded-xl border border-emerald-500/30 bg-linear-to-br from-emerald-500/10 to-primary/10 p-3 text-center flex flex-col justify-center gap-1">
-            <p class="text-[10px] uppercase tracking-wide text-emerald-500/80 font-bold">
-              Total
-            </p>
-            <p class="text-xl sm:text-2xl font-mono font-bold text-emerald-400 leading-none wrap-break-word">
-              {{ athlete.total }}
-            </p>
-            <p class="text-[11px] text-emerald-500/60 font-medium">
-              kg
-            </p>
-          </div>
-
-          <div class="min-h-28 rounded-xl border border-amber-500/30 bg-linear-to-br from-amber-500/10 to-orange-500/10 p-3 text-center flex flex-col justify-center gap-1">
-            <p class="text-[10px] uppercase tracking-wide text-amber-400/80 font-bold">
-              Sinclair
-            </p>
-            <p class="text-xl sm:text-2xl font-mono font-bold text-amber-300 leading-none wrap-break-word">
-              {{ athlete.sinclair }}
-            </p>
-            <p class="text-[11px] text-amber-400/70 font-medium">
-              pkt
+            <p class="text-[11px] text-muted">
+              Sala — najlepszy zapisany wynik
             </p>
           </div>
         </div>
-
-        <div class="rounded-xl border border-default/30 bg-muted/5 p-4">
-          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-            <p class="text-xs font-bold text-muted flex items-center gap-2 uppercase tracking-wider">
-              <UIcon
-                name="i-lucide-trending-up"
-                class="text-primary size-4"
-              />
-              Progresja totalu
-            </p>
-            <p class="text-[10px] text-muted font-medium">
-              Najedź punkt na wykresie — szczegóły startu
-            </p>
+        <div class="grid min-w-0 grid-cols-2 divide-x divide-y divide-default/35 bg-muted/10 sm:grid-cols-4 sm:divide-y-0 dark:divide-default/45 dark:bg-muted/20">
+          <div class="flex min-h-24 min-w-0 flex-col items-center justify-center gap-0.5 bg-elevated/75 px-2 py-3 text-center dark:bg-elevated/50">
+            <UIcon name="i-game-icons-weight-lifting-up" class="size-4 text-info" />
+            <span class="text-[10px] font-medium uppercase tracking-wide text-muted">Rwanie</span>
+            <span class="min-w-0 truncate font-mono text-lg font-bold tabular-nums text-highlighted">{{ athlete.trainingStrip.snatch }}</span>
+            <span class="text-[10px] text-muted">kg</span>
           </div>
+          <div class="flex min-h-24 min-w-0 flex-col items-center justify-center gap-0.5 bg-elevated/75 px-2 py-3 text-center dark:bg-elevated/50">
+            <UIcon name="i-game-icons-weight-lifting-down" class="size-4 text-info" />
+            <span class="text-[10px] font-medium uppercase tracking-wide text-muted">Podrzut</span>
+            <span class="min-w-0 truncate font-mono text-lg font-bold tabular-nums text-highlighted">{{ athlete.trainingStrip.cleanAndJerk }}</span>
+            <span class="text-[10px] text-muted">kg</span>
+          </div>
+          <div class="flex min-h-24 min-w-0 flex-col items-center justify-center gap-0.5 bg-info/10 px-2 py-3 text-center dark:bg-info/15">
+            <span class="text-[10px] font-bold uppercase tracking-wide text-info">Total</span>
+            <span class="min-w-0 truncate font-mono text-lg font-bold tabular-nums text-highlighted">{{ athlete.trainingStrip.total }}</span>
+            <span class="text-[10px] text-muted">kg</span>
+          </div>
+          <div class="flex min-h-24 min-w-0 flex-col items-center justify-center gap-0.5 bg-elevated/75 px-2 py-3 text-center dark:bg-elevated/50">
+            <span class="text-[10px] font-medium uppercase tracking-wide text-muted">Sinclair</span>
+            <span class="min-w-0 truncate font-mono text-lg font-bold tabular-nums text-highlighted">{{ athlete.trainingStrip.sinclair }}</span>
+            <span class="text-[10px] text-muted">pkt</span>
+          </div>
+        </div>
+      </div>
+    </template>
 
-          <div
-            v-if="chartPaths"
-            class="relative h-29 w-full rounded-xl bg-linear-to-b from-primary/[0.07] via-muted/20 to-muted/5 ring-1 ring-inset ring-primary/10 overflow-visible"
-            @click.stop.prevent
-            @mouseleave="clearHover"
-          >
-            <Transition
+    <!-- Progresja -->
+    <div class="border-t border-default/35 bg-muted/8 p-4 dark:border-default/45 dark:bg-muted/12 sm:p-5">
+      <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <p class="flex items-center gap-2 text-sm font-semibold text-highlighted">
+          <UIcon name="i-lucide-trending-up" class="size-4 text-primary" />
+          Progresja totalu
+        </p>
+        <p class="text-[11px] text-muted">
+          Najedź — szczegóły startu
+        </p>
+      </div>
+
+      <div
+        v-if="chartPaths"
+        class="relative h-29 w-full overflow-visible rounded-xl border border-default/50 bg-linear-to-b from-muted/20 to-muted/5 dark:border-default/45 dark:from-muted/30 dark:to-muted/10"
+        @click.stop.prevent
+        @mouseleave="clearHover"
+      >
+        <Transition
               enter-active-class="transition-opacity duration-150 ease-out"
               enter-from-class="opacity-0"
               enter-to-class="opacity-100"
@@ -300,7 +356,7 @@ function clearHover() {
                     {{ fmtPlDate(tooltipPoint.date) }}
                   </p>
                   <div class="flex items-baseline gap-2 flex-wrap">
-                    <span class="text-lg font-mono font-black text-emerald-400">{{ tooltipPoint.total }}</span>
+                    <span class="text-lg font-mono font-black text-success">{{ tooltipPoint.total }}</span>
                     <span class="text-[11px] font-semibold text-muted">kg total</span>
                   </div>
                   <div class="mt-1.5 grid grid-cols-2 gap-x-4 gap-y-0.5 text-[11px]">
@@ -309,7 +365,7 @@ function clearHover() {
                     <span class="text-muted">Podrzut</span>
                     <span class="font-mono font-bold text-highlighted text-right">{{ tooltipPoint.clean_and_jerk }} kg</span>
                     <span class="text-muted">Sinclair</span>
-                    <span class="font-mono font-bold text-amber-400 text-right">
+                    <span class="font-mono font-bold text-warning text-right">
                       {{ tooltipPoint.sinclair != null ? tooltipPoint.sinclair : '—' }}
                       <span
                         v-if="tooltipPoint.sinclair != null"
@@ -452,7 +508,7 @@ function clearHover() {
                 :cy="pt.y"
                 :r="chartHoverIndex === i ? 7 : 5"
                 class="pointer-events-none fill-white stroke-2 stroke-primary dark:fill-neutral-950 transition-all duration-150"
-                :class="chartHoverIndex === i ? 'stroke-emerald-400' : ''"
+                :class="chartHoverIndex === i ? 'stroke-success' : ''"
               />
               <circle
                 v-for="(pt, i) in chartPaths.pts"
@@ -464,74 +520,72 @@ function clearHover() {
               />
             </svg>
 
-            <div class="pointer-events-none absolute bottom-1 right-2 flex items-center gap-1.5 rounded-full bg-background/90 px-2 py-0.5 text-[10px] font-mono font-bold text-muted shadow-sm ring-1 ring-default/30">
-              skala {{ Math.round(chartPaths.minV) }}–{{ Math.round(chartPaths.maxV) }} kg
-            </div>
-          </div>
+        <div class="pointer-events-none absolute bottom-1 right-2 flex items-center gap-1.5 rounded-full bg-background/90 px-2 py-0.5 text-[10px] font-mono font-bold text-muted shadow-sm ring-1 ring-default/30">
+          skala {{ Math.round(chartPaths.minV) }}–{{ Math.round(chartPaths.maxV) }} kg
+        </div>
+      </div>
 
+      <div
+        v-else-if="athlete.chartHistory.length === 1"
+        class="relative overflow-visible rounded-xl border border-default/50 bg-muted/15 px-4 py-6 dark:border-default/45 dark:bg-muted/25"
+        @click.stop.prevent
+        @mouseleave="clearHover"
+      >
+        <Transition
+          enter-active-class="transition-opacity duration-150 ease-out"
+          enter-from-class="opacity-0"
+          enter-to-class="opacity-100"
+          leave-active-class="transition-opacity duration-100 ease-in"
+          leave-from-class="opacity-100"
+          leave-to-class="opacity-0"
+        >
           <div
-            v-else-if="athlete.chartHistory.length === 1"
-            class="relative rounded-xl bg-linear-to-b from-primary/[0.07] to-muted/10 ring-1 ring-inset ring-primary/10 overflow-visible px-4 py-6"
-            @click.stop.prevent
-            @mouseleave="clearHover"
+            v-if="chartHoverIndex === 0 && athlete.chartHistory[0]"
+            class="pointer-events-none absolute z-40 bottom-full left-1/2 mb-2 w-max max-w-[18rem] -translate-x-1/2"
           >
-            <Transition
-              enter-active-class="transition-opacity duration-150 ease-out"
-              enter-from-class="opacity-0"
-              enter-to-class="opacity-100"
-              leave-active-class="transition-opacity duration-100 ease-in"
-              leave-from-class="opacity-100"
-              leave-to-class="opacity-0"
-            >
-              <div
-                v-if="chartHoverIndex === 0 && athlete.chartHistory[0]"
-                class="pointer-events-none absolute z-40 bottom-full left-1/2 mb-2 w-max max-w-[18rem] -translate-x-1/2"
-              >
-                <div class="rounded-xl border border-primary/25 bg-background/95 px-3.5 py-2.5 shadow-lg ring-1 ring-default/40 backdrop-blur-md">
-                  <p class="text-[11px] font-bold uppercase tracking-wide text-primary mb-1">
-                    {{ fmtPlDate(athlete.chartHistory[0].date) }}
-                  </p>
-                  <div class="flex items-baseline gap-2">
-                    <span class="text-lg font-mono font-black text-emerald-400">{{ athlete.chartHistory[0].total }}</span>
-                    <span class="text-[11px] text-muted font-semibold">kg total</span>
-                  </div>
-                  <div class="mt-1.5 grid grid-cols-2 gap-x-4 gap-y-0.5 text-[11px]">
-                    <span class="text-muted">Rwanie</span>
-                    <span class="font-mono font-bold text-right">{{ athlete.chartHistory[0].snatch }} kg</span>
-                    <span class="text-muted">Podrzut</span>
-                    <span class="font-mono font-bold text-right">{{ athlete.chartHistory[0].clean_and_jerk }} kg</span>
-                    <span class="text-muted">Sinclair</span>
-                    <span class="font-mono font-bold text-amber-400 text-right">
-                      {{ athlete.chartHistory[0].sinclair != null ? athlete.chartHistory[0].sinclair : '—' }}
-                    </span>
-                  </div>
-                </div>
+            <div class="rounded-xl border border-primary/25 bg-background/95 px-3.5 py-2.5 shadow-lg ring-1 ring-default/40 backdrop-blur-md">
+              <p class="text-[11px] font-bold uppercase tracking-wide text-primary mb-1">
+                {{ fmtPlDate(athlete.chartHistory[0].date) }}
+              </p>
+              <div class="flex items-baseline gap-2">
+                <span class="text-lg font-mono font-black text-success">{{ athlete.chartHistory[0].total }}</span>
+                <span class="text-[11px] text-muted font-semibold">kg total</span>
               </div>
-            </Transition>
-            <div
-              class="relative flex items-end justify-center h-24 gap-2 cursor-crosshair"
-              @mouseenter="chartHoverIndex = 0"
-            >
-              <div
-                class="bg-linear-to-t from-primary/50 to-primary/25 rounded-t-xl hover:from-primary hover:to-primary/80 transition-all duration-200 relative min-w-[52px] shadow-inner ring-1 ring-primary/20"
-                :style="{ height: `${Math.min(100, ((athlete.chartHistory[0]?.total ?? 0) / athlete.maxHistory) * 100)}%` }"
-              >
-                <span class="absolute -top-7 left-1/2 -translate-x-1/2 text-xs font-mono font-black text-primary whitespace-nowrap tabular-nums">
-                  {{ athlete.chartHistory[0]?.total ?? 0 }} kg
+              <div class="mt-1.5 grid grid-cols-2 gap-x-4 gap-y-0.5 text-[11px]">
+                <span class="text-muted">Rwanie</span>
+                <span class="font-mono font-bold text-right">{{ athlete.chartHistory[0].snatch }} kg</span>
+                <span class="text-muted">Podrzut</span>
+                <span class="font-mono font-bold text-right">{{ athlete.chartHistory[0].clean_and_jerk }} kg</span>
+                <span class="text-muted">Sinclair</span>
+                <span class="font-mono font-bold text-warning text-right">
+                  {{ athlete.chartHistory[0].sinclair != null ? athlete.chartHistory[0].sinclair : '—' }}
                 </span>
               </div>
             </div>
           </div>
-
+        </Transition>
+        <div
+          class="relative flex h-24 cursor-crosshair items-end justify-center gap-2"
+          @mouseenter="chartHoverIndex = 0"
+        >
           <div
-            v-else
-            class="flex h-28 items-center justify-center px-2 rounded-xl bg-muted/10 ring-1 ring-dashed ring-default/40"
+            class="relative min-w-[52px] rounded-t-xl bg-linear-to-t from-primary/50 to-primary/25 shadow-inner ring-1 ring-primary/20 transition-all duration-200 hover:from-primary hover:to-primary/80"
+            :style="{ height: `${Math.min(100, ((athlete.chartHistory[0]?.total ?? 0) / athlete.maxHistory) * 100)}%` }"
           >
-            <p class="text-center text-xs text-muted leading-relaxed max-w-sm">
-              Brak zatwierdzonych wyników startowych — po akceptacji zgłoszenia pojawi się tu wykres z podziałem rwanie / podrzut i pkt Sinclair.
-            </p>
+            <span class="absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap font-mono text-xs font-black text-primary tabular-nums">
+              {{ athlete.chartHistory[0]?.total ?? 0 }} kg
+            </span>
           </div>
         </div>
+      </div>
+
+      <div
+        v-else
+        class="flex h-28 items-center justify-center rounded-xl border border-dashed border-default/50 bg-muted/10 px-3 dark:border-default/40 dark:bg-muted/15"
+      >
+        <p class="max-w-sm text-center text-xs leading-relaxed text-muted">
+          Brak zatwierdzonych wyników startowych — po akceptacji zgłoszenia pojawi się tu wykres z podziałem rwanie / podrzut i pkt Sinclair.
+        </p>
       </div>
     </div>
   </UCard>

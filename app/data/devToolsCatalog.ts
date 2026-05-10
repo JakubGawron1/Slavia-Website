@@ -16,6 +16,52 @@ export interface DevToolLinkGroup {
 /**
  * Dokumentacja zewnętrzna — nie da się jej wyprowadzić z routera aplikacji.
  */
+/**
+ * Dokumentacja stosu — Node, paczki, backend Rust, styl.
+ */
+export const DEV_TOOL_STACK_GROUP: DevToolLinkGroup = {
+  title: 'Stack i narzędzia developerskie',
+  description: 'Wersje zależą od repo — te linki to oficjalna dokumentacja komponentów (nowa karta).',
+  links: [
+    {
+      to: 'https://nodejs.org/docs/',
+      label: 'Node.js',
+      description: 'Runtime — lokalnie i na CI',
+      icon: 'i-lucide-box'
+    },
+    {
+      to: 'https://pnpm.io/workspaces',
+      label: 'pnpm',
+      description: 'Zależności i skrypty (frontend)',
+      icon: 'i-lucide-package'
+    },
+    {
+      to: 'https://nuxt.com/docs/getting-started/testing',
+      label: 'Nuxt — Testing',
+      description: 'Unit / runtime testy modułu',
+      icon: 'i-lucide-flask-conical'
+    },
+    {
+      to: 'https://doc.rust-lang.org/book/',
+      label: 'The Rust Book',
+      description: 'Backend (Axum) w osobnym repozytorium',
+      icon: 'i-lucide-memory-stick'
+    },
+    {
+      to: 'https://tokio.rs/',
+      label: 'Tokio',
+      description: 'Async runtime używany przez serwer HTTP',
+      icon: 'i-lucide-zap'
+    },
+    {
+      to: 'https://tailwindcss.com/docs/',
+      label: 'Tailwind CSS',
+      description: 'Style (`@tailwindcss` + Nuxt UI)',
+      icon: 'i-lucide-palette'
+    }
+  ]
+}
+
 export const DEV_TOOL_EXTERNAL_DOCS_GROUP: DevToolLinkGroup = {
   title: 'Dokumentacja zewnętrzna',
   description: 'Przydatne przy pracy z frontem, PWA i przeglądarką. Otwiera się w nowej karcie.',

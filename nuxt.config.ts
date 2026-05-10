@@ -1,6 +1,5 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
-import { mkdirSync, readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
 function readPackageJsonVersion(): string {
@@ -15,18 +14,31 @@ function formatPublicAppVersion(raw: string): string {
 }
 
 const packageJsonVersion = readPackageJsonVersion()
-const nitroPayloadCacheBase = resolve(process.cwd(), '.nuxt', 'cache', 'nuxt', 'payload')
 
-// Windows+dev: Nitro potrafi próbować zapisać payload cache (ISR) zanim katalog istnieje.
-try {
-  mkdirSync(nitroPayloadCacheBase, { recursive: true })
-} catch {
-  // ignore
+/** Publiczny URL aplikacji: jawna zmienna albo automatycznie na Vercel (Preview/Production). */
+function resolvePublicSiteUrl(): string {
+  const explicit = (process.env.NUXT_PUBLIC_SITE_URL || '').trim()
+  if (explicit) {
+    return explicit
+  }
+  const vercel = (process.env.VERCEL_URL || '').trim()
+  if (vercel) {
+    return `https://${vercel}`
+  }
+  return 'http://localhost:3000'
 }
+
+/**
+ * ISR na `/` poza prod wyłączone: `payloadCache` tworzy się już przy dowolnym ISR w projekcie
+ * (`NUXT_RUNTIME_PAYLOAD_EXTRACTION`); przy zapisie dla URL `/` unstorage rozjeżdża mount
+ * `cache:nuxt:payload` → próba zapisu na `.nuxt/cache/nuxt/payload` i `EISDIR` na Windows.
+ * Nie używać tu `import.meta.dev` — w kontekście ładowania `nuxt.config` bywa undefined.
+ */
+const devDisableRootIsr = process.env.NODE_ENV !== 'production'
 
 export default defineNuxtConfig({
   // Najnowsze domyślne zachowanie Nitro / presetów modułów dla wybranej osi czasu (bump przy większych upgrade’ach Nuxt).
-  compatibilityDate: '2026-05-03',
+  compatibilityDate: '2026-05-09',
 
   modules: [
     '@nuxt/eslint',
@@ -43,17 +55,7 @@ export default defineNuxtConfig({
 
   nitro: {
     /** Bez map Nitro szybciej pakuje serwer (domyślnie przy wyłączonym `sourcemap.server` i tak zwykle nie są potrzebne lokalnie). */
-    sourceMap: process.env.NUXT_SOURCEMAP === '1',
-    /**
-     * Dev-only stabilizacja na Windows: ustawiamy jawnie storage dla payload cache (ISR),
-     * żeby zapisy nie waliły `ENOENT` na relatywnej ścieżce.
-     */
-    storage: {
-      payload: {
-        driver: 'fs',
-        base: nitroPayloadCacheBase
-      }
-    }
+    sourceMap: process.env.NUXT_SOURCEMAP === '1'
   },
 
   /**
@@ -63,8 +65,8 @@ export default defineNuxtConfig({
    * W przeciwnym wypadku cache może “pomieszać” widoki publiczne i adminowe.
    */
   routeRules: {
-    // Publiczne i identyczne dla wszystkich → ISR (najszybciej na Vercel: cache HTML, mniej cold startów).
-    '/': { isr: 600 },
+    // Produkcja: ISR na `/`; lokalnie `import.meta.dev` — patrz `devDisableRootIsr` (payload cache + unstorage).
+    '/': devDisableRootIsr ? { isr: false } : { isr: 600 },
     '/zawodnicy': { isr: 900 },
     '/galeria': { isr: 1800 },
     '/aktualnosci': { isr: 600 },
@@ -117,7 +119,7 @@ export default defineNuxtConfig({
       /**
        * Publiczny URL strony — używany do canonical/og:url.
        */
-      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:3000',
+      siteUrl: resolvePublicSiteUrl(),
       /**
        * Lista rozdzielona przecinkami: identyfikatory funkcji eksperymentalnych zawsze wyłączone na buildzie (deploy).
        * Nadpisuje localStorage i domyślne „włączone”. Zob. `app/data/experimentalFeaturesCatalog.ts`.
@@ -125,8 +127,18 @@ export default defineNuxtConfig({
        * Przykład: `barbell_pose_analysis,club_notification_bell`
        */
       experimentalKillSwitch: process.env.NUXT_PUBLIC_EXPERIMENTAL_KILL_SWITCH || '',
-      /** Z pola `version` w `package.json` (build-time); stopka i nagłówek (Beta jeśli w nazwie jest „beta”). */
-      appVersion: formatPublicAppVersion(packageJsonVersion)
+      /** Z pola `version` w `package.json` (build-time); stopka — w nagłówku odznaka Dev/Beta wg `SiteHeader`. */
+      appVersion: formatPublicAppVersion(packageJsonVersion),
+      /**
+       * Feature flag (env): `NUXT_PUBLIC_FEATURE_ATHLETE_COMPARE=0` wyłącza link do porównania zawodników.
+       * Domyślnie włączone — bez zmiennej środowiskowej moduł jest widoczny.
+       */
+      featureAthleteCompare: process.env.NUXT_PUBLIC_FEATURE_ATHLETE_COMPARE !== '0',
+      /**
+       * JSON z flagami boolean (np. `{"foo":false}`). Łączy się z `usePublicFeatures()` / `usePublicFeatureFlag()`.
+       * Nie wstawiaj tu sekretów — zmienna jest publiczna (bundle klienta).
+       */
+      featuresJson: process.env.NUXT_PUBLIC_FEATURES_JSON || ''
     }
   },
   vite: {
@@ -137,6 +149,10 @@ export default defineNuxtConfig({
       chunkSizeWarningLimit: 1600
     },
     optimizeDeps: {
+      /**
+       * Ikony: Nuxt Icon w trybie `local` bundluje tylko zainstalowane kolekcje (`package.json` —
+       * obecnie lucide + game-icons). Nie dodawaj całego `@iconify/json` do zależności produkcyjnych.
+       */
       include: [
         'date-fns',
         'date-fns/locale'

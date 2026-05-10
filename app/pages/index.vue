@@ -168,7 +168,7 @@ const groups: TrainingGroup[] = [
       'Aktywne zabawy i wzmacnianie ogółu'
     ],
     icon: 'i-lucide-sparkles',
-    accent: 'from-emerald-500/15 to-emerald-500/0 border-emerald-500/30 text-emerald-600 dark:text-emerald-300'
+    accent: 'from-success/15 to-success/0 border-success/35 text-success'
   },
   {
     id: 'junior',
@@ -293,7 +293,7 @@ const trainingDays = [
       aria-hidden="true"
     />
     <div
-      class="pointer-events-none absolute left-1/2 top-[88vh] hidden size-[280px] -translate-x-1/2 rounded-full bg-sky-400/8 blur-3xl dark:bg-sky-400/12 lg:block"
+      class="pointer-events-none absolute left-1/2 top-[88vh] hidden size-[280px] -translate-x-1/2 rounded-full bg-info/12 blur-3xl opacity-70 dark:bg-info/18 lg:block"
       aria-hidden="true"
     />
 
@@ -361,7 +361,7 @@ const trainingDays = [
         </div>
 
         <!-- Pasek statystyk klubu -->
-        <div class="mt-14 grid gap-3 rounded-3xl border border-default/60 bg-card/90 p-5 shadow-sm ring-1 ring-default/30 backdrop-blur-sm sm:p-6 lg:mt-20 lg:grid-cols-4">
+        <div class="mt-14 grid gap-3 rounded-3xl border border-default/60 bg-elevated/75 p-5 shadow-sm ring-1 ring-default/30 backdrop-blur-sm dark:bg-card/95 sm:p-6 lg:mt-20 lg:grid-cols-4">
           <div class="flex flex-col items-start gap-1 rounded-2xl bg-primary/5 p-5 ring-1 ring-primary/15 lg:items-center lg:text-center">
             <div class="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-primary">
               <UIcon name="i-lucide-users" class="size-4" />
@@ -388,8 +388,8 @@ const trainingDays = [
             </p>
           </div>
 
-          <div class="flex flex-col items-start gap-1 rounded-2xl bg-sky-500/5 p-5 ring-1 ring-sky-500/15 lg:items-center lg:text-center">
-            <div class="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-sky-600 dark:text-sky-300">
+          <div class="flex flex-col items-start gap-1 rounded-2xl bg-info/6 p-5 ring-1 ring-info/20 lg:items-center lg:text-center">
+            <div class="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-info">
               <UIcon name="i-lucide-dumbbell" class="size-4" />
               Najwyższa suma
             </div>
@@ -401,8 +401,8 @@ const trainingDays = [
             </p>
           </div>
 
-          <div class="flex flex-col items-start gap-1 rounded-2xl bg-emerald-500/5 p-5 ring-1 ring-emerald-500/15 lg:items-center lg:text-center">
-            <div class="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-emerald-600 dark:text-emerald-300">
+          <div class="flex flex-col items-start gap-1 rounded-2xl bg-success/6 p-5 ring-1 ring-success/20 lg:items-center lg:text-center">
+            <div class="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-success">
               <UIcon name="i-lucide-calendar-days" class="size-4" />
               Treningi
             </div>
@@ -466,10 +466,10 @@ const trainingDays = [
             </div>
           </div>
 
-          <div class="group relative overflow-hidden rounded-3xl border border-default/60 bg-linear-to-br from-card via-card to-emerald-500/5 p-6 shadow-sm ring-1 ring-default/30 transition-all hover:-translate-y-1 hover:shadow-xl hover:ring-emerald-500/30 lg:p-8">
-            <div class="pointer-events-none absolute -right-10 -top-10 size-40 rounded-full bg-emerald-500/10 blur-2xl transition-all group-hover:bg-emerald-500/20" />
+          <div class="group relative overflow-hidden rounded-3xl border border-default/60 bg-linear-to-br from-card via-card to-success/5 p-6 shadow-sm ring-1 ring-default/30 transition-all hover:-translate-y-1 hover:shadow-xl hover:ring-success/30 lg:p-8">
+            <div class="pointer-events-none absolute -right-10 -top-10 size-40 rounded-full bg-success/12 blur-2xl transition-all group-hover:bg-success/22" />
             <div class="relative">
-              <div class="mb-5 inline-flex size-12 items-center justify-center rounded-2xl bg-emerald-500/12 text-emerald-600 ring-1 ring-emerald-500/30 dark:text-emerald-400">
+              <div class="mb-5 inline-flex size-12 items-center justify-center rounded-2xl bg-success/12 text-success ring-1 ring-success/30">
                 <UIcon name="i-lucide-heart-pulse" class="size-6" />
               </div>
               <h3 class="text-xl font-black text-highlighted">

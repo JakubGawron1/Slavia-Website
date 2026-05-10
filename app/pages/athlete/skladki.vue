@@ -124,6 +124,15 @@ onMounted(() => {
   void refreshPaymentStatus()
   void refreshYearTable()
 })
+
+const membershipMonthBadge = computed(() => {
+  if (!paymentStatus.value) return null
+  const ps = paymentStatus.value
+  if (ps.is_paid) return { color: 'success' as const, label: 'Opłacona' }
+  if (ps.is_overdue) return { color: 'error' as const, label: 'Nieopłacona' }
+  if (ps.has_standing_order === true) return { color: 'info' as const, label: 'Przelew stały' }
+  return { color: 'warning' as const, label: 'Niepotwierdzona' }
+})
 </script>
 
 <template>
@@ -150,11 +159,11 @@ onMounted(() => {
       <div class="flex flex-wrap items-center justify-between gap-3">
         <h2 class="text-lg font-black text-highlighted">Status</h2>
         <UBadge
-          v-if="paymentStatus"
-          :color="paymentStatus.is_paid ? 'success' : (paymentStatus.is_overdue ? 'error' : 'warning')"
+          v-if="membershipMonthBadge"
+          :color="membershipMonthBadge.color"
           variant="subtle"
         >
-          {{ paymentStatus.is_paid ? 'Opłacona' : (paymentStatus.is_overdue ? 'Nieopłacona' : 'Niepotwierdzona') }}
+          {{ membershipMonthBadge.label }}
         </UBadge>
       </div>
 

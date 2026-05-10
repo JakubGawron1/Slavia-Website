@@ -175,9 +175,9 @@ function statusColor(s: string) {
 }
 
 function rowAccentClass(s: string) {
-  if (s === 'in_range') return 'border-emerald-500/25 ring-1 ring-emerald-500/10 bg-emerald-500/5'
+  if (s === 'in_range') return 'border-success/28 ring-1 ring-success/12 bg-success/5'
   if (s === 'below') return 'border-amber-500/25 ring-1 ring-amber-500/10 bg-amber-500/5'
-  if (s === 'above') return 'border-sky-500/25 ring-1 ring-sky-500/10 bg-sky-500/5'
+  if (s === 'above') return 'border-info/28 ring-1 ring-info/12 bg-info/5'
   return 'border-default/60 bg-muted/10'
 }
 </script>

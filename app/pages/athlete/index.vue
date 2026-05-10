@@ -11,6 +11,8 @@ definePageMeta({ middleware: 'auth' })
 const auth = useAuth()
 const apiFetch = useApi()
 const toast = useToast()
+const terms = useSlaviaCopy()
+const route = useRoute()
 
 /** Konto z przypisaną rolą „Zawodnik” (nie mylić z dostępem SuperAdmin do tej strefy). */
 const isAthleteRole = computed(() => auth.isAthlete.value)
@@ -187,6 +189,25 @@ async function submitResult() {
     return
   }
 
+  const sn = resultForm.snatch ?? 0
+  const cj = resultForm.clean_and_jerk ?? 0
+  const tot = resultForm.total
+  if (hasOly && tot === 0 && sn === 0 && cj === 0) {
+    const ok = typeof window !== 'undefined'
+      && window.confirm(
+        'Zgłaszasz wpis z zerowym total (obie próby 0 kg). Czy na pewno chcesz wysłać taki wynik?'
+      )
+    if (!ok) return
+  } else if (sn > 0 && cj > 0) {
+    if (Math.abs(sn - cj) >= 100) {
+      const ok = typeof window !== 'undefined'
+        && window.confirm(
+          'Różnica między rwaniem a podrzutem wynosi co najmniej 100 kg. Sprawdź wartości przed wysłaniem — kontynuować?'
+        )
+      if (!ok) return
+    }
+  }
+
   try {
     const body: Record<string, unknown> = {
       athlete_id: athlete.value.id,
@@ -249,18 +270,33 @@ const portalHeroAvatarSrc = computed(() => {
 
 const paymentKpi = computed(() => {
   if (!isAthleteRole.value) {
-    return { value: '—', tone: 'neutral' as const, hint: 'Dostępne tylko dla roli zawodnika' }
+    return { value: '—', tone: 'info' as const, hint: 'Dostępne tylko dla roli zawodnika' }
   }
   if (!paymentStatus.value) {
-    return { value: '—', tone: 'neutral' as const, hint: 'Brak danych (odśwież)' }
+    return { value: '—', tone: 'info' as const, hint: 'Brak danych (odśwież)' }
   }
-  if (paymentStatus.value.is_paid) {
-    return { value: 'Opłacona', tone: 'success' as const, hint: paymentStatus.value.month }
+  const ps = paymentStatus.value
+  const standing = ps.has_standing_order === true
+  if (ps.is_paid) {
+    return { value: 'Opłacona', tone: 'success' as const, hint: ps.month }
   }
-  if (paymentStatus.value.is_overdue) {
-    return { value: 'Nieopłacona', tone: 'error' as const, hint: paymentStatus.value.month }
+  if (ps.is_overdue) {
+    return { value: 'Nieopłacona', tone: 'error' as const, hint: ps.month }
   }
-  return { value: 'Oczekuje', tone: 'warning' as const, hint: paymentStatus.value.month }
+  if (standing) {
+    return { value: terms.paymentStandingOrder(), tone: 'info' as const, hint: `Auto-składka · ${ps.month}` }
+  }
+  return { value: 'Oczekuje', tone: 'warning' as const, hint: ps.month }
+})
+
+/** Spójny kolor/tekst z KPI — bez mylenia zielonego kafelka z faktycznym „opłacona”. */
+const membershipMonthBadge = computed(() => {
+  if (!paymentStatus.value) return null
+  const ps = paymentStatus.value
+  if (ps.is_paid) return { color: 'success' as const, label: 'Opłacona' }
+  if (ps.is_overdue) return { color: 'error' as const, label: 'Nieopłacona' }
+  if (ps.has_standing_order === true) return { color: 'info' as const, label: terms.paymentStandingOrder() }
+  return { color: 'warning' as const, label: 'Niepotwierdzona' }
 })
 
 const athleteDashboardTiles = [
@@ -269,8 +305,9 @@ const athleteDashboardTiles = [
     title: 'Składka klubowa',
     desc: 'Zgłoś płatność i sprawdź status',
     icon: 'i-lucide-banknote',
-    ring: 'ring-green-500/25 hover:ring-green-500/45',
-    iconBg: 'bg-green-500/15 text-green-700 dark:text-green-400'
+    /** Bez „green” w klasach — inaczej `toneFromIconBg` zawsze daje success i myli ze statusem opłacenia. */
+    ring: 'ring-primary/25 hover:ring-primary/45',
+    iconBg: 'bg-primary/15 text-primary'
   },
   {
     to: '/athlete/kalendarz',
@@ -285,80 +322,80 @@ const athleteDashboardTiles = [
     title: 'Tor sztangi',
     desc: 'Analiza nagrania w przeglądarce',
     icon: 'i-lucide-scan-line',
-    ring: 'ring-violet-500/20 hover:ring-violet-500/40',
-    iconBg: 'bg-violet-500/15 text-violet-600 dark:text-violet-400'
+    ring: 'ring-orange-500/25 hover:ring-orange-500/45',
+    iconBg: 'bg-orange-500/12 text-orange-600 dark:text-orange-400'
   },
   {
     to: '/dziennik',
     title: 'Dziennik treningów',
     desc: 'Wpisy po jednostkach',
     icon: 'i-lucide-book-marked',
-    ring: 'ring-cyan-500/25 hover:ring-cyan-500/45',
-    iconBg: 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400'
+    ring: 'ring-info/25 hover:ring-info/45',
+    iconBg: 'bg-info/12 text-info'
   },
   {
     to: '/athlete/exercises',
     title: 'Inne ćwiczenia',
     desc: 'Przysiady, wyciskanie, martwy',
     icon: 'i-lucide-bar-chart-3',
-    ring: 'ring-lime-500/25 hover:ring-lime-500/45',
-    iconBg: 'bg-lime-500/15 text-lime-700 dark:text-lime-400'
+    ring: 'ring-warning/28 hover:ring-warning/42',
+    iconBg: 'bg-warning/10 text-warning'
   },
   {
     to: '/kalkulator-proporcji',
     title: 'Proporcje (ratio)',
     desc: '„Złote proporcje” między bojami',
     icon: 'i-lucide-sigma',
-    ring: 'ring-emerald-500/20 hover:ring-emerald-500/40',
-    iconBg: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
+    ring: 'ring-success/25 hover:ring-success/40',
+    iconBg: 'bg-success/12 text-success'
   },
   {
     to: '/aktualnosci',
     title: 'Aktualności klubu',
     desc: 'Aktualności i komunikaty',
     icon: 'i-lucide-newspaper',
-    ring: 'ring-amber-500/25 hover:ring-amber-500/45',
-    iconBg: 'bg-amber-500/15 text-amber-700 dark:text-amber-400'
+    ring: 'ring-warning/25 hover:ring-warning/42',
+    iconBg: 'bg-warning/10 text-warning'
   },
   {
     to: '/chat',
     title: 'Czat z trenerem',
     desc: 'Wiadomości 1:1',
     icon: 'i-lucide-messages-square',
-    ring: 'ring-sky-500/25 hover:ring-sky-500/45',
-    iconBg: 'bg-sky-500/15 text-sky-700 dark:text-sky-400'
+    ring: 'ring-info/28 hover:ring-info/45',
+    iconBg: 'bg-info/14 text-info'
   },
   {
     to: '/attendance',
     title: 'Moja obecność',
     desc: 'Zgłoś obecność i sprawdź historię',
     icon: 'i-lucide-user-check',
-    ring: 'ring-indigo-500/25 hover:ring-indigo-500/45',
-    iconBg: 'bg-indigo-500/15 text-indigo-700 dark:text-indigo-400'
+    ring: 'ring-primary/22 hover:ring-primary/42',
+    iconBg: 'bg-primary/12 text-primary'
   },
   {
     to: '/athlete/timeline',
     title: 'Historia treningów',
     desc: 'Oś czasu: wyniki, obecność, dziennik',
     icon: 'i-lucide-timeline',
-    ring: 'ring-fuchsia-500/25 hover:ring-fuchsia-500/45',
-    iconBg: 'bg-fuchsia-500/15 text-fuchsia-700 dark:text-fuchsia-400'
+    ring: 'ring-primary/28 hover:ring-primary/46',
+    iconBg: 'bg-primary/10 text-primary'
   },
   {
     to: '/athlete/plany',
     title: 'Plany treningowe',
     desc: 'Cele tygodnia i raport progresu',
     icon: 'i-lucide-clipboard-list',
-    ring: 'ring-emerald-500/25 hover:ring-emerald-500/45',
-    iconBg: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
+    ring: 'ring-success/25 hover:ring-success/45',
+    iconBg: 'bg-success/12 text-success'
   },
   {
     to: '/athlete/regeneracja',
     title: 'Regeneracja',
     desc: 'Dzienny check-in snu i zmęczenia',
     icon: 'i-lucide-heart-pulse',
-    ring: 'ring-rose-500/25 hover:ring-rose-500/45',
-    iconBg: 'bg-rose-500/15 text-rose-700 dark:text-rose-400'
+    ring: 'ring-error/28 hover:ring-error/42',
+    iconBg: 'bg-error/10 text-error'
   }
 ] as const
 
@@ -400,11 +437,12 @@ const athleteModuleGroups = computed(() => {
 
 function toneFromIconBg(iconBg?: string): 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral' {
   const s = String(iconBg || '').toLowerCase()
-  if (s.includes('rose') || s.includes('red')) return 'error'
-  if (s.includes('amber') || s.includes('yellow')) return 'warning'
-  if (s.includes('emerald') || s.includes('green') || s.includes('teal') || s.includes('lime')) return 'success'
-  if (s.includes('sky') || s.includes('cyan') || s.includes('blue') || s.includes('indigo')) return 'info'
-  if (s.includes('violet') || s.includes('purple') || s.includes('fuchsia') || s.includes('primary')) return 'primary'
+  if (s.includes('error') || s.includes('rose') || s.includes('red')) return 'error'
+  if (s.includes('warning') || s.includes('amber') || s.includes('yellow') || s.includes('orange')) return 'warning'
+  if (s.includes('success') || s.includes('emerald') || s.includes('green') || s.includes('teal')) return 'success'
+  if (s.includes('info') || s.includes('sky') || s.includes('cyan') || s.includes('blue') || s.includes('indigo')) return 'info'
+  if (s.includes('primary') || s.includes('violet') || s.includes('purple') || s.includes('fuchsia') || s.includes('lime')) return 'primary'
+  if (s.includes('muted')) return 'neutral'
   return 'neutral'
 }
 
@@ -436,6 +474,66 @@ const pageLead = computed(() => {
   return isAthleteRole.value
     ? 'To jest Twój osobisty panel. Tutaj możesz śledzić swoje postępy, wyniki z zawodów oraz zarządzać swoim profilem.'
     : 'Ustawienia konta (e-mail, hasło, zdjęcie). Funkcje zawodnicze są dostępne tylko dla kont z rolą zawodnika.'
+})
+
+const PAY_HIDE_LS = 'slavia_hide_payment_reminder'
+const hidePaymentReminderLocal = ref(false)
+const ONBOARD_LS = 'slavia_onboarding_athlete_v1_done'
+const showOnboarding = ref(false)
+
+function syncPaymentReminderFromStorage() {
+  if (!import.meta.client) return
+  try {
+    hidePaymentReminderLocal.value = localStorage.getItem(PAY_HIDE_LS) === '1'
+  } catch {
+    /* ignore */
+  }
+}
+
+watch(
+  () => route.fullPath,
+  () => syncPaymentReminderFromStorage()
+)
+
+onMounted(() => {
+  syncPaymentReminderFromStorage()
+  if (isAthleteRole.value) {
+    try {
+      if (!localStorage.getItem(ONBOARD_LS)) {
+        showOnboarding.value = true
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+})
+
+function dismissOnboarding() {
+  showOnboarding.value = false
+  if (!import.meta.client) return
+  try {
+    localStorage.setItem(ONBOARD_LS, '1')
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Przypomnienie przed 10. dniem miesiąca — tylko zawodnik, nie „ukryte” w profilu, brak opłaty i bez przelewu stałego. */
+const showPre10PaymentBanner = computed(() => {
+  if (!isAthleteRole.value || hidePaymentReminderLocal.value) {
+    return false
+  }
+  const day = new Date().getDate()
+  if (day >= 10) {
+    return false
+  }
+  if (paymentStatus.value?.is_paid) {
+    return false
+  }
+  if (paymentStatus.value?.has_standing_order === true) {
+    return false
+  }
+  return true
 })
 </script>
 
@@ -487,6 +585,43 @@ const pageLead = computed(() => {
       </div>
     </div>
 
+    <UAlert
+      v-if="showPre10PaymentBanner && paymentStatus"
+      class="mt-6"
+      color="warning"
+      variant="subtle"
+      title="Zbliża się termin składki (10. dzień miesiąca)"
+      :description="`Nie masz jeszcze zatwierdzonej wpłaty za ${paymentStatus.month}. Możesz zgłosić przelew w sekcji składki — przypomnienie można wyłączyć w /profil (tylko ta przeglądarka).`"
+    />
+
+    <UModal
+      v-model:open="showOnboarding"
+      title="Witaj w panelu zawodnika"
+      :dismissible="true"
+      :ui="{ content: 'sm:max-w-lg' }"
+    >
+      <template #content>
+        <div class="space-y-4 p-4 sm:p-5">
+          <ol class="list-decimal space-y-3 ps-5 text-sm text-muted">
+            <li>
+              <strong class="text-highlighted">Składka</strong> — zgłoś przelew do 10. dnia miesiąca; przy przelewie stałym system tworzy wpisy automatycznie.
+            </li>
+            <li>
+              <strong class="text-highlighted">Kalendarz</strong> — sprawdzaj przypisane starty i treningi klubowe.
+            </li>
+            <li>
+              <strong class="text-highlighted">Wynik</strong> — możesz zgłosić start lub trening; kadra zatwierdza wpis w systemie.
+            </li>
+          </ol>
+          <div class="flex justify-end border-t border-default/60 pt-3">
+            <UButton @click="dismissOnboarding">
+              Rozumiem
+            </UButton>
+          </div>
+        </div>
+      </template>
+    </UModal>
+
     <div
       v-if="auth.canAccessAthletePortal && athlete"
       class="mt-8 grid grid-cols-1 items-stretch gap-3 sm:grid-cols-3 lg:gap-4"
@@ -503,7 +638,7 @@ const pageLead = computed(() => {
         label="Frekwencja"
         :value="attendanceSummary ? `${attendanceSummary.attendance_percent}%` : '—'"
         icon="i-lucide-user-check"
-        :tone="attendanceSummary ? 'primary' : 'neutral'"
+        :tone="attendanceSummary ? 'primary' : 'info'"
         :hint="attendanceSummary ? `${attendanceSummary.present_count} obecności · ${attendanceSummary.absent_count} nieob.` : null"
         to="/attendance"
       />
@@ -511,7 +646,7 @@ const pageLead = computed(() => {
         label="Wyniki (oczekujące)"
         :value="myPendingResultsCount"
         icon="i-lucide-clipboard-clock"
-        :tone="myPendingResultsCount ? 'warning' : 'neutral'"
+        :tone="myPendingResultsCount ? 'warning' : 'info'"
         :to="{ path: '/athlete', hash: '#ostatnie-zgloszenia' }"
       />
     </div>
@@ -532,6 +667,7 @@ const pageLead = computed(() => {
             :icon="tile!.icon"
             :to="tile!.to"
             :tone="toneFromIconBg(tile!.iconBg)"
+            :icon-wrapper-class="tile!.iconBg"
           />
         </div>
       </div>
@@ -631,11 +767,11 @@ const pageLead = computed(() => {
         <div class="flex flex-wrap items-center justify-between gap-3">
           <h2 class="text-lg font-black text-highlighted">Składka klubowa</h2>
           <UBadge
-            v-if="paymentStatus"
-            :color="paymentStatus.is_paid ? 'success' : (paymentStatus.is_overdue ? 'error' : 'warning')"
+            v-if="membershipMonthBadge"
+            :color="membershipMonthBadge.color"
             variant="subtle"
           >
-            {{ paymentStatus.is_paid ? 'Opłacona' : (paymentStatus.is_overdue ? 'Nieopłacona' : 'Niepotwierdzona') }}
+            {{ membershipMonthBadge.label }}
           </UBadge>
         </div>
 
@@ -750,7 +886,7 @@ const pageLead = computed(() => {
           </p>
         </div>
         <div class="slavia-form-panel__body">
-          <div class="grid gap-5 sm:grid-cols-2">
+          <div class="slavia-form-grid grid-cols-1 sm:max-w-md">
             <UFormField label="Typ wpisu" description="Zawody trafiają na publiczną listę">
               <select
                 v-model="resultForm.kind"
@@ -760,8 +896,12 @@ const pageLead = computed(() => {
                 <option value="training">Trening (po zalogowaniu)</option>
               </select>
             </UFormField>
+          </div>
+          <div
+            v-if="resultForm.kind === 'competition'"
+            class="slavia-form-grid grid-cols-1 sm:max-w-2xl"
+          >
             <UFormField
-              v-if="resultForm.kind === 'competition'"
               label="Miejsce zawodów"
               description="Opcjonalnie"
             >
@@ -772,6 +912,8 @@ const pageLead = computed(() => {
                 class="w-full"
               />
             </UFormField>
+          </div>
+          <div class="slavia-form-grid grid-cols-1 border-t border-default/40 pt-5 sm:grid-cols-2">
             <UFormField label="Rwanie (kg)">
               <UInputNumber
                 v-model="resultForm.snatch"
@@ -807,7 +949,7 @@ const pageLead = computed(() => {
               />
             </UFormField>
           </div>
-          <div class="grid gap-5 border-t border-default/40 pt-5 sm:grid-cols-3">
+          <div class="slavia-form-grid grid-cols-1 border-t border-default/40 pt-5 sm:grid-cols-3">
             <UFormField
               label="Przysiad (kg)"
               description="Opcjonalnie"

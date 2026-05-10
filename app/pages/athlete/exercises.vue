@@ -65,6 +65,21 @@ async function submitStrengthResult() {
     toast.add({ title: 'Podaj minimum jeden wynik', color: 'warning' })
     return
   }
+  const sq = form.squat_kg || 0
+  const be = form.bench_kg || 0
+  const de = form.deadlift_kg || 0
+  const vals = [sq, be, de].filter(x => x > 0)
+  if (vals.length >= 2) {
+    const hi = Math.max(...vals)
+    const lo = Math.min(...vals)
+    if (hi - lo >= 100) {
+      const ok = typeof window !== 'undefined'
+        && window.confirm(
+          'Różnica między bojami siłowymi wynosi co najmniej 100 kg — upewnij się, że to poprawne wartości. Wysłać mimo to?'
+        )
+      if (!ok) return
+    }
+  }
   try {
     await apiFetch('/api/results', {
       method: 'POST',

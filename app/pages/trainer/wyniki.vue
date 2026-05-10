@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Athlete, CompetitionResult } from '~/types/models'
+import { apiRoutes } from '~/config/api'
 import { getApiErrorMessage } from '~/composables/useApi'
 import { sinclairTotal } from '~/utils/sinclair'
 import { effectiveBodyweightKgForSinclair } from '~/utils/sinclairAthlete'
@@ -92,7 +93,7 @@ function suggestedBodyweightKg(athleteId: string): number | null {
   return null
 }
 
-type ResultKindOption = 'competition' | 'training'
+type ResultKindOption = 'competition' | 'training' | 'import'
 
 const modalOpen = ref(false)
 const editing = ref<CompetitionResult | null>(null)
@@ -221,7 +222,7 @@ async function submitAdd() {
       date: formAdd.date,
       kind: formAdd.kind
     }
-    if (formAdd.kind === 'competition' && formAdd.location.trim()) {
+    if ((formAdd.kind === 'competition' || formAdd.kind === 'import') && formAdd.location.trim()) {
       body.location = formAdd.location.trim()
     }
     if (formAdd.bodyweight_kg != null && formAdd.bodyweight_kg > 0) body.bodyweight_kg = formAdd.bodyweight_kg
@@ -311,7 +312,7 @@ async function saveEdit() {
         date: form.date,
         status: form.status,
         kind: form.kind,
-        location: form.kind === 'competition' ? (trimmedLocation || null) : null,
+        location: (form.kind === 'competition' || form.kind === 'import') ? (trimmedLocation || null) : null,
         bodyweight_kg: form.bodyweight_kg != null && form.bodyweight_kg > 0 ? form.bodyweight_kg : null,
         squat_kg: form.squat_kg != null && form.squat_kg > 0 ? form.squat_kg : null,
         bench_kg: form.bench_kg != null && form.bench_kg > 0 ? form.bench_kg : null,
@@ -356,6 +357,71 @@ watch([() => form.snatch, () => form.clean_and_jerk], () => {
 watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
   formAdd.total = formAdd.snatch + formAdd.clean_and_jerk
 })
+
+const copy = useSlaviaCopy()
+const pendingRows = computed(() => rows.value.filter(r => r.status === 'Pending'))
+const selectedPending = ref<string[]>([])
+
+watch(
+  pendingRows,
+  (list) => {
+    const ok = new Set(list.map(r => r.id))
+    selectedPending.value = selectedPending.value.filter(id => ok.has(id))
+  },
+  { deep: true }
+)
+
+function togglePendingSelect(id: string) {
+  const i = selectedPending.value.indexOf(id)
+  if (i >= 0) {
+    selectedPending.value.splice(i, 1)
+  } else {
+    selectedPending.value.push(id)
+  }
+}
+
+function selectAllPendingVisible() {
+  const ids = pendingRows.value.map(r => r.id)
+  const set = new Set([...selectedPending.value, ...ids])
+  selectedPending.value = [...set]
+}
+
+const bulkApproving = ref(false)
+
+async function bulkApproveSelected() {
+  if (selectedPending.value.length === 0) {
+    return
+  }
+  bulkApproving.value = true
+  try {
+    const res = await apiFetch<{ approved: number, skipped: number }>(apiRoutes.results.batchApprove, {
+      method: 'POST',
+      body: { ids: selectedPending.value }
+    })
+    toast.add({
+      title: 'Masowa akceptacja zakończona',
+      description: `Zatwierdzono: ${res.approved}, pominięto (np. już nie Pending): ${res.skipped}.`,
+      color: 'success'
+    })
+    selectedPending.value = []
+    await refresh()
+  } catch (e) {
+    toast.add({
+      title: 'Nie udało się zatwierdzić wybranych',
+      description: getApiErrorMessage(e),
+      color: 'error'
+    })
+  } finally {
+    bulkApproving.value = false
+  }
+}
+
+function badgeColorForKind(k: string | undefined) {
+  const v = k ?? 'competition'
+  if (v === 'training') return 'info'
+  if (v === 'import') return 'neutral'
+  return 'primary'
+}
 </script>
 
 <template>
@@ -443,6 +509,60 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
       </p>
     </div>
 
+    <UCard
+      v-if="pendingRows.length > 0"
+      class="mb-6 border-warning/25 bg-warning/5"
+    >
+      <div class="space-y-4 p-4 sm:p-5">
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 class="text-sm font-bold text-highlighted">
+              Oczekujące wpisy ({{ pendingRows.length }})
+            </h2>
+            <p class="text-xs text-muted">
+              Zaznacz wiele wierszy i zatwierdź jednym żądaniem (audyt po stronie API).
+            </p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <UButton
+              size="sm"
+              variant="soft"
+              @click="selectAllPendingVisible"
+            >
+              Zaznacz wszystkie oczekujące
+            </UButton>
+            <UButton
+              size="sm"
+              color="primary"
+              :loading="bulkApproving"
+              :disabled="selectedPending.length === 0"
+              @click="bulkApproveSelected"
+            >
+              Zatwierdź wybrane ({{ selectedPending.length }})
+            </UButton>
+          </div>
+        </div>
+        <div class="max-h-56 space-y-2 overflow-y-auto rounded-xl border border-default/50 bg-background/80 p-2">
+          <label
+            v-for="r in pendingRows"
+            :key="`pend-${r.id}`"
+            class="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-muted/30"
+          >
+            <input
+              type="checkbox"
+              class="size-4 accent-primary"
+              :checked="selectedPending.includes(r.id)"
+              @click.prevent="togglePendingSelect(r.id)"
+            >
+            <span class="min-w-0 flex-1 text-sm">
+              <span class="font-medium text-highlighted">{{ nameById.get(r.athlete_id) || r.athlete_id }}</span>
+              <span class="text-muted"> · {{ r.date.slice(0, 10) }} · {{ r.total }} kg</span>
+            </span>
+          </label>
+        </div>
+      </div>
+    </UCard>
+
     <UCard :ui="{ body: 'p-0 overflow-x-auto' }">
       <table class="w-full min-w-[920px] text-sm">
         <thead class="border-b border-default bg-muted/30">
@@ -513,11 +633,11 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
               </td>
               <td class="px-4 py-3">
                 <UBadge
-                  :color="(r.kind ?? 'competition') === 'training' ? 'info' : 'primary'"
+                  :color="badgeColorForKind(r.kind)"
                   variant="subtle"
                   size="sm"
                 >
-                  {{ (r.kind ?? 'competition') === 'training' ? 'Trening' : 'Zawody' }}
+                  {{ copy.resultKindLabel(r.kind) }}
                 </UBadge>
               </td>
               <td class="px-4 py-3">
@@ -552,7 +672,7 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
                   :color="r.status === 'Approved' ? 'success' : (r.status === 'Rejected' ? 'error' : 'warning')"
                   variant="subtle"
                 >
-                  {{ r.status === 'Approved' ? 'Zatwierdzony' : (r.status === 'Rejected' ? 'Odrzucony' : 'Oczekuje') }}
+                  {{ copy.resultStatusLabel(r.status) }}
                 </UBadge>
               </td>
               <td class="hidden px-4 py-3 text-right text-[11px] tabular-nums text-muted lg:table-cell">
@@ -605,7 +725,7 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
               </div>
             </div>
             <div class="slavia-form-panel__body">
-              <div class="slavia-form-grid grid-cols-1 sm:grid-cols-3">
+              <div class="slavia-form-grid grid-cols-1 sm:grid-cols-2">
                 <UFormField label="Data">
                   <UInput
                     v-model="form.date"
@@ -625,10 +745,16 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
                     <option value="training">
                       Trening (tylko po zalogowaniu)
                     </option>
+                    <option value="import">
+                      Import (dane historyczne)
+                    </option>
                   </select>
                 </UFormField>
+              </div>
+
+              <div class="slavia-form-grid grid-cols-1 sm:max-w-2xl">
                 <UFormField
-                  v-if="form.kind === 'competition'"
+                  v-if="form.kind === 'competition' || form.kind === 'import'"
                   label="Miejsce zawodów"
                   description="Opcjonalnie"
                 >
@@ -852,13 +978,16 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
                     <option value="training">
                       Trening (tylko po zalogowaniu)
                     </option>
+                    <option value="import">
+                      Import (dane historyczne)
+                    </option>
                   </select>
                 </UFormField>
               </div>
 
-              <div class="slavia-form-grid grid-cols-1 sm:grid-cols-2">
+              <div class="slavia-form-grid grid-cols-1 sm:max-w-2xl">
                 <UFormField
-                  v-if="formAdd.kind === 'competition'"
+                  v-if="formAdd.kind === 'competition' || formAdd.kind === 'import'"
                   label="Miejsce zawodów"
                   description="Opcjonalnie"
                 >
@@ -882,7 +1011,9 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
                     icon="i-lucide-dumbbell"
                   />
                 </UFormField>
+              </div>
 
+              <div class="slavia-form-grid grid-cols-1 sm:max-w-md">
                 <UFormField
                   label="Waga na starcie (kg)"
                   description="Opcjonalnie — domyślnie podpowiadamy wagę z ostatniego wpisu zawodnika."

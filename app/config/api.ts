@@ -11,7 +11,10 @@ export const apiRoutes = {
   auth: {
     login: '/api/auth/login',
     me: '/api/auth/me',
-    profile: '/api/auth/profile'
+    profile: '/api/auth/profile',
+    totpSetup: '/api/auth/totp/setup',
+    totpEnable: '/api/auth/totp/enable',
+    totpDisable: '/api/auth/totp/disable'
   },
   athletes: {
     list: '/api/athletes',
@@ -137,7 +140,7 @@ export const apiRoutes = {
     publicBoardOlympic: '/api/results/public-board-olympic',
     pending: '/api/results/pending',
     all: '/api/results/all',
-    /** Domyślnie tylko zawody (publiczne). `?kind=training` lub `?kind=all` wymaga zalogowania. */
+    /** Domyślnie tylko zawody (publiczne). `?kind=training` lub `?kind=all` — sesja oraz prawo do podglądu tego profilu (kadra lub właściciel). */
     athlete: (id: string, kind?: 'competition' | 'training' | 'all') => {
       const base = `/api/results/athlete/${encodeURIComponent(id)}`
       return kind ? `${base}?kind=${encodeURIComponent(kind)}` : base
@@ -146,7 +149,8 @@ export const apiRoutes = {
       `/api/results/athlete/${encodeURIComponent(id)}/submissions`,
     one: (id: string) => `/api/results/${encodeURIComponent(id)}`,
     approve: (id: string) => `/api/results/${encodeURIComponent(id)}/approve`,
-    reject: (id: string) => `/api/results/${encodeURIComponent(id)}/reject`
+    reject: (id: string) => `/api/results/${encodeURIComponent(id)}/reject`,
+    batchApprove: '/api/results/batch-approve'
   },
   /** Zgłoszenia wyników (Pending) — osobna przestrzeń od zwykłych tras `results`. */
   submissions: {

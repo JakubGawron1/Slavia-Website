@@ -6,6 +6,7 @@ definePageMeta({ middleware: 'auth' })
 
 const { items, loading, refresh, markRead, markAllRead, deleteAll, remove } = useNotifications()
 const toast = useToast()
+const copy = useSlaviaCopy()
 const deletingAll = ref(false)
 
 async function onDeleteAll() {
@@ -60,6 +61,14 @@ onMounted(() => {
       <UCard v-for="n in items" :key="n.id" :class="n.is_read ? '' : 'ring-1 ring-primary/30'">
         <div class="flex items-start justify-between gap-3">
           <div class="min-w-0">
+            <UBadge
+              size="xs"
+              variant="subtle"
+              color="neutral"
+              class="mb-1 font-semibold uppercase tracking-wide"
+            >
+              {{ copy.notificationKindLabel(n.kind) }}
+            </UBadge>
             <p class="font-semibold text-highlighted">{{ n.title }}</p>
             <p class="mt-1 text-sm text-muted">{{ n.body }}</p>
             <p class="mt-1 text-xs text-muted">{{ relative(n.created_at) }}</p>

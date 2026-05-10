@@ -317,11 +317,11 @@ async function createApprovedPayment() {
       </div>
     </UCard>
 
-    <UCard class="mb-6 border-emerald-500/30 bg-emerald-500/5">
+    <UCard class="mb-6 border-success/30 bg-success/5">
       <div class="flex flex-wrap items-start justify-between gap-3">
         <div class="flex items-start gap-3">
-          <div class="rounded-full bg-emerald-500/15 p-2">
-            <UIcon name="i-lucide-repeat" class="size-5 text-emerald-500" />
+          <div class="rounded-full bg-success/15 p-2">
+            <UIcon name="i-lucide-repeat" class="size-5 text-success" />
           </div>
           <div>
             <h2 class="text-lg font-semibold text-highlighted">Przelewy stałe</h2>
@@ -369,7 +369,7 @@ async function createApprovedPayment() {
               <UIcon
                 v-if="standingOrderById.get(r.athlete_id)"
                 name="i-lucide-repeat"
-                class="size-3.5 shrink-0 text-emerald-500"
+                class="size-3.5 shrink-0 text-success"
               />
               {{ r.full_name }}
             </span>
@@ -390,7 +390,7 @@ async function createApprovedPayment() {
               <UIcon
                 v-if="standingOrderById.get(r.athlete_id)"
                 name="i-lucide-repeat"
-                class="size-3.5 shrink-0 text-emerald-500"
+                class="size-3.5 shrink-0 text-success"
               />
               {{ r.full_name }}
             </span>
@@ -411,7 +411,7 @@ async function createApprovedPayment() {
               <UIcon
                 v-if="standingOrderById.get(r.athlete_id)"
                 name="i-lucide-repeat"
-                class="size-3.5 shrink-0 text-emerald-500"
+                class="size-3.5 shrink-0 text-success"
               />
               {{ r.full_name }}
             </span>

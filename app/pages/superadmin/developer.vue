@@ -4,7 +4,11 @@ import { pl } from 'date-fns/locale'
 import { useBrowserNotifications } from '~/composables/useBrowserNotifications'
 import type { DevSuperadminLogLevel } from '~/composables/useDevSuperadminLogs'
 import { useDevSuperadminLogs } from '~/composables/useDevSuperadminLogs'
-import { DEV_TOOL_EXTERNAL_DOCS_GROUP, DEV_TOOL_ROUTE_SUPPLEMENT } from '~/data/devToolsCatalog'
+import {
+  DEV_TOOL_EXTERNAL_DOCS_GROUP,
+  DEV_TOOL_ROUTE_SUPPLEMENT,
+  DEV_TOOL_STACK_GROUP
+} from '~/data/devToolsCatalog'
 import type { ExperimentalFeatureId } from '~/data/experimentalFeaturesCatalog'
 import {
   slaviaAppearanceStorageKeys,
@@ -252,6 +256,13 @@ const experimentalVisibleDefs = computed(() =>
   (experimental.definitions || []).filter(d => !stableExperimentalIds.has(d.id))
 )
 
+const experimentalStableDefs = computed(() =>
+  (experimental.definitions || [])
+    .filter(d => stableExperimentalIds.has(d.id))
+    .slice()
+    .sort((a, b) => a.label.localeCompare(b.label, 'pl'))
+)
+
 async function setExperimentalFlag(id: string, value: boolean) {
   if (experimental.isForcedOffByDeploy(id)) {
     toast.add({
@@ -348,6 +359,7 @@ const autoRouteGroups = computed(() => {
 const devLinkGroupsCombined = computed(() => {
   const seen = new Set<string>()
   const groups = [
+    DEV_TOOL_STACK_GROUP,
     ...autoRouteGroups.value,
     ...DEV_TOOL_ROUTE_SUPPLEMENT,
     DEV_TOOL_EXTERNAL_DOCS_GROUP
@@ -510,12 +522,24 @@ function toggleMobilePreview() {
   })
 }
 
+function clearDevIframeSessionFlag() {
+  if (!import.meta.client) return
+  try {
+    sessionStorage.removeItem('slavia-dev__iframe_active')
+  } catch {
+    /* ignore */
+  }
+}
+
 function applyViewportPreview(mode: 'off' | 'mobile' | 'desktop', width: string) {
   if (!import.meta.client) return
   viewportMode.value = mode
   viewportWidth.value = width
   localStorage.setItem(DEV_LS_VIEWPORT_MODE, mode)
   localStorage.setItem(DEV_LS_VIEWPORT_WIDTH, String(width || '').trim())
+  if (mode === 'off') {
+    clearDevIframeSessionFlag()
+  }
   window.dispatchEvent(new Event('slavia-dev-viewport-changed'))
 }
 
@@ -1101,7 +1125,7 @@ function toastStorageApisAvailability() {
           Narzędzia superadmina
         </h1>
         <p class="mt-1 max-w-3xl text-xs leading-snug text-muted sm:text-sm">
-          Flagi, motyw, smoke API, schowek i mapa tras — zwarty układ pod szybki smoke test.
+          Konfiguracja deployu, funkcje eksperymentalne, smoke API, schowek, motyw i mapa tras — pod szybki smoke i debug.
         </p>
       </div>
       <UButton
@@ -1115,6 +1139,53 @@ function toastStorageApisAvailability() {
         Panel
       </UButton>
     </div>
+
+    <UCard class="mb-4 rounded-2xl border-primary/25 bg-linear-to-br from-primary/6 via-card to-card p-4 shadow-sm ring-1 ring-primary/15 sm:p-5">
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <div class="min-w-0">
+          <p class="text-[10px] font-bold uppercase tracking-wider text-primary">
+            Publiczna konfiguracja (NUXT_PUBLIC_*)
+          </p>
+          <p class="mt-1 text-[11px] leading-relaxed text-muted sm:text-xs">
+            Wartości trafiają do bundla klienta — <strong class="text-highlighted">bez sekretów</strong>. Zmiana wymaga ponownego deployu / restartu dev.
+          </p>
+        </div>
+        <UBadge color="neutral" variant="subtle" size="xs" class="shrink-0 font-mono">
+          X-API-Version: 1
+        </UBadge>
+      </div>
+      <ul class="mt-3 grid gap-2 text-[11px] text-muted sm:grid-cols-2">
+        <li class="rounded-lg border border-default/50 bg-muted/10 px-3 py-2">
+          <span class="font-mono text-[10px] text-highlighted">NUXT_PUBLIC_API_BASE_URL</span>
+          — adres backendu (Leapcell / Render / localhost).
+        </li>
+        <li class="rounded-lg border border-default/50 bg-muted/10 px-3 py-2">
+          <span class="font-mono text-[10px] text-highlighted">NUXT_PUBLIC_FEATURES_JSON</span>
+          — obiekt JSON z flagami boolean (np.
+          <code class="break-all font-mono text-[10px] text-primary">{"athleteCompare":false}</code>
+          ); czyta composable <span class="font-mono text-[10px] text-highlighted">usePublicFeatures()</span>.
+        </li>
+        <li class="rounded-lg border border-default/50 bg-muted/10 px-3 py-2">
+          <span class="font-mono text-[10px] text-highlighted">NUXT_PUBLIC_FEATURE_ATHLETE_COMPARE</span>
+          — <code class="font-mono">0</code> wyłącza link „Porównanie” na liście zawodników (domyślnie włączone bez zmiennej).
+        </li>
+        <li class="rounded-lg border border-default/50 bg-muted/10 px-3 py-2">
+          <span class="font-mono text-[10px] text-highlighted">NUXT_PUBLIC_EXPERIMENTAL_KILL_SWITCH</span>
+          — lista <code class="font-mono">id</code> z
+          <code class="font-mono text-[10px]">experimentalFeaturesCatalog.ts</code>, rozdzielona przecinkami; wymusza wyłączenie na produkcji.
+        </li>
+        <li class="rounded-lg border border-default/50 bg-muted/10 px-3 py-2 sm:col-span-2">
+          <span class="font-mono text-[10px] text-highlighted">NUXT_PUBLIC_SITE_URL</span>,
+          <span class="font-mono text-[10px] text-highlighted">VERCEL_URL</span>,
+          <span class="font-mono text-[10px] text-highlighted">NUXT_SOURCEMAP=1</span>
+          — canonical / og:url, adres na Vercel, opcjonalne mapy przy buildzie.
+        </li>
+      </ul>
+      <p class="mt-3 text-[10px] text-muted">
+        Backend dokłada nagłówek odpowiedzi <span class="font-mono text-highlighted">X-API-Version: 1</span>
+        — możesz go podejrzeć w zakładce Sieć / Network.
+      </p>
+    </UCard>
 
     <!-- Sekcja 1: statystyki / smoke API — zawsze nad narzędziami pomocniczymi -->
     <section aria-label="Statystyki i backend" class="grid grid-cols-1 gap-3 lg:grid-cols-12 lg:gap-4">
@@ -1264,7 +1335,7 @@ function toastStorageApisAvailability() {
             </UAlert>
           </div>
           <UButton
-            v-if="experimentalVisibleDefs.length > 0"
+            v-if="experimentalStableDefs.length > 0 || experimentalVisibleDefs.length > 0"
             size="xs"
             variant="soft"
             color="neutral"
@@ -1276,6 +1347,48 @@ function toastStorageApisAvailability() {
           </UButton>
         </div>
 
+        <div v-if="experimentalStableDefs.length > 0" class="mt-3">
+          <p class="text-[10px] font-bold uppercase tracking-wider text-muted">
+            Włączone w produkcji (stabilne)
+          </p>
+          <p class="mt-0.5 text-[11px] text-muted">
+            Domyślnie aktywne funkcje aplikacji; przełącznik zapisuje stan w przeglądarce jak pozostałe (kill switch deployu nadal ma pierwszeństwo).
+          </p>
+          <ul class="mt-2 divide-y divide-default/40 rounded-lg border border-default/50 bg-muted/5">
+            <li
+              v-for="def in experimentalStableDefs"
+              :key="`stable-${def.id}`"
+              class="flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
+            >
+              <div class="min-w-0 flex-1">
+                <p class="font-semibold text-highlighted">
+                  {{ def.label }}
+                </p>
+                <p class="mt-0.5 line-clamp-2 text-[11px] leading-snug text-muted">
+                  {{ def.description }}
+                </p>
+                <p class="mt-2 font-mono text-[10px] text-muted/80">
+                  {{ def.id }}
+                  <UBadge
+                    v-if="isExperimentalLocked(def.id)"
+                    class="ml-2 align-middle"
+                    color="warning"
+                    variant="subtle"
+                    size="xs"
+                  >
+                    deploy OFF
+                  </UBadge>
+                </p>
+              </div>
+              <USwitch
+                :disabled="isExperimentalLocked(def.id)"
+                :model-value="experimentalResolved[def.id] ?? def.defaultEnabled"
+                @update:model-value="setExperimentalFlag(def.id, $event)"
+              />
+            </li>
+          </ul>
+        </div>
+
         <div
           v-if="experimentalVisibleDefs.length === 0"
           class="mt-3 rounded-lg border border-dashed border-default/60 bg-muted/10 px-3 py-4 text-center text-xs text-muted"
@@ -1284,9 +1397,15 @@ function toastStorageApisAvailability() {
           <code class="font-mono text-[10px]">experimentalFeaturesCatalog.ts</code>
         </div>
 
+        <template v-if="experimentalVisibleDefs.length > 0">
+          <p class="mt-4 text-[10px] font-bold uppercase tracking-wider text-muted">
+            Eksperymenty (edycja)
+          </p>
+        </template>
+
         <ul
-          v-else
-          class="mt-3 divide-y divide-default/50 rounded-lg border border-default/60 bg-muted/5"
+          v-if="experimentalVisibleDefs.length > 0"
+          class="mt-2 divide-y divide-default/50 rounded-lg border border-default/60 bg-muted/5"
         >
           <li
             v-for="def in experimentalVisibleDefs"

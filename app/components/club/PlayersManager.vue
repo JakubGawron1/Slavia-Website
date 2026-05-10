@@ -644,7 +644,7 @@ watch(
                       >
                         <UIcon
                           name="i-lucide-repeat"
-                          class="size-3.5 text-emerald-500"
+                          class="size-3.5 text-success"
                         />
                       </UTooltip>
                     </div>
@@ -724,12 +724,15 @@ watch(
       v-model:open="modalOpen"
       :title="editingId ? 'Edycja zawodnika' : 'Nowy zawodnik'"
       :dismissible="true"
-      :ui="{ content: 'rounded-3xl sm:max-w-3xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl' }"
+      :ui="{
+        content: 'rounded-3xl sm:max-w-3xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl',
+        body: 'min-h-0 overflow-y-auto'
+      }"
     >
       <!-- Slot #content w Nuxt UI v4 wyłącza nagłówek z domyślnym „X” i psuje dismiss
            (overlay/ESC) — używamy #body, żeby Dialog dostał normalny header + close. -->
       <template #body>
-        <div class="slavia-form-modal">
+        <div class="slavia-form-modal slavia-form-modal--umodal-body">
           <form
             class="slavia-form-stack"
             @submit.prevent="savePlayer"
@@ -994,7 +997,7 @@ watch(
                   </div>
                   <div
                     v-if="form.create_account"
-                    class="mt-5 grid gap-5 sm:grid-cols-2"
+                    class="mt-5 slavia-form-grid grid-cols-1 sm:grid-cols-2"
                   >
                     <UFormField
                       label="Login"
@@ -1015,6 +1018,18 @@ watch(
                         v-model="form.password"
                         type="password"
                         placeholder="Domyślnie: Slavia2026"
+                        size="lg"
+                        class="w-full"
+                      />
+                    </UFormField>
+                    <UFormField
+                      v-else
+                      label="Hasło"
+                      description="Po akceptacji prośby ustawi je administrator."
+                    >
+                      <UInput
+                        disabled
+                        placeholder="—"
                         size="lg"
                         class="w-full"
                       />
@@ -1163,7 +1178,7 @@ watch(
                       <USwitch v-model="form.has_standing_order" />
                       <div class="flex flex-col">
                         <span class="flex items-center gap-1.5 text-sm font-semibold text-highlighted">
-                          <UIcon name="i-lucide-repeat" class="size-3.5 text-emerald-500" />
+                          <UIcon name="i-lucide-repeat" class="size-3.5 text-success" />
                           Przelew stały (auto-składka)
                         </span>
                         <span class="text-[11px] text-muted">
@@ -1203,9 +1218,10 @@ watch(
       title="Usunąć zawodnika?"
       description="Tej operacji nie cofniesz."
       :dismissible="true"
+      :ui="{ body: 'min-h-0 overflow-y-auto' }"
     >
       <template #body>
-        <div class="slavia-form-modal">
+        <div class="slavia-form-modal slavia-form-modal--umodal-body">
           <p
             v-if="pendingDelete"
             class="text-muted leading-relaxed"

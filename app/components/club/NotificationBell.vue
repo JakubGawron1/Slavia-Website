@@ -7,6 +7,7 @@ import { useBrowserNotifications } from '~/composables/useBrowserNotifications'
 
 const auth = useAuth()
 const toast = useToast()
+const copy = useSlaviaCopy()
 const { resolveLink } = useNotificationLinks()
 const { items, loading, refresh, remove, markRead, markAllRead, clearLocal } = useNotifications()
 const {
@@ -219,6 +220,16 @@ onBeforeUnmount(() => {
           @keydown.enter="onRowClick(n)"
         >
           <div class="min-w-0 flex-1">
+            <div class="mb-1 flex flex-wrap items-center gap-2">
+              <UBadge
+                size="xs"
+                variant="subtle"
+                color="neutral"
+                class="font-semibold uppercase tracking-wide"
+              >
+                {{ copy.notificationKindLabel(n.kind) }}
+              </UBadge>
+            </div>
             <p class="text-sm font-semibold leading-snug text-highlighted">
               {{ n.title }}
             </p>
