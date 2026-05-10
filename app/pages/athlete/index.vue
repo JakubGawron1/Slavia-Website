@@ -138,19 +138,13 @@ const resultForm = reactive<{
   clean_and_jerk: number | null
   total: number
   date: string
-  squat_kg: number | null
-  bench_kg: number | null
-  deadlift_kg: number | null
 }>({
   kind: 'competition',
   location: '',
   snatch: null,
   clean_and_jerk: null,
   total: 0,
-  date: new Date().toISOString().substring(0, 10),
-  squat_kg: null,
-  bench_kg: null,
-  deadlift_kg: null
+  date: new Date().toISOString().substring(0, 10)
 })
 
 watch(
@@ -176,14 +170,10 @@ async function submitResult() {
   const hasOly =
     (resultForm.snatch != null && resultForm.snatch > 0)
     || (resultForm.clean_and_jerk != null && resultForm.clean_and_jerk > 0)
-  const hasSbd =
-    (resultForm.squat_kg != null && resultForm.squat_kg > 0)
-    || (resultForm.bench_kg != null && resultForm.bench_kg > 0)
-    || (resultForm.deadlift_kg != null && resultForm.deadlift_kg > 0)
-  if (!hasOly && !hasSbd) {
+  if (!hasOly) {
     toast.add({
       title: 'Uzupełnij formularz',
-      description: 'Podaj rwanie i/lub podrzut albo przynajmniej jedno ćwiczenie siłowe.',
+      description: 'Podaj rwanie i/lub podrzut.',
       color: 'warning'
     })
     return
@@ -221,9 +211,6 @@ async function submitResult() {
     if (resultForm.snatch != null && resultForm.snatch >= 0) body.snatch = resultForm.snatch
     if (resultForm.clean_and_jerk != null && resultForm.clean_and_jerk >= 0) body.clean_and_jerk = resultForm.clean_and_jerk
     if (resultForm.snatch != null || resultForm.clean_and_jerk != null) body.total = resultForm.total
-    if (resultForm.squat_kg != null && resultForm.squat_kg > 0) body.squat_kg = resultForm.squat_kg
-    if (resultForm.bench_kg != null && resultForm.bench_kg > 0) body.bench_kg = resultForm.bench_kg
-    if (resultForm.deadlift_kg != null && resultForm.deadlift_kg > 0) body.deadlift_kg = resultForm.deadlift_kg
 
     await apiFetch('/api/results', {
       method: 'POST',
@@ -242,9 +229,6 @@ async function submitResult() {
     resultForm.date = new Date().toISOString().substring(0, 10)
     resultForm.kind = 'competition'
     resultForm.location = ''
-    resultForm.squat_kg = null
-    resultForm.bench_kg = null
-    resultForm.deadlift_kg = null
     await refreshResults()
   } catch (e) {
     toast.add({ title: 'Błąd zgłoszenia', description: getApiErrorMessage(e), color: 'error' })
@@ -651,7 +635,20 @@ const showPre10PaymentBanner = computed(() => {
       />
     </div>
 
-    <div v-if="auth.canAccessAthletePortal && athlete" class="mb-10 space-y-8">
+    <!-- Osiągnięcia (Badges) -->
+    <div v-if="auth.canAccessAthletePortal && athlete" class="mt-8">
+      <div class="mb-4 flex items-center justify-between gap-3">
+        <h2 class="text-xl font-bold tracking-tight text-highlighted">
+          Moje Osiągnięcia
+        </h2>
+        <UBadge variant="soft" color="primary" size="sm" class="uppercase tracking-widest">
+          Badges
+        </UBadge>
+      </div>
+      <AthleteBadges :athlete="athlete" :present-count="attendanceSummary?.present_count || 0" />
+    </div>
+
+    <div v-if="auth.canAccessAthletePortal && athlete" class="mt-10 mb-10 space-y-8">
       <div v-for="g in athleteModuleGroups" :key="g.title">
         <div class="mb-3 flex items-end justify-between gap-3">
           <h2 class="text-xl font-semibold text-highlighted">
@@ -949,44 +946,6 @@ const showPre10PaymentBanner = computed(() => {
               />
             </UFormField>
           </div>
-          <div class="slavia-form-grid grid-cols-1 border-t border-default/40 pt-5 sm:grid-cols-3">
-            <UFormField
-              label="Przysiad (kg)"
-              description="Opcjonalnie"
-            >
-              <UInputNumber
-                v-model="resultForm.squat_kg"
-                :min="0"
-                :step="0.5"
-                size="lg"
-                class="w-full"
-              />
-            </UFormField>
-            <UFormField
-              label="Wyciskanie (kg)"
-              description="Opcjonalnie"
-            >
-              <UInputNumber
-                v-model="resultForm.bench_kg"
-                :min="0"
-                :step="0.5"
-                size="lg"
-                class="w-full"
-              />
-            </UFormField>
-            <UFormField
-              label="Martwy ciąg (kg)"
-              description="Opcjonalnie"
-            >
-              <UInputNumber
-                v-model="resultForm.deadlift_kg"
-                :min="0"
-                :step="0.5"
-                size="lg"
-                class="w-full"
-              />
-            </UFormField>
-          </div>
           <div class="slavia-form-actions border-t border-default/60 pt-5">
             <UButton
               color="primary"
@@ -1035,9 +994,6 @@ const showPre10PaymentBanner = computed(() => {
                 <th class="hidden sm:table-cell px-4 py-3 text-left font-semibold text-muted">
                   Miejsce
                 </th>
-                <th class="hidden lg:table-cell px-4 py-3 text-center font-semibold text-muted">
-                  Siła (opcj.)
-                </th>
                 <th class="px-4 py-3 text-center font-semibold text-muted">
                   Status
                 </th>
@@ -1067,14 +1023,6 @@ const showPre10PaymentBanner = computed(() => {
                 <td class="hidden sm:table-cell px-4 py-3 text-muted">
                   <span v-if="r.location">{{ r.location }}</span>
                   <span v-else class="text-muted/60">—</span>
-                </td>
-                <td class="hidden lg:table-cell max-w-40 px-4 py-3 text-center text-[11px] text-muted leading-snug">
-                  <template v-if="r.squat_kg != null || r.bench_kg != null || r.deadlift_kg != null">
-                    P {{ r.squat_kg ?? '—' }} · W {{ r.bench_kg ?? '—' }} · M {{ r.deadlift_kg ?? '—' }}
-                  </template>
-                  <template v-else>
-                    —
-                  </template>
                 </td>
                 <td class="px-4 py-3 text-center">
                   <UBadge

@@ -13,6 +13,7 @@ const toast = useToast()
 
 const slugSegment = computed(() => String(route.params.slug || ''))
 const athleteId = computed(() => parseSlugId(slugSegment.value))
+const activeTab = ref('history')
 
 useSeoMeta({
   title: 'Dziennik treningów — trener',
@@ -120,9 +121,31 @@ async function removeEntry(e: TrainingLogEntry) {
       </div>
     </div>
 
-    <h2 class="mb-4 text-xl font-bold text-highlighted">
-      Historia wpisów
-    </h2>
+    <div class="mb-6 flex gap-1 rounded-xl bg-default/10 p-1">
+      <button 
+        class="flex-1 rounded-lg px-4 py-2 text-sm font-bold transition-all"
+        :class="activeTab === 'history' ? 'bg-card text-primary shadow-sm' : 'text-muted hover:text-highlighted'"
+        @click="activeTab = 'history'"
+      >
+        Historia wpisów
+      </button>
+      <button 
+        class="flex-1 rounded-lg px-4 py-2 text-sm font-bold transition-all"
+        :class="activeTab === 'comparison' ? 'bg-card text-primary shadow-sm' : 'text-muted hover:text-highlighted'"
+        @click="activeTab = 'comparison'"
+      >
+        Porównaj z planem
+      </button>
+    </div>
+
+    <div v-if="activeTab === 'comparison'">
+      <TrainerTrainingComparison :athlete-id="athleteId" />
+    </div>
+
+    <template v-else>
+      <h2 class="mb-4 text-xl font-bold text-highlighted">
+        Historia wpisów
+      </h2>
 
     <div
       v-if="loading"
@@ -207,5 +230,6 @@ async function removeEntry(e: TrainingLogEntry) {
         </div>
       </UCard>
     </div>
+    </template>
   </UContainer>
 </template>

@@ -105,10 +105,7 @@ const form = reactive({
   status: 'Approved' as 'Pending' | 'Approved' | 'Rejected',
   kind: 'competition' as ResultKindOption,
   location: '' as string,
-  bodyweight_kg: null as number | null,
-  squat_kg: null as number | null,
-  bench_kg: null as number | null,
-  deadlift_kg: null as number | null
+  bodyweight_kg: null as number | null
 })
 const saving = ref(false)
 const comments = ref<Array<{ id: string, body: string, author_user_id: string, created_at: string }>>([])
@@ -125,10 +122,7 @@ const formAdd = reactive({
   date: '',
   kind: 'competition' as ResultKindOption,
   location: '' as string,
-  bodyweight_kg: null as number | null,
-  squat_kg: null as number | null,
-  bench_kg: null as number | null,
-  deadlift_kg: null as number | null
+  bodyweight_kg: null as number | null
 })
 
 const kindFilter = ref<'all' | ResultKindOption>('all')
@@ -174,9 +168,6 @@ function openAddModal() {
   formAdd.kind = 'competition'
   formAdd.location = ''
   formAdd.bodyweight_kg = formAdd.athlete_id ? suggestedBodyweightKg(formAdd.athlete_id) : null
-  formAdd.squat_kg = null
-  formAdd.bench_kg = null
-  formAdd.deadlift_kg = null
   addModalOpen.value = true
 }
 
@@ -200,14 +191,10 @@ async function submitAdd() {
     return
   }
   const hasOlyPositive = formAdd.snatch > 0 || formAdd.clean_and_jerk > 0
-  const hasSbdPositive =
-    (formAdd.squat_kg != null && formAdd.squat_kg > 0)
-    || (formAdd.bench_kg != null && formAdd.bench_kg > 0)
-    || (formAdd.deadlift_kg != null && formAdd.deadlift_kg > 0)
-  if (!hasOlyPositive && !hasSbdPositive) {
+  if (!hasOlyPositive) {
     toast.add({
       title: 'Uzupełnij wynik',
-      description: 'Podaj dodatnie rwanie i/lub podrzut (0 dozwolone przy kontuzji/jednoboju) albo przynajmniej jedno ćwiczenie siłowe.',
+      description: 'Podaj dodatnie rwanie i/lub podrzut (0 dozwolone przy kontuzji/jednoboju).',
       color: 'warning'
     })
     return
@@ -226,9 +213,6 @@ async function submitAdd() {
       body.location = formAdd.location.trim()
     }
     if (formAdd.bodyweight_kg != null && formAdd.bodyweight_kg > 0) body.bodyweight_kg = formAdd.bodyweight_kg
-    if (formAdd.squat_kg != null && formAdd.squat_kg > 0) body.squat_kg = formAdd.squat_kg
-    if (formAdd.bench_kg != null && formAdd.bench_kg > 0) body.bench_kg = formAdd.bench_kg
-    if (formAdd.deadlift_kg != null && formAdd.deadlift_kg > 0) body.deadlift_kg = formAdd.deadlift_kg
 
     await apiFetch<CompetitionResult>('/api/results', {
       method: 'POST',
@@ -262,9 +246,6 @@ function openEdit(r: CompetitionResult) {
   form.kind = ((r.kind ?? 'competition') as ResultKindOption)
   form.location = r.location ?? ''
   form.bodyweight_kg = r.bodyweight_kg ?? null
-  form.squat_kg = r.squat_kg ?? null
-  form.bench_kg = r.bench_kg ?? null
-  form.deadlift_kg = r.deadlift_kg ?? null
   modalOpen.value = true
   void loadComments(r.id)
 }
@@ -313,10 +294,7 @@ async function saveEdit() {
         status: form.status,
         kind: form.kind,
         location: (form.kind === 'competition' || form.kind === 'import') ? (trimmedLocation || null) : null,
-        bodyweight_kg: form.bodyweight_kg != null && form.bodyweight_kg > 0 ? form.bodyweight_kg : null,
-        squat_kg: form.squat_kg != null && form.squat_kg > 0 ? form.squat_kg : null,
-        bench_kg: form.bench_kg != null && form.bench_kg > 0 ? form.bench_kg : null,
-        deadlift_kg: form.deadlift_kg != null && form.deadlift_kg > 0 ? form.deadlift_kg : null
+        bodyweight_kg: form.bodyweight_kg != null && form.bodyweight_kg > 0 ? form.bodyweight_kg : null
       }
     })
     toast.add({ title: 'Zapisano wynik', color: 'success' })
@@ -594,9 +572,6 @@ function badgeColorForKind(k: string | undefined) {
             <th class="px-4 py-3 text-left font-semibold text-muted">
               Status
             </th>
-            <th class="hidden px-4 py-3 text-right text-xs font-semibold text-muted lg:table-cell">
-              Siła
-            </th>
             <th class="px-4 py-3 text-right font-semibold text-muted">
               Akcje
             </th>
@@ -674,12 +649,6 @@ function badgeColorForKind(k: string | undefined) {
                 >
                   {{ copy.resultStatusLabel(r.status) }}
                 </UBadge>
-              </td>
-              <td class="hidden px-4 py-3 text-right text-[11px] tabular-nums text-muted lg:table-cell">
-                <span v-if="r.squat_kg != null || r.bench_kg != null || r.deadlift_kg != null">
-                  {{ r.squat_kg ?? '—' }}/{{ r.bench_kg ?? '—' }}/{{ r.deadlift_kg ?? '—' }}
-                </span>
-                <span v-else>—</span>
               </td>
               <td class="px-4 py-3 text-right">
                 <div class="flex justify-end gap-1">
@@ -836,41 +805,6 @@ function badgeColorForKind(k: string | undefined) {
 
               <p class="text-xs text-muted">
                 Suma (auto): <strong class="tabular-nums text-highlighted">{{ form.total }}</strong> kg
-              </p>
-              <div class="slavia-form-grid grid-cols-1 sm:grid-cols-3">
-                <UFormField label="Przysiad (kg)">
-                  <UInput
-                    v-model.number="form.squat_kg"
-                    type="number"
-                    step="0.5"
-                    min="0"
-                    size="lg"
-                    class="w-full tabular-nums"
-                  />
-                </UFormField>
-                <UFormField label="Wyciskanie (kg)">
-                  <UInput
-                    v-model.number="form.bench_kg"
-                    type="number"
-                    step="0.5"
-                    min="0"
-                    size="lg"
-                    class="w-full tabular-nums"
-                  />
-                </UFormField>
-                <UFormField label="Martwy (kg)">
-                  <UInput
-                    v-model.number="form.deadlift_kg"
-                    type="number"
-                    step="0.5"
-                    min="0"
-                    size="lg"
-                    class="w-full tabular-nums"
-                  />
-                </UFormField>
-              </div>
-              <p class="text-[11px] text-muted">
-                Puste lub 0 — kasuje zapis siłowy przy edycji (JSON null).
               </p>
               <div class="rounded-xl border border-default/60 p-3">
                 <p class="mb-2 text-sm font-semibold text-highlighted">Komentarze trenera</p>
@@ -1054,38 +988,6 @@ function badgeColorForKind(k: string | undefined) {
               <p class="text-xs text-muted">
                 Dwubój (auto): <strong class="tabular-nums text-highlighted">{{ formAdd.total }}</strong> kg
               </p>
-              <div class="slavia-form-grid grid-cols-1 sm:grid-cols-3">
-                <UFormField label="Przysiad (kg)">
-                  <UInput
-                    v-model.number="formAdd.squat_kg"
-                    type="number"
-                    step="0.5"
-                    min="0"
-                    size="lg"
-                    class="w-full tabular-nums"
-                  />
-                </UFormField>
-                <UFormField label="Wyciskanie (kg)">
-                  <UInput
-                    v-model.number="formAdd.bench_kg"
-                    type="number"
-                    step="0.5"
-                    min="0"
-                    size="lg"
-                    class="w-full tabular-nums"
-                  />
-                </UFormField>
-                <UFormField label="Martwy (kg)">
-                  <UInput
-                    v-model.number="formAdd.deadlift_kg"
-                    type="number"
-                    step="0.5"
-                    min="0"
-                    size="lg"
-                    class="w-full tabular-nums"
-                  />
-                </UFormField>
-              </div>
             </div>
           </div>
           <div class="slavia-form-actions border-t border-default/60 pt-4">

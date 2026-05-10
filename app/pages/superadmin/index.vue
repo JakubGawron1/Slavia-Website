@@ -48,6 +48,14 @@ const quickLinks = [
     bg: 'bg-red-500/10'
   },
   {
+    title: 'Logi systemowe',
+    description: 'Historia zmian i audyt operacji (superadmin)',
+    icon: 'i-lucide-history',
+    to: '/superadmin/audit-logs',
+    color: 'text-primary',
+    bg: 'bg-primary/10'
+  },
+  {
     title: 'Panel Admina',
     description: 'Przejdź do panelu administratora',
     icon: 'i-lucide-settings',
@@ -158,6 +166,14 @@ const quickLinks = [
     to: '/aktualnosci',
     color: 'text-orange-500',
     bg: 'bg-orange-500/10'
+  },
+  {
+    title: 'Barbell Tracker Lab',
+    description: 'Benchmark silników: MediaPipe, TF.js, OpenCV (Superadmin Experimental)',
+    icon: 'i-lucide-beaker',
+    to: '/superadmin/barbell-lab',
+    color: 'text-pink-500',
+    bg: 'bg-pink-500/10'
   }
 ]
 
@@ -170,8 +186,10 @@ const moduleGroups = computed(() => {
       title: 'System i bezpieczeństwo',
       items: [
         pick('/superadmin/administratorzy'),
+        pick('/superadmin/audit-logs'),
         pick('/superadmin/developer'),
-        pick('/superadmin/zawodnicy')
+        pick('/superadmin/zawodnicy'),
+        pick('/superadmin/barbell-lab')
       ].filter(Boolean)
     },
     {

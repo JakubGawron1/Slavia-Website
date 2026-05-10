@@ -4,9 +4,6 @@ defineOptions({
 })
 
 const error = useError()
-const config = useRuntimeConfig()
-const appReleaseLabel = computed(() => String(config.public.appVersion ?? ''))
-const currentYear = new Date().getFullYear()
 
 /** Runtime (router) ustawia `url`; typ `NuxtError` tego nie deklaruje. */
 function errorRequestUrl(e: typeof error.value): string | undefined {
@@ -177,55 +174,6 @@ function reloadPage() {
     </div>
     </div>
 
-    <UFooter
-      class="border-t border-default bg-muted/5 py-8 slavia-safe-bottom slavia-safe-x lg:py-10"
-      :ui="{ container: 'flex flex-col gap-8 md:flex-row md:items-center md:justify-between lg:gap-12' }"
-    >
-      <template #left>
-        <div class="flex flex-col gap-2 text-left">
-          <p class="text-sm font-bold text-highlighted uppercase tracking-widest">
-            CKS Slavia Ruda Śląska
-          </p>
-          <div class="flex flex-col text-xs text-muted">
-            <a
-              href="https://maps.app.goo.gl/zqGy466nizCv45c57"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="flex items-center gap-2 hover:text-highlighted transition-colors"
-            >
-              <UIcon
-                name="i-lucide-map-pin"
-                class="size-3"
-              />
-              ul. Konopnickiej 13, 41-700 Ruda Śląska
-            </a>
-            <span class="flex items-center gap-2">
-              <UIcon
-                name="i-lucide-calendar"
-                class="size-3"
-              />
-              Treningi: Pn, Śr, Pt (15:00 - 18:00)
-            </span>
-          </div>
-        </div>
-      </template>
-
-      <template #right>
-        <div class="flex w-full flex-col gap-2 text-left md:w-auto md:items-end md:text-right">
-          <p class="text-xs text-muted">
-            © {{ currentYear }} Slavia Ruda Śląska.
-          </p>
-          <p class="text-[10px] text-muted/50">
-            Realizacja: Neution Studio · Jakub Gawron · Dawid Węgrzyn
-          </p>
-          <p
-            class="text-[10px] font-mono text-muted/70"
-            aria-label="Wersja aplikacji"
-          >
-            Wersja {{ appReleaseLabel }}
-          </p>
-        </div>
-      </template>
-    </UFooter>
+    <ClubSiteFooter />
   </div>
 </template>

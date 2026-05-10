@@ -123,17 +123,6 @@ function formatBoardDate(d: string) {
   }
 }
 
-function formatKg(v: number | null | undefined) {
-  if (v == null || Number.isNaN(v)) return '\u2014'
-  return `${v}`
-}
-
-function formatPlTriple(r: { squat_kg?: number | null, bench_kg?: number | null, deadlift_kg?: number | null }) {
-  const has = r.squat_kg != null || r.bench_kg != null || r.deadlift_kg != null
-  if (!has) return '\u2014'
-  return `${formatKg(r.squat_kg)} / ${formatKg(r.bench_kg)} / ${formatKg(r.deadlift_kg)}`
-}
-
 function genderLabel(g: string | null | undefined) {
   if (g === 'male') return 'Mężczyzna'
   if (g === 'female') return 'Kobieta'
@@ -1154,7 +1143,6 @@ const approvedSinclair = computed(() => {
                           <th class="px-3 py-3 text-right sm:px-4">Rwanie</th>
                           <th class="px-3 py-3 text-right sm:px-4">Podrzut</th>
                           <th class="px-3 py-3 text-right font-semibold sm:px-4">Razem</th>
-                          <th class="hidden px-3 py-3 text-right lg:table-cell lg:px-4">Siła (kg)</th>
                         </tr>
                       </thead>
                       <tbody class="divide-y divide-default/50">
@@ -1174,9 +1162,6 @@ const approvedSinclair = computed(() => {
                           <td class="px-3 py-3 text-right tabular-nums text-muted sm:px-4">{{ r.clean_and_jerk }} kg</td>
                           <td class="px-3 py-3 text-right tabular-nums font-bold text-info sm:px-4">
                             {{ r.total }} kg
-                          </td>
-                          <td class="hidden px-3 py-3 text-right text-xs tabular-nums text-muted lg:table-cell lg:px-4">
-                            {{ formatPlTriple(r) }}
                           </td>
                         </tr>
                       </tbody>

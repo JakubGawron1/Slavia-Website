@@ -64,7 +64,17 @@ export const apiRoutes = {
     manageOne: (id: string) => `/api/contact/manage/${encodeURIComponent(id)}`
   },
   exercises: {
-    board: '/api/exercises/board'
+    board: '/api/exercises/board',
+    list: '/api/exercises',
+    one: (id: string) => `/api/exercises/${encodeURIComponent(id)}`
+  },
+  exerciseSubmissions: {
+    collection: '/api/exercise-submissions',
+    my: '/api/exercise-submissions/my',
+    pending: '/api/exercise-submissions/pending',
+    approve: (id: string) => `/api/exercise-submissions/${encodeURIComponent(id)}/approve`,
+    reject: (id: string) => `/api/exercise-submissions/${encodeURIComponent(id)}/reject`,
+    board: (exerciseId: string) => `/api/exercise-submissions/board?exercise_id=${encodeURIComponent(exerciseId)}`
   },
   attendance: {
     collection: '/api/attendance',
@@ -84,8 +94,9 @@ export const apiRoutes = {
   trainingPlans: {
     collection: '/api/training-plans',
     my: '/api/training-plans/my',
-    athlete: (athleteId: string) => `/api/training-plans/athlete/${encodeURIComponent(athleteId)}`,
+    athlete: (athlete_id: string) => `/api/training-plans/athlete/${encodeURIComponent(athlete_id)}`,
     one: (id: string) => `/api/training-plans/${encodeURIComponent(id)}`,
+    items: (id: string) => `/api/training-plans/${encodeURIComponent(id)}/items`,
     myProgress: (id: string) => `/api/training-plans/${encodeURIComponent(id)}/my-progress`
   },
   recovery: {

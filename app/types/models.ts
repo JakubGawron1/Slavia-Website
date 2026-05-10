@@ -143,6 +143,30 @@ export interface TrainingLogEntry {
   author_username?: string | null
 }
 
+export interface Exercise {
+  id: string
+  name: string
+  category?: string | null
+  description?: string | null
+  video_url?: string | null
+  created_at: string
+}
+
+export interface TrainingPlanItem {
+  id: string
+  plan_id: string
+  day_of_week: number
+  exercise_id?: string | null
+  custom_exercise_name?: string | null
+  sets?: number | null
+  reps?: number | null
+  intensity_percent?: number | null
+  weight_kg?: number | null
+  notes?: string | null
+  sort_order: number
+  exercise_name?: string | null
+}
+
 export interface TrainingPlan {
   id: string
   athlete_id: string
@@ -243,6 +267,33 @@ export interface ExerciseBoardRow {
   source_approved_results_count: number
   source_training_log_count: number
   source_last_approved_date?: string | null
+}
+
+export type ExerciseSubmissionStatus = 'Pending' | 'Approved' | 'Rejected'
+
+export interface ExerciseSubmissionDto {
+  id: string
+  athlete_id: string
+  athlete_name?: string | null
+  exercise_id: string
+  exercise_name: string
+  value: number
+  unit: string
+  performed_at: string
+  notes?: string | null
+  status: ExerciseSubmissionStatus
+  reviewed_at?: string | null
+  review_note?: string | null
+  created_at: string
+}
+
+export interface ExerciseBoardRowV2 {
+  athlete_id: string
+  athlete_name: string
+  best_value: number
+  unit: string
+  entries: number
+  last_performed_at?: string | null
 }
 
 export interface PlayerPayload {

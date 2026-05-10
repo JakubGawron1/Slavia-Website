@@ -49,7 +49,7 @@ Zbiór propozycji po przeglądzie kodu (`Slavia-frontend`, typy tras z `api.ts`,
 ## Kalendarz, obecności, integracje
 
 23. **Eksport wydarzenia do kalendarza** — ICS dla pojedynczego zawodów oraz — jeśli sensownie — dla serii jednostek treningowych.
-24. **Check-in QR / kiosk** — skrót dla trenera na jednostce: kod na telefon prowadzącego → zawodnik skanuje i zapisuje obecność (wymaga decyzji czy bez logowania, czy tylko zalogowany Athlete).
+24. **Check-in QR / kiosk** — skrót for trenera na jednostce: kod na telefon prowadzącego → zawodnik skanuje i zapisuje obecność (wymaga decyzji czy bez logowania, czy tylko zalogowany Athlete).
 
 ---
 
@@ -104,4 +104,79 @@ Zbiór propozycji po przeglądzie kodu (`Slavia-frontend`, typy tras z `api.ts`,
 
 ---
 
-*Ten plik służy do planowania; nie wiąże się automatycznie z backlogiem ani commitami. Aktualizuj po większych zmianach w produkcie (np. nowy moduł API).*
+## Sekcja 46–70
+
+46. **Porównanie A/B toru sztangi** — tryb side-by-side lub nałożenie dwóch analiz (np. rekord życiowy vs ostatnie podejście) z automatyczną synchronizacją momentu startu (przekroczenie progu $v_y$).
+47. **IndexedDB dla analiz wideo** — zapisywanie samych metryk i miniatur analiz lokalnie w przeglądarce, aby zawodnik miał dostęp do historii swoich „torów” bez przesyłania plików na serwer.
+48. **Eksport toru jako „Story/Post”** — generator grafiki/krótkiego klipu z naniesioną trajektorią i kluczowymi statystykami (V-max, wychylenie w poziomie) gotowy do udostępnienia w mediach społecznościowych.
+49. **Integracja Sinclair w formularzu wyników** — przycisk „Oblicz i wstaw” w formularzu zgłaszania wyniku; automatyczne pobranie wagi z profilu i przeliczenie punktów Sinclair na żywo.
+50. **Walidacja PB (Personal Best)** — ostrzeżenie (soft-block) przy próbie zgłoszenia wyniku nierealistycznie wyższego (np. o 30%) od obecnego rekordu życiowego zapisanego w systemie.
+51. **[ZAKOŃCZONE] Audit Log UI dla Superadmina** — dedykowany widok w panelu administracyjnym Nuxt dla `/api/system/audit-logs` — kto, co i kiedy zmienił. Wyświetla przyjazne nazwy użytkowników zamiast UUID.
+52. **Saldo i automatyczne przypomnienia** — widget z bieżącym stanem konta zawodnika w dashboardzie i automatyczne powiadomienie push/e-mail 8. dnia miesiąca dla osób z zaległościami.
+53. **Generowanie kontraktu API (OpenAPI)** — wdrożenie `utoipa` po stronie Rusta, aby automatycznie generować typy TypeScript i unikać błędów synchronizacji modeli danych między frontendem a backendem.
+54. **Idempotentne składki (Database level)** — unikalny constraint na parze `athlete_id + period` w tabeli płatności, zapobiegający duplikatom przy błędach sieciowych lub wielokrotnym uruchomieniu schedulera.
+55. **[ZAKOŃCZONE] System osiągnięć (Badges)** — wirtualne odznaki za staż, frekwencję oraz kamienie milowe Sinclaira i wyniki w bojach. Zawiera interaktywny modal z listą poziomów.
+56. **Wsparcie dla klubów partnerskich (Multi-tenancy)** — przygotowanie architektury bazy danych pod obsługę wielu oddziałów Slavia lub innych klubów w ramach jednej instancji systemu.
+57. **Personalizowane plany suplementacyjne** — prosty moduł w profilu zawodnika z zaleceniami od trenera, zintegrowany z powiadomieniami o porze przyjmowania suplementów.
+58. **Integracja z Apple Health / Google Fit** — pobieranie danych o śnie i krokach do modułu regeneracji (Idea #42), aby lepiej szacować gotowość zawodnika do treningu (RPE vs dane obiektywne).
+59. **Interaktywna tablica rekordów (Hall of Fame)** — dynamicznie aktualizowana lista rekordów klubu w podziale na kategorie wagowe, wiekowe i płeć, z filtrowaniem „Wszech czasów” vs „Bieżący rok”.
+60. **Wideo-analiza z adnotacjami dla trenera** — narzędzie pozwalające trenerowi na rysowanie po klatkach wideo (linie, kąty, trajektorie) i przesyłania takich instruktaży zwrotnych do zawodnika przez system komentarzy.
+61. **Moduł zawodów na żywo (Live Scoreboard)** — publiczny widok „na telebim” podczas lokalnych zawodów, pokazujący aktualne podejście, ciężar oraz wirtualną sygnalizację sędziowską (białe/czerwone światła).
+62. **Automatyczne wykrywanie plateau** — algorytm ostrzegający trenera, jeśli zawodnik nie poprawił wyników w głównych bojach przez określony czas, sugerując potrzebę deloadu lub zmiany objętości.
+63. **Klubowy Marketplace (Merch)** — prosty moduł do zamawiania odzieży klubowej, suplementów i akcesoriów, zintegrowany z systemem płatności i saldem zawodnika.
+64. **Biblioteka wideo techniki** — baza krótkich filmów instruktażowych dla każdego ćwiczenia (np. *Snatch Pull*, *Power Jerk*), podpięta bezpośrednio pod nazwy ćwiczeń w planach treningowych.
+65. **System rezerwacji pomostów** — grafik pozwalający uniknąć tłoku na sali treningowej; zawodnicy rezerwują konkretne sloty czasowe i stanowiska (pomosty) w kalendarzu.
+66. **Grupowe wyzwania (Community Challenges)** — grywalizacja dla całej społeczności, np. „Total Tonnage Challenge” — kto w danym miesiącu przerzuci łącznie najwięcej ton na treningach.
+67. **Szybkie ankiety po-treningowe (RPE)** — wyskakujący widżet po zakończeniu sesji: „Jak oceniasz trudność (1–10)?” oraz „Czy odczuwasz ból?”, dla lepszej kontroli obciążeń przez trenera.
+68. **Raporty dla Związku (PZPC)** — automatyczne generowanie dokumentacji, zestawień wyników i licencji w formatach wymaganych przez krajowy związek podnoszenia ciężarów.
+69. **Tryb „Competition Mode” (High Contrast)** — specjalny motyw graficzny o bardzo wysokim kontraście, zoptymalizowany pod ekrany mobilne używane w ostrym świetle na pomostach zewnętrznych.
+70. **Bot powiadomień Telegram/Discord** — opcjonalna integracja wysyłająca najważniejsze ogłoszenia klubowe i przypomnienia o startach bezpośrednio na komunikatory zawodników.
+
+---
+
+## Nowe propozycje (Sport-Tech 2.0: 71–90)
+
+71. **VBT (Velocity Based Training) Lite** — rozszerzenie analizy wideo o pomiar prędkości sztangi (m/s) w czasie rzeczywistym, pozwalające trenować na konkretnych strefach intensywności.
+72. **Inteligentny Asystent Obciążeń** — algorytm sugerujący ciężary na dany trening na podstawie RPE, jakości snu i zmęczenia z ostatnich dni (Idea #42/67).
+73. **Multi-cam Video Analysis** — synchronizacja dwóch nagrań z różnych kątów (np. przód i bok) w jednym widoku analizy dla pełnej diagnostyki techniki.
+74. **Automatyczne faktury/potwierdzenia** — generowanie PDF z potwierdzeniem opłacenia składki członkowskiej natychmiast po zatwierdzeniu przez administratora.
+75. **Integracja z wagami Smart** — automatyczny import masy ciała i % tkanki tłuszczowej (np. Withings, Garmin Connect) do profilu zawodnika.
+76. **Mapa kontuzji i fizjoterapii** — interaktywny model ciała do zgłaszania dolegliwości i przesyłania zaleceń od klubowego fizjoterapeuty.
+77. **Ranking „Progressor of the Month”** — automatyczne wyróżnianie osoby z największym przyrostem punktowym w Sinclairze w danym miesiącu.
+78. **System lojalnościowy (Slavia Points)** — zbieranie punktów za frekwencję i pomoc w klubie, wymienialnych na zniżki w Marketplace (#63).
+79. **Generator dyplomów i certyfikatów** — automatyczne tworzenie PDF za osiągnięcia, rekordy klubu lub udział w zawodach.
+80. **Archiwum „Legendy Slavii”** — wirtualne muzeum klubu: stare zdjęcia, historyczne rekordy i sylwetki zasłużonych zawodników.
+81. **Dostęp „Rodzic”** — ograniczony panel dla opiekunów niepełnoletnich zawodników (płatności, frekwencja, kalendarz).
+82. **Analiza „Barbell Path Deviation”** — procentowe wyliczenie odchylenia toru sztangi od idealnej krzywej „S-curve” dla danej próby.
+83. **Weight-cut Planner** — kalkulator bezpiecznego zbijania wagi przed zawodami (nawodnienie, dieta, progi wagowe).
+84. **Analityka „Weak Link”** — analiza statystyczna wskazująca bój pomocniczy, który najbardziej ogranicza progres w rwaniu/podrzucie.
+85. **Kiosk Mode (Tablet na sali)** — uproszczony interfejs na tablet ścienny do błyskawicznego check-in i wpisywania wyników.
+86. **Bot Rekordów (Discord/Telegram)** — automatyczne powiadomienie na klubowy kanał, gdy zawodnik pobije swój PB w systemie.
+87. **Integracja RFID/NFC** — oznaczanie obecności na treningu za pomocą zbliżeniowej karty klubowej lub breloka.
+88. **Ankiety Mindset Tracker** — krótkie kwestionariusze dotyczące poziomu stresu przedstartowego i pewności siebie.
+89. **Repozytorium badań lekarskich** — bezpieczne miejsce na dokumentację medyczną z systemem alertów o wygasających zaświadczeniach.
+90. **Moduł „Sparing Partner”** — funkcja pozwalająca na wirtualne śledzenie postępów wybranego kolegi z klubu (motywacyjna rywalizacja).
+91. **Rekonstrukcja 3D toru sztangi** — eksperymentalna funkcja wykorzystująca dwa nagrania (przód + bok) do stworzenia trójwymiarowego modelu ruchu w przestrzeni.
+92. **Sinclair Live-Rank** — tablica wyników na żywo dla zawodów wewnętrznych, która przelicza punkty i pozycję w rankingu natychmiast po zatwierdzeniu podejścia.
+93. **Radar Kontuzji (AI Predictive)** — analiza trendów (sen/regeneracja vs objętość) alarmująca trenera o wysokim ryzyku przetrenowania u danego zawodnika.
+94. **Automatyczny Video Clipping** — narzędzie wykrywające start i koniec boju w długim nagraniu z treningu i automatycznie wycinające krótki klip do analizy.
+95. **Notatki Głosowe Trenera** — możliwość nagrywania szybkich wskazówek audio zamiast pisania tekstu w dzienniku treningowym zawodnika.
+96. **Centrum Edukacji Media Hub** — wewnętrzna sekcja z autorskimi filmami klubu, wywiadami i materiałami szkoleniowymi dotyczącymi techniki i suplementacji.
+97. **System Banerów Sponsorskich** — zarządzanie logotypami sponsorów wyświetlanymi na publicznych rankingach i tablicach zawodów (wsparcie finansowania klubu).
+98. **Attendance Streaks** — system nagradzający "pasma" regularnych treningów (np. 12 treningów z rzędu bez opuszczenia jednostki).
+99. **Log Serwisowy Sprzętu** — monitorowanie zużycia i przeglądów gryfów, talerzy oraz pomostów (np. "Gryf nr 4 wymaga smarowania po 1000 seriach").
+100. **Personalizowane Przypomnienia Suplementacyjne** — powiadomienia push dla zawodników o porze przyjęcia suplementów zgodnie z planem od trenera (#57).
+101. **Lift Pose Comparison (Ghost Mode)** — nakładanie półprzezroczystego wideo "wzorcowej" techniki (lub własnego rekordu) na bieżącą analizę w celach porównawczych.
+102. **Dynamiczny Generator Rozgrzewki** — automatycznie generowany zestaw ćwiczeń aktywacyjnych na podstawie planowanego treningu i zgłoszonych bólów (#76).
+103. **System Głosowań Klubowych** — demokratyczne ankiety dla członków klubu w sprawach organizacyjnych (np. wybór nowego sprzętu czy miejsca integracji).
+104. **Athlete Resume / Media Kit** — automatycznie generowany profil publiczny dla zawodników kadry (osiągnięcia, trendy PB, Sinclair) do wysyłki dla sponsorów.
+105. **Wirtualne Zawody Międzyklubowe** — współdzielona tablica wyników z innymi klubami korzystającymi z platformy Slavia w celu zdalnej rywalizacji.
+106. **Barbell Acceleration Profile** — szczegółowy wykres przyspieszenia sztangi w poszczególnych fazach ciągu i podrzutu (identyfikacja martwych punktów).
+107. **QR Equipment Guide** — skanowanie kodu QR na maszynie lub gryfie, aby zobaczyć jego historię, wagę oraz wideo z instrukcją techniczną.
+108. **Automatyczne Podsumowanie Roku (Slavia Wrapped)** — generowana na koniec roku interaktywna statystyka dla każdego zawodnika (łączny tonaż, liczba PR-ów, frekwencja).
+109. **Multi-library Barbell Lab (Superadmin)** — [W REALIZACJI] Zaawansowany poligon do porównywania MediaPipe, TF.js i OpenCV w warunkach rzeczywistych.
+110. **Auto-Calibration OpenCV** — automatyczne skalowanie pikseli na metry poprzez wykrywanie standardowej średnicy talerza (450mm) bez udziału użytkownika.
+
+---
+
+*Ten plik służy do planowania; nie wiąże się automatycznie z backlogiem ani commitami. Aktualizuj po większych zmianach w produkcie.*

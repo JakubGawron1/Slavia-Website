@@ -17,6 +17,22 @@ type ChangelogUpdate = {
 
 const updates = [
   {
+    version: 'v3.1.0-dev',
+    date: '10 Maj 2026',
+    title: 'Nowy System Zarządzania Treningami (V4), Premium UI/UX oraz Słownik Ćwiczeń',
+    features: [
+      'Nowy Kreator Planów (Trener): Wdrożono tryb podglądu i edycji (inline), inteligentne przełączanie stanów oraz granularne zarządzanie jednostkami treningowymi.',
+      'Panel Zawodnika (Plany): Przeprojektowana karta planu na `/athlete/plany` (spójny layout „karta treningu”), status „Aktualny stan” jako szybki wybór przyciskami + auto-reguły (100% → zakończony, >0% → aktywny) oraz akcja „Cofnij” do niezapisanych zmian.',
+      'Inne ćwiczenia: zupełnie osobny system zgłoszeń i weryfikacji (nie dotyka `results` ani dwuboju) — nowe API, kolejka dla kadry (approve/reject z notatką), historia zatwierdzonych wyników oraz ranking liczony per wybrane ćwiczenie z katalogu.',
+      'Premium UX „Inne ćwiczenia”: trener ma modal weryfikacji (bez promptów), filtry kolejki + statystyki; zawodnik ma listę „Moje zgłoszenia” z notatkami, wyróżnienie własnej pozycji w rankingu i przycisk „Skocz do mnie”.',
+      'Design Premium: Odświeżono estetykę modułów treningowych — szklane karty (glassmorphism), płynne animacje rzędów oraz nowoczesne parametry (Sets, Reps, Weight) w układzie mobilnym.',
+      'Słownik Ćwiczeń: Poprawiono układ wyszukiwania i filtrów kategorii (teraz pod polem szukania) oraz zoptymalizowano modale dodawania ćwiczeń pod Nuxt UI v4.',
+      'Stabilność UI: Naprawiono błędy kompilacji `v-model` oraz reaktywności zbiorów `Set` w komponentach Vue 3, zapewniając płynne działanie interfejsu.',
+      'Integracja API: Pełna synchronizacja z backendem Rust/Axum w zakresie aktualizacji jednostek planu i śledzenia postępów zawodnika.'
+    ],
+    type: 'release'
+  },
+  {
     version: 'v3.0.0-dev',
     date: '10 Maj 2026',
     title: 'Seria 3.x (dev): kolorowe panele, modal zawodnika, kalendarz importu zewnętrznego',

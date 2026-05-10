@@ -196,6 +196,14 @@ const quickLinks = computed(() => {
       bg: 'bg-amber-500/10'
     },
     {
+      title: 'Słownik ćwiczeń',
+      description: 'Zarządzaj bazą standardowych ćwiczeń do planów',
+      icon: 'i-lucide-library',
+      to: '/trainer/cwiczenia',
+      color: 'text-indigo-500',
+      bg: 'bg-indigo-500/10'
+    },
+    {
       title: 'Ustawienia konta',
       description: 'E-mail, avatar i hasło',
       icon: 'i-lucide-user-cog',
@@ -253,6 +261,7 @@ const moduleGroups = computed(() => {
       items: [
         pick('/trainer/analiza-sztangi'),
         pick('/trainer/exercises'),
+        pick('/trainer/cwiczenia'),
         pick('/kalkulator-proporcji'),
         pick('/chat'),
         pick('/profil')
