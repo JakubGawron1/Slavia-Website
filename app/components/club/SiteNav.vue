@@ -55,7 +55,7 @@ const items = computed(() => {
     // dlatego skracamy etykietę, najdłuższa pozycja w pasku to wąskie gardło.
     { label: 'Zawodnicy', to: '/zawodnicy' },
     { label: 'Kalendarz', to: '/kalendarz' },
-    { label: 'Kontakt', to: '/kontakt' }
+    ...(auth.isLoggedIn.value ? [] : [{ label: 'Kontakt', to: '/kontakt' }])
   ]
 
   const adminLinks: ManagementLink[] = []
