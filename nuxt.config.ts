@@ -42,7 +42,9 @@ export default defineNuxtConfig({
 
   modules: [
     '@nuxt/eslint',
-    '@nuxt/ui'
+    '@nuxt/ui',
+    /** Web Analytics na Vercel — moduł: `@vercel/analytics/nuxt` (meta.name: `@vercel/analytics`). */
+    '@vercel/analytics/nuxt'
   ],
 
   devtools: { enabled: true },
