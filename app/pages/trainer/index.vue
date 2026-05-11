@@ -58,6 +58,7 @@ const attendanceFilters = reactive({
   to_date: ''
 })
 const attendanceRows = ref<AttendanceRecord[]>([])
+const verifyingAttendanceId = ref<string | null>(null)
 
 const athleteNameById = computed(() => {
   const m = new Map<string, string>()
@@ -339,6 +340,24 @@ async function rejectPayment(id: string) {
   }
 }
 
+async function verifyAttendanceRecord(recordId: string) {
+  if (verifyingAttendanceId.value) return
+  verifyingAttendanceId.value = recordId
+  try {
+    await apiFetch(apiRoutes.attendance.verifyRecord(recordId), { method: 'POST' })
+    toast.add({ title: 'Obecność zweryfikowana', color: 'success' })
+    await loadAttendanceRows()
+  } catch (e) {
+    toast.add({
+      title: 'Nie udało się zatwierdzić obecności',
+      description: getApiErrorMessage(e),
+      color: 'error'
+    })
+  } finally {
+    verifyingAttendanceId.value = null
+  }
+}
+
 async function loadAttendanceRows() {
   const q = new URLSearchParams()
   if (attendanceFilters.athlete_id !== FILTER_ALL) q.set('athlete_id', attendanceFilters.athlete_id)
@@ -495,11 +514,24 @@ onMounted(() => {
       </div>
       <div class="mt-4 space-y-2">
         <div v-for="row in attendanceRows" :key="row.id" class="rounded-xl border border-default/60 px-3 py-2">
-          <div class="flex flex-wrap items-center gap-2 text-xs">
-            <UBadge size="xs" variant="subtle">{{ athleteNameById.get(row.athlete_id) || row.athlete_id }}</UBadge>
-            <UBadge size="xs" variant="subtle" color="primary">{{ row.session_date }}</UBadge>
-            <UBadge size="xs" variant="subtle" :color="row.status === 'obecny' ? 'success' : 'error'">{{ row.status }}</UBadge>
-            <UBadge size="xs" variant="subtle" :color="row.verification_state === 'verified' ? 'success' : 'warning'">{{ row.verification_state }}</UBadge>
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex flex-wrap items-center gap-2 text-xs">
+              <UBadge size="xs" variant="subtle">{{ athleteNameById.get(row.athlete_id) || row.athlete_id }}</UBadge>
+              <UBadge size="xs" variant="subtle" color="primary">{{ row.session_date }}</UBadge>
+              <UBadge size="xs" variant="subtle" :color="row.status === 'obecny' ? 'success' : 'error'">{{ row.status }}</UBadge>
+              <UBadge size="xs" variant="subtle" :color="row.verification_state === 'verified' ? 'success' : 'warning'">{{ row.verification_state }}</UBadge>
+            </div>
+            <UButton
+              v-if="row.verification_state === 'pending'"
+              size="xs"
+              color="primary"
+              icon="i-lucide-badge-check"
+              :loading="verifyingAttendanceId === row.id"
+              :disabled="verifyingAttendanceId !== null && verifyingAttendanceId !== row.id"
+              @click="() => { void verifyAttendanceRecord(row.id) }"
+            >
+              Zatwierdź
+            </UButton>
           </div>
           <p v-if="row.note" class="mt-1 text-sm text-muted">{{ row.note }}</p>
         </div>

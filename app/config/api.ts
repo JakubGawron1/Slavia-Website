@@ -79,7 +79,9 @@ export const apiRoutes = {
   attendance: {
     collection: '/api/attendance',
     athlete: (athleteId: string) => `/api/attendance/${encodeURIComponent(athleteId)}`,
-    summary: (athleteId: string) => `/api/attendance/summary/${encodeURIComponent(athleteId)}`
+    summary: (athleteId: string) => `/api/attendance/summary/${encodeURIComponent(athleteId)}`,
+    verifyRecord: (recordId: string) =>
+      `/api/attendance/record/${encodeURIComponent(recordId)}/verify`
   },
   chat: {
     threads: '/api/chat/threads',

@@ -139,10 +139,32 @@ function postExcerpt(p: BlogPost, maxLen = 160) {
   return `${txt.slice(0, maxLen).trim()}…`
 }
 
-const podiumOrder = computed(() => {
-  // 2. miejsce po lewej, 1. na środku, 3. po prawej — klasyczny podium look.
-  const arr = champions.value
-  return [arr[1], arr[0], arr[2]].filter(Boolean) as ChampionRow[]
+interface MobileLatestRelease {
+  configured: boolean
+  tagName?: string
+  name?: string
+  htmlUrl?: string
+  apkDownloadUrl?: string | null
+  publishedAt?: string | null
+  fallbackUrl?: string
+  apiError?: boolean
+}
+
+const { data: mobileRelease } = await useFetch<MobileLatestRelease>('/api/mobile/latest-release', {
+  key: 'home-mobile-latest-release',
+  server: true,
+  default: () => ({ configured: false })
+})
+
+const mobileDownloadHref = computed(() => {
+  if (!mobileRelease.value?.configured) return ''
+  const r = mobileRelease.value
+  return r.apkDownloadUrl || r.htmlUrl || r.fallbackUrl || ''
+})
+
+const mobileDownloadLabel = computed(() => {
+  if (!mobileRelease.value?.configured) return 'Pobierz aplikację'
+  return mobileRelease.value.apkDownloadUrl ? 'Pobierz aplikację (APK)' : 'Pobierz aplikację'
 })
 
 interface TrainingGroup {
@@ -357,6 +379,20 @@ const trainingDays = [
             >
               Dołącz do nas
             </UButton>
+            <UButton
+              v-if="mobileDownloadHref"
+              :to="mobileDownloadHref"
+              external
+              target="_blank"
+              rel="noopener noreferrer"
+              size="xl"
+              color="success"
+              variant="subtle"
+              icon="i-lucide-smartphone"
+              class="min-h-12 justify-center font-bold sm:min-h-0"
+            >
+              {{ mobileDownloadLabel }}
+            </UButton>
           </div>
         </div>
 
@@ -505,14 +541,14 @@ const trainingDays = [
 
         <div class="mx-auto grid max-w-5xl gap-4 sm:grid-cols-3 sm:items-end sm:gap-6">
           <NuxtLink
-            v-for="p in podiumOrder"
+            v-for="p in champions"
             :key="`pod-${p.id}`"
             :to="athleteProfilePath(p.full_name, p.id)"
             class="group relative overflow-hidden rounded-3xl border border-default/60 bg-linear-to-b from-card to-card/80 p-5 text-center shadow-sm ring-1 ring-default/30 transition-all hover:-translate-y-1 hover:shadow-xl"
             :class="{
-              'sm:order-2 sm:scale-105 sm:border-amber-500/40 sm:ring-amber-500/30 sm:shadow-lg': p === champions[0],
-              'sm:order-1 sm:border-slate-400/30 sm:ring-slate-400/20': p === champions[1],
-              'sm:order-3 sm:border-amber-700/30 sm:ring-amber-700/20': p === champions[2]
+              'order-1 sm:order-2 sm:scale-105 sm:border-amber-500/40 sm:ring-amber-500/30 sm:shadow-lg': p === champions[0],
+              'order-2 sm:order-1 sm:border-slate-400/30 sm:ring-slate-400/20': p === champions[1],
+              'order-3 sm:order-3 sm:border-amber-700/30 sm:ring-amber-700/20': p === champions[2]
             }"
           >
             <div

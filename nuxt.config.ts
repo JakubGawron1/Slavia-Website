@@ -101,6 +101,8 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     blobReadWriteToken: process.env.BLOB_READ_WRITE_TOKEN || '',
+    /** Opcjonalny token dla wyższego limitu zapytań do GitHub API (tylko serwer). */
+    githubApiToken: process.env.GITHUB_TOKEN || process.env.GITHUB_API_TOKEN || '',
     public: {
       /**
        * Zewnętrzny backend — tylko ten URL; brak proxy Nitro, brak kodu serwera w tym repo.
@@ -140,7 +142,12 @@ export default defineNuxtConfig({
        * JSON z flagami boolean (np. `{"foo":false}`). Łączy się z `usePublicFeatures()` / `usePublicFeatureFlag()`.
        * Nie wstawiaj tu sekretów — zmienna jest publiczna (bundle klienta).
        */
-      featuresJson: process.env.NUXT_PUBLIC_FEATURES_JSON || ''
+      featuresJson: process.env.NUXT_PUBLIC_FEATURES_JSON || '',
+      /**
+       * Repozytorium aplikacji mobilnej (GitHub) — `owner/repo`.
+       * Używane do przycisku „Pobierz aplikację” i `/api/mobile/latest-release`.
+       */
+      mobileGithubRepo: process.env.NUXT_PUBLIC_MOBILE_GITHUB_REPO || ''
     }
   },
   vite: {

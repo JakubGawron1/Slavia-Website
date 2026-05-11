@@ -9,6 +9,8 @@ declare module 'nuxt/schema' {
     appVersion: string
     /** Lista rozdzielona przecinkami — identyfikatory funkcji eksperymentalnych wymuszonych jako wyłączone. */
     experimentalKillSwitch: string
+    /** Repozytorium GitHub aplikacji mobilnej (`owner/repo`) — najnowszy release / APK. */
+    mobileGithubRepo: string
   }
 }
 

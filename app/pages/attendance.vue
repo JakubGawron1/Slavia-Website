@@ -150,6 +150,7 @@ function dayAccentClass(day: Date) {
   if (!isT) return base
 
   if (tStatus !== 'scheduled') return `${base} ring-1 ring-warning/20`
+  if (rec?.verification_state === 'pending') return `${base} ring-1 ring-warning/40 bg-warning/5`
   if (rec?.status === 'obecny') return `${base} ring-1 ring-success/25 bg-success/5`
   if (rec?.status === 'nieobecny') return `${base} ring-1 ring-red-500/25 bg-red-500/5`
   return `${base} ring-1 ring-primary/15`
@@ -283,7 +284,7 @@ onMounted(() => {
         </div>
       </div>
 
-      <div class="mb-4 grid gap-2 rounded-2xl border border-default/60 bg-muted/10 p-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="mb-4 grid gap-2 rounded-2xl border border-default/60 bg-muted/10 p-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <div class="flex items-center gap-2">
           <UBadge color="success" variant="subtle" size="sm">Planowy</UBadge>
           <span class="text-xs text-muted">trening</span>
@@ -299,6 +300,10 @@ onMounted(() => {
         <div class="flex items-center gap-2">
           <UBadge color="error" variant="subtle" size="sm">Nieobecny</UBadge>
           <span class="text-xs text-muted">wpis</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <UBadge color="warning" variant="subtle" size="sm">Oczekuje</UBadge>
+          <span class="text-xs text-muted">weryfikacja przez trenera</span>
         </div>
       </div>
 
@@ -333,7 +338,7 @@ onMounted(() => {
               </UBadge>
             </div>
 
-            <div class="mt-1">
+            <div class="mt-1 flex flex-col items-start gap-1">
               <UBadge
                 v-if="recordsByDate.get(format(day, 'yyyy-MM-dd'))"
                 size="xs"
@@ -343,7 +348,15 @@ onMounted(() => {
                 {{ statusLabelPl(recordsByDate.get(format(day, 'yyyy-MM-dd'))?.status || '') }}
               </UBadge>
               <UBadge
-                v-else-if="isTrainingDay(day)"
+                v-if="recordsByDate.get(format(day, 'yyyy-MM-dd'))?.verification_state === 'pending'"
+                size="xs"
+                variant="subtle"
+                color="warning"
+              >
+                Weryfikacja
+              </UBadge>
+              <UBadge
+                v-else-if="isTrainingDay(day) && !recordsByDate.get(format(day, 'yyyy-MM-dd'))"
                 size="xs"
                 variant="subtle"
                 color="neutral"
@@ -431,6 +444,13 @@ onMounted(() => {
           <UFormField label="Data treningu">
             <UInput v-model="sessionDate" type="date" class="w-full" />
           </UFormField>
+          <UAlert
+            v-if="recordsByDate.get(sessionDate)?.verification_state === 'pending'"
+            color="warning"
+            variant="subtle"
+            title="Oczekuje na weryfikację trenera"
+            description="Po zatwierdzeniu w panelu trenera status zmieni się na zweryfikowany."
+          />
           <UFormField label="Status obecności">
             <div class="flex flex-wrap gap-2">
               <UButton
