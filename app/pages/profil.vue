@@ -14,6 +14,7 @@ const auth = useAuth()
 const apiFetch = useApi()
 const toast = useToast()
 const { preset, presets, setPreset, colorMode } = useSlaviaAppearance()
+const { mobileRelease, mobileDownloadHref, mobileDownloadLabel } = useMobileAppRelease()
 
 const form = reactive({
   avatar_url: '',
@@ -483,6 +484,62 @@ async function save() {
                     </button>
                   </div>
                 </UFormField>
+              </div>
+            </section>
+
+            <section
+              v-if="mobileDownloadHref"
+              class="rounded-2xl border border-default/50 bg-card p-6 shadow-sm ring-1 ring-default/20 sm:p-7"
+            >
+              <div class="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h2 class="text-base font-bold text-highlighted">
+                    Aplikacja mobilna
+                  </h2>
+                  <p class="mt-1 text-sm leading-relaxed text-muted">
+                    Oficjalna aplikacja CKS Slavia na Androida (APK z GitHub Releases). Na iOS otworzysz stronę wydania w przeglądarce.
+                  </p>
+                  <p
+                    v-if="mobileRelease?.tagName || mobileRelease?.name"
+                    class="mt-2 text-xs font-medium text-muted"
+                  >
+                    <span v-if="mobileRelease?.tagName" class="font-mono">{{ mobileRelease.tagName }}</span>
+                    <span v-if="mobileRelease?.tagName && mobileRelease?.name"> · </span>
+                    <span v-if="mobileRelease?.name">{{ mobileRelease.name }}</span>
+                  </p>
+                </div>
+                <UBadge variant="soft" color="success" size="xs" class="shrink-0 uppercase tracking-wide">
+                  Android
+                </UBadge>
+              </div>
+              <div class="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+                <UButton
+                  :to="mobileDownloadHref"
+                  external
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  color="success"
+                  variant="solid"
+                  size="md"
+                  icon="i-lucide-download"
+                  class="w-full justify-center font-semibold sm:w-auto"
+                >
+                  {{ mobileDownloadLabel }}
+                </UButton>
+                <UButton
+                  v-if="mobileRelease?.htmlUrl"
+                  :to="mobileRelease.htmlUrl"
+                  external
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  color="neutral"
+                  variant="outline"
+                  size="md"
+                  icon="i-lucide-github"
+                  class="w-full justify-center sm:w-auto"
+                >
+                  Zobacz wydanie na GitHubie
+                </UButton>
               </div>
             </section>
 

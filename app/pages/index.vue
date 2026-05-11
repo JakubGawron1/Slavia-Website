@@ -139,33 +139,7 @@ function postExcerpt(p: BlogPost, maxLen = 160) {
   return `${txt.slice(0, maxLen).trim()}…`
 }
 
-interface MobileLatestRelease {
-  configured: boolean
-  tagName?: string
-  name?: string
-  htmlUrl?: string
-  apkDownloadUrl?: string | null
-  publishedAt?: string | null
-  fallbackUrl?: string
-  apiError?: boolean
-}
-
-const { data: mobileRelease } = await useFetch<MobileLatestRelease>('/api/mobile/latest-release', {
-  key: 'home-mobile-latest-release',
-  server: true,
-  default: () => ({ configured: false })
-})
-
-const mobileDownloadHref = computed(() => {
-  if (!mobileRelease.value?.configured) return ''
-  const r = mobileRelease.value
-  return r.apkDownloadUrl || r.htmlUrl || r.fallbackUrl || ''
-})
-
-const mobileDownloadLabel = computed(() => {
-  if (!mobileRelease.value?.configured) return 'Pobierz aplikację'
-  return mobileRelease.value.apkDownloadUrl ? 'Pobierz aplikację (APK)' : 'Pobierz aplikację'
-})
+const { mobileDownloadHref, mobileDownloadLabel } = useMobileAppRelease()
 
 interface TrainingGroup {
   id: string
