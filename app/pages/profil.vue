@@ -541,6 +541,46 @@ async function save() {
                   Zobacz wydanie na GitHubie
                 </UButton>
               </div>
+
+              <div class="mt-6 rounded-xl border border-dashed border-default/45 bg-muted/10 p-4 ring-1 ring-default/15">
+                <h3 class="text-sm font-semibold text-highlighted">
+                  Changelog aplikacji mobilnej
+                </h3>
+                <p class="mt-1 text-xs leading-relaxed text-muted">
+                  Skrót najnowszych zmian w oficjalnej aplikacji na Androida — szczegóły techniczne i historia całego systemu (web + backend + mobilka) są też w panelu administracyjnym.
+                </p>
+                <ul class="mt-3 list-disc space-y-1.5 pl-5 text-sm text-muted">
+                  <li>
+                    <span class="text-highlighted">Biometria i dostęp:</span>
+                    opcjonalna blokada biometryczna przy starcie, skróty Quick Actions z pulpitu (Android).
+                  </li>
+                  <li>
+                    <span class="text-highlighted">Powiadomienia:</span>
+                    badge na ikonie aplikacji, przypomnienia o zbliżających się startach powiązane z kalendarzem.
+                  </li>
+                  <li>
+                    <span class="text-highlighted">Dashboard i profil:</span>
+                    seria treningów na głównym ekranie, lepsze dopasowanie layoutu; oś czasu zawodnika i aktualności klubu zsynchronizowane z witryną.
+                  </li>
+                  <li>
+                    <span class="text-highlighted">Aktualizacje:</span>
+                    sprawdzanie nowych wydań APK (GitHub Releases) bezpośrednio z aplikacji.
+                  </li>
+                  <li>
+                    <span class="text-highlighted">Stabilność:</span>
+                    porządki kodu analizatora Dart (spójne API kolorów, bezpieczne wywołania po operacjach asynchronicznych).
+                  </li>
+                </ul>
+                <p v-if="auth.isAdmin" class="mt-4 text-xs text-muted">
+                  <NuxtLink
+                    class="font-medium text-primary underline-offset-2 hover:underline"
+                    to="/admin/changelog"
+                  >
+                    Pełny changelog systemu (panel admina)
+                  </NuxtLink>
+                  <span class="text-muted"> — wszystkie wpisy wydań web + mobilka + infrastruktura.</span>
+                </p>
+              </div>
             </section>
 
             <section class="rounded-2xl border border-default/50 bg-card p-6 shadow-sm ring-1 ring-default/20 sm:p-7">

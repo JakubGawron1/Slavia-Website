@@ -179,4 +179,109 @@ Zbiór propozycji po przeglądzie kodu (`Slavia-frontend`, typy tras z `api.ts`,
 
 ---
 
+## Aplikacja mobilna (Flutter) — pomysły rozszerzeń (111–210)
+
+111. **Widget iOS / Android z najbliższym startem** — data, miasto, kategoria z `Moje starty` bez otwierania apki.
+112. **Skróty Siri / Asystent Google** — „pokaż moje treningi w Slavia”, „otwórz czat z trenerem”.
+113. **Live Activities (iOS)** — odliczanie do ważenia lub rozpoczęcia zawodów z kalendarza.
+114. **Tiles Wear OS** — skrót do dziennika treningów lub listy powiadomień na zegarku.
+115. **Pełna parzystość motywów z WWW** — te same presety i tryb jasny/ciemny co `profil` na stronie.
+116. **Deep linki uniwersalne** — `https://…/athlete/…` otwiera profil w aplikacji, jeśli zainstalowana (Android App Links / iOS Universal Links).
+117. **Udostępnianie wyniku jako grafika** — PNG z totalem i Sinclarem do Stories (jak pomysły www, ale natywny share sheet).
+118. **Tryb „trening” (Focus / DND)** — jednym przyciskiem wyciszenie powiadomień poza alarmami i czatem klubowym.
+119. **Lokalne szkice wpisów dziennika** — zapis offline przed synchronizacją przy słabej sieci na sali.
+120. **Kolejka żądań offline** — ponawianie nieudanych PATCH/POST przy odzyskaniu sieci (obecności, dziennik).
+121. **Biometryczne odblokowanie** — Face ID / odcisk po wygaśnięciu sesji zamiast ponownego hasła przy każdym powrocie.
+122. **PIN klubowy** — szybkie logowanie dla współdzielonego tabletu rodzinnego (dziecko zawodnika).
+123. **Tryb kontrastu i rozmiaru czcionki** — osobno od systemu, dla treningu w pełnym słońcu.
+124. **Wibracje i dźwięki UX** — konfigurowalne: wyłączenie haptyki przy każdym tapie.
+125. **Zdjęcie z aparatu → załącznik do czatu** — kompresja i limit rozmiaru przed wysłaniem.
+126. **Nagrywanie notatek głosowych** — plik audio do wątku z trenerem (jeśli backend/dysk pozwoli).
+127. **Podgląd PDF z zawodów** — wbudowany viewer dla regulaminów z linków w ogłoszeniach.
+128. **Mapy i nawigacja** — otwarcie miejsca zawodów w Google Maps / Apple Maps z karty startu.
+129. **Dodawanie startu do kalendarza urządzenia** — eksport ICS z ekranu szczegółów zawodów.
+130. **Powiadomienia grupowane po typie** — „Slavia: czat”, „Slavia: klub” dla mniejszego szumu.
+131. **Ciche godziny powiadomień push** — nie budzić po 22:00 oprócz wiadomości oznaczonych pilnymi.
+132. **Badge z liczbą nieprzeczytanych** — synchronizacja z API powiadomień i czatu.
+133. **Szybki filtr zawodników** — po kategorii wagowej, płci, roku — rozszerzenie listy kadry.
+134. **Porównanie dwóch zawodników (mobile)** — uproszczony widok jak `/zawodnicy/porównanie` na małym ekranie.
+135. **Eksport listy startowej do CSV** — z ekranu przydziału zawodów (trener).
+136. **Skan QR z zaproszenia** — jeśli klub generuje kody do wydarzeń lub profili.
+137. **Tryb „gość” na demonstracji** — demo bez logowania z mockowanymi danymi na targach.
+138. **Język aplikacji** — i18n: PL domyślnie, EN dla zawodników dwujęzycznych.
+139. **Duży przycisk „Zgłoś problem”** — zbiera wersję apki, model telefonu, ostatni błąd sieci (bez danych medycznych).
+140. **Log diagnostyczny (opcjonalny)** — eksport dla devów po zgodzie użytkownika.
+141. **Bezpieczne wylogowanie ze wszystkich urządzeń** — jeśli backend udostępni endpoint revokacji tokenów.
+142. **Tryb oszczędzania danych** — mniejsze obrazy awatarów, wyłączone autopodglądy wideo w czacie.
+143. **Automatyczne czyszczenie cache obrazów** — limit MB dla urządzeń z małą pamięcią.
+144. **Android split APK / App Bundle** — optymalizacja rozmiaru pobrania per ABI (już częściowo przez Flutter).
+145. **Obsługa foldables** — układ dwukolumnowy na tablecie / składanym telefonie dla listy + szczegółów.
+146. **Stylus / rysik** — adnotacje na zrzucie wykresu (eksport do PNG).
+147. **Integracja ze schowkiem** — inteligentne wklejanie wagi/czasu z SMS od federacji (heurystyka).
+148. **Powiadomienie lokalne „jutro start”** — zaplanowane na urządzeniu bez serwera, jeśli użytkownik włączy przypomnienie.
+149. **Backup ustawień motywu** — eksport/import JSON dla przeniesienia na nowy telefon.
+150. **Onboarding karuzela** — 3 ekrany: start, role, powiadomienia po pierwszej instalacji.
+151. **Tooltipi i coach marks** — jednorazowe podpowiedzi przy nowych funkcjach (feature flags).
+152. **Tryb jednej ręki** — przesunięcie FAB i dolnej nawigacji wyżej na dużych telefonach.
+153. **Gest powrotu (Android predictive back)** — poprawne stosy routingu bez gubienia stanu formularzy.
+154. **Obsługa odświeżenia tokenu** — bez wylogowania przy rotacji JWT, jeśli backend wystawi refresh.
+155. **Certificate pinning (opcjonalnie)** — dla organizacji wymagających wyższego poziomu zaufania API.
+156. **Szczegóły sesji treningowej w karcie** — rozwijana karta w dzienniku z metadanymi (czas trwania, RPE).
+157. **Szablony wiadomości w czacie** — „Jestem spóźniony”, „Potrzebuję konsultacji” jednym tapnięciem.
+158. **Status „online” w czacie** — jeśli backend wyśle presence (bez naruszania prywatności — wyłączalne).
+159. **Reakcje na wiadomości** — emoji potwierdzenia jak w Messengerze (wymaga API).
+160. **Wątki przypięte** — stały dostęp do najważniejszego kontaktu trenera.
+161. **Harmonogram powiadomień o składce** — lokalny reminder zsynchronizowany z datą z profilu WWW.
+162. **Wykresy: eksport jako SVG/PNG** — udostępnienie postępu Sinclair z ekranu profilu.
+163. **Tryb „tylko odczyt” dla kont rodzica** — osobna rola lub widok (parzysty z www gdy powstanie).
+164. **Integracja z Apple Wallet / Google Wallet** — karta członkowska z QR identyfikatorem zawodnika.
+165. **NFC tap-to-check-in** — jeśli klub wdroży tokeny przy wejściu na halę.
+166. **Podgląd planu treningowego offline** — cache ostatnio pobranego planu na tydzień.
+167. **Synchronizacja dwukierunkowa dziennika** — rozwiązywanie konfliktów przy edycji na dwóch urządzeniach.
+168. **Mini gra „codzienna seria”** — delikatna grywalizacja frekwencji (etycznie, bez karania).
+169. **Powiadomienie o nowym ogłoszeniu** — kategoria push dla ważnych ogłoszeń klubowych.
+170. **Filtrowanie powiadomień w aplikacji** — tylko nieprzeczytane, tylko typ „wynik”.
+171. **Masowe oznaczanie przeczytanych** — już częściowo; rozważyć undo przez snackbar.
+172. **Powiązanie z Health Connect / HealthKit** — zapis treningu jako aktywność ogólna (bez fałszywych kalorii).
+173. **Skrót „Zadzwoń do klubu”** — jeśli numer w konfiguracji marki / API.
+174. **Tryb jasny w nocy na sali** — przełącznik „tymczasowy” bez zmiany ustawień konta.
+175. **Animacje oszczędne** — redukcja motion zgodnie z `MediaQuery.disableAnimations`.
+176. **Testy widżetów złotych proporcji** — snapshoty golden dla regresji UI kalkulatora.
+177. **CI: `flutter analyze` + testy** — obowiązkowy krok dla gałęzi mobile.
+178. **Wersjonowanie widoczne w „O aplikacji”** — semver + numer commita zgodnie z build.gradle.
+179. **Kanał beta (Firebase App Distribution / Play Internal)** — dla kadry przed produkcją.
+180. **Symulator tabletu w dokumentacji** — zrzuty ekranu 7″ i 10″ do sklepu.
+181. **Dostępność VoiceOver / TalkBack** — opisy semantyczne dla wykresów (tekst alternatywny).
+182. **Powiększenie dynamiczne** — `textScaleFactor` bez łamania layoutu kalkulatorów.
+183. **Przypomnienie o aktualizacji** — już częściowo (`AppUpdateService`); ujednolicić copy z WWW.
+184. **Tryb „screenshot block”** — opcjonalnie ukrycie wrażliwych danych medycznych przy zrzucie ekranu.
+185. **Szyfrowanie lokalnej bazy** — jeśli kiedyś przechowywane będą dane wrażliwe offline.
+186. **Migracja SharedPreferences** — wersjonowany schemat przy zmianie kluczy motywu.
+187. **Obsługa wielu kont** — przełącznik kont (trener rodzic + zawodnik) na jednym urządzeniu.
+188. **Importer kontaktu z książki adresowej** — wklejenie telefonu trenera do notatek (tylko lokalnie).
+189. **Integracja z kalendarzem systemowym — dwukierunkowo** — oznaczanie treningów jako „ukończone” po wpisie w apce.
+190. **Limit rozmiaru załącznika** — komunikat przy przekroczeniu zanim wyśle się do API czatu.
+191. **Transkrypcja głosowa** — lokalna (on-device) dla notatek po treningu.
+192. **Tryb „podróż”** — wyłączenie automatycznego odtwarzania wideo w aktualnościach (data saver).
+193. **Powiadomienie o nieprzeczytanej wiadomości po 24h** — lokalne przypomnienie (zgoda użytkownika).
+194. **Porównanie tygodni treningowych** — prosty wykres słupkowy objętości z dziennika.
+195. **Szablon wiadomości do administratora** — zgłoszenie błędu z preformatowanym szablonem.
+196. **Obsługa Safe Area i notch** — audyt wszystkich ekranów na iPhone 14+/Dynamic Island.
+197. **Podgląd markdown w ogłoszeniach** — jeśli treść z API zawiera MD (spójnie z WWW).
+198. **Lint dla tłumaczeń** — brak twardych stringów PL w kodzie produkcyjnym przed release.
+199. **Flutter isolates dla ciężkich kalkulacji** — proporcje / Sinclair bez blokowania UI przy dużych zbiorach.
+200. **Crashlytics / Sentry** — produkcyjne zbieranie wyjątków z wersją builda.
+201. **Feature flags z backendu** — włączanie eksperymentalnych ekranów bez nowego APK.
+202. **Minimum SDK policy** — dokument: wspierane wersje Android/iOS vs funkcje (np. Live Activities).
+203. **Polityka prywatności in-app** — link do dokumentu klubu i zgody na analitykę.
+204. **Edukacja RODO** — krótki modal przy pierwszym logowaniu o celach przetwarzania.
+205. **Szczegóły sesji sieciowej** — dev menu: czas odpowiedzi API (tylko build debug).
+206. **Automatyczne logowanie po resetcie hasła** — deep link z maila do ustawienia hasła w WebView lub przeglądarce.
+207. **Obsługa split-screen Android** — resize bez crashy przy obracaniu i zmianie szerokości.
+208. **Testy integracyjne login flow** — `integration_test` na emulatorze CI.
+209. **Szablon issue GitHub** — „Mobile bug” z polami: wersja, urządzenie, krok reprodukcji.
+210. **Roadmapa publiczna** — synchronizacja wybranych numerów z tego pliku z changelogiem apki w sklepie.
+
+---
+
 *Ten plik służy do planowania; nie wiąże się automatycznie z backlogiem ani commitami. Aktualizuj po większych zmianach w produkcie.*

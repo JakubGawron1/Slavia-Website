@@ -17,6 +17,24 @@ type ChangelogUpdate = {
 
 const updates = [
   {
+    version: 'v3.1.1-dev',
+    date: '11 Maj 2026',
+    title:
+      'Aplikacja mobilna (Flutter): biometria, skróty, przypomnienia; witryna — changelog przy sekcji APK',
+    features: [
+      'Mobilka — BiometricGate: opcjonalna dodatkowa blokada biometryczna po uruchomieniu aplikacji.',
+      'Mobilka — Quick Actions (Android): skróty z pulpitu do najczęstszych akcji.',
+      'Mobilka — licznik na ikonie aplikacji (App Badge) zsynchronizowany z powiadomieniami push.',
+      'Mobilka — przypomnienia o zbliżających się startach (powiązane z kalendarzem i powiadomieniami).',
+      'Mobilka — dashboard: seria treningów na głównym widoku, stabilniejszy układ (LayoutBuilder / MainScreen).',
+      'Mobilka — profil zawodnika: oś czasu (to samo API co witryna `/athlete/timeline`), skrót w przeglądzie; otwieranie aktualności klubu przez AppBrand.',
+      'Mobilka — sprawdzanie aktualizacji APK z GitHub Releases (AppUpdateService) i spójny tekst komunikatów.',
+      'Mobilka — konserwacja: `dart analyze lib` bez zgłoszeń (kolory `withValues`, bezpieczne użycie `BuildContext` po `await`, nawiasy w pojedynczych `if`, Dropdown z `initialValue`).',
+      'Witryna — profil (`/profil`): sekcja „Aplikacja mobilna” zawiera skróconą listę zmian; administratorzy mają link do pełnego changelogu w panelu.'
+    ],
+    type: 'feature'
+  },
+  {
     version: 'v3.1.0-dev',
     date: '10 Maj 2026',
     title: 'Nowy System Zarządzania Treningami (V4), Premium UI/UX oraz Słownik Ćwiczeń',
