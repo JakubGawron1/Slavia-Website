@@ -17,6 +17,20 @@ type ChangelogUpdate = {
 
 const updates = [
   {
+    version: 'v0.8.0',
+    date: '11 Maj 2026',
+    title:
+      'Aplikacja mobilna (Flutter) 0.8.0 — plany treningowe, panel trenera, aktualizator APK',
+    features: [
+      'Wersja aplikacji: Android `versionName` z tagu Git (`describe --exact-match`, potem najnowszy `v*`), `versionCode` z liczby commitów; `pubspec` 0.8.0 jako zapas.',
+      'Zawodnik — plany treningowe: lista planów z `/api/training-plans/my`, postęp i notatka (PATCH `/my-progress`), szczegóły jednostek wg dnia tygodnia; skróty w dashboardzie i w Narzędziach.',
+      'Trener / SuperAdmin — panel planów: wybór zawodnika (`/api/athletes/admin`), nowy/edycja/usuń plan, duplikacja z jednostkami, edytor dni (słownik ćwiczeń + PUT `/items`).',
+      'Aktualizator (GitHub Releases): lepsze porównanie semver, timeouty HTTP, komunikaty przy ręcznym „Sprawdź wersję” w profilu; instalacja APK — `FLAG_ACTIVITY_NEW_TASK` w intencji Android.',
+      'UI: usunięcie deprecacji `DropdownButtonFormField.value` (status planu — chipy; wybór zawodnika/ćwiczenia — `DropdownButton` w `InputDecorator`).'
+    ],
+    type: 'release'
+  },
+  {
     version: 'v3.1.1-dev',
     date: '11 Maj 2026',
     title:
