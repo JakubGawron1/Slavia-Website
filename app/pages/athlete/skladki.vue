@@ -2,6 +2,7 @@
 import { apiRoutes } from '~/config/api'
 import { getApiErrorMessage } from '~/composables/useApi'
 import type { PaymentMonthStatusRow, PaymentStatusResponse } from '~/types/models'
+import { membershipMonthBadgeFromStatus } from '~/utils/paymentSemantics'
 
 definePageMeta({ middleware: 'auth' })
 
@@ -13,6 +14,7 @@ useSeoMeta({
 const auth = useAuth()
 const apiFetch = useApi()
 const toast = useToast()
+const terms = useSlaviaCopy()
 
 const paymentStatus = ref<PaymentStatusResponse | null>(null)
 const currentYear = new Date().getFullYear()
@@ -127,11 +129,7 @@ onMounted(() => {
 
 const membershipMonthBadge = computed(() => {
   if (!paymentStatus.value) return null
-  const ps = paymentStatus.value
-  if (ps.is_paid) return { color: 'success' as const, label: 'Opłacona' }
-  if (ps.is_overdue) return { color: 'error' as const, label: 'Nieopłacona' }
-  if (ps.has_standing_order === true) return { color: 'info' as const, label: 'Przelew stały' }
-  return { color: 'warning' as const, label: 'Niepotwierdzona' }
+  return membershipMonthBadgeFromStatus(paymentStatus.value, terms.paymentStandingOrder())
 })
 </script>
 

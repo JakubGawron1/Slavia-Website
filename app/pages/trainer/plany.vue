@@ -2,6 +2,7 @@
 import type { Athlete, TrainingPlan, TrainingPlanItem } from '~/types/models'
 import { apiRoutes } from '~/config/api'
 import { getApiErrorMessage } from '~/composables/useApi'
+import { trainerDiaryAthletePath } from '~/utils/slug'
 
 definePageMeta({ middleware: 'trainer' })
 
@@ -181,6 +182,18 @@ async function duplicatePlan(plan: TrainingPlan) {
 watch(selectedAthleteId, () => {
   void loadPlans()
 })
+
+const selectedAthleteMeta = computed(() => {
+  const id = selectedAthleteId.value
+  if (!id || id === NO_ATHLETE) return null
+  return (athletes.value || []).find(a => a.id === id) ?? null
+})
+
+const planVsDiaryHref = computed(() => {
+  const a = selectedAthleteMeta.value
+  if (!a?.id || !a.full_name) return null
+  return trainerDiaryAthletePath(a.full_name, a.id)
+})
 </script>
 
 <template>
@@ -204,6 +217,17 @@ watch(selectedAthleteId, () => {
       </div>
       
       <div v-if="selectedAthleteId !== NO_ATHLETE" class="flex gap-2">
+        <UButton
+          v-if="planVsDiaryHref"
+          :to="planVsDiaryHref"
+          icon="i-lucide-git-compare"
+          size="xl"
+          variant="soft"
+          color="primary"
+          class="rounded-2xl px-5"
+        >
+          Plan vs dziennik
+        </UButton>
         <UButton 
           icon="i-lucide-plus" 
           size="xl" 

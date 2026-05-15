@@ -111,7 +111,10 @@ export const apiRoutes = {
     backendProvider: '/api/system/backend-provider',
     auditLogs: '/api/system/audit-logs',
     metrics: '/api/system/metrics',
-    eventFeed: '/api/system/event-feed'
+    eventFeed: '/api/system/event-feed',
+    workerCronRuns: '/api/system/worker-cron-runs',
+    calendarExport: (competitionId: string) =>
+      `/api/system/calendar/export/${encodeURIComponent(competitionId)}`
   },
   upload: '/api/upload',
   notifications: {
@@ -129,6 +132,9 @@ export const apiRoutes = {
       `/api/competitions/recurring-training-cancellations/${encodeURIComponent(sessionDate)}`,
     one: (id: string) => `/api/competitions/${encodeURIComponent(id)}`,
     participants: (id: string) => `/api/competitions/${encodeURIComponent(id)}/participants`
+  },
+  challenges: {
+    monthlyTrainingSessions: '/api/challenges/monthly-training-sessions'
   },
   payments: {
     my: '/api/payments/my',

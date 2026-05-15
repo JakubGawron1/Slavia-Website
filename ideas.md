@@ -74,7 +74,7 @@ Zbiór propozycji po przeglądzie kodu (`Slavia-frontend`, typy tras z `api.ts`,
 
 32. **Indeksy pod listy** — m.in. `(athlete_id, status, …)` dla wyników i płatności miesiąc/status; potwierdzenie przez `EXPLAIN QUERY PLAN`.
 33. **Idempotencja schedulerów** — jawny constraint lub jednoznaczny „UPSERT” przy auto-składce (`standing_order`), metryki w logach („ile pominięto duplikatów”).
-34. **Kontrakt API** — OpenAPI z Axum (lub utrzymywane ręcznie) → generacja typów TypeScript w CI (`PaymentStatusResponse` itd.).
+34. ~~**Kontrakt API** — OpenAPI z Axum (lub utrzymywane ręcznie) → generacja typów TypeScript w CI (`PaymentStatusResponse` itd.).~~ *(skrypt `pnpm run openapi:types` + plik `app/types/generated/openapi.types.ts` ze `src/embed/openapi.json` backendu; przy rozłącznych repozytoriach regeneracja lokalnie / w monorepo CI.)*
 35. **E2E krytycznych ścieżek** — Playwright: logowanie, zgłoszenie składki, przegląd profilu; rozszerzenie o 2FA i batch approve gdy są już w UI.
 36. **Rate limiting** — domknięcie na kolejnych POST (zagłoszenia, upload, masa operacji kadry) dokumentowane przy endpointach.
 
@@ -89,14 +89,14 @@ Zbiór propozycji po przeglądzie kodu (`Slavia-frontend`, typy tras z `api.ts`,
 
 ## Aplikacja mobilna i spójność kanałów
 
-39. **Parzystość ze stroną www** — ten sam semantyczny model składki (`has_standing_order`, `is_paid`, komunikaty), żeby uniknąć zgłoszeń „w apce inaczej niż na web”.
+39. ~~**Parzystość ze stroną www** — ten sam semantyczny model składki (`has_standing_order`, `is_paid`, komunikaty), żeby uniknąć zgłoszeń „w apce inaczej niż na web”.~~ *(www: wspólny `app/utils/paymentSemantics.ts` + `useSlaviaCopy` na `/athlete` i `/athlete/skladki`; mobile — osobno.)*
 40. **Offline-first przy obecnościach** — kolejka zapisu przy braku sieci i synchronizacja po powrocie (jeśli mobile ma moduł obecności).
 
 ---
 
 ## Inne warto rozważyć
 
-41. **Plany treningowe vs dziennik** — automatyczny podgląd „co było zaplanowane vs co wpisano” w jednym widoku dla trenera.
+41. ~~**Plany treningowe vs dziennik** — automatyczny podgląd „co było zaplanowane vs co wpisano” w jednym widoku dla trenera.~~ *(WWW: zakładka „Porównaj z planem” w dzienniku zawodnika + szybki link „Plan vs dziennik” na `/trainer/plany`.)*
 42. **Regeneracja** — agregaty tygodniowe / alerty przy zaniżonym śnie kilka dni z rzędu (etycznie jako sugestie, bez „karać” UI).
 43. **Import zawodników** (`/superadmin/import`) — rozszerzenie o walidację duplikatów imion + raport częściowego powodzenia linia po linii.
 44. **Międzynarodowy język UI** — i18n (Nuxt `i18n`) na start EN dla publicznego www, PL pozostaje domyślne dla kadry — decyzja produktowa.
@@ -126,10 +126,10 @@ Zbiór propozycji po przeglądzie kodu (`Slavia-frontend`, typy tras z `api.ts`,
 63. **Klubowy Marketplace (Merch)** — prosty moduł do zamawiania odzieży klubowej, suplementów i akcesoriów, zintegrowany z systemem płatności i saldem zawodnika.
 64. **Biblioteka wideo techniki** — baza krótkich filmów instruktażowych dla każdego ćwiczenia (np. *Snatch Pull*, *Power Jerk*), podpięta bezpośrednio pod nazwy ćwiczeń w planach treningowych.
 65. **System rezerwacji pomostów** — grafik pozwalający uniknąć tłoku na sali treningowej; zawodnicy rezerwują konkretne sloty czasowe i stanowiska (pomosty) w kalendarzu.
-66. **Grupowe wyzwania (Community Challenges)** — grywalizacja dla całej społeczności, np. „Total Tonnage Challenge” — kto w danym miesiącu przerzuci łącznie najwięcej ton na treningach.
+66. ~~**Grupowe wyzwania (Community Challenges)** — grywalizacja dla całej społeczności, np. „Total Tonnage Challenge” — kto w danym miesiącu przerzuci łącznie najwięcej ton na treningach.~~ *(MVP www: `/klub/wyzwania` + `GET /api/challenges/monthly-training-sessions` — ranking wg **liczby wpisów dziennika** w miesiącu; tonnage po rozszerzeniu wpisów o objętość.)*
 67. **Szybkie ankiety po-treningowe (RPE)** — wyskakujący widżet po zakończeniu sesji: „Jak oceniasz trudność (1–10)?” oraz „Czy odczuwasz ból?”, dla lepszej kontroli obciążeń przez trenera.
 68. **Raporty dla Związku (PZPC)** — automatyczne generowanie dokumentacji, zestawień wyników i licencji w formatach wymaganych przez krajowy związek podnoszenia ciężarów.
-69. **Tryb „Competition Mode” (High Contrast)** — specjalny motyw graficzny o bardzo wysokim kontraście, zoptymalizowany pod ekrany mobilne używane w ostrym świetle na pomostach zewnętrznych.
+69. ~~**Tryb „Competition Mode” (High Contrast)** — specjalny motyw graficzny o bardzo wysokim kontraście, zoptymalizowany pod ekrany mobilne używane w ostrym świetle na pomostach zewnętrznych.~~ *(mobile: przełącznik w profilu — lokalny preset wysokiego kontrastu na ciemnym tle.)*
 70. **Bot powiadomień Telegram/Discord** — opcjonalna integracja wysyłająca najważniejsze ogłoszenia klubowe i przypomnienia o startach bezpośrednio na komunikatory zawodników.
 
 ---
@@ -169,7 +169,7 @@ Zbiór propozycji po przeglądzie kodu (`Slavia-frontend`, typy tras z `api.ts`,
 101. **Lift Pose Comparison (Ghost Mode)** — nakładanie półprzezroczystego wideo "wzorcowej" techniki (lub własnego rekordu) na bieżącą analizę w celach porównawczych.
 102. **Dynamiczny Generator Rozgrzewki** — automatycznie generowany zestaw ćwiczeń aktywacyjnych na podstawie planowanego treningu i zgłoszonych bólów (#76).
 103. ~~**System Głosowań Klubowych** — demokratyczne ankiety dla członków klubu w sprawach organizacyjnych (np. wybór nowego sprzętu czy miejsca integracji).~~ *(wdrożone: API `/api/club-votes`, widget na panelu zawodnika, podsumowanie na dashboardach kadry.)*
-104. **Athlete Resume / Media Kit** — automatycznie generowany profil publiczny dla zawodników kadry (osiągnięcia, trendy PB, Sinclair) do wysyłki dla sponsorów.
+104. ~~**Athlete Resume / Media Kit** — automatycznie generowany profil publiczny dla zawodników kadry (osiągnięcia, trendy PB, Sinclair) do wysyłki dla sponsorów.~~ *(WWW: profil `/athlete/...` — przyciski „Link (media / sponsor)” kopiują `?share=1`, w tym widoku także „Drukuj”; KPI z zawodów już publiczne.)*
 105. **Wirtualne Zawody Międzyklubowe** — współdzielona tablica wyników z innymi klubami korzystającymi z platformy Slavia w celu zdalnej rywalizacji.
 106. **Barbell Acceleration Profile** — szczegółowy wykres przyspieszenia sztangi w poszczególnych fazach ciągu i podrzutu (identyfikacja martwych punktów).
 107. **QR Equipment Guide** — skanowanie kodu QR na maszynie lub gryfie, aby zobaczyć jego historię, wagę oraz wideo z instrukcją techniczną.
@@ -181,7 +181,7 @@ Zbiór propozycji po przeglądzie kodu (`Slavia-frontend`, typy tras z `api.ts`,
 
 ## Aplikacja mobilna (Flutter) — pomysły rozszerzeń (111–210)
 
-111. **Widget iOS / Android z najbliższym startem** — data, miasto, kategoria z `Moje starty` bez otwierania apki.
+111. ~~**Widget iOS / Android z najbliższym startem** — data, miasto, kategoria z `Moje starty` bez otwierania apki.~~ *(MVP: **Quick Actions** — podtytuł skrótu „Moje starty” aktualizowany o najbliższy / ostatni start po zalogowaniu; pełne widżety pulpitu — osobno natywnie.)*
 112. ~~**Skróty Siri / Asystent Google** — „pokaż moje treningi w Slavia”, „otwórz czat z trenerem”.~~ *(wdrożone częściowo: `quick_actions` — czat, dziennik, kalendarz startów; pełna integracja Siri Shortcuts — dalej.)*
 113. **Live Activities (iOS)** — odliczanie do ważenia lub rozpoczęcia zawodów z kalendarza.
 114. **Tiles Wear OS** — skrót do dziennika treningów lub listy powiadomień na zegarku.
@@ -199,7 +199,7 @@ Zbiór propozycji po przeglądzie kodu (`Slavia-frontend`, typy tras z `api.ts`,
 126. **Nagrywanie notatek głosowych** — plik audio do wątku z trenerem (jeśli backend/dysk pozwoli).
 127. **Podgląd PDF z zawodów** — wbudowany viewer dla regulaminów z linków w ogłoszeniach.
 128. **Mapy i nawigacja** — otwarcie miejsca zawodów w Google Maps / Apple Maps z karty startu.
-129. **Dodawanie startu do kalendarza urządzenia** — eksport ICS z ekranu szczegółów zawodów.
+129. ~~**Dodawanie startu do kalendarza urządzenia** — eksport ICS z ekranu szczegółów zawodów.~~ *(WWW: modal szczegółów na `/kalendarz` + istniejący eksport w `/athlete/kalendarz`; mobile: „Dodaj do kalendarza (.ics)” na liście „Moje starty” + `GET /api/system/calendar/export/{id}`.)*
 130. **Powiadomienia grupowane po typie** — „Slavia: czat”, „Slavia: klub” dla mniejszego szumu.
 131. **Ciche godziny powiadomień push** — nie budzić po 22:00 oprócz wiadomości oznaczonych pilnymi.
 132. **Badge z liczbą nieprzeczytanych** — synchronizacja z API powiadomień i czatu.
@@ -209,7 +209,7 @@ Zbiór propozycji po przeglądzie kodu (`Slavia-frontend`, typy tras z `api.ts`,
 136. **Skan QR z zaproszenia** — jeśli klub generuje kody do wydarzeń lub profili.
 137. **Tryb „gość” na demonstracji** — demo bez logowania z mockowanymi danymi na targach.
 138. **Język aplikacji** — i18n: PL domyślnie, EN dla zawodników dwujęzycznych.
-139. **Duży przycisk „Zgłoś problem”** — zbiera wersję apki, model telefonu, ostatni błąd sieci (bez danych medycznych).
+139. ~~**Duży przycisk „Zgłoś problem”** — zbiera wersję apki, model telefonu, ostatni błąd sieci (bez danych medycznych).~~ *(mobile: wielki przycisk w profilu → schowek z diagnostyką + otwarcie **szablonu GitHub** `mobile_bug.yml` — patrz #209; ostatni błąd zapisuje się m.in. przy błędzie listy startów / zapisu profilu.)*
 140. **Log diagnostyczny (opcjonalny)** — eksport dla devów po zgodzie użytkownika.
 141. ~~**Bezpieczne wylogowanie ze wszystkich urządzeń** — jeśli backend udostępni endpoint revokacji tokenów.~~ *(wdrożone: `POST /api/auth/logout-all`, `token_version` w JWT, przycisk na `/profil`; mobile wylogowuje się przy następnym żądaniu — bez osobnego przycisku w apce.)*
 142. **Tryb oszczędzania danych** — mniejsze obrazy awatarów, wyłączone autopodglądy wideo w czacie.
@@ -279,7 +279,7 @@ Zbiór propozycji po przeglądzie kodu (`Slavia-frontend`, typy tras z `api.ts`,
 206. **Automatyczne logowanie po resetcie hasła** — deep link z maila do ustawienia hasła w WebView lub przeglądarce.
 207. ~~**Obsługa split-screen Android** — resize bez crashy przy obracaniu i zmianie szerokości.~~ *(wdrożone: `resizeableActivity` + `configChanges` w `AndroidManifest`; testy manualne zalecane.)*
 208. **Testy integracyjne login flow** — `integration_test` na emulatorze CI.
-209. ~~**Szablon issue GitHub** — „Mobile bug” z polami: wersja, urządzenie, krok reprodukcji.~~ *(wdrożone: `.github/ISSUE_TEMPLATE/mobile_bug.yml`.)*
+209. ~~**Szablon issue GitHub** — „Mobile bug” z polami: wersja, urządzenie, krok reprodukcji.~~ *(wdrożone: `.github/ISSUE_TEMPLATE/mobile_bug.yml` — powiązanie z UI zgłaszania w aplikacji: #139.)*
 210. **Roadmapa publiczna** — synchronizacja wybranych numerów z tego pliku z changelogiem apki w sklepie.
 
 
@@ -2423,7 +2423,7 @@ Priorytety pod **doświadczenie roli**: zawodnik (ZAW), trener (TRE), administra
 2296. **SUP — Narzędzie porównania odpowiedzi API prod vs staging dla tego samego ID.**
 2297. **SUP — Integracja z Statuspage dla komunikatów przy incydencie.**
 2298. **SUP — Symulacja shardingu po athlete_id — eksperyment przyszłościowy.**
-2299. **SUP — Panel „koszt workerów” CPU czasu dla cronów.**
+2299. ~~**SUP — Panel „koszt workerów” CPU czasu dla cronów.**~~ *(www: `/superadmin/workers` + `GET /api/system/worker-cron-runs` — śledzenie **czasu trwania przebiegu (wall-clock)** w procesie dla schedulera składek i prunera czatu; to nie jest profil CPU — dalsze metryki opcjonalnie.)*
 2300. **SUP — Konfiguracja globalnego CAPTCHA threshold przy podejrzanym ruchu.**
 
 ---

@@ -11,6 +11,7 @@
     "start": "node .output/server/index.mjs",
     "postinstall": "nuxt prepare",
     "lint": "eslint .",
+    "openapi:types": "openapi-typescript ../Slavia-backend/src/embed/openapi.json -o app/types/generated/openapi.types.ts",
     "typecheck": "nuxt typecheck",
     "test:e2e": "playwright test",
     "smoke:backend": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/smoke-backend.ps1",
@@ -48,6 +49,7 @@
     "@types/node": "^25.6.2",
     "esbuild": "0.28.0",
     "eslint": "^10.3.0",
+    "openapi-typescript": "^7.13.0",
     "typescript": "^6.0.3",
     "vue-tsc": "^3.2.8"
   },

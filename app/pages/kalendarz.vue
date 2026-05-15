@@ -17,6 +17,7 @@ import { pl } from 'date-fns/locale'
 import { apiRoutes } from '~/config/api'
 import type { Athlete, Competition, CalendarEvent, RecurringTrainingSession } from '~/types/models'
 import { getApiErrorMessage } from '~/composables/useApi'
+import { generateIcsContent, downloadIcs } from '~/utils/ics'
 
 useSeoMeta({
   title: 'Kalendarz — Slavia Ruda Śląska',
@@ -278,6 +279,30 @@ const formState = reactive({
   status: 'scheduled'
 })
 const readOnlyEvent = ref(false)
+
+const canExportReadOnlyCompetitionIcs = computed(
+  () =>
+    readOnlyEvent.value
+    && typeof editingId.value === 'string'
+    && editingId.value.length > 0
+    && !editingId.value.startsWith('training-')
+    && bannerEvent.value?.type !== 'training'
+)
+
+function exportReadOnlyEventToIcs() {
+  if (!canExportReadOnlyCompetitionIcs.value || !editingId.value) return
+  const dateIso = formState.date?.slice(0, 10)
+  if (!dateIso) return
+  const cat = formState.category?.trim()
+  const descParts = [formState.description?.trim(), cat ? `Kategoria: ${cat}` : ''].filter(Boolean)
+  const content = generateIcsContent({
+    title: formState.title || 'Wydarzenie',
+    date: dateIso,
+    location: formState.location,
+    description: descParts.join('\n\n')
+  })
+  downloadIcs(formState.title || 'wydarzenie', content)
+}
 
 const categories = [
   { value: 'championship', label: '🏆 Mistrzostwa', desc: 'ogólnopol. / śląskie' },
@@ -957,7 +982,17 @@ function handleDayClick(day: Date) {
             </a>
           </div>
           <div class="mt-6 flex flex-col gap-3 border-t border-default/60 pt-6 sm:flex-row sm:items-center sm:justify-between">
-            <div class="min-h-10 shrink-0">
+            <div class="flex min-h-10 shrink-0 flex-wrap items-center gap-2">
+              <UButton
+                v-if="canExportReadOnlyCompetitionIcs"
+                variant="soft"
+                color="primary"
+                size="lg"
+                icon="i-lucide-calendar-plus"
+                @click="exportReadOnlyEventToIcs"
+              >
+                Dodaj do kalendarza (.ics)
+              </UButton>
               <UButton
                 v-if="canShowCalendarDeleteButton"
                 color="error"

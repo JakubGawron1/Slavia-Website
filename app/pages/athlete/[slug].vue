@@ -12,6 +12,8 @@ import AthleteCombinedChart, { type CombinedChartPoint } from '~/components/Athl
 const route = useRoute()
 const apiFetch = useApi()
 const auth = useAuth()
+const toast = useToast()
+const requestUrlState = useRequestURL()
 
 /** Udostępniany „lekki” widok profilu — bez sekcji treningowych (np. `?share=1`). */
 const shareLite = computed(() => {
@@ -455,6 +457,26 @@ const approvedSinclair = computed(() => {
   if (Number.isNaN(calculated)) return null
   return Number(calculated.toFixed(2))
 })
+
+const resumeShareUrl = computed(() => `${requestUrlState.origin}${route.path}?share=1`)
+
+async function copyResumeShareLink() {
+  if (!import.meta.client || !resumeShareUrl.value) return
+  try {
+    await navigator.clipboard.writeText(resumeShareUrl.value)
+    toast.add({
+      title: 'Skopiowano link publiczny',
+      description: 'Widok dla mediów bez sekcji treningowych (?share=1).',
+      color: 'success'
+    })
+  } catch {
+    toast.add({ title: 'Nie udało się skopiować linku', color: 'warning' })
+  }
+}
+
+function printAthleteResume() {
+  if (import.meta.client) window.print()
+}
 </script>
 
 <template>
@@ -632,6 +654,24 @@ const approvedSinclair = computed(() => {
                 icon="i-lucide-list"
               >
                 Historia startów
+              </UButton>
+              <UButton
+                v-if="approvedResults.length > 0"
+                variant="outline"
+                color="neutral"
+                icon="i-lucide-share-2"
+                @click="copyResumeShareLink"
+              >
+                Link (media / sponsor)
+              </UButton>
+              <UButton
+                v-if="shareLite && approvedResults.length > 0"
+                variant="soft"
+                color="primary"
+                icon="i-lucide-printer"
+                @click="printAthleteResume"
+              >
+                Drukuj
               </UButton>
             </div>
           </div>

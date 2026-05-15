@@ -39,6 +39,26 @@ const appReleaseLabel = computed(() => String(config.public.appVersion ?? ''))
             Treningi: Pn, Śr, Pt (15:00 - 18:00)
           </span>
         </div>
+        <div class="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs">
+          <NuxtLink
+            to="/klub/wyzwania"
+            class="font-semibold text-primary underline-offset-2 hover:underline"
+          >
+            Wyzwania miesiąca
+          </NuxtLink>
+          <NuxtLink
+            to="/zawodnicy"
+            class="font-semibold text-primary underline-offset-2 hover:underline"
+          >
+            Zawodnicy
+          </NuxtLink>
+          <NuxtLink
+            to="/kalendarz"
+            class="font-semibold text-primary underline-offset-2 hover:underline"
+          >
+            Kalendarz
+          </NuxtLink>
+        </div>
         <div v-if="latestRelease" class="mt-2 flex items-center gap-4">
           <UButton
             :to="latestRelease.download_url"

@@ -225,11 +225,12 @@ const goToToday = () => {
 }
 
 function exportEventToIcs() {
-  if (!selectedEvent.value?._dateIso) return
-  const ev = selectedEvent.value
+  const dateIso = selectedEvent.value?._dateIso
+  if (!dateIso) return
+  const ev = selectedEvent.value!
   const content = generateIcsContent({
     title: ev.title,
-    date: ev._dateIso,
+    date: dateIso,
     location: ev.location,
     description: (ev.modalHint || '') + (ev.participantsLine ? '\n\n' + ev.participantsLine : ''),
     time: ev.time

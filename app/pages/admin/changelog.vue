@@ -43,7 +43,7 @@ const updates = [
       'Dashboardy admin/trener/superadmin: miesięczne KPI (frekwencja, składki, oczekujące wyniki) w `DashboardMonthlySummary`.',
       'Zawodnik: kalendarz z eksportem `.ics`, kalkulator Sinclair ze scenariuszami i linkiem do formularza wyniku, Slavia Wrapped.',
       'Backend: eksport kalendarza, `token_version` w JWT, API mobile releases; naprawy kompilacji i typów.',
-      'Witryna: naprawa `app.vue` (brakujące `</script>`), pełny `typecheck` i `eslint` bez błędów.'
+      'Witryna: naprawa app.vue (brakującego zamknięcia bloku script), pełny `typecheck` i `eslint` bez błędów.'
     ],
     type: 'release'
   },

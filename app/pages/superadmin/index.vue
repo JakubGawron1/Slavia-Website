@@ -99,6 +99,15 @@ const quickLinks = [
     bg: 'bg-primary/10'
   },
   {
+    title: 'Workery cron (czasy przebiegu)',
+    description:
+      'Ostatnie takty zadań w tle: auto-składki, pruner czatu — czas trwania (wall-clock)',
+    icon: 'i-lucide-timer',
+    to: '/superadmin/workers',
+    color: 'text-fuchsia-500',
+    bg: 'bg-fuchsia-500/10'
+  },
+  {
     title: 'Panel Admina',
     description: 'Przejdź do panelu administratora',
     icon: 'i-lucide-settings',

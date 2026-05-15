@@ -3,6 +3,11 @@ import { getApiErrorMessage } from '~/composables/useApi'
 import type { Athlete, CompetitionResult, MobileReleaseInfo, MyCalendarEntry, PaymentStatusResponse } from '~/types/models'
 import { apiRoutes } from '~/config/api'
 import { resolveAuthProfilePhotoSrc } from '~/utils/profilePhoto'
+import {
+  athletePaymentKpiFromStatus,
+  membershipMonthBadgeFromStatus,
+  showPre10PaymentAthleteReminder
+} from '~/utils/paymentSemantics'
 import DashboardModuleCard from '~/components/dashboard/DashboardModuleCard.vue'
 import DashboardKpiCard from '~/components/dashboard/DashboardKpiCard.vue'
 
@@ -358,28 +363,13 @@ const paymentKpi = computed(() => {
   if (!paymentStatus.value) {
     return { value: '—', tone: 'info' as const, hint: 'Brak danych (odśwież)' }
   }
-  const ps = paymentStatus.value
-  const standing = ps.has_standing_order === true
-  if (ps.is_paid) {
-    return { value: 'Opłacona', tone: 'success' as const, hint: ps.month }
-  }
-  if (ps.is_overdue) {
-    return { value: 'Nieopłacona', tone: 'error' as const, hint: ps.month }
-  }
-  if (standing) {
-    return { value: terms.paymentStandingOrder(), tone: 'info' as const, hint: `Auto-składka · ${ps.month}` }
-  }
-  return { value: 'Oczekuje', tone: 'warning' as const, hint: ps.month }
+  return athletePaymentKpiFromStatus(paymentStatus.value, terms.paymentStandingOrder())
 })
 
 /** Spójny kolor/tekst z KPI — bez mylenia zielonego kafelka z faktycznym „opłacona”. */
 const membershipMonthBadge = computed(() => {
   if (!paymentStatus.value) return null
-  const ps = paymentStatus.value
-  if (ps.is_paid) return { color: 'success' as const, label: 'Opłacona' }
-  if (ps.is_overdue) return { color: 'error' as const, label: 'Nieopłacona' }
-  if (ps.has_standing_order === true) return { color: 'info' as const, label: terms.paymentStandingOrder() }
-  return { color: 'warning' as const, label: 'Niepotwierdzona' }
+  return membershipMonthBadgeFromStatus(paymentStatus.value, terms.paymentStandingOrder())
 })
 
 const athleteDashboardTiles = [
@@ -601,23 +591,12 @@ function dismissOnboarding() {
   }
 }
 
-/** Przypomnienie przed 10. dniem miesiąca — tylko zawodnik, nie „ukryte” w profilu, brak opłaty i bez przelewu stałego. */
-const showPre10PaymentBanner = computed(() => {
-  if (!isAthleteRole.value || hidePaymentReminderLocal.value) {
-    return false
-  }
-  const day = new Date().getDate()
-  if (day >= 10) {
-    return false
-  }
-  if (paymentStatus.value?.is_paid) {
-    return false
-  }
-  if (paymentStatus.value?.has_standing_order === true) {
-    return false
-  }
-  return true
-})
+const showPre10PaymentBanner = computed(() =>
+  showPre10PaymentAthleteReminder({
+    isAthlete: isAthleteRole.value,
+    hiddenInBrowserStorage: hidePaymentReminderLocal.value,
+    paymentStatus: paymentStatus.value
+  }))
 </script>
 
 <template>
