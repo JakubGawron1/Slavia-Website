@@ -25,7 +25,7 @@ const updates = [
       'Profil — tryb „Competition mode” (wysoki kontrast na ciemnym tle) pod pomost i ostre świetło.',
       'Moje starty — pobieranie pliku `.ics` z backendu (`/api/system/calendar/export/...`), otwarcie w aplikacji kalendarza.',
       'Profil — duży przycisk „Zgłoś problem”: diagnostyka do schowka + przeglądarka z szablonem GitHub `mobile_bug.yml` (idea #209).',
-      'Skróty Quick Actions — podtytuł „Moje starty” ustawiany wg najbliższego (lub ostatniego) przypisanego zawodu.',
+      'Skróty Quick Actions — podtytuł „Moje starty” ustawiany wg najbliższego (lub ostatniego) przypisanego startu.',
       'Opcjonalnie: `LastErrorRecorder` przy wybranych błędach (lista startów / zapis konta).',
       'Tag: `v0.9.2` — zsynchronizuj z `pubspec` / build Android (versionName z tagu).'
     ],
