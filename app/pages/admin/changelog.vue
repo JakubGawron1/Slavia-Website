@@ -17,6 +17,36 @@ type ChangelogUpdate = {
 
 const updates = [
   {
+    version: 'v0.9.2',
+    date: '15 Maj 2026',
+    title:
+      'Aplikacja mobilna (Flutter) 0.9.2 — Competition mode, ICS startów, zgłoś problem, Quick Actions z najbliższym startem',
+    features: [
+      'Profil — tryb „Competition mode” (wysoki kontrast na ciemnym tle) pod pomost i ostre świetło.',
+      'Moje starty — pobieranie pliku `.ics` z backendu (`/api/system/calendar/export/...`), otwarcie w aplikacji kalendarza.',
+      'Profil — duży przycisk „Zgłoś problem”: diagnostyka do schowka + przeglądarka z szablonem GitHub `mobile_bug.yml` (idea #209).',
+      'Skróty Quick Actions — podtytuł „Moje starty” ustawiany wg najbliższego (lub ostatniego) przypisanego zawodu.',
+      'Opcjonalnie: `LastErrorRecorder` przy wybranych błędach (lista startów / zapis konta).',
+      'Tag: `v0.9.2` — zsynchronizuj z `pubspec` / build Android (versionName z tagu).'
+    ],
+    type: 'release'
+  },
+  {
+    version: 'v3.1.3-dev',
+    date: '15 Maj 2026',
+    title:
+      'Wyzwania klubu, typy z OpenAPI, media kit profilu, ICS w kalendarzu publicznym, plan vs dziennik',
+    features: [
+      'Backend: `GET /api/challenges/monthly-training-sessions` — ranking wpisów dziennika w miesiącu (MVP community challenges); wpis w `openapi.json`.',
+      'Witryna: `/klub/wyzwania` — tabela rankingu + filtr `YYYY-MM`; stopka z linkami (m.in. wyzwania, zawodnicy, kalendarz).',
+      'Dev: `pnpm run openapi:types` + `openapi-typescript` → `app/types/generated/openapi.types.ts`.',
+      'Trener: `/trainer/plany` — przycisk „Plan vs dziennik” do porównania z tygodniem planu.',
+      'Kalendarz klubu: w szczegółach tylko do odczytu — eksport `.ics` do kalendarza urządzenia.',
+      'Profil publiczny zawodnika: skrót „Link (media / sponsor)” (`?share=1`) i drukowanie w widoku share.'
+    ],
+    type: 'release'
+  },
+  {
     version: 'v0.9.0-dev',
     date: '15 Maj 2026',
     title:
