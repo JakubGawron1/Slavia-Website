@@ -39,6 +39,29 @@ const athleteName = computed(() => {
 const entries = ref<TrainingLogEntry[]>([])
 const loading = ref(true)
 
+const stats = computed(() => {
+  const list = entries.value || []
+  if (list.length === 0) return { last7d: 0, last30d: 0, lastDate: null }
+  
+  const now = new Date()
+  const d7 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+  const d30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+  
+  let c7 = 0
+  let c30 = 0
+  let last: Date | null = null
+  
+  for (const e of list) {
+    const d = new Date(e.session_date)
+    if (isNaN(d.getTime())) continue
+    if (!last || d > last) last = d
+    if (d >= d7) c7++
+    if (d >= d30) c30++
+  }
+  
+  return { last7d: c7, last30d: c30, lastDate: last }
+})
+
 async function loadEntries() {
   if (!athleteId.value) {
     return
@@ -119,6 +142,44 @@ async function removeEntry(e: TrainingLogEntry) {
           Panel trenera
         </UButton>
       </div>
+    </div>
+
+    <div class="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <UCard class="bg-primary/5 border-primary/20">
+        <div class="flex items-center gap-3">
+          <div class="rounded-lg bg-primary/10 p-2 text-primary">
+            <UIcon name="i-lucide-calendar-days" class="size-5" />
+          </div>
+          <div>
+            <p class="text-xs font-bold text-muted uppercase">Ostatnie 7 dni</p>
+            <p class="text-xl font-black text-highlighted">{{ stats.last7d }} jednostek</p>
+          </div>
+        </div>
+      </UCard>
+      <UCard class="bg-info/5 border-info/20">
+        <div class="flex items-center gap-3">
+          <div class="rounded-lg bg-info/10 p-2 text-info">
+            <UIcon name="i-lucide-calendar-range" class="size-5" />
+          </div>
+          <div>
+            <p class="text-xs font-bold text-muted uppercase">Ostatnie 30 dni</p>
+            <p class="text-xl font-black text-highlighted">{{ stats.last30d }} jednostek</p>
+          </div>
+        </div>
+      </UCard>
+      <UCard class="bg-success/5 border-success/20">
+        <div class="flex items-center gap-3">
+          <div class="rounded-lg bg-success/10 p-2 text-success">
+            <UIcon name="i-lucide-clock" class="size-5" />
+          </div>
+          <div>
+            <p class="text-xs font-bold text-muted uppercase">Ostatni wpis</p>
+            <p class="text-xl font-black text-highlighted">
+              {{ stats.lastDate ? stats.lastDate.toISOString().slice(0, 10) : 'Brak' }}
+            </p>
+          </div>
+        </div>
+      </UCard>
     </div>
 
     <div class="mb-6 flex gap-1 rounded-xl bg-default/10 p-1">

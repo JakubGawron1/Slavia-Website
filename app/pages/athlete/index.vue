@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { getApiErrorMessage } from '~/composables/useApi'
-import type { Athlete, CompetitionResult, MyCalendarEntry, PaymentStatusResponse } from '~/types/models'
+import type { Athlete, CompetitionResult, MobileReleaseInfo, MyCalendarEntry, PaymentStatusResponse } from '~/types/models'
 import { apiRoutes } from '~/config/api'
 import { resolveAuthProfilePhotoSrc } from '~/utils/profilePhoto'
 import DashboardModuleCard from '~/components/dashboard/DashboardModuleCard.vue'
@@ -137,6 +137,7 @@ const resultForm = reactive<{
   snatch: number | null
   clean_and_jerk: number | null
   total: number
+  bodyweight: number | null
   date: string
 }>({
   kind: 'competition',
@@ -144,6 +145,7 @@ const resultForm = reactive<{
   snatch: null,
   clean_and_jerk: null,
   total: 0,
+  bodyweight: null,
   date: new Date().toISOString().substring(0, 10)
 })
 
@@ -153,6 +155,98 @@ watch(
     resultForm.total = (snatch || 0) + (clean || 0)
   }
 )
+
+const sinclairValue = ref(0)
+watch(
+  () => [resultForm.total, resultForm.bodyweight, athlete.value?.bodyweight, athlete.value?.gender],
+  async () => {
+    const g = athlete.value?.gender === 'female' ? 'female' : 'male'
+    const w = resultForm.bodyweight || athlete.value?.bodyweight || 0
+    if (w <= 0 || resultForm.total <= 0) {
+      sinclairValue.value = 0
+      return
+    }
+    const { sinclairTotal } = await import('~/utils/sinclair')
+    sinclairValue.value = sinclairTotal(resultForm.total, w, g)
+  },
+  { immediate: true }
+)
+
+function useProfileWeight() {
+  if (athlete.value?.bodyweight) {
+    resultForm.bodyweight = athlete.value.bodyweight
+  }
+}
+
+/** Idea #49 — wstaw wagę z profilu i pokaż przeliczony Sinclair. */
+function applySinclairCalcAndInsert() {
+  useProfileWeight()
+  if (!resultForm.bodyweight && athlete.value?.bodyweight) {
+    resultForm.bodyweight = athlete.value.bodyweight
+  }
+  if (resultForm.total <= 0) {
+    toast.add({
+      title: 'Uzupełnij rwanie i podrzut',
+      description: 'Suma dwuboju musi być większa od zera.',
+      color: 'warning'
+    })
+    return
+  }
+  toast.add({
+    title: 'Sinclair przeliczony',
+    description: `${sinclairValue.value.toFixed(2)} pkt (podgląd — nie zapisujemy automatycznie w zgłoszeniu).`,
+    color: 'success'
+  })
+}
+
+/** Idea #22 — zapis bieżącego formularza jako scenariusz (jak kalkulator). */
+async function saveResultFormAsSinclairScenario() {
+  const g = athlete.value?.gender === 'female' ? 'female' : 'male'
+  const bw = resultForm.bodyweight || athlete.value?.bodyweight
+  const t = resultForm.total
+  if (!bw || bw <= 0 || t <= 0) {
+    toast.add({ title: 'Uzupełnij wagę i sumę', color: 'warning' })
+    return
+  }
+  const { sinclairTotal: st } = await import('~/utils/sinclair')
+  const sin = Number(st(t, bw, g).toFixed(2))
+  try {
+    const saved = localStorage.getItem('slavia_sinclair_scenarios')
+    const list = saved ? JSON.parse(saved) : []
+    list.push({
+      id: crypto.randomUUID(),
+      label: `Z formularza ${resultForm.date}`,
+      gender: g,
+      bodyweight: bw,
+      total: t,
+      sinclair: sin,
+      at: new Date().toISOString()
+    })
+    localStorage.setItem('slavia_sinclair_scenarios', JSON.stringify(list))
+    toast.add({ title: 'Scenariusz zapisany lokalnie', color: 'success' })
+  } catch {
+    toast.add({ title: 'Nie udało się zapisać scenariusza', color: 'error' })
+  }
+}
+
+function applySinclairQueryFromRoute() {
+  const q = route.query
+  const bw = Number(q.sinclair_bw)
+  const tot = Number(q.sinclair_total)
+  if (Number.isFinite(bw) && bw > 0) resultForm.bodyweight = bw
+  if (Number.isFinite(tot) && tot > 0) {
+    resultForm.snatch = Math.floor(tot / 2)
+    resultForm.clean_and_jerk = tot - (resultForm.snatch || 0)
+    resultForm.total = tot
+  }
+  if (q.sinclair_gender === 'female' || q.sinclair_gender === 'male') {
+    // gender z profilu zawodnika — tylko podpowiedź w UI
+  }
+}
+
+onMounted(() => {
+  applySinclairQueryFromRoute()
+})
 
 async function submitResult() {
   if (!athlete.value) {
@@ -211,6 +305,9 @@ async function submitResult() {
     if (resultForm.snatch != null && resultForm.snatch >= 0) body.snatch = resultForm.snatch
     if (resultForm.clean_and_jerk != null && resultForm.clean_and_jerk >= 0) body.clean_and_jerk = resultForm.clean_and_jerk
     if (resultForm.snatch != null || resultForm.clean_and_jerk != null) body.total = resultForm.total
+    if (resultForm.bodyweight != null && resultForm.bodyweight > 0) {
+      body.bodyweight_kg = resultForm.bodyweight
+    }
 
     await apiFetch('/api/results', {
       method: 'POST',
@@ -234,6 +331,8 @@ async function submitResult() {
     toast.add({ title: 'Błąd zgłoszenia', description: getApiErrorMessage(e), color: 'error' })
   }
 }
+
+const { data: latestRelease } = await useAsyncData('latest-mobile-release-athlete', () => apiFetch<MobileReleaseInfo>('/api/system/mobile-releases/latest').catch(() => null))
 
 useSeoMeta({
   title: 'Profil konta — CKS Slavia Ruda Śląska',
@@ -608,7 +707,7 @@ const showPre10PaymentBanner = computed(() => {
 
     <div
       v-if="auth.canAccessAthletePortal && athlete"
-      class="mt-8 grid grid-cols-1 items-stretch gap-3 sm:grid-cols-3 lg:gap-4"
+      class="mt-8 grid grid-cols-1 items-stretch gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-4"
     >
       <DashboardKpiCard
         label="Składka (bieżący miesiąc)"
@@ -633,6 +732,41 @@ const showPre10PaymentBanner = computed(() => {
         :tone="myPendingResultsCount ? 'warning' : 'info'"
         :to="{ path: '/athlete', hash: '#ostatnie-zgloszenia' }"
       />
+      <ClubVotingWidget />
+    </div>
+
+    <!-- Pobierz aplikację mobile -->
+    <div v-if="latestRelease" class="mt-8">
+      <div
+        class="group relative overflow-hidden rounded-[1.75rem] border border-primary/20 bg-linear-to-r from-primary/10 to-indigo-500/10 p-5 shadow-sm sm:p-6"
+      >
+        <div class="absolute -right-12 -top-12 size-40 rounded-full bg-primary/20 blur-3xl transition-all group-hover:bg-primary/30" />
+        <div class="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+          <div class="flex items-center gap-4">
+            <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/20 text-primary ring-1 ring-primary/30 shadow-inner">
+              <UIcon name="i-lucide-smartphone" class="size-7" />
+            </div>
+            <div class="min-w-0">
+              <h3 class="text-lg font-black text-highlighted tracking-tight">Dostępna aplikacja mobilna</h3>
+              <p class="text-sm text-muted">Śledź swoje wyniki i obecność bezpośrednio w telefonie.</p>
+              <div class="mt-1 flex items-center gap-2">
+                <UBadge size="sm" variant="soft" color="primary" class="font-bold font-mono">{{ latestRelease.version }}</UBadge>
+                <span class="text-[10px] text-muted/60 uppercase font-bold tracking-widest">Wersja Android (.apk)</span>
+              </div>
+            </div>
+          </div>
+          <UButton
+            :to="latestRelease.download_url"
+            target="_blank"
+            size="xl"
+            color="primary"
+            trailing-icon="i-lucide-download"
+            class="min-h-12 w-full justify-center sm:w-auto shadow-lg shadow-primary/20 transition-transform active:scale-95"
+          >
+            Pobierz teraz
+          </UButton>
+        </div>
+      </div>
     </div>
 
     <!-- Osiągnięcia (Badges) -->
@@ -945,6 +1079,58 @@ const showPre10PaymentBanner = computed(() => {
                 disabled
               />
             </UFormField>
+            <UFormField label="Waga ciała (kg)" description="Do Sinclaira">
+              <div class="flex gap-2">
+                <UInputNumber
+                  v-model="resultForm.bodyweight"
+                  :min="0"
+                  :step="0.1"
+                  size="lg"
+                  class="flex-1"
+                  placeholder="np. 85.5"
+                />
+                <UButton
+                  v-if="athlete?.bodyweight"
+                  color="neutral"
+                  variant="outline"
+                  icon="i-lucide-user"
+                  @click="useProfileWeight"
+                >
+                  Z profilu
+                </UButton>
+              </div>
+            </UFormField>
+            <UFormField label="Punkty Sinclair" description="Wyliczane na żywo">
+              <div class="flex h-[44px] items-center rounded-lg border border-default bg-muted/20 px-4 font-black text-primary">
+                {{ sinclairValue.toFixed(2) }} pkt
+              </div>
+            </UFormField>
+            <div class="flex flex-wrap gap-2 sm:col-span-2">
+              <UButton
+                color="primary"
+                variant="soft"
+                icon="i-lucide-calculator"
+                @click="applySinclairCalcAndInsert"
+              >
+                Oblicz i wstaw
+              </UButton>
+              <UButton
+                color="neutral"
+                variant="outline"
+                icon="i-lucide-bookmark"
+                @click="saveResultFormAsSinclairScenario"
+              >
+                Zapisz jako scenariusz
+              </UButton>
+              <UButton
+                to="/kalkulator-sinclair"
+                color="neutral"
+                variant="ghost"
+                icon="i-lucide-external-link"
+              >
+                Kalkulator Sinclair
+              </UButton>
+            </div>
           </div>
           <div class="slavia-form-actions border-t border-default/60 pt-5">
             <UButton

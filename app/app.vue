@@ -78,23 +78,6 @@ const description = 'Klub sportowy Slavia Ruda Śląska: zawodnicy, wyniki i spo
 const siteUrl = computed(() => (config.public.siteUrl as string).replace(/\/$/, ''))
 const socialImage = computed(() => `${siteUrl.value}/logo.png`)
 
-useHead({
-  meta: [
-    { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
-    { name: 'theme-color', content: '#0f172a' },
-    { name: 'mobile-web-app-capable', content: 'yes' },
-    { name: 'apple-mobile-web-app-capable', content: 'yes' },
-    { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' }
-  ],
-  link: [
-    { rel: 'icon', type: 'image/png', href: '/logo.png' },
-    { rel: 'apple-touch-icon', href: '/logo.png' }
-  ],
-  htmlAttrs: {
-    lang: 'pl'
-  }
-})
-
 useSeoMeta({
   title,
   description,
@@ -133,8 +116,27 @@ function syncFloatingBackVisibility() {
   showFloatingBack.value = window.history.length > 1
 }
 
+const { items: notifications, refresh: refreshNotifications } = useNotifications()
+const unreadCount = computed(() => (notifications.value || []).filter(n => !n.is_read).length)
+
+const faviconUrl = computed(() => {
+  if (!unreadCount.value) return '/logo.png'
+  const countStr = unreadCount.value > 9 ? '9+' : String(unreadCount.value)
+  // Simple badge SVG
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+    <circle cx="16" cy="16" r="15" fill="#0f172a" />
+    <path d="M16 2L18.5 10H26.5L20 15L22.5 23L16 18L9.5 23L12 15L5.5 10H13.5L16 2Z" fill="#38bdf8" opacity="0.3" />
+    <circle cx="24" cy="8" r="8" fill="#ef4444" />
+    <text x="24" y="11" font-family="sans-serif" font-size="9" font-weight="900" fill="white" text-anchor="middle">${countStr}</text>
+  </svg>`.trim()
+  return `data:image/svg+xml;base64,${btoa(svg)}`
+})
+
 onMounted(() => {
   syncFloatingBackVisibility()
+  if (auth.isLoggedIn.value) {
+    void refreshNotifications()
+  }
 })
 
 watch(
@@ -143,10 +145,31 @@ watch(
     nextTick(() => syncFloatingBackVisibility())
   }
 )
+
+useHead({
+  meta: [
+    { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
+    { name: 'theme-color', content: '#0f172a' },
+    { name: 'mobile-web-app-capable', content: 'yes' },
+    { name: 'apple-mobile-web-app-capable', content: 'yes' },
+    { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' }
+  ],
+  link: [
+    { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+    { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
+    { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,100..900;1,100..900&family=Outfit:wght@100..900&display=swap' },
+    { rel: 'icon', type: unreadCount.value ? 'image/svg+xml' : 'image/png', href: faviconUrl },
+    { rel: 'apple-touch-icon', href: '/logo.png' }
+  ],
+  htmlAttrs: {
+    lang: 'pl'
+  }
+})
 </script>
 
 <template>
   <UApp>
+    <NuxtLoadingIndicator :color="'var(--ui-primary)'" />
     <a
       href="#main-content"
       class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-200 focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-sm focus:font-bold focus:text-white focus:ring-2 focus:ring-offset-2 focus:ring-white"

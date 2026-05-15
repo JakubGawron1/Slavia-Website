@@ -1913,6 +1913,60 @@ function toastStorageApisAvailability() {
       </div>
       </UCard>
 
+      <section id="perf-audit" class="space-y-4">
+        <div class="flex items-center gap-3 px-1">
+          <UIcon name="i-lucide-gauge" class="size-6 text-primary" />
+          <h2 class="text-xl font-black uppercase italic tracking-tight text-highlighted">
+            Wydajność i SEO (Audit)
+          </h2>
+        </div>
+        <UCard class="rounded-2xl border-default/60 bg-muted/5 shadow-sm">
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div class="space-y-3">
+              <p class="text-sm font-medium text-muted">PageSpeed Insights (PSI)</p>
+              <div class="flex flex-col gap-2">
+                <UButton
+                  block
+                  variant="soft"
+                  color="neutral"
+                  icon="i-lucide-external-link"
+                  :to="`https://pagespeed.web.dev/analysis?url=${encodeURIComponent(config.public.siteUrl || '')}`"
+                  target="_blank"
+                >
+                  Audyt Strony Głównej
+                </UButton>
+                <UButton
+                  block
+                  variant="soft"
+                  color="neutral"
+                  icon="i-lucide-external-link"
+                  :to="`https://pagespeed.web.dev/analysis?url=${encodeURIComponent((config.public.siteUrl || '') + '/logowanie')}`"
+                  target="_blank"
+                >
+                  Audyt Panelu Logowania
+                </UButton>
+              </div>
+            </div>
+            <div class="rounded-xl border border-default/50 bg-muted/10 p-4 space-y-3">
+              <h3 class="text-xs font-bold uppercase tracking-widest text-primary mb-2">Wskazówki CWV (#31)</h3>
+              <ul class="list-disc ps-4 text-xs space-y-1 text-muted">
+                <li>Używaj <code>loading="lazy"</code> dla obrazów pod linią zgięcia.</li>
+                <li>Optymalizuj formaty (WebP/AVIF) i wymiary obrazów.</li>
+                <li>Unikaj Layout Shift (CLS) — rezerwuj miejsce na obrazy i reklamy.</li>
+                <li>ISR/SWR na trasach publicznych znacząco poprawia TTFB.</li>
+              </ul>
+              <h3 class="text-xs font-bold uppercase tracking-widest text-primary">Audyt routeRules (#29)</h3>
+              <ul class="list-disc ps-4 text-xs space-y-1 text-muted">
+                <li>Strefy <code>/athlete/**</code>, <code>/trainer/**</code>, <code>/admin/**</code> — <code>private, no-store</code>.</li>
+                <li>Publiczne ISR: <code>/</code>, <code>/aktualnosci</code>, <code>/galeria</code>, <code>/zawodnicy</code>.</li>
+                <li>Nowe trasy chronione: dodaj regułę w <code>nuxt.config.ts</code> przed merge.</li>
+                <li>Trasy panelu: <code>robots: noindex</code> w <code>useSeoMeta</code>.</li>
+              </ul>
+            </div>
+          </div>
+        </UCard>
+      </section>
+
       <UCard class="rounded-2xl border-default/60 p-4 shadow-sm lg:col-span-12">
       <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
         <div class="min-w-0">

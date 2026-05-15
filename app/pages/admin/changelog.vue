@@ -17,6 +17,37 @@ type ChangelogUpdate = {
 
 const updates = [
   {
+    version: 'v0.9.0-dev',
+    date: '15 Maj 2026',
+    title:
+      'Aplikacja mobilna (Flutter) 0.9.0-dev — nawigacja, aktualności, osiągnięcia, regeneracja',
+    features: [
+      'Nowa nawigacja: dolny pasek zakładek + menu boczne (`IndexedStack`), spójne skróty z dashboardu i sekcji „Więcej”.',
+      'Aktualności klubu i galeria zdjęć — natywne ekrany z API (lista, szczegóły wpisu, galeria).',
+      'Osiągnięcia zawodnika — odznaki za Sinclair, dwubój, boje i frekwencję (jak `AthleteBadges` na WWW).',
+      'Dziennik regeneracji, składki, przypisanie startów — rozszerzenie funkcji WWW w aplikacji.',
+      'Biometria: `FlutterFragmentActivity`, stabilniejszy `BiometricGate` po aktualizacji Android.',
+      'Frekwencja offline (bufor obecności), poprawki API i layoutu dashboardu.',
+      'Tag GitHub: `v0.9.0-dev` — `versionName` z tagu, `pubspec` 0.9.0 jako zapas.'
+    ],
+    type: 'release'
+  },
+  {
+    version: 'v3.1.2-dev',
+    date: '15 Maj 2026',
+    title:
+      'Wylogowanie globalne, głosowanie „Zawodnik miesiąca”, KPI dashboardów, eksport kalendarza ICS',
+    features: [
+      'Bezpieczeństwo: `POST /api/auth/logout-all` — unieważnienie tokenów na wszystkich urządzeniach (WWW + mobile); przycisk w `/profil`.',
+      'Klub: widget głosowania „Zawodnik miesiąca” (`/api/club-votes`), synchronizacja wydań APK w panelu admina.',
+      'Dashboardy admin/trener/superadmin: miesięczne KPI (frekwencja, składki, oczekujące wyniki) w `DashboardMonthlySummary`.',
+      'Zawodnik: kalendarz z eksportem `.ics`, kalkulator Sinclair ze scenariuszami i linkiem do formularza wyniku, Slavia Wrapped.',
+      'Backend: eksport kalendarza, `token_version` w JWT, API mobile releases; naprawy kompilacji i typów.',
+      'Witryna: naprawa `app.vue` (brakujące `</script>`), pełny `typecheck` i `eslint` bez błędów.'
+    ],
+    type: 'release'
+  },
+  {
     version: 'v0.8.0',
     date: '11 Maj 2026',
     title:

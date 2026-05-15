@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import type { Athlete, CompetitionResult, PendingPaymentRow } from '~/types/models'
+import type { Athlete, AthletePaymentOverviewRow, CompetitionResult, PendingPaymentRow } from '~/types/models'
 import { apiRoutes } from '~/config/api'
 import { getApiErrorMessage } from '~/composables/useApi'
 import DashboardHero from '~/components/dashboard/DashboardHero.vue'
 import DashboardKpiCard from '~/components/dashboard/DashboardKpiCard.vue'
 import DashboardModuleCard from '~/components/dashboard/DashboardModuleCard.vue'
 import DashboardUrgentList from '~/components/dashboard/DashboardUrgentList.vue'
+import DashboardMonthlySummary from '~/components/dashboard/DashboardMonthlySummary.vue'
 
 definePageMeta({ middleware: 'trainer' })
 
@@ -60,6 +61,40 @@ const attendanceFilters = reactive({
 const attendanceRows = ref<AttendanceRecord[]>([])
 const verifyingAttendanceId = ref<string | null>(null)
 
+/** KPI Summary Data */
+const currentMonthStr = new Date().toISOString().slice(0, 7)
+const { data: paymentsOverview } = await useAsyncData(
+  'trainer-kpi-payments',
+  () => apiFetch<AthletePaymentOverviewRow[]>(`${apiRoutes.payments.overview}?month=${currentMonthStr}`).catch(() => [])
+)
+
+const paidCount = computed(() => (paymentsOverview.value || []).filter(r => r.has_approved).length)
+const totalAthletesWithRecords = computed(() => (paymentsOverview.value || []).length)
+const paymentProgress = computed(() => {
+  if (totalAthletesWithRecords.value === 0) return 0
+  return Math.round((paidCount.value / totalAthletesWithRecords.value) * 100)
+})
+const paymentsPendingCount = computed(
+  () => (paymentsOverview.value || []).filter((r: { has_approved?: boolean }) => !r.has_approved).length
+)
+
+const { data: recentAttendance } = await useAsyncData(
+  'trainer-kpi-attendance-recent',
+  () => {
+    const d = new Date()
+    d.setDate(d.getDate() - 30)
+    const from = d.toISOString().slice(0, 10)
+    return apiFetch<AttendanceRecord[]>(`/api/attendance?from_date=${from}`).catch(() => [])
+  }
+)
+
+const avgAttendance = computed(() => {
+  const rows = recentAttendance.value || []
+  if (rows.length === 0) return 0
+  const present = rows.filter(r => r.status === 'obecny').length
+  return Math.round((present / rows.length) * 100)
+})
+
 const athleteNameById = computed(() => {
   const m = new Map<string, string>()
   for (const a of (athletes.value || []) as Athlete[]) {
@@ -81,7 +116,7 @@ const athletesCount = computed(() => {
 })
 const pendingCount = computed(() => (Array.isArray(pendingResults.value) ? pendingResults.value.length : 0))
 const pendingPaymentsCount = computed(() => (Array.isArray(pendingPayments.value) ? pendingPayments.value.length : 0))
-const competitionsCount = computed(() => (Array.isArray(competitions.value) ? competitions.value.length : 0))
+const _competitionsCount = computed(() => (Array.isArray(competitions.value) ? competitions.value.length : 0))
 
 const lowerDashboards = computed(() => {
   const roles = new Set(auth.roles.value || [])
@@ -421,16 +456,46 @@ onMounted(() => {
       </div>
     </div>
 
-    <div class="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3 lg:gap-4">
-      <DashboardKpiCard label="Zawodnicy (aktywni)" :value="athletesCount" icon="i-lucide-users" tone="info" to="/trainer/zawodnicy" />
-      <DashboardKpiCard
-        label="Wyniki oczekujące"
-        :value="pendingCount"
-        icon="i-lucide-clipboard-clock"
-        :tone="pendingCount ? 'warning' : 'info'"
-        :to="{ path: '/trainer', hash: '#wyniki-oczekujace' }"
-      />
-      <DashboardKpiCard label="Wydarzenia w kalendarzu" :value="competitionsCount" icon="i-lucide-calendar" tone="primary" to="/kalendarz" />
+    <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:col-span-2 lg:gap-4">
+        <DashboardKpiCard
+          label="Zawodnicy (aktywni)"
+          :value="athletesCount"
+          icon="i-lucide-users"
+          tone="info"
+          to="/trainer/zawodnicy"
+        />
+        <DashboardKpiCard
+          label="Frekwencja (30d)"
+          :value="`${avgAttendance}%`"
+          icon="i-lucide-user-check"
+          tone="success"
+          to="/attendance"
+        />
+        <DashboardKpiCard
+          label="Składki (opłacone)"
+          :value="`${paymentProgress}%`"
+          icon="i-lucide-banknote"
+          :tone="paymentProgress < 50 ? 'warning' : 'success'"
+          to="/trainer/skladki"
+        />
+        <DashboardKpiCard
+          label="Wyniki oczekujące"
+          :value="pendingCount"
+          icon="i-lucide-clipboard-clock"
+          :tone="pendingCount ? 'warning' : 'neutral'"
+          :to="{ path: '/trainer', hash: '#wyniki-oczekujace' }"
+        />
+      </div>
+      <div class="lg:col-span-1">
+        <DashboardMonthlySummary
+          :athletes-active="athletesCount"
+          :payment-progress="paymentProgress"
+          :payments-pending="paymentsPendingCount"
+          :avg-attendance30d="avgAttendance"
+          :pending-results="pendingCount"
+        />
+      </div>
     </div>
 
     <div class="mt-10 grid gap-4 lg:grid-cols-2">

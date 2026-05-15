@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import type { Athlete, CompetitionResult } from '~/types/models'
+import type { Athlete, AthletePaymentOverviewRow, CompetitionResult, MobileReleaseInfo } from '~/types/models'
 import { getApiErrorMessage } from '~/composables/useApi'
 import DashboardHero from '~/components/dashboard/DashboardHero.vue'
 import DashboardKpiCard from '~/components/dashboard/DashboardKpiCard.vue'
 import DashboardModuleCard from '~/components/dashboard/DashboardModuleCard.vue'
 import DashboardUrgentList from '~/components/dashboard/DashboardUrgentList.vue'
+import DashboardMonthlySummary from '~/components/dashboard/DashboardMonthlySummary.vue'
 
 definePageMeta({ middleware: 'admin' })
 
@@ -42,6 +43,40 @@ const { data: pendingResults, refresh: refreshPending } = await useAsyncData(
 )
 const { data: competitions } = await useAsyncData('dashboard-competitions', () => apiFetch('/api/competitions').catch(() => []))
 
+/** KPI Summary Data (Extended) */
+const currentMonthStr = new Date().toISOString().slice(0, 7)
+const { data: paymentsOverview } = await useAsyncData(
+  'admin-kpi-payments',
+  () => apiFetch<AthletePaymentOverviewRow[]>('/api/payments/overview?month=' + currentMonthStr).catch(() => [])
+)
+
+const paidCount = computed(() => (paymentsOverview.value || []).filter(r => r.has_approved).length)
+const totalAthletesWithRecords = computed(() => (paymentsOverview.value || []).length)
+const paymentProgress = computed(() => {
+  if (totalAthletesWithRecords.value === 0) return 0
+  return Math.round((paidCount.value / totalAthletesWithRecords.value) * 100)
+})
+const paymentsPendingCount = computed(
+  () => (paymentsOverview.value || []).filter((r: { has_approved?: boolean }) => !r.has_approved).length
+)
+
+const { data: recentAttendance } = await useAsyncData(
+  'admin-kpi-attendance-recent',
+  () => {
+    const d = new Date()
+    d.setDate(d.getDate() - 30)
+    const from = d.toISOString().slice(0, 10)
+    return apiFetch<{ status: string }[]>(`/api/attendance?from_date=${from}`).catch(() => [])
+  }
+)
+
+const avgAttendance = computed(() => {
+  const rows = recentAttendance.value || []
+  if (rows.length === 0) return 0
+  const present = rows.filter(r => r.status === 'obecny').length
+  return Math.round((present / rows.length) * 100)
+})
+
 const toast = useToast()
 
 const athleteNameById = computed(() => {
@@ -64,7 +99,7 @@ const athletesCount = computed(() => {
   return list.filter(a => a.is_active !== false).length
 })
 const pendingCount = computed(() => Array.isArray(pendingResults.value) ? pendingResults.value.length : 0)
-const competitionsCount = computed(() => Array.isArray(competitions.value) ? competitions.value.length : 0)
+const _competitionsCount = computed(() => Array.isArray(competitions.value) ? competitions.value.length : 0)
 
 async function approveResult(id: string) {
   try {
@@ -77,6 +112,27 @@ async function approveResult(id: string) {
       description: getApiErrorMessage(e),
       color: 'error'
     })
+  }
+}
+
+const syncingMobile = ref(false)
+async function syncMobileReleases() {
+  syncingMobile.value = true
+  try {
+    const res = await apiFetch<MobileReleaseInfo>('/api/system/mobile-releases/sync', { method: 'POST' })
+    toast.add({
+      title: 'Zsynchronizowano wydania mobilne',
+      description: `Najnowsza wersja: ${res.version}`,
+      color: 'success'
+    })
+  } catch (e) {
+    toast.add({
+      title: 'Błąd synchronizacji',
+      description: getApiErrorMessage(e),
+      color: 'error'
+    })
+  } finally {
+    syncingMobile.value = false
   }
 }
 
@@ -286,16 +342,28 @@ const lowerDashboards = computed(() => {
     />
 
     <!-- Statystyki — nad banerami i skrótami -->
-    <div class="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3 lg:gap-4">
-      <DashboardKpiCard label="Zawodnicy (aktywni)" :value="athletesCount" icon="i-lucide-users" tone="info" to="/admin/zawodnicy" />
-      <DashboardKpiCard
-        label="Wyniki oczekujące"
-        :value="pendingCount"
-        icon="i-lucide-clipboard-clock"
-        :tone="pendingCount ? 'warning' : 'info'"
-        :to="{ path: '/admin', hash: '#wyniki-oczekujace' }"
-      />
-      <DashboardKpiCard label="Zaplanowane zawody" :value="competitionsCount" icon="i-lucide-calendar" tone="primary" to="/kalendarz" />
+    <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:col-span-2 lg:gap-4">
+        <DashboardKpiCard label="Zawodnicy (aktywni)" :value="athletesCount" icon="i-lucide-users" tone="info" to="/admin/zawodnicy" />
+        <DashboardKpiCard
+          label="Wyniki oczekujące"
+          :value="pendingCount"
+          icon="i-lucide-clipboard-clock"
+          :tone="pendingCount ? 'warning' : 'info'"
+          :to="{ path: '/admin', hash: '#wyniki-oczekujace' }"
+        />
+        <DashboardKpiCard label="Składki (opłacone)" :value="`${paymentProgress}%`" icon="i-lucide-banknote" tone="success" to="/admin/zawodnicy" />
+        <DashboardKpiCard label="Obecność (30d)" :value="`${avgAttendance}%`" icon="i-lucide-user-check" tone="primary" to="/trainer" />
+      </div>
+      <div class="lg:col-span-1">
+        <DashboardMonthlySummary
+          :athletes-active="athletesCount"
+          :payment-progress="paymentProgress"
+          :payments-pending="paymentsPendingCount"
+          :avg-attendance30d="avgAttendance"
+          :pending-results="pendingCount"
+        />
+      </div>
     </div>
 
     <!-- SuperAdmin Banner -->
@@ -319,14 +387,27 @@ const lowerDashboards = computed(() => {
           </p>
         </div>
       </div>
-      <UButton
-        to="/superadmin"
-        trailing-icon="i-lucide-arrow-right"
-        size="lg"
-        class="min-h-11 w-full shrink-0 justify-center sm:w-auto"
-      >
-        Panel SuperAdmin
-      </UButton>
+      <div class="flex flex-col gap-2 sm:flex-row">
+        <UButton
+          size="lg"
+          variant="soft"
+          color="neutral"
+          icon="i-lucide-refresh-ccw"
+          :loading="syncingMobile"
+          class="min-h-11 justify-center"
+          @click="syncMobileReleases"
+        >
+          Sync Mobile Releases
+        </UButton>
+        <UButton
+          to="/superadmin"
+          trailing-icon="i-lucide-arrow-right"
+          size="lg"
+          class="min-h-11 w-full shrink-0 justify-center sm:w-auto"
+        >
+          Panel SuperAdmin
+        </UButton>
+      </div>
     </div>
 
     <div

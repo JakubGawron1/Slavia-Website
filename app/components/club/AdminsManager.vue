@@ -164,6 +164,8 @@ const accountSaving = ref(false)
 const accountTarget = ref<AdminAccount | null>(null)
 const accountUsername = ref('')
 const accountPassword = ref('')
+const accountAthleteId = ref<string>('')
+const accountInitialAthleteId = ref<string>('')
 
 const banModalOpen = ref(false)
 const banSaving = ref(false)
@@ -292,7 +294,10 @@ function openAccountEdit(a: AdminAccount) {
   accountTarget.value = a
   accountUsername.value = a.username
   accountPassword.value = ''
+  accountAthleteId.value = a.athlete_id || ''
+  accountInitialAthleteId.value = a.athlete_id || ''
   accountModalOpen.value = true
+  void loadAthletesForLink()
 }
 
 async function saveAccountEdit() {
@@ -303,7 +308,7 @@ async function saveAccountEdit() {
   }
   accountSaving.value = true
   try {
-    const body: Record<string, string> = {
+    const body: { username: string, password?: string } = {
       username: accountUsername.value.trim()
     }
     if (accountPassword.value) {
@@ -313,6 +318,22 @@ async function saveAccountEdit() {
       method: 'PATCH',
       body
     })
+
+    // Linkowanie / odlinkowanie zawodnika
+    if (accountAthleteId.value !== accountInitialAthleteId.value) {
+      if (accountInitialAthleteId.value) {
+        // Najpierw odepnij starego
+        await api(apiRoutes.athletes.detachUser(accountInitialAthleteId.value), { method: 'POST' })
+      }
+      if (accountAthleteId.value) {
+        // Przypnij nowego
+        await api(apiRoutes.athletes.attachUser(accountAthleteId.value), {
+          method: 'POST',
+          body: { user_id: accountTarget.value.id }
+        })
+      }
+    }
+
     toast.add({ title: 'Konto zaktualizowane', color: 'success' })
     accountModalOpen.value = false
     accountPassword.value = ''
@@ -372,7 +393,11 @@ async function loadAthletesForLink() {
   try {
     const list = await api<Athlete[]>(apiRoutes.athletes.listAdmin)
     athletesForLink.value = (Array.isArray(list) ? list : [])
-      .filter(a => !(a.user_id && String(a.user_id).trim()))
+      .filter(a => {
+        // Pokaż zawodników bez user_id LUB tego, który jest aktualnie edytowany
+        if (!a.user_id || String(a.user_id).trim() === '') return true
+        return accountTarget.value && a.user_id === accountTarget.value.id
+      })
       .map(a => ({ label: a.full_name, value: a.id }))
       .sort((x, y) => x.label.localeCompare(y.label, 'pl'))
   } catch {
@@ -1003,6 +1028,17 @@ onMounted(() => {
                   autocomplete="new-password"
                   size="lg"
                   class="w-full rounded-xl"
+                />
+              </UFormField>
+              <UFormField
+                label="Powiązany zawodnik"
+                description="Linkowanie konta z profilem w bazie zawodników"
+              >
+                <USelect
+                  v-model="accountAthleteId"
+                  :items="[{ label: 'Brak powiązania', value: '' }, ...athletesForLink]"
+                  class="w-full rounded-xl"
+                  size="lg"
                 />
               </UFormField>
             </div>

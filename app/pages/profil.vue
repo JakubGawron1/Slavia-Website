@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { apiRoutes } from '~/config/api'
 import { getApiErrorMessage } from '~/composables/useApi'
+import type { Athlete } from '~/types/models'
 import { resolveAuthProfilePhotoSrc } from '~/utils/profilePhoto'
 
 definePageMeta({ middleware: 'auth' })
@@ -15,11 +16,15 @@ const apiFetch = useApi()
 const toast = useToast()
 const { preset, presets, setPreset, colorMode } = useSlaviaAppearance()
 const { mobileRelease, mobileDownloadHref, mobileDownloadLabel } = useMobileAppRelease()
+const athlete = ref<Athlete | null>(null)
+const athleteLoading = ref(false)
 
 const form = reactive({
   avatar_url: '',
   newPassword: '',
-  confirmPassword: ''
+  confirmPassword: '',
+  birth_year: null as number | null,
+  gender: 'male' as 'male' | 'female' | null
 })
 
 watch(
@@ -30,9 +35,26 @@ watch(
     }
     /** Wpis w formularzu: jawny avatar konta lub — jak pusty — zdjęcie z profilu zawodnika (`/me`). */
     form.avatar_url = u.avatar_url?.trim() || u.athlete_image_url?.trim() || ''
+    if (u.roles.includes('Athlete')) {
+      fetchAthleteProfile()
+    }
   },
   { immediate: true }
 )
+
+async function fetchAthleteProfile() {
+  athleteLoading.value = true
+  try {
+    const res = await apiFetch<Athlete>('/api/athletes/me')
+    athlete.value = res
+    form.birth_year = res.birth_year ?? null
+    form.gender = res.gender === 'female' ? 'female' : 'male'
+  } catch (err) {
+    console.error('Failed to fetch athlete profile', err)
+  } finally {
+    athleteLoading.value = false
+  }
+}
 
 /** Podgląd — ta sama kolejność co navbar: wpis w formularzu, potem `resolveAuthProfilePhotoSrc`. */
 const profileAvatarSrc = computed(() => {
@@ -59,6 +81,10 @@ function resetForm() {
   form.avatar_url = u.avatar_url?.trim() || u.athlete_image_url?.trim() || ''
   form.newPassword = ''
   form.confirmPassword = ''
+  if (athlete.value) {
+    form.birth_year = athlete.value.birth_year ?? null
+    form.gender = athlete.value.gender === 'female' ? 'female' : 'male'
+  }
   avatarBroken.value = false
 }
 
@@ -189,6 +215,29 @@ async function disableTotp() {
   }
 }
 
+const logoutAllLoading = ref(false)
+
+async function logoutFromAllDevices() {
+  if (!confirm('Czy na pewno chcesz wylogować się ze wszystkich urządzeń? Będziesz musiał zalogować się ponownie na tym urządzeniu.')) {
+    return
+  }
+  logoutAllLoading.value = true
+  try {
+    await apiFetch(apiRoutes.auth.logoutAll, { method: 'POST' })
+    toast.add({ title: 'Wylogowano ze wszystkich urządzeń', color: 'success' })
+    auth.logout()
+    navigateTo('/logowanie')
+  } catch (e) {
+    toast.add({
+      title: 'Błąd wylogowywania',
+      description: getApiErrorMessage(e),
+      color: 'error'
+    })
+  } finally {
+    logoutAllLoading.value = false
+  }
+}
+
 /** Zapis `users.avatar_url` w backendzie (sam upload na Cloudinary tego nie robi). */
 async function persistAvatarToAccount(url: string) {
   const trimmed = url.trim()
@@ -223,6 +272,18 @@ async function save() {
       payload.password = pw
     }
     await apiFetch('/api/auth/profile', { method: 'PATCH', body: payload })
+
+    if (auth.user.value?.roles.includes('Athlete')) {
+      await apiFetch('/api/athletes/me', {
+        method: 'PATCH',
+        body: {
+          birth_year: form.birth_year,
+          gender: form.gender
+        }
+      })
+      await fetchAthleteProfile()
+    }
+
     await auth.fetchMe()
     form.newPassword = ''
     form.confirmPassword = ''
@@ -422,6 +483,34 @@ async function save() {
               </div>
             </section>
 
+            <section v-if="auth.isAthlete.value" class="rounded-2xl border border-default/50 bg-card p-6 shadow-sm ring-1 ring-default/20 sm:p-7">
+              <h2 class="text-base font-bold text-highlighted">
+                Dane zawodnika
+              </h2>
+              <p class="mt-1 text-sm leading-relaxed text-muted">
+                Płeć i rok urodzenia są niezbędne do poprawnego wyliczania punktów Sinclair i Meltzer-Faber.
+              </p>
+              <div class="mt-5 grid gap-4 sm:grid-cols-2">
+                <UFormField label="Płeć" :ui="{ label: 'text-xs font-semibold uppercase tracking-wide text-muted' }">
+                  <URadioGroup
+                    v-model="form.gender"
+                    :options="[
+                      { value: 'male', label: 'Mężczyzna' },
+                      { value: 'female', label: 'Kobieta' }
+                    ]"
+                  />
+                </UFormField>
+                <UFormField label="Rok urodzenia" :ui="{ label: 'text-xs font-semibold uppercase tracking-wide text-muted' }">
+                  <UInput
+                    v-model="form.birth_year"
+                    type="number"
+                    placeholder="np. 2005"
+                    size="md"
+                  />
+                </UFormField>
+              </div>
+            </section>
+
             <section class="rounded-2xl border border-default/50 bg-card p-6 shadow-sm ring-1 ring-default/20 sm:p-7">
               <h2 class="text-base font-bold text-highlighted">
                 Wygląd
@@ -551,24 +640,24 @@ async function save() {
                 </p>
                 <ul class="mt-3 list-disc space-y-1.5 pl-5 text-sm text-muted">
                   <li>
-                    <span class="text-highlighted">Biometria i dostęp:</span>
-                    opcjonalna blokada biometryczna przy starcie, skróty Quick Actions z pulpitu (Android).
+                    <span class="text-highlighted">Nawigacja (0.9.0-dev):</span>
+                    dolny pasek zakładek, menu boczne i sekcja „Więcej” z kalkulatorami i narzędziami.
                   </li>
                   <li>
-                    <span class="text-highlighted">Powiadomienia:</span>
-                    badge na ikonie aplikacji, przypomnienia o zbliżających się startach powiązane z kalendarzem.
+                    <span class="text-highlighted">Klub:</span>
+                    aktualności i galeria w aplikacji; odznaki osiągnięć (Sinclair, dwubój, boje, frekwencja).
                   </li>
                   <li>
-                    <span class="text-highlighted">Dashboard i profil:</span>
-                    seria treningów na głównym ekranie, lepsze dopasowanie layoutu; oś czasu zawodnika i aktualności klubu zsynchronizowane z witryną.
+                    <span class="text-highlighted">Zdrowie i starty:</span>
+                    dziennik regeneracji, przypisanie do zawodów, frekwencja z buforem offline.
                   </li>
                   <li>
-                    <span class="text-highlighted">Aktualizacje:</span>
-                    sprawdzanie nowych wydań APK (GitHub Releases) bezpośrednio z aplikacji.
+                    <span class="text-highlighted">Biometria i aktualizacje:</span>
+                    poprawiona blokada biometryczna (Android), sprawdzanie APK z GitHub Releases.
                   </li>
                   <li>
-                    <span class="text-highlighted">Stabilność:</span>
-                    porządki kodu analizatora Dart (spójne API kolorów, bezpieczne wywołania po operacjach asynchronicznych).
+                    <span class="text-highlighted">Sesja:</span>
+                    wylogowanie ze wszystkich urządzeń z witryny unieważnia token także w aplikacji mobilnej.
                   </li>
                 </ul>
                 <p v-if="auth.isAdmin" class="mt-4 text-xs text-muted">
@@ -673,6 +762,27 @@ async function save() {
                     Wyłącz 2FA
                   </UButton>
                 </div>
+              </div>
+            </section>
+
+            <section class="rounded-2xl border border-error/50 bg-error/5 p-6 shadow-sm ring-1 ring-error/20 sm:p-7">
+              <h2 class="text-base font-bold text-highlighted">
+                Bezpieczeństwo sesji
+              </h2>
+              <p class="mt-1 text-sm leading-relaxed text-muted">
+                Jeśli zgubiłeś urządzenie lub podejrzewasz nieautoryzowany dostęp, możesz wylogować się ze wszystkich miejsc naraz.
+              </p>
+              <div class="mt-5">
+                <UButton
+                  color="error"
+                  variant="outline"
+                  size="md"
+                  icon="i-lucide-log-out"
+                  :loading="logoutAllLoading"
+                  @click="logoutFromAllDevices"
+                >
+                  Wyloguj ze wszystkich urządzeń
+                </UButton>
               </div>
             </section>
 

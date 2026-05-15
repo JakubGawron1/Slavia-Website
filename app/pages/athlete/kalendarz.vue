@@ -15,7 +15,8 @@ import {
 } from 'date-fns'
 import { pl } from 'date-fns/locale'
 import { apiRoutes } from '~/config/api'
-import type { MyCalendarEntry, RecurringTrainingSession } from '~/types/models'
+import type { AthleteCalendarDayEvent, Competition, MyCalendarEntry, RecurringTrainingSession } from '~/types/models'
+import { generateIcsContent, downloadIcs } from '~/utils/ics'
 
 definePageMeta({ middleware: 'athlete-calendar' })
 
@@ -57,6 +58,34 @@ const { data: myData } = await useAsyncData(
   { default: () => ({ entries: [] }) }
 )
 
+const { data: allCompetitions } = await useLazyFetch<Competition[]>(
+  () => `${publicCalendarApiBase()}${apiRoutes.competitions.collection}`,
+  {
+    key: 'athlete-all-competitions',
+    default: () => [],
+    server: false
+  }
+)
+
+const filterOnlyMine = ref(true)
+const filterCategory = ref('all')
+
+const categories = [
+  { value: 'all', label: 'Wszystkie' },
+  { value: 'championship', label: 'Mistrzostwa' },
+  { value: 'league', label: 'Liga' },
+  { value: 'club_event', label: 'Wydarzenia' },
+  { value: 'training', label: 'Treningi' }
+]
+
+const assignedIds = computed(() => {
+  const s = new Set<string>()
+  for (const ent of myData.value?.entries ?? []) {
+    if (ent.competition.id) s.add(ent.competition.id)
+  }
+  return s
+})
+
 const assignedByDate = computed(() => {
   const m = new Map<string, MyCalendarEntry[]>()
   for (const ent of myData.value?.entries ?? []) {
@@ -87,6 +116,8 @@ const weekDays = ['Pon', 'Wt', 'Śr', 'Czw', 'Pt', 'Sob', 'Ndz']
 const { getEventClasses, getEventIcon, getEventModalHeaderClass, getEventKindLabel } = useCalendarEventChips()
 
 function getTrainingsForDay(date: Date) {
+  if (filterCategory.value !== 'all' && filterCategory.value !== 'training') return []
+
   const day = getDay(date)
   if ([1, 3, 5].includes(day)) {
     const ds = format(date, 'yyyy-MM-dd')
@@ -110,28 +141,68 @@ function getTrainingsForDay(date: Date) {
 
 function getEventsForDay(date: Date) {
   const dateStr = format(date, 'yyyy-MM-dd')
-  const assigned = (assignedByDate.value.get(dateStr) ?? []).map((entry) => {
-    const names = entry.participants.map(p => p.full_name).join(', ')
-    return {
-      id: entry.competition.id,
-      type: 'competition' as const,
-      category: entry.competition.category || 'club_event',
-      status: entry.competition.status || 'scheduled',
-      external_source: entry.competition.external_source || undefined,
-      title: entry.competition.title,
-      time: '' as const,
-      location: entry.competition.location,
-      modalHint: 'Przypisani zawodnicy widzą się nawzajem',
-      participantsLine: names ? `Startuje z: ${names}` : ''
-    }
-  })
-  return [...getTrainingsForDay(date), ...assigned]
+  
+  let list: AthleteCalendarDayEvent[] = []
+
+  if (filterOnlyMine.value) {
+    const assigned = (assignedByDate.value.get(dateStr) ?? []).map((entry) => {
+      const names = entry.participants.map(p => p.full_name).join(', ')
+      return {
+        id: entry.competition.id,
+        type: 'competition' as const,
+        category: entry.competition.category || 'club_event',
+        status: entry.competition.status || 'scheduled',
+        external_source: entry.competition.external_source || undefined,
+        title: entry.competition.title,
+        time: '' as const,
+        location: entry.competition.location,
+        modalHint: 'Przypisani zawodnicy widzą się nawzajem',
+        participantsLine: names ? `Startuje z: ${names}` : '',
+        isAssigned: true
+      }
+    })
+    list = assigned
+  } else {
+    const allOnDay = (allCompetitions.value || [])
+      .filter(c => c.date?.startsWith(dateStr))
+      .map(c => {
+        const isMine = assignedIds.value.has(c.id)
+        let partsLine = ''
+        if (isMine) {
+          const entry = (myData.value?.entries ?? []).find(e => e.competition.id === c.id)
+          if (entry) {
+            partsLine = `Startuje z: ${entry.participants.map(p => p.full_name).join(', ')}`
+          }
+        }
+        return {
+          id: c.id,
+          type: c.external_source ? 'external' : 'competition',
+          category: c.category || 'club_event',
+          status: c.status || 'scheduled',
+          external_source: c.external_source || undefined,
+          title: c.title,
+          time: '',
+          location: c.location,
+          modalHint: isMine ? 'Przypisani zawodnicy widzą się nawzajem' : 'Nie jesteś przypisany do tych zawodów.',
+          participantsLine: partsLine,
+          isAssigned: isMine
+        }
+      })
+    list = allOnDay
+  }
+
+  // Filtr kategorii (poza treningami które mają własny filtr wyżej)
+  if (filterCategory.value !== 'all') {
+    list = list.filter(e => e.category === filterCategory.value)
+  }
+
+  return [...getTrainingsForDay(date), ...list]
 }
 
 const modalOpen = ref(false)
-const selectedEvent = ref<Record<string, unknown> | null>(null)
+const selectedEvent = ref<AthleteCalendarDayEvent | null>(null)
 
-function openDetail(day: Date, ev: Record<string, unknown>) {
+function openDetail(day: Date, ev: AthleteCalendarDayEvent) {
   selectedEvent.value = {
     ...ev,
     _dateIso: format(day, 'yyyy-MM-dd')
@@ -151,6 +222,19 @@ const prevMonth = () => {
 }
 const goToToday = () => {
   currentDate.value = new Date()
+}
+
+function exportEventToIcs() {
+  if (!selectedEvent.value?._dateIso) return
+  const ev = selectedEvent.value
+  const content = generateIcsContent({
+    title: ev.title,
+    date: ev._dateIso,
+    location: ev.location,
+    description: (ev.modalHint || '') + (ev.participantsLine ? '\n\n' + ev.participantsLine : ''),
+    time: ev.time
+  })
+  downloadIcs(ev.title, content)
 }
 </script>
 
@@ -201,6 +285,29 @@ const goToToday = () => {
           color="neutral"
           @click="nextMonth"
         />
+      </div>
+
+      <div class="flex flex-wrap items-center gap-3">
+        <div class="flex items-center gap-2 rounded-xl border border-default bg-muted/10 p-1">
+          <UButton
+            v-for="cat in categories"
+            :key="cat.value"
+            size="sm"
+            :variant="filterCategory === cat.value ? 'solid' : 'ghost'"
+            color="neutral"
+            @click="filterCategory = cat.value"
+          >
+            {{ cat.label }}
+          </UButton>
+        </div>
+
+        <div class="flex items-center gap-2 rounded-xl border border-default bg-muted/10 px-3 py-1.5">
+          <UCheckbox
+            v-model="filterOnlyMine"
+            label="Tylko moje starty"
+            size="md"
+          />
+        </div>
       </div>
     </div>
 
@@ -405,17 +512,30 @@ const goToToday = () => {
                 {{ selectedEvent.location }}
               </p>
             </div>
-            <UButton
-              block
-              size="lg"
-              color="neutral"
-              variant="soft"
-              icon="i-lucide-x"
-              class="font-bold"
-              @click="modalOpen = false"
-            >
-              Zamknij
-            </UButton>
+            <div class="flex flex-col gap-2">
+              <UButton
+                block
+                size="lg"
+                color="primary"
+                variant="outline"
+                icon="i-lucide-calendar-plus"
+                class="font-bold"
+                @click="exportEventToIcs"
+              >
+                Dodaj do swojego kalendarza (ICS)
+              </UButton>
+              <UButton
+                block
+                size="lg"
+                color="neutral"
+                variant="soft"
+                icon="i-lucide-x"
+                class="font-bold"
+                @click="modalOpen = false"
+              >
+                Zamknij
+              </UButton>
+            </div>
           </div>
         </div>
       </template>

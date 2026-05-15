@@ -14,7 +14,8 @@ export const apiRoutes = {
     profile: '/api/auth/profile',
     totpSetup: '/api/auth/totp/setup',
     totpEnable: '/api/auth/totp/enable',
-    totpDisable: '/api/auth/totp/disable'
+    totpDisable: '/api/auth/totp/disable',
+    logoutAll: '/api/auth/logout-all'
   },
   athletes: {
     list: '/api/athletes',

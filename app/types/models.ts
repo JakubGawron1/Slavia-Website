@@ -19,6 +19,8 @@ export interface AuthUser {
   ui_color_mode?: string | null
   /** Płeć zawodnika powiązanego z kontem (jeśli konto ma profil athlete). */
   athlete_gender?: string | null
+  /** Rok urodzenia zawodnika powiązanego z kontem. */
+  athlete_birth_year?: number | null
   /** Zdjęcie z `athletes.image_url` (Cloudinary), gdy konto jest powiązane ze zawodnikiem. */
   athlete_image_url?: string | null
   /** `athletes.id` powiązany profil (`GET /api/auth/me`). */
@@ -312,4 +314,32 @@ export interface CreateAdminPayload {
   password: string
   /** Domyślnie backend ustawia `['Admin']`. */
   roles?: UserRole[]
+}
+
+export interface ClubVoteMyVote {
+  athlete_id: string | null
+  athlete_name?: string | null
+}
+
+/** Odpowiedź `/api/system/mobile-releases/latest` i sync. */
+export interface MobileReleaseInfo {
+  version: string
+  download_url: string
+  published_at: string
+}
+
+/** Wpis dnia w kalendarzu zawodnika (`/athlete/kalendarz`). */
+export interface AthleteCalendarDayEvent {
+  id: string
+  type: string
+  category: string
+  status: string
+  external_source?: string
+  title: string
+  time: string
+  location?: string
+  modalHint: string
+  participantsLine: string
+  isAssigned?: boolean
+  _dateIso?: string
 }

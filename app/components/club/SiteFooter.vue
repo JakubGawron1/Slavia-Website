@@ -1,5 +1,11 @@
 <script setup lang="ts">
+import type { MobileReleaseInfo } from '~/types/models'
+
 const config = useRuntimeConfig()
+const apiFetch = useApi()
+
+const { data: latestRelease } = await useAsyncData('latest-mobile-release', () => apiFetch<MobileReleaseInfo>('/api/system/mobile-releases/latest').catch(() => null))
+
 const appReleaseLabel = computed(() => String(config.public.appVersion ?? ''))
 </script>
 
@@ -31,6 +37,22 @@ const appReleaseLabel = computed(() => String(config.public.appVersion ?? ''))
               class="size-3"
             />
             Treningi: Pn, Śr, Pt (15:00 - 18:00)
+          </span>
+        </div>
+        <div v-if="latestRelease" class="mt-2 flex items-center gap-4">
+          <UButton
+            :to="latestRelease.download_url"
+            target="_blank"
+            size="xs"
+            color="primary"
+            variant="soft"
+            icon="i-lucide-smartphone"
+            class="font-black uppercase tracking-widest text-[9px]"
+          >
+            Pobierz Aplikację (Android)
+          </UButton>
+          <span class="text-[9px] font-bold text-muted uppercase tracking-tighter">
+            Wersja {{ latestRelease.version }}
           </span>
         </div>
       </div>

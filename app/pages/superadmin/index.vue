@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import type { AthletePaymentOverviewRow } from '~/types/models'
 import DashboardHero from '~/components/dashboard/DashboardHero.vue'
 import DashboardKpiCard from '~/components/dashboard/DashboardKpiCard.vue'
 import DashboardModuleCard from '~/components/dashboard/DashboardModuleCard.vue'
+import DashboardMonthlySummary from '~/components/dashboard/DashboardMonthlySummary.vue'
 
 definePageMeta({ middleware: 'superadmin' })
 
@@ -26,6 +28,47 @@ const { data: adminsGrouped } = await useAsyncData(
 )
 const { data: competitions } = await useAsyncData('super-dashboard-competitions', () => apiFetch('/api/competitions').catch(() => []))
 
+/** KPI Summary Data (Extended) */
+const currentMonthStr = new Date().toISOString().slice(0, 7)
+const { data: paymentsOverview } = await useAsyncData(
+  'super-kpi-payments',
+  () => apiFetch<AthletePaymentOverviewRow[]>('/api/payments/overview?month=' + currentMonthStr).catch(() => [])
+)
+
+const paidCount = computed(() => (paymentsOverview.value || []).filter(r => r.has_approved).length)
+const totalAthletesWithRecords = computed(() => (paymentsOverview.value || []).length)
+const paymentProgress = computed(() => {
+  if (totalAthletesWithRecords.value === 0) return 0
+  return Math.round((paidCount.value / totalAthletesWithRecords.value) * 100)
+})
+const paymentsPendingCount = computed(
+  () => (paymentsOverview.value || []).filter((r: { has_approved?: boolean }) => !r.has_approved).length
+)
+const { data: pendingResults } = await useAsyncData(
+  'super-dashboard-pending',
+  () => apiFetch<unknown[]>('/api/results/pending').catch(() => [])
+)
+const pendingResultsCount = computed(() =>
+  Array.isArray(pendingResults.value) ? pendingResults.value.length : 0
+)
+
+const { data: recentAttendance } = await useAsyncData(
+  'super-kpi-attendance-recent',
+  () => {
+    const d = new Date()
+    d.setDate(d.getDate() - 30)
+    const from = d.toISOString().slice(0, 10)
+    return apiFetch<{ status: string }[]>(`/api/attendance?from_date=${from}`).catch(() => [])
+  }
+)
+
+const avgAttendance = computed(() => {
+  const rows = recentAttendance.value || []
+  if (rows.length === 0) return 0
+  const present = rows.filter(r => r.status === 'obecny').length
+  return Math.round((present / rows.length) * 100)
+})
+
 const athletesCount = computed(() => {
   const list = athletes.value
   if (!Array.isArray(list)) {
@@ -36,7 +79,7 @@ const athletesCount = computed(() => {
 const adminsCount = computed(() =>
   Array.isArray(adminsGrouped.value?.admins) ? adminsGrouped.value.admins.length : 0
 )
-const competitionsCount = computed(() => Array.isArray(competitions.value) ? competitions.value.length : 0)
+const _competitionsCount = computed(() => Array.isArray(competitions.value) ? competitions.value.length : 0)
 
 const quickLinks = [
   {
@@ -248,10 +291,21 @@ function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 
       ]"
     />
 
-    <div class="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3 lg:gap-4">
-      <DashboardKpiCard label="Konta administracyjne" :value="adminsCount" icon="i-lucide-shield-check" tone="error" to="/superadmin/administratorzy" />
+    <div class="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-4">
+      <DashboardKpiCard label="Konta (kadra)" :value="adminsCount" icon="i-lucide-shield-check" tone="error" to="/superadmin/administratorzy" />
       <DashboardKpiCard label="Zawodnicy (aktywni)" :value="athletesCount" icon="i-lucide-users" tone="info" to="/superadmin/zawodnicy" />
-      <DashboardKpiCard label="Wydarzenia (kalendarz)" :value="competitionsCount" icon="i-lucide-calendar" tone="primary" to="/kalendarz" />
+      <DashboardKpiCard label="Składki (opłacone)" :value="`${paymentProgress}%`" icon="i-lucide-banknote" tone="success" to="/admin" />
+      <DashboardKpiCard label="Obecność (30d)" :value="`${avgAttendance}%`" icon="i-lucide-user-check" tone="primary" to="/trainer" />
+    </div>
+
+    <div class="mt-8">
+      <DashboardMonthlySummary
+        :athletes-active="athletesCount"
+        :payment-progress="paymentProgress"
+        :payments-pending="paymentsPendingCount"
+        :avg-attendance30d="avgAttendance"
+        :pending-results="pendingResultsCount"
+      />
     </div>
 
     <div class="mt-12 space-y-8">
