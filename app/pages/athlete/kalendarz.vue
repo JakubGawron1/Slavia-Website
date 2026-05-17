@@ -237,32 +237,55 @@ function exportEventToIcs() {
   })
   downloadIcs(ev.title, content)
 }
+
+const monthAgenda = computed(() => {
+  const start = startOfMonth(monthStart.value)
+  const end = endOfMonth(monthStart.value)
+  return eachDayOfInterval({ start, end })
+    .map((d) => ({
+      day: d,
+      events: getEventsForDay(d)
+    }))
+    .filter((x) => x.events.length > 0)
+})
+
+function eventAgendaKey(event: { id: string | number, type?: string }) {
+  return `${event.id}-${event.type ?? 'event'}`
+}
+
+const monthAgendaRows = computed(() =>
+  monthAgenda.value.map((row) => ({
+    day: row.day,
+    events: row.events.map((ev) => ({
+      key: eventAgendaKey(ev),
+      title: ev.title,
+      subtitle: ev.time || ev.location || ev.participantsLine || '—',
+      chipClass: getEventClasses(ev) || '',
+      icon: getEventIcon(ev)
+    }))
+  }))
+)
+
+function onAgendaSelect(day: Date, ev: { key: string }) {
+  const found = getEventsForDay(day).find((e) => eventAgendaKey(e) === ev.key)
+  if (found) openDetail(day, found)
+}
 </script>
 
 <template>
-  <UContainer class="py-8 md:py-12 lg:py-14">
-    <div class="mb-8">
-      <p class="text-sm font-medium uppercase tracking-wider text-primary">
-        Zawodnik
-      </p>
-      <h1 class="text-3xl font-bold text-highlighted">
-        Mój kalendarz
-      </h1>
-      <p class="mt-2 max-w-xl text-muted text-sm">
-        Treningi klubowe (Pn, Śr, Pt) — status (np. odwołanie) jest ten sam co w kalendarzu klubu.
-        Niżej zawody i wydarzenia, do których trener lub administrator Cię przypisał — zobaczysz też kto jeszcze startuje.
-      </p>
-      <div class="mt-4">
-        <UButton
-          to="/kalendarz"
-          variant="soft"
-          color="neutral"
-          icon="i-lucide-calendar-days"
-        >
+  <PanelPageLayout>
+    <PanelPageHeader
+      area="athlete"
+      title="Mój kalendarz"
+      icon="i-lucide-calendar-heart"
+      description="Treningi klubowe (Pn, Śr, Pt) oraz przypisane starty. Status treningu jest ten sam co w kalendarzu klubu."
+    >
+      <template #actions>
+        <UButton to="/kalendarz" variant="soft" color="neutral" icon="i-lucide-calendar-days">
           Pełny kalendarz klubu
         </UButton>
-      </div>
-    </div>
+      </template>
+    </PanelPageHeader>
 
     <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
       <div class="flex items-center gap-2 bg-muted/20 p-1.5 rounded-xl border border-default">
@@ -312,7 +335,7 @@ function exportEventToIcs() {
       </div>
     </div>
 
-    <div class="border border-default rounded-2xl overflow-hidden bg-card shadow-2xl">
+    <div class="hidden sm:block border border-default rounded-2xl overflow-hidden bg-card shadow-2xl">
       <div class="grid grid-cols-7 border-b border-default bg-muted/30">
         <div
           v-for="d in weekDays"
@@ -373,6 +396,14 @@ function exportEventToIcs() {
           </div>
         </div>
       </div>
+    </div>
+
+    <div class="mt-4 sm:hidden">
+      <CalendarMonthAgenda
+        :rows="monthAgendaRows"
+        empty-description="Zmień miesiąc lub filtry kategorii."
+        @select="onAgendaSelect"
+      />
     </div>
 
     <div class="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-3 p-5 rounded-2xl bg-muted/10 border border-default">
@@ -541,5 +572,5 @@ function exportEventToIcs() {
         </div>
       </template>
     </UModal>
-  </UContainer>
+  </PanelPageLayout>
 </template>

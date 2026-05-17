@@ -55,25 +55,21 @@ function workerHuman(id: string) {
 </script>
 
 <template>
-  <UContainer class="py-8 md:py-12">
-    <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <p class="text-sm font-semibold uppercase tracking-wider text-primary">
-          Operacje · telemetria
-        </p>
-        <h1 class="mt-2 text-3xl font-black tracking-tight text-highlighted">
-          Workery w tle (cron)
-        </h1>
-        <p class="mt-2 max-w-3xl text-sm text-muted">
-          Ostatnie przebiegi zadań okresowych w procesie backendu. Wyświetlany czas to
-          <strong class="text-highlighted">czas ściany (wall-clock)</strong> pojedynczego przebiegu — przybliżenie kosztu pracy workerów względem DB,
-          nie surowe zużycie CPU (SUP #2299 — panel na www).
-        </p>
-      </div>
-      <UButton icon="i-lucide-refresh-cw" color="neutral" variant="outline" @click="refreshRows">
-        Odśwież
-      </UButton>
-    </div>
+  <PanelPageLayout>
+    <PanelPageHeader
+      area="superadmin"
+      tone="superadmin"
+      eyebrow="Operacje · telemetria"
+      title="Workery w tle (cron)"
+      icon="i-lucide-cpu"
+      description="Ostatnie przebiegi zadań okresowych w procesie backendu. Wyświetlany czas to czas ściany (wall-clock) pojedynczego przebiegu."
+    >
+      <template #actions>
+        <UButton icon="i-lucide-refresh-cw" color="neutral" variant="outline" @click="refreshRows">
+          Odśwież
+        </UButton>
+      </template>
+    </PanelPageHeader>
 
     <UCard class="rounded-2xl">
       <div v-if="pending" class="flex justify-center py-16">
@@ -138,5 +134,5 @@ function workerHuman(id: string) {
       Zarejestrowane zadania: cykliczna auto-składka (standing order),
       usuwanie nieaktywnych wątków czatu oraz jednorazowe „catch-up” przy starcie serwisu.
     </p>
-  </UContainer>
+  </PanelPageLayout>
 </template>

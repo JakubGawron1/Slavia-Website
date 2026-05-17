@@ -126,11 +126,13 @@ async function sendMessage() {
 </script>
 
 <template>
-  <UContainer class="py-4 sm:py-6 lg:py-8">
-    <div class="mb-4">
-      <h1 class="text-2xl font-bold text-highlighted">Czat trener–zawodnik</h1>
-      <p class="text-sm text-muted">Wiadomości 1:1 w obrębie kont klubowych.</p>
-    </div>
+  <PanelPageLayout padding="compact">
+    <PanelPageHeader
+      area="staff"
+      title="Czat trener–zawodnik"
+      icon="i-lucide-messages-square"
+      description="Wiadomości 1:1 w obrębie kont klubowych."
+    />
 
     <UCard v-if="auth.isTrainer.value || auth.isSuperAdmin.value" class="mb-4">
       <div class="flex flex-wrap items-end gap-2">
@@ -211,5 +213,5 @@ async function sendMessage() {
         </div>
       </UCard>
     </div>
-  </UContainer>
+  </PanelPageLayout>
 </template>

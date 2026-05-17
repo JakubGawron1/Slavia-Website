@@ -183,49 +183,34 @@ function rowAccentClass(s: string) {
 </script>
 
 <template>
-  <UContainer class="py-8 md:py-14 lg:py-16">
-    <div class="mx-auto max-w-6xl">
-      <div class="relative overflow-hidden rounded-3xl border border-default/60 bg-linear-to-br from-primary/10 via-card to-card p-6 shadow-sm ring-1 ring-primary/10 sm:p-8">
-        <div class="pointer-events-none absolute -right-20 -top-24 size-72 rounded-full bg-primary/20 blur-3xl" />
-        <div class="relative">
-          <p class="text-[11px] font-black uppercase tracking-[0.25em] text-primary">
-            Narzędzie
-          </p>
-          <h1 class="mt-2 text-3xl font-black tracking-tight text-highlighted sm:text-4xl lg:text-5xl">
-            Kalkulator „złotych proporcji”
-          </h1>
-          <p class="mt-3 max-w-3xl text-sm leading-relaxed text-muted sm:text-base">
-            Wpisz znane maxy (1RM). Dostaniesz sugerowane <strong class="text-default">widełki</strong> oraz miłe wskazówki,
-            co najczęściej poprawia balans między bojami (technika, mobilność, transfer siły).
-          </p>
-          <p class="mt-3 max-w-3xl text-sm leading-relaxed text-muted sm:text-base">
-            <strong class="text-default">Możesz wpisać kilka powiązanych ćwiczeń naraz</strong> — dostaniesz feedback dla każdej relacji,
-            gdzie podasz oba ćwiczenia (dotyczy też ćwiczeń dodatkowych).
-          </p>
-          <div class="mt-5 flex flex-wrap gap-2">
-            <UBadge color="success" variant="subtle" size="sm">
-              W widełkach: {{ summary.inRange }}
-            </UBadge>
-            <UBadge color="warning" variant="subtle" size="sm">
-              Poniżej: {{ summary.below }}
-            </UBadge>
-            <UBadge color="info" variant="subtle" size="sm">
-              Powyżej: {{ summary.above }}
-            </UBadge>
-            <UBadge color="neutral" variant="subtle" size="sm">
-              Policzone: {{ summary.computed }} / {{ summary.total }}
-            </UBadge>
-            <UBadge color="neutral" variant="subtle" size="sm">
-              Wpisane: {{ filledCount }}
-            </UBadge>
-            <UBadge color="primary" variant="subtle" size="sm">
-              Analiz relacji: {{ relationAnalyses.length }}
-            </UBadge>
-          </div>
-        </div>
-      </div>
+  <PublicPageLayout>
+    <PanelPageHeader
+      eyebrow="Narzędzie"
+      title="Kalkulator „złotych proporcji”"
+      icon="i-lucide-sigma"
+      variant="hero"
+      description="Wpisz znane maxy (1RM) — dostaniesz sugerowane widełki i wskazówki balansu między bojami. Możesz wpisać kilka ćwiczeń naraz."
+    >
+      <template #badges>
+        <UBadge color="success" variant="subtle" size="sm">
+          W widełkach: {{ summary.inRange }}
+        </UBadge>
+        <UBadge color="warning" variant="subtle" size="sm">
+          Poniżej: {{ summary.below }}
+        </UBadge>
+        <UBadge color="info" variant="subtle" size="sm">
+          Powyżej: {{ summary.above }}
+        </UBadge>
+        <UBadge color="neutral" variant="subtle" size="sm">
+          Policzone: {{ summary.computed }} / {{ summary.total }}
+        </UBadge>
+        <UBadge color="neutral" variant="subtle" size="sm">
+          Wpisane: {{ filledCount }}
+        </UBadge>
+      </template>
+    </PanelPageHeader>
 
-      <div class="mt-10 grid gap-8 lg:grid-cols-5">
+      <div class="grid gap-8 lg:grid-cols-5">
         <UCard class="rounded-3xl border-default/70 shadow-sm ring-1 ring-default/40 lg:col-span-2">
           <template #header>
             <div class="flex items-start justify-between gap-3">
@@ -482,7 +467,6 @@ function rowAccentClass(s: string) {
           </div>
         </UCard>
       </div>
-    </div>
-  </UContainer>
+  </PublicPageLayout>
 </template>
 

@@ -4,6 +4,7 @@ import DashboardHero from '~/components/dashboard/DashboardHero.vue'
 import DashboardKpiCard from '~/components/dashboard/DashboardKpiCard.vue'
 import DashboardModuleCard from '~/components/dashboard/DashboardModuleCard.vue'
 import DashboardMonthlySummary from '~/components/dashboard/DashboardMonthlySummary.vue'
+import { dashboardLink, type DashboardModuleLink } from '~/utils/dashboardLink'
 
 definePageMeta({ middleware: 'superadmin' })
 
@@ -81,193 +82,66 @@ const adminsCount = computed(() =>
 )
 const _competitionsCount = computed(() => Array.isArray(competitions.value) ? competitions.value.length : 0)
 
-const quickLinks = [
+const moduleGroups: { title: string, items: DashboardModuleLink[] }[] = [
   {
-    title: 'Zarządzanie kontami',
-    description: 'Administratorzy, trenerzy i zawodnicy — role, konta i uprawnienia (superadmin)',
-    icon: 'i-lucide-shield-alert',
-    to: '/superadmin/administratorzy',
-    color: 'text-red-500',
-    bg: 'bg-red-500/10'
+    title: 'System i bezpieczeństwo',
+    items: [
+      dashboardLink('Konta i role', 'Administratorzy, trenerzy, zawodnicy', 'i-lucide-shield-alert', '/superadmin/administratorzy', 'text-red-500', 'bg-red-500/10'),
+      dashboardLink('Logi systemowe', 'Audyt operacji', 'i-lucide-history', '/superadmin/audit-logs', 'text-primary', 'bg-primary/10'),
+      dashboardLink('Workery cron', 'Zadania w tle', 'i-lucide-timer', '/superadmin/workers', 'text-fuchsia-500', 'bg-fuchsia-500/10'),
+      dashboardLink('Narzędzia developera', 'Diagnostyka API i PWA', 'i-lucide-terminal', '/superadmin/developer', 'text-violet-500', 'bg-violet-500/10'),
+      dashboardLink('Import danych', 'Federacje i CSV', 'i-lucide-file-up', '/superadmin/import', 'text-cyan-600', 'bg-cyan-500/10'),
+      dashboardLink('Baza zawodników', 'Pełna edycja profili', 'i-lucide-users', '/superadmin/zawodnicy', 'text-blue-500', 'bg-blue-500/10'),
+      dashboardLink('Barbell Lab', 'Eksperymenty wizji', 'i-lucide-beaker', '/superadmin/barbell-lab', 'text-pink-500', 'bg-pink-500/10')
+    ]
   },
   {
-    title: 'Logi systemowe',
-    description: 'Historia zmian i audyt operacji (superadmin)',
-    icon: 'i-lucide-history',
-    to: '/superadmin/audit-logs',
-    color: 'text-primary',
-    bg: 'bg-primary/10'
+    title: 'Panele ról',
+    items: [
+      dashboardLink('Panel admina', 'Administracja treści', 'i-lucide-settings', '/admin', 'text-neutral-500', 'bg-neutral-500/10'),
+      dashboardLink('Panel trenera', 'Kadra i zawodnicy', 'i-lucide-dumbbell', '/trainer', 'text-success', 'bg-success/12'),
+      dashboardLink('Panel zawodnika', 'Widok zawodnika', 'i-lucide-user', '/athlete', 'text-amber-500', 'bg-amber-500/10')
+    ]
   },
   {
-    title: 'Workery cron (czasy przebiegu)',
-    description:
-      'Ostatnie takty zadań w tle: auto-składki, pruner czatu — czas trwania (wall-clock)',
-    icon: 'i-lucide-timer',
-    to: '/superadmin/workers',
-    color: 'text-fuchsia-500',
-    bg: 'bg-fuchsia-500/10'
+    title: 'Administracja treści',
+    items: [
+      dashboardLink('Konta kadry', 'Login i hasła', 'i-lucide-key-round', '/admin/konta', 'text-rose-500', 'bg-rose-500/10'),
+      dashboardLink('Wiadomości (kontakt)', 'Formularz publiczny', 'i-lucide-mail', '/admin/kontakt-wiadomosci', 'text-info', 'bg-info/12'),
+      dashboardLink('Changelog', 'Historia wydań', 'i-lucide-file-text', '/admin/changelog', 'text-success', 'bg-success/12'),
+      dashboardLink('Aktualności', 'Wpisy klubu', 'i-lucide-newspaper', '/aktualnosci', 'text-orange-500', 'bg-orange-500/10'),
+      dashboardLink('Ogłoszenia', 'Tablica klubu', 'i-lucide-megaphone', '/ogloszenia', 'text-violet-500', 'bg-violet-500/10'),
+      dashboardLink('Galeria', 'Zdjęcia na stronie', 'i-lucide-images', '/galeria', 'text-pink-500', 'bg-pink-500/10'),
+      dashboardLink('Kalendarz', 'Wydarzenia klubu', 'i-lucide-calendar', '/kalendarz', 'text-purple-500', 'bg-purple-500/10')
+    ]
   },
   {
-    title: 'Panel Admina',
-    description: 'Przejdź do panelu administratora',
-    icon: 'i-lucide-settings',
-    to: '/admin',
-    color: 'text-neutral-500',
-    bg: 'bg-neutral-500/10'
+    title: 'Kadra trenera',
+    items: [
+      dashboardLink('Starty zawodników', 'Lista startów', 'i-lucide-list-checks', '/trainer/wyniki', 'text-teal-500', 'bg-teal-500/10'),
+      dashboardLink('Składki', 'Zatwierdzanie wpłat', 'i-lucide-banknote', '/trainer/skladki', 'text-green-600', 'bg-green-500/10'),
+      dashboardLink('Obecności', 'Weryfikacja', 'i-lucide-user-check', '/attendance', 'text-indigo-600', 'bg-indigo-500/10'),
+      dashboardLink('Dzienniki', 'Wpisy treningowe', 'i-lucide-book-marked', '/trainer/dziennik', 'text-cyan-600', 'bg-cyan-500/10'),
+      dashboardLink('Plany', 'Monitoring progresu', 'i-lucide-clipboard-list', '/trainer/plany', 'text-emerald-600', 'bg-emerald-500/10'),
+      dashboardLink('Regeneracja', 'Check-in zawodników', 'i-lucide-heart-pulse', '/trainer/regeneracja', 'text-rose-600', 'bg-rose-500/10'),
+      dashboardLink('Inne ćwiczenia', 'Ranking siłowy', 'i-lucide-bar-chart-3', '/trainer/exercises', 'text-lime-600', 'bg-lime-500/10'),
+      dashboardLink('Słownik ćwiczeń', 'Baza do planów', 'i-lucide-library', '/trainer/cwiczenia', 'text-indigo-500', 'bg-indigo-500/10'),
+      dashboardLink('Analiza sztangi', 'Wideo i diagnostyka', 'i-lucide-scan-line', '/trainer/analiza-sztangi', 'text-orange-500', 'bg-orange-500/10'),
+      dashboardLink('Monitoring', 'Metryki kadry', 'i-lucide-activity', '/trainer/monitoring', 'text-sky-600', 'bg-sky-500/10'),
+      dashboardLink('Czat', 'Wiadomości 1:1', 'i-lucide-messages-square', '/chat', 'text-info', 'bg-info/12')
+    ]
   },
   {
-    title: 'Panel Trenera',
-    description: 'Przejdź do panelu trenera',
-    icon: 'i-lucide-user-check',
-    to: '/trainer',
-    color: 'text-success',
-    bg: 'bg-success/12'
-  },
-  {
-    title: 'Panel Zawodnika',
-    description: 'Zobacz interfejs tak jak po stronie zawodnika',
-    icon: 'i-lucide-dumbbell',
-    to: '/athlete',
-    color: 'text-amber-500',
-    bg: 'bg-amber-500/10'
-  },
-  {
-    title: 'Baza Zawodników',
-    description: 'Pełny dostęp do edycji bazy zawodników',
-    icon: 'i-lucide-users',
-    to: '/superadmin/zawodnicy',
-    color: 'text-blue-500',
-    bg: 'bg-blue-500/10'
-  },
-  {
-    title: 'Narzędzia developera',
-    description: 'Mapa tras, ping API, PWA, logi lokalne i zrzuty diagnostyczne',
-    icon: 'i-lucide-terminal',
-    to: '/superadmin/developer',
-    color: 'text-violet-500',
-    bg: 'bg-violet-500/10'
-  },
-  {
-    title: 'Changelog systemu',
-    description: 'Lista wydań — ta sama co w panelu admina',
-    icon: 'i-lucide-file-text',
-    to: '/admin/changelog',
-    color: 'text-success',
-    bg: 'bg-success/12'
-  },
-  {
-    title: 'Dzienniki treningów',
-    description: 'Wpisy po jednostkach — widok trenera',
-    icon: 'i-lucide-book-marked',
-    to: '/trainer/dziennik',
-    color: 'text-cyan-600',
-    bg: 'bg-cyan-500/10'
-  },
-  {
-    title: 'Inne ćwiczenia',
-    description: 'Ranking ćwiczeń pomocniczych dla kadry i adminów',
-    icon: 'i-lucide-bar-chart-3',
-    to: '/trainer/exercises',
-    color: 'text-lime-600',
-    bg: 'bg-lime-500/10'
-  },
-  {
-    title: 'Proporcje (ratio)',
-    description: '„Złote proporcje” i widełki % między bojami',
-    icon: 'i-lucide-sigma',
-    to: '/kalkulator-proporcji',
-    color: 'text-success',
-    bg: 'bg-success/12'
-  },
-  {
-    title: 'Analiza toru sztangi',
-    description: 'Wideo i diagnostyka toru (kadra)',
-    icon: 'i-lucide-scan-line',
-    to: '/trainer/analiza-sztangi',
-    color: 'text-orange-500',
-    bg: 'bg-orange-500/10'
-  },
-  {
-    title: 'Kalendarz Systemowy',
-    description: 'Edytuj wszystkie wydarzenia na stronie',
-    icon: 'i-lucide-calendar',
-    to: '/kalendarz',
-    color: 'text-purple-500',
-    bg: 'bg-purple-500/10'
-  },
-  {
-    title: 'Starty zawodników',
-    description: 'Pełna lista startów — edycja i usuwanie wpisów',
-    icon: 'i-lucide-list-checks',
-    to: '/trainer/wyniki',
-    color: 'text-teal-500',
-    bg: 'bg-teal-500/10'
-  },
-  {
-    title: 'Ustawienia konta',
-    description: 'E-mail, avatar i hasło',
-    icon: 'i-lucide-user-cog',
-    to: '/profil',
-    color: 'text-neutral-500',
-    bg: 'bg-neutral-500/10'
-  },
-  {
-    title: 'Aktualności',
-    description: 'Wpisy informacyjne i relacje',
-    icon: 'i-lucide-newspaper',
-    to: '/aktualnosci',
-    color: 'text-orange-500',
-    bg: 'bg-orange-500/10'
-  },
-  {
-    title: 'Barbell Tracker Lab',
-    description: 'Benchmark silników: MediaPipe, TF.js, OpenCV (Superadmin Experimental)',
-    icon: 'i-lucide-beaker',
-    to: '/superadmin/barbell-lab',
-    color: 'text-pink-500',
-    bg: 'bg-pink-500/10'
+    title: 'Klub publiczny i konto',
+    items: [
+      dashboardLink('Ranking zawodników', 'Wyniki publiczne', 'i-lucide-trophy', '/zawodnicy', 'text-yellow-600', 'bg-yellow-500/10'),
+      dashboardLink('Wyzwania miesiąca', 'Aktywność', 'i-lucide-flame', '/klub/wyzwania', 'text-orange-600', 'bg-orange-500/10'),
+      dashboardLink('Powiadomienia', 'Alerty', 'i-lucide-bell', '/powiadomienia', 'text-amber-600', 'bg-amber-500/10'),
+      dashboardLink('Proporcje', 'Kalkulator bojów', 'i-lucide-sigma', '/kalkulator-proporcji', 'text-success', 'bg-success/12'),
+      dashboardLink('Profil', 'Ustawienia konta', 'i-lucide-user-cog', '/profil', 'text-neutral-500', 'bg-neutral-500/10')
+    ]
   }
 ]
-
-const moduleGroups = computed(() => {
-  const byTo = new Map<string, typeof quickLinks[number]>()
-  for (const l of quickLinks) byTo.set(String(l.to), l)
-  const pick = (to: string) => byTo.get(to)
-  return [
-    {
-      title: 'System i bezpieczeństwo',
-      items: [
-        pick('/superadmin/administratorzy'),
-        pick('/superadmin/audit-logs'),
-        pick('/superadmin/developer'),
-        pick('/superadmin/zawodnicy'),
-        pick('/superadmin/barbell-lab')
-      ].filter(Boolean)
-    },
-    {
-      title: 'Przejścia i operacje',
-      items: [
-        pick('/admin'),
-        pick('/trainer'),
-        pick('/athlete'),
-        pick('/kalendarz')
-      ].filter(Boolean)
-    },
-    {
-      title: 'Narzędzia i treści',
-      items: [
-        pick('/admin/changelog'),
-        pick('/trainer/wyniki'),
-        pick('/trainer/dziennik'),
-        pick('/trainer/exercises'),
-        pick('/trainer/analiza-sztangi'),
-        pick('/aktualnosci'),
-        pick('/profil'),
-        pick('/kalkulator-proporcji')
-      ].filter(Boolean)
-    }
-  ] as const
-})
 
 function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral' {
   const s = String(bg || '').toLowerCase()
@@ -284,7 +158,7 @@ function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 
 </script>
 
 <template>
-  <UContainer class="py-8 md:py-14 lg:py-16">
+  <UContainer class="slavia-panel-page py-8 md:py-14 lg:py-16">
     <DashboardHero
       eyebrow="Superadministracja"
       :title="`Witaj, ${auth.user.value?.username || 'Superadminie'}!`"
@@ -293,10 +167,6 @@ function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 
       :badges="[
         { label: `Konta admin: ${adminsCount}`, color: 'neutral' },
         { label: `Zawodnicy: ${athletesCount}`, color: 'neutral' }
-      ]"
-      :actions="[
-        { label: 'Konta i role', to: '/superadmin/administratorzy', icon: 'i-lucide-shield-alert', variant: 'soft', color: 'primary' },
-        { label: 'Dev tools', to: '/superadmin/developer', icon: 'i-lucide-terminal', variant: 'outline', color: 'neutral' }
       ]"
     />
 
@@ -320,7 +190,7 @@ function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 
     <div class="mt-12 space-y-8">
       <div v-for="g in moduleGroups" :key="g.title">
         <div class="mb-3 flex items-end justify-between gap-3">
-          <h2 class="text-xl font-semibold text-highlighted">
+          <h2 class="slavia-panel-section-title">
             {{ g.title }}
           </h2>
         </div>

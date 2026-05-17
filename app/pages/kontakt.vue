@@ -65,16 +65,15 @@ async function submit() {
 </script>
 
 <template>
-  <UContainer class="animate-page-in py-8 sm:py-12 lg:py-14">
-    <div class="mx-auto max-w-xl">
-      <h1 class="text-2xl font-bold tracking-tight text-highlighted sm:text-3xl">
-        Kontakt
-      </h1>
-      <p class="mt-2 text-sm text-muted sm:text-base">
-        Masz pytanie o treningi, zapisy lub współpracę? Zostaw wiadomość — administratorzy klubu zobaczą ją w panelu.
-      </p>
+  <PublicPageLayout narrow>
+    <PublicPageHeader
+      eyebrow="CKS Slavia"
+      title="Kontakt"
+      description="Masz pytanie o treningi, zapisy lub współpracę? Zostaw wiadomość — administratorzy klubu zobaczą ją w panelu."
+    />
 
-      <UCard class="mt-8 border border-default">
+    <div class="mx-auto max-w-xl">
+      <UCard class="slavia-page-card mt-2">
         <form
           class="flex flex-col gap-4 p-4 sm:p-6"
           @submit.prevent="submit"
@@ -137,5 +136,5 @@ async function submit() {
         Administracja może przeglądać i oznaczać wiadomości w panelu administratora.
       </p>
     </div>
-  </UContainer>
+  </PublicPageLayout>
 </template>

@@ -131,15 +131,13 @@ useSeoMeta({
 </script>
 
 <template>
-  <UContainer class="py-8 sm:py-12 lg:py-14">
-    <div class="mb-8">
-      <h1 class="text-2xl font-bold tracking-tight text-highlighted sm:text-3xl lg:text-4xl">
-        Inne ćwiczenia
-      </h1>
-      <p class="mt-2 text-sm text-muted sm:text-base lg:leading-relaxed">
-        Rzeczywiste wyniki siłowe z zatwierdzonych wpisów (trener/admin) + status zgłoszeń zawodników.
-      </p>
-    </div>
+  <PanelPageLayout>
+    <PanelPageHeader
+      area="athlete"
+      title="Inne ćwiczenia"
+      icon="i-lucide-bar-chart-3"
+      description="Rzeczywiste wyniki siłowe z zatwierdzonych wpisów (trener/admin) + status zgłoszeń zawodników."
+    />
 
     <UAlert
       v-if="!canOpen"
@@ -293,5 +291,5 @@ useSeoMeta({
         </div>
       </UCard>
     </div>
-  </UContainer>
+  </PanelPageLayout>
 </template>

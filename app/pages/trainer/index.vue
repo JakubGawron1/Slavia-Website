@@ -7,6 +7,7 @@ import DashboardKpiCard from '~/components/dashboard/DashboardKpiCard.vue'
 import DashboardModuleCard from '~/components/dashboard/DashboardModuleCard.vue'
 import DashboardUrgentList from '~/components/dashboard/DashboardUrgentList.vue'
 import DashboardMonthlySummary from '~/components/dashboard/DashboardMonthlySummary.vue'
+import { dashboardLink, type DashboardModuleLink } from '~/utils/dashboardLink'
 
 definePageMeta({ middleware: 'trainer' })
 
@@ -17,7 +18,6 @@ useSeoMeta({
 
 const auth = useAuth()
 const apiFetch = useApi()
-const FILTER_ALL = '__all__'
 
 const { data: athletes } = await useAsyncData(
   'trainer-athletes',
@@ -43,23 +43,12 @@ const { data: pendingPayments, refresh: refreshPendingPayments } = await useAsyn
 const { data: competitions } = await useAsyncData('trainer-competitions', () => apiFetch('/api/competitions').catch(() => []))
 
 const toast = useToast()
+
 type AttendanceRecord = {
   id: string
-  athlete_id: string
-  session_date: string
-  status: string
+  status?: string
   verification_state: string
-  note?: string | null
 }
-const attendanceFilters = reactive({
-  athlete_id: FILTER_ALL,
-  status: FILTER_ALL,
-  verification_state: FILTER_ALL,
-  from_date: '',
-  to_date: ''
-})
-const attendanceRows = ref<AttendanceRecord[]>([])
-const verifyingAttendanceId = ref<string | null>(null)
 
 /** KPI Summary Data */
 const currentMonthStr = new Date().toISOString().slice(0, 7)
@@ -95,6 +84,18 @@ const avgAttendance = computed(() => {
   return Math.round((present / rows.length) * 100)
 })
 
+const { data: pendingAttendanceRows } = await useAsyncData(
+  'trainer-pending-attendance',
+  () =>
+    apiFetch<AttendanceRecord[]>('/api/attendance?verification_state=pending').catch(
+      () => []
+    )
+)
+
+const pendingAttendanceCount = computed(
+  () => (pendingAttendanceRows.value || []).length
+)
+
 const athleteNameById = computed(() => {
   const m = new Map<string, string>()
   for (const a of (athletes.value || []) as Athlete[]) {
@@ -121,190 +122,54 @@ const _competitionsCount = computed(() => (Array.isArray(competitions.value) ? c
 const lowerDashboards = computed(() => {
   const roles = new Set(auth.roles.value || [])
   const list: { label: string, to: string, icon: string }[] = []
+  if (roles.has('Admin')) list.push({ label: 'Panel admina', to: '/admin', icon: 'i-lucide-shield' })
+  if (roles.has('SuperAdmin')) list.push({ label: 'Panel SuperAdmin', to: '/superadmin', icon: 'i-lucide-crown' })
   if (roles.has('Athlete')) list.push({ label: 'Panel zawodnika', to: '/athlete', icon: 'i-lucide-user' })
   return list
 })
 
-const quickLinks = computed(() => {
-  const links = [
-    {
-      title: 'Baza zawodników',
-      description: 'Edycja profili i zawodów — konta logowania zakłada administrator',
-      icon: 'i-lucide-users',
-      to: '/trainer/zawodnicy',
-      color: 'text-blue-500',
-      bg: 'bg-blue-500/10'
-    },
-    {
-      title: 'Kalendarz',
-      description: 'Sprawdzaj i planuj zawody oraz treningi',
-      icon: 'i-lucide-calendar',
-      to: '/kalendarz',
-      color: 'text-purple-500',
-      bg: 'bg-purple-500/10'
-    },
-    {
-      title: 'Zgłoszenia wyników',
-      description: 'Lista oczekujących na tej stronie (sekcja poniżej) lub dodaj start w „Wszystkie starty”',
-      icon: 'i-lucide-check-circle',
-      to: { path: '/trainer', hash: '#wyniki-oczekujace' },
-      color: 'text-success',
-      bg: 'bg-success/12'
-    },
-    {
-      title: 'Składki klubowe',
-      description: 'Oczekujące, opłacone i brak wpłaty (widok miesiąca)',
-      icon: 'i-lucide-banknote',
-      to: '/trainer/skladki',
-      color: 'text-green-600',
-      bg: 'bg-green-500/10'
-    },
-    {
-      title: 'Wszystkie starty',
-      description: 'Lista zapisanych startów z edycją',
-      icon: 'i-lucide-list-checks',
-      to: '/trainer/wyniki',
-      color: 'text-teal-500',
-      bg: 'bg-teal-500/10'
-    },
-    {
-      title: 'Dzienniki treningów',
-      description: 'Wybierz zawodnika i prowadź wpisy po jednostkach',
-      icon: 'i-lucide-book-marked',
-      to: '/trainer/dziennik',
-      color: 'text-cyan-600',
-      bg: 'bg-cyan-500/10'
-    },
-    {
-      title: 'Plany treningowe',
-      description: 'Tworzenie planów i monitoring progresu',
-      icon: 'i-lucide-clipboard-list',
-      to: '/trainer/plany',
-      color: 'text-success',
-      bg: 'bg-success/12'
-    },
-    {
-      title: 'Regeneracja zawodników',
-      description: 'Check-in snu, zmęczenia i gotowości',
-      icon: 'i-lucide-heart-pulse',
-      to: '/trainer/regeneracja',
-      color: 'text-rose-600',
-      bg: 'bg-rose-500/10'
-    },
-    {
-      title: 'Feed wydarzeń',
-      description: 'Aktywności: wyniki, obecność, regeneracja',
-      icon: 'i-lucide-list-collapse',
-      to: '/trainer/wydarzenia',
-      color: 'text-fuchsia-600',
-      bg: 'bg-fuchsia-500/10'
-    },
-    {
-      title: 'Inne ćwiczenia',
-      description: 'Ranking przysiadów, wyciskania i martwego',
-      icon: 'i-lucide-bar-chart-3',
-      to: '/trainer/exercises',
-      color: 'text-lime-600',
-      bg: 'bg-lime-500/10'
-    },
-    {
-      title: 'Proporcje (ratio)',
-      description: '„Złote proporcje” i widełki % między bojami',
-      icon: 'i-lucide-sigma',
-      to: '/kalkulator-proporcji',
-      color: 'text-success',
-      bg: 'bg-success/12'
-    },
-    {
-      title: 'Analiza toru sztangi',
-      description: 'Wideo + AI w przeglądarce: tor ruchu i komunikaty techniczne',
-      icon: 'i-lucide-scan-line',
-      to: '/trainer/analiza-sztangi',
-      color: 'text-orange-500',
-      bg: 'bg-orange-500/10'
-    },
-    {
-      title: 'Aktualności klubu',
-      description: 'Aktualności, ogłoszenia i wpisy na stronie',
-      icon: 'i-lucide-newspaper',
-      to: '/aktualnosci',
-      color: 'text-amber-600',
-      bg: 'bg-amber-500/10'
-    },
-    {
-      title: 'Słownik ćwiczeń',
-      description: 'Zarządzaj bazą standardowych ćwiczeń do planów',
-      icon: 'i-lucide-library',
-      to: '/trainer/cwiczenia',
-      color: 'text-indigo-500',
-      bg: 'bg-indigo-500/10'
-    },
-    {
-      title: 'Ustawienia konta',
-      description: 'E-mail, avatar i hasło',
-      icon: 'i-lucide-user-cog',
-      to: '/profil',
-      color: 'text-neutral-500',
-      bg: 'bg-neutral-500/10'
-    },
-    {
-      title: 'Czat trener–zawodnik',
-      description: 'Wiadomości 1:1 i szybki kontakt',
-      icon: 'i-lucide-messages-square',
-      to: '/chat',
-      color: 'text-info',
-      bg: 'bg-info/12'
-    },
-    {
-      title: 'Lista obecności',
-      description: 'Statusy obecności i historia',
-      icon: 'i-lucide-user-check',
-      to: '/attendance',
-      color: 'text-indigo-600',
-      bg: 'bg-indigo-500/10'
-    }
-  ]
-  return links
-})
-
-const moduleGroups = computed(() => {
-  const list = quickLinks.value
-  const byTo = new Map<string, typeof list[number]>()
-  for (const l of list) byTo.set(typeof l.to === 'string' ? l.to : l.to.path, l)
-
-  const pick = (to: string) => byTo.get(to)
-  return [
-    {
-      title: 'Najczęstsze',
-      items: [
-        pick('/trainer/wyniki'),
-        pick('/trainer/zawodnicy'),
-        pick('/trainer/skladki'),
-        pick('/attendance')
-      ].filter(Boolean)
-    },
-    {
-      title: 'Planowanie',
-      items: [
-        pick('/kalendarz'),
-        pick('/trainer/plany'),
-        pick('/trainer/regeneracja'),
-        pick('/trainer/wydarzenia')
-      ].filter(Boolean)
-    },
-    {
-      title: 'Narzędzia',
-      items: [
-        pick('/trainer/analiza-sztangi'),
-        pick('/trainer/exercises'),
-        pick('/trainer/cwiczenia'),
-        pick('/kalkulator-proporcji'),
-        pick('/chat'),
-        pick('/profil')
-      ].filter(Boolean)
-    }
-  ] as const
-})
+const moduleGroups: { title: string, items: DashboardModuleLink[] }[] = [
+  {
+    title: 'Najczęstsze',
+    items: [
+      dashboardLink('Wszystkie starty', 'Lista startów z edycją', 'i-lucide-list-checks', '/trainer/wyniki', 'text-teal-500', 'bg-teal-500/10'),
+      dashboardLink('Baza zawodników', 'Profile i przypisania do zawodów', 'i-lucide-users', '/trainer/zawodnicy', 'text-blue-500', 'bg-blue-500/10'),
+      dashboardLink('Składki klubowe', 'Widok miesiąca i zatwierdzanie', 'i-lucide-banknote', '/trainer/skladki', 'text-green-600', 'bg-green-500/10'),
+      dashboardLink('Lista obecności', 'Statusy i weryfikacja', 'i-lucide-user-check', '/attendance', 'text-indigo-600', 'bg-indigo-500/10'),
+      dashboardLink('Dzienniki treningów', 'Wpisy po jednostkach', 'i-lucide-book-marked', '/trainer/dziennik', 'text-cyan-600', 'bg-cyan-500/10'),
+      dashboardLink('Czat z zawodnikami', 'Wiadomości 1:1', 'i-lucide-messages-square', '/chat', 'text-info', 'bg-info/12')
+    ]
+  },
+  {
+    title: 'Planowanie i monitoring',
+    items: [
+      dashboardLink('Kalendarz', 'Zawody i treningi klubu', 'i-lucide-calendar', '/kalendarz', 'text-purple-500', 'bg-purple-500/10'),
+      dashboardLink('Plany treningowe', 'Cykle i monitoring progresu', 'i-lucide-clipboard-list', '/trainer/plany', 'text-emerald-600', 'bg-emerald-500/10'),
+      dashboardLink('Regeneracja', 'Check-in snu i zmęczenia', 'i-lucide-heart-pulse', '/trainer/regeneracja', 'text-rose-600', 'bg-rose-500/10'),
+      dashboardLink('Feed wydarzeń', 'Aktywności w klubie', 'i-lucide-list-collapse', '/trainer/wydarzenia', 'text-fuchsia-600', 'bg-fuchsia-500/10'),
+      dashboardLink('Monitoring', 'Metryki systemowe', 'i-lucide-activity', '/trainer/monitoring', 'text-sky-600', 'bg-sky-500/10')
+    ]
+  },
+  {
+    title: 'Klub i treści',
+    items: [
+      dashboardLink('Aktualności', 'Wpisy na stronie', 'i-lucide-newspaper', '/aktualnosci', 'text-amber-600', 'bg-amber-500/10'),
+      dashboardLink('Wyzwania miesiąca', 'Ranking aktywności', 'i-lucide-flame', '/klub/wyzwania', 'text-orange-600', 'bg-orange-500/10'),
+      dashboardLink('Ranking zawodników', 'Publiczne wyniki', 'i-lucide-trophy', '/zawodnicy', 'text-yellow-600', 'bg-yellow-500/10'),
+      dashboardLink('Powiadomienia', 'Alerty systemowe', 'i-lucide-bell', '/powiadomienia', 'text-amber-600', 'bg-amber-500/10')
+    ]
+  },
+  {
+    title: 'Narzędzia',
+    items: [
+      dashboardLink('Analiza toru sztangi', 'Wideo i diagnostyka', 'i-lucide-scan-line', '/trainer/analiza-sztangi', 'text-orange-500', 'bg-orange-500/10'),
+      dashboardLink('Inne ćwiczenia', 'Ranking siłowy', 'i-lucide-bar-chart-3', '/trainer/exercises', 'text-lime-600', 'bg-lime-500/10'),
+      dashboardLink('Słownik ćwiczeń', 'Baza do planów', 'i-lucide-library', '/trainer/cwiczenia', 'text-indigo-500', 'bg-indigo-500/10'),
+      dashboardLink('Proporcje (ratio)', 'Kalkulator bojów', 'i-lucide-sigma', '/kalkulator-proporcji', 'text-success', 'bg-success/12'),
+      dashboardLink('Ustawienia konta', 'E-mail, avatar, hasło', 'i-lucide-user-cog', '/profil', 'text-neutral-500', 'bg-neutral-500/10')
+    ]
+  }
+]
 
 function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral' {
   const s = String(bg || '').toLowerCase()
@@ -375,42 +240,10 @@ async function rejectPayment(id: string) {
   }
 }
 
-async function verifyAttendanceRecord(recordId: string) {
-  if (verifyingAttendanceId.value) return
-  verifyingAttendanceId.value = recordId
-  try {
-    await apiFetch(apiRoutes.attendance.verifyRecord(recordId), { method: 'POST' })
-    toast.add({ title: 'Obecność zweryfikowana', color: 'success' })
-    await loadAttendanceRows()
-  } catch (e) {
-    toast.add({
-      title: 'Nie udało się zatwierdzić obecności',
-      description: getApiErrorMessage(e),
-      color: 'error'
-    })
-  } finally {
-    verifyingAttendanceId.value = null
-  }
-}
-
-async function loadAttendanceRows() {
-  const q = new URLSearchParams()
-  if (attendanceFilters.athlete_id !== FILTER_ALL) q.set('athlete_id', attendanceFilters.athlete_id)
-  if (attendanceFilters.status !== FILTER_ALL) q.set('status', attendanceFilters.status)
-  if (attendanceFilters.verification_state !== FILTER_ALL) q.set('verification_state', attendanceFilters.verification_state)
-  if (attendanceFilters.from_date) q.set('from_date', attendanceFilters.from_date)
-  if (attendanceFilters.to_date) q.set('to_date', attendanceFilters.to_date)
-  const path = q.toString() ? `/api/attendance?${q}` : '/api/attendance'
-  attendanceRows.value = await apiFetch<AttendanceRecord[]>(path).catch(() => [])
-}
-
-onMounted(() => {
-  void loadAttendanceRows()
-})
 </script>
 
 <template>
-  <UContainer class="py-8 md:py-14 lg:py-16">
+  <UContainer class="slavia-panel-page py-8 md:py-14 lg:py-16">
     <DashboardHero
       eyebrow="Panel trenera"
       :title="`Witaj, ${auth.user.value?.username || 'Trenerze'}!`"
@@ -419,10 +252,6 @@ onMounted(() => {
       :badges="[
         { label: `Oczekujące wyniki: ${pendingCount}`, color: pendingCount ? 'warning' : 'neutral' },
         { label: `Oczekujące składki: ${pendingPaymentsCount}`, color: pendingPaymentsCount ? 'warning' : 'neutral' }
-      ]"
-      :actions="[
-        { label: 'Wszystkie starty', to: '/trainer/wyniki', icon: 'i-lucide-list-checks', variant: 'soft', color: 'primary' },
-        { label: 'Składki', to: '/trainer/skladki', icon: 'i-lucide-banknote', variant: 'outline', color: 'neutral' }
       ]"
     />
 
@@ -471,6 +300,7 @@ onMounted(() => {
           icon="i-lucide-user-check"
           tone="success"
           to="/attendance"
+          :hint="pendingAttendanceCount ? `${pendingAttendanceCount} do weryfikacji` : 'Pełna lista na /attendance'"
         />
         <DashboardKpiCard
           label="Składki (opłacone)"
@@ -497,6 +327,22 @@ onMounted(() => {
         />
       </div>
     </div>
+
+    <UAlert
+      v-if="pendingAttendanceCount > 0"
+      class="mt-8"
+      icon="i-lucide-user-check"
+      color="warning"
+      variant="subtle"
+      title="Obecności oczekują na weryfikację"
+      :description="`${pendingAttendanceCount} wpisów — zarządzaj na dedykowanej stronie listy obecności (kalendarz + agenda).`"
+    >
+      <template #actions>
+        <UButton to="/attendance" size="sm" color="primary" variant="soft">
+          Otwórz listę obecności
+        </UButton>
+      </template>
+    </UAlert>
 
     <div class="mt-10 grid gap-4 lg:grid-cols-2">
       <DashboardUrgentList
@@ -540,17 +386,17 @@ onMounted(() => {
       </DashboardUrgentList>
     </div>
 
-    <div class="mt-12 space-y-8">
+    <div class="slavia-panel-section space-y-8">
       <div v-for="g in moduleGroups" :key="g.title">
         <div class="mb-3 flex items-end justify-between gap-3">
-          <h2 class="text-xl font-semibold text-highlighted">
+          <h2 class="slavia-panel-section-title">
             {{ g.title }}
           </h2>
         </div>
         <div class="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <DashboardModuleCard
             v-for="link in g.items"
-            :key="typeof link!.to === 'string' ? link!.to : link!.to.path"
+            :key="link!.to"
             :title="link!.title"
             :description="link!.description"
             :icon="link!.icon"
@@ -562,46 +408,5 @@ onMounted(() => {
       </div>
     </div>
 
-    <div class="mt-12 rounded-2xl border border-default bg-card p-6">
-      <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <h2 class="text-xl font-semibold text-highlighted">Obecności zawodników</h2>
-        <UButton size="sm" variant="soft" icon="i-lucide-refresh-cw" @click="loadAttendanceRows">Odśwież</UButton>
-      </div>
-      <div class="slavia-form-grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
-        <USelect v-model="attendanceFilters.athlete_id" :items="[{label:'Wszyscy',value:FILTER_ALL}, ...((athletes || []).map(a => ({label:a.full_name, value:a.id})))]" />
-        <USelect v-model="attendanceFilters.status" :items="[{label:'Każdy status',value:FILTER_ALL},{label:'Obecny',value:'obecny'},{label:'Nieobecny',value:'nieobecny'}]" />
-        <USelect v-model="attendanceFilters.verification_state" :items="[{label:'Każdy stan',value:FILTER_ALL},{label:'Zweryfikowane',value:'verified'},{label:'Oczekujące',value:'pending'}]" />
-        <UInput v-model="attendanceFilters.from_date" type="date" />
-        <UInput v-model="attendanceFilters.to_date" type="date" />
-      </div>
-      <div class="mt-2">
-        <UButton size="sm" color="primary" @click="loadAttendanceRows">Filtruj</UButton>
-      </div>
-      <div class="mt-4 space-y-2">
-        <div v-for="row in attendanceRows" :key="row.id" class="rounded-xl border border-default/60 px-3 py-2">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <div class="flex flex-wrap items-center gap-2 text-xs">
-              <UBadge size="xs" variant="subtle">{{ athleteNameById.get(row.athlete_id) || row.athlete_id }}</UBadge>
-              <UBadge size="xs" variant="subtle" color="primary">{{ row.session_date }}</UBadge>
-              <UBadge size="xs" variant="subtle" :color="row.status === 'obecny' ? 'success' : 'error'">{{ row.status }}</UBadge>
-              <UBadge size="xs" variant="subtle" :color="row.verification_state === 'verified' ? 'success' : 'warning'">{{ row.verification_state }}</UBadge>
-            </div>
-            <UButton
-              v-if="row.verification_state === 'pending'"
-              size="xs"
-              color="primary"
-              icon="i-lucide-badge-check"
-              :loading="verifyingAttendanceId === row.id"
-              :disabled="verifyingAttendanceId !== null && verifyingAttendanceId !== row.id"
-              @click="() => { void verifyAttendanceRecord(row.id) }"
-            >
-              Zatwierdź
-            </UButton>
-          </div>
-          <p v-if="row.note" class="mt-1 text-sm text-muted">{{ row.note }}</p>
-        </div>
-        <p v-if="attendanceRows.length === 0" class="text-sm text-muted">Brak wpisów dla wybranego filtra.</p>
-      </div>
-    </div>
   </UContainer>
 </template>

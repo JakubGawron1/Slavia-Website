@@ -154,26 +154,24 @@ function editPostUrl(post: BlogPost) {
 </script>
 
 <template>
-  <UContainer class="animate-page-in py-8 sm:py-12 lg:py-14">
-    <div class="mb-8 flex flex-col gap-4 sm:mb-10 md:flex-row md:items-end md:justify-between">
-      <div class="min-w-0">
-        <h1 class="text-2xl font-bold tracking-tight text-highlighted sm:text-3xl lg:text-4xl">
-          Aktualności
-        </h1>
-        <p class="mt-2 text-sm text-muted sm:text-base lg:text-lg lg:leading-relaxed">
-          Najnowsze informacje i relacje z zawodów naszego klubu.
-        </p>
-      </div>
-      <UButton
-        v-if="isAdmin"
-        to="/aktualnosci/nowy"
-        icon="i-lucide-pen-tool"
-        color="primary"
-        class="min-h-11 w-full shrink-0 justify-center md:w-auto"
-      >
-        Dodaj wpis
-      </UButton>
-    </div>
+  <PublicPageLayout>
+    <PublicPageHeader
+      eyebrow="CKS Slavia"
+      title="Aktualności"
+      description="Najnowsze informacje i relacje z zawodów naszego klubu."
+    >
+      <template #actions>
+        <UButton
+          v-if="isAdmin"
+          to="/aktualnosci/nowy"
+          icon="i-lucide-pen-tool"
+          color="primary"
+          class="min-h-11 w-full shrink-0 justify-center md:w-auto"
+        >
+          Dodaj wpis
+        </UButton>
+      </template>
+    </PublicPageHeader>
 
     <div
       v-if="pending"
@@ -314,5 +312,5 @@ function editPostUrl(post: BlogPost) {
         </div>
       </UCard>
     </div>
-  </UContainer>
+  </PublicPageLayout>
 </template>

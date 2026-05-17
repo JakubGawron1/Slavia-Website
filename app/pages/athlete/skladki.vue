@@ -134,14 +134,12 @@ const membershipMonthBadge = computed(() => {
 </script>
 
 <template>
-  <UContainer class="py-8 md:py-14">
-    <div class="mb-6">
-      <p class="text-sm font-medium uppercase tracking-wider text-primary">Panel zawodnika</p>
-      <h1 class="mt-2 text-3xl font-bold tracking-tight text-highlighted">Składka klubowa</h1>
-      <p class="mt-2 max-w-2xl text-sm text-muted">
+  <PanelPageLayout>
+    <PanelPageHeader area="athlete" title="Składka klubowa" icon="i-lucide-banknote">
+      <template #description>
         Składka miesięczna to <span class="font-bold">50 zł</span>. Jeśli zapłacisz więcej, nadpłata przechodzi na kolejne miesiące (po zatwierdzeniu przez kadrę).
-      </p>
-    </div>
+      </template>
+    </PanelPageHeader>
 
     <UAlert
       v-if="auth.isAthlete.value && paymentStatus && paymentStatus.is_overdue && !paymentStatus.is_paid"
@@ -270,6 +268,6 @@ const membershipMonthBadge = computed(() => {
         </table>
       </div>
     </UCard>
-  </UContainer>
+  </PanelPageLayout>
 </template>
 

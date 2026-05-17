@@ -37,10 +37,14 @@ onMounted(() => {
 </script>
 
 <template>
-  <UContainer class="py-8">
-    <div class="mb-5 flex flex-wrap items-center justify-between gap-2">
-      <h1 class="text-2xl font-bold text-highlighted">Powiadomienia</h1>
-      <div class="flex flex-wrap gap-2">
+  <PanelPageLayout padding="compact">
+    <PanelPageHeader
+      area="staff"
+      title="Powiadomienia"
+      icon="i-lucide-bell"
+      description="Alerty od systemu i kadry."
+    >
+      <template #actions>
         <UButton variant="soft" icon="i-lucide-refresh-cw" @click="refresh">Odśwież</UButton>
         <UButton variant="soft" color="primary" icon="i-lucide-check-check" @click="markAllRead">Oznacz wszystko</UButton>
         <UButton
@@ -53,8 +57,8 @@ onMounted(() => {
         >
           Usuń wszystkie
         </UButton>
-      </div>
-    </div>
+      </template>
+    </PanelPageHeader>
 
     <div v-if="loading" class="text-sm text-muted">Ładowanie…</div>
     <div v-else class="space-y-3">
@@ -82,5 +86,5 @@ onMounted(() => {
       </UCard>
       <p v-if="items.length === 0" class="text-sm text-muted">Brak powiadomień.</p>
     </div>
-  </UContainer>
+  </PanelPageLayout>
 </template>

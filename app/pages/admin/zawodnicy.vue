@@ -2,25 +2,19 @@
 definePageMeta({ middleware: 'admin' })
 
 useSeoMeta({
-  title: 'Panel admina — zawodnicy',
+  title: 'Zawodnicy — Panel admina',
   robots: 'noindex, nofollow'
 })
 </script>
 
 <template>
-  <UContainer class="py-8 md:py-14 lg:py-16">
-    <div class="mb-8">
-      <p class="text-sm font-medium uppercase tracking-wider text-primary">
-        Administracja
-      </p>
-      <h1 class="mt-2 text-3xl font-bold tracking-tight text-highlighted">
-        Zawodnicy
-      </h1>
-      <p class="mt-2 max-w-2xl text-muted">
-        Dodawaj, edytuj i usuwaj rekordy zawodników oraz twórz konta logowania. Trenerzy bez roli administratora korzystają z „Panel trenera → Zawodnicy” — mogą wysłać prośbę o konto zamiast je zakładać.
-      </p>
-    </div>
-
+  <PanelPageLayout>
+    <PanelPageHeader
+      area="admin"
+      title="Zawodnicy"
+      icon="i-lucide-users"
+      description="Zarządzaj listą zawodników, danymi kontaktowymi i przypisaniami. Tworzenie kont logowania dla zawodników — w zależności od uprawnień konta administratora."
+    />
     <ClubPlayersManager />
-  </UContainer>
+  </PanelPageLayout>
 </template>

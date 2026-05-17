@@ -46,18 +46,14 @@ const selectedName = computed(() => {
 </script>
 
 <template>
-  <UContainer class="max-w-5xl py-8 sm:py-12">
-    <header class="mb-10">
-      <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-primary">
-        Dobrostan kadry
-      </p>
-      <h1 class="mt-2 text-3xl font-black tracking-tight text-highlighted sm:text-4xl">
-        Regeneracja zawodników
-      </h1>
-      <p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted sm:text-base">
-        Podgląd check-inów zawodników (sen, skale subiektywne, notatki). Dane pochodzą z ich wpisów — możesz reagować planem treningowym lub rozmową.
-      </p>
-    </header>
+  <PanelPageLayout narrow>
+    <PanelPageHeader
+      area="trainer"
+      eyebrow="Dobrostan kadry"
+      title="Regeneracja zawodników"
+      icon="i-lucide-heart-pulse"
+      description="Podgląd check-inów zawodników (sen, skale subiektywne, notatki). Dane pochodzą z ich wpisów — możesz reagować planem treningowym lub rozmową."
+    />
 
     <UCard class="mb-10 border-default/70 shadow-sm ring-1 ring-default/40">
       <UFormField label="Zawodnik" description="Lista aktywnych profili dostępnych dla kadry">
@@ -119,5 +115,5 @@ const selectedName = computed(() => {
         </p>
       </div>
     </section>
-  </UContainer>
+  </PanelPageLayout>
 </template>

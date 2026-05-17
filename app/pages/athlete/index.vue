@@ -10,6 +10,7 @@ import {
 } from '~/utils/paymentSemantics'
 import DashboardModuleCard from '~/components/dashboard/DashboardModuleCard.vue'
 import DashboardKpiCard from '~/components/dashboard/DashboardKpiCard.vue'
+import { dashboardLink, type DashboardModuleLink } from '~/utils/dashboardLink'
 
 definePageMeta({ middleware: 'auth' })
 
@@ -372,141 +373,45 @@ const membershipMonthBadge = computed(() => {
   return membershipMonthBadgeFromStatus(paymentStatus.value, terms.paymentStandingOrder())
 })
 
-const athleteDashboardTiles = [
+const athleteModuleGroups: { title: string, items: DashboardModuleLink[] }[] = [
   {
-    to: '/athlete/skladki',
-    title: 'Składka klubowa',
-    desc: 'Zgłoś płatność i sprawdź status',
-    icon: 'i-lucide-banknote',
-    /** Bez „green” w klasach — inaczej `toneFromIconBg` zawsze daje success i myli ze statusem opłacenia. */
-    ring: 'ring-primary/25 hover:ring-primary/45',
-    iconBg: 'bg-primary/15 text-primary'
+    title: 'Najczęstsze',
+    items: [
+      dashboardLink('Składka klubowa', 'Zgłoś płatność i status', 'i-lucide-banknote', '/athlete/skladki', 'text-primary', 'bg-primary/15'),
+      dashboardLink('Kalendarz startów', 'Przypisania od kadry', 'i-lucide-calendar-heart', '/athlete/kalendarz', 'text-primary', 'bg-primary/15'),
+      dashboardLink('Moja obecność', 'Zgłoś i sprawdź historię', 'i-lucide-user-check', '/attendance', 'text-primary', 'bg-primary/12'),
+      dashboardLink('Czat z trenerem', 'Wiadomości 1:1', 'i-lucide-messages-square', '/chat', 'text-info', 'bg-info/14'),
+      dashboardLink('Powiadomienia', 'Alerty od kadry', 'i-lucide-bell', '/powiadomienia', 'text-amber-600', 'bg-amber-500/12')
+    ]
   },
   {
-    to: '/athlete/kalendarz',
-    title: 'Kalendarz startów',
-    desc: 'Przypisania zawodów od kadry',
-    icon: 'i-lucide-calendar-heart',
-    ring: 'ring-primary/25 hover:ring-primary/45',
-    iconBg: 'bg-primary/15 text-primary'
+    title: 'Trening i progres',
+    items: [
+      dashboardLink('Dziennik treningów', 'Wpisy po jednostkach', 'i-lucide-book-marked', '/dziennik', 'text-info', 'bg-info/12'),
+      dashboardLink('Historia treningów', 'Oś czasu aktywności', 'i-lucide-timeline', '/athlete/timeline', 'text-primary', 'bg-primary/10'),
+      dashboardLink('Plany treningowe', 'Cele i progres', 'i-lucide-clipboard-list', '/athlete/plany', 'text-success', 'bg-success/12'),
+      dashboardLink('Regeneracja', 'Check-in snu i zmęczenia', 'i-lucide-heart-pulse', '/athlete/regeneracja', 'text-error', 'bg-error/10')
+    ]
   },
   {
-    to: '/athlete/analiza-sztangi',
-    title: 'Tor sztangi',
-    desc: 'Analiza nagrania w przeglądarce',
-    icon: 'i-lucide-scan-line',
-    ring: 'ring-orange-500/25 hover:ring-orange-500/45',
-    iconBg: 'bg-orange-500/12 text-orange-600 dark:text-orange-400'
+    title: 'Klub',
+    items: [
+      dashboardLink('Kalendarz klubu', 'Treningi i zawody', 'i-lucide-calendar-days', '/kalendarz', 'text-purple-600', 'bg-purple-500/12'),
+      dashboardLink('Aktualności', 'Komunikaty klubu', 'i-lucide-newspaper', '/aktualnosci', 'text-warning', 'bg-warning/10'),
+      dashboardLink('Wyzwania miesiąca', 'Ranking aktywności', 'i-lucide-flame', '/klub/wyzwania', 'text-orange-600', 'bg-orange-500/12'),
+      dashboardLink('Ranking zawodników', 'Wyniki w klubie', 'i-lucide-trophy', '/zawodnicy', 'text-yellow-600', 'bg-yellow-500/12')
+    ]
   },
   {
-    to: '/dziennik',
-    title: 'Dziennik treningów',
-    desc: 'Wpisy po jednostkach',
-    icon: 'i-lucide-book-marked',
-    ring: 'ring-info/25 hover:ring-info/45',
-    iconBg: 'bg-info/12 text-info'
-  },
-  {
-    to: '/athlete/exercises',
-    title: 'Inne ćwiczenia',
-    desc: 'Przysiady, wyciskanie, martwy',
-    icon: 'i-lucide-bar-chart-3',
-    ring: 'ring-warning/28 hover:ring-warning/42',
-    iconBg: 'bg-warning/10 text-warning'
-  },
-  {
-    to: '/kalkulator-proporcji',
-    title: 'Proporcje (ratio)',
-    desc: '„Złote proporcje” między bojami',
-    icon: 'i-lucide-sigma',
-    ring: 'ring-success/25 hover:ring-success/40',
-    iconBg: 'bg-success/12 text-success'
-  },
-  {
-    to: '/aktualnosci',
-    title: 'Aktualności klubu',
-    desc: 'Aktualności i komunikaty',
-    icon: 'i-lucide-newspaper',
-    ring: 'ring-warning/25 hover:ring-warning/42',
-    iconBg: 'bg-warning/10 text-warning'
-  },
-  {
-    to: '/chat',
-    title: 'Czat z trenerem',
-    desc: 'Wiadomości 1:1',
-    icon: 'i-lucide-messages-square',
-    ring: 'ring-info/28 hover:ring-info/45',
-    iconBg: 'bg-info/14 text-info'
-  },
-  {
-    to: '/attendance',
-    title: 'Moja obecność',
-    desc: 'Zgłoś obecność i sprawdź historię',
-    icon: 'i-lucide-user-check',
-    ring: 'ring-primary/22 hover:ring-primary/42',
-    iconBg: 'bg-primary/12 text-primary'
-  },
-  {
-    to: '/athlete/timeline',
-    title: 'Historia treningów',
-    desc: 'Oś czasu: wyniki, obecność, dziennik',
-    icon: 'i-lucide-timeline',
-    ring: 'ring-primary/28 hover:ring-primary/46',
-    iconBg: 'bg-primary/10 text-primary'
-  },
-  {
-    to: '/athlete/plany',
-    title: 'Plany treningowe',
-    desc: 'Cele tygodnia i raport progresu',
-    icon: 'i-lucide-clipboard-list',
-    ring: 'ring-success/25 hover:ring-success/45',
-    iconBg: 'bg-success/12 text-success'
-  },
-  {
-    to: '/athlete/regeneracja',
-    title: 'Regeneracja',
-    desc: 'Dzienny check-in snu i zmęczenia',
-    icon: 'i-lucide-heart-pulse',
-    ring: 'ring-error/28 hover:ring-error/42',
-    iconBg: 'bg-error/10 text-error'
+    title: 'Narzędzia i konto',
+    items: [
+      dashboardLink('Tor sztangi', 'Analiza nagrania', 'i-lucide-scan-line', '/athlete/analiza-sztangi', 'text-orange-600', 'bg-orange-500/12'),
+      dashboardLink('Inne ćwiczenia', 'Przysiad, wycisk, martwy', 'i-lucide-bar-chart-3', '/athlete/exercises', 'text-warning', 'bg-warning/10'),
+      dashboardLink('Proporcje (ratio)', 'Kalkulator bojów', 'i-lucide-sigma', '/kalkulator-proporcji', 'text-success', 'bg-success/12'),
+      dashboardLink('Ustawienia konta', 'E-mail, avatar, hasło', 'i-lucide-user-cog', '/profil', 'text-neutral-500', 'bg-muted/30')
+    ]
   }
-] as const
-
-const athleteModuleGroups = computed(() => {
-  const list = athleteDashboardTiles
-  const byTo = new Map<string, typeof list[number]>()
-  for (const l of list) byTo.set(String(l.to), l)
-  const pick = (to: string) => byTo.get(to)
-  return [
-    {
-      title: 'Najczęstsze',
-      items: [
-        pick('/athlete/skladki'),
-        pick('/athlete/kalendarz'),
-        pick('/attendance'),
-        pick('/chat')
-      ].filter(Boolean)
-    },
-    {
-      title: 'Trening i progres',
-      items: [
-        pick('/dziennik'),
-        pick('/athlete/timeline'),
-        pick('/athlete/plany'),
-        pick('/athlete/regeneracja')
-      ].filter(Boolean)
-    },
-    {
-      title: 'Narzędzia',
-      items: [
-        pick('/athlete/analiza-sztangi'),
-        pick('/athlete/exercises'),
-        pick('/kalkulator-proporcji'),
-        pick('/aktualnosci')
-      ].filter(Boolean)
-    }
-  ] as const
-})
+]
 
 function toneFromIconBg(iconBg?: string): 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral' {
   const s = String(iconBg || '').toLowerCase()
@@ -600,7 +505,7 @@ const showPre10PaymentBanner = computed(() =>
 </script>
 
 <template>
-  <UContainer class="py-8 md:py-11 lg:py-14">
+  <UContainer class="slavia-panel-page py-8 md:py-11 lg:py-14">
     <!-- Hero dashboard -->
     <div
       class="relative mb-8 overflow-hidden rounded-[1.75rem] border border-primary/20 bg-linear-to-br from-primary/[0.14] via-card to-card shadow-sm ring-1 ring-primary/10 sm:rounded-3xl"
@@ -770,14 +675,14 @@ const showPre10PaymentBanner = computed(() =>
         </div>
         <div class="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <DashboardModuleCard
-            v-for="tile in g.items"
-            :key="String(tile!.to)"
-            :title="tile!.title"
-            :description="tile!.desc"
-            :icon="tile!.icon"
-            :to="tile!.to"
-            :tone="toneFromIconBg(tile!.iconBg)"
-            :icon-wrapper-class="tile!.iconBg"
+            v-for="link in g.items"
+            :key="link.to"
+            :title="link.title"
+            :description="link.description"
+            :icon="link.icon"
+            :to="link.to"
+            :tone="toneFromIconBg(link.bg)"
+            :icon-wrapper-class="`${link.bg} ${link.color}`"
           />
         </div>
       </div>
@@ -821,38 +726,6 @@ const showPre10PaymentBanner = computed(() =>
           >
             Harmonogram
           </UButton>
-        </div>
-      </UCard>
-    </div>
-
-    <div
-      v-if="auth.canAccessAthletePortal && athlete && attendanceSummary"
-      class="mb-10"
-    >
-      <UCard class="rounded-2xl border-default/70">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <h2 class="text-lg font-black text-highlighted">Frekwencja treningowa</h2>
-          <UBadge color="primary" variant="subtle">
-            {{ attendanceSummary.attendance_percent }}%
-          </UBadge>
-        </div>
-        <div class="mt-4 grid gap-3 sm:grid-cols-4 sm:items-stretch">
-          <div class="flex min-h-[5.25rem] flex-col justify-between gap-1 rounded-xl border border-default/50 p-3">
-            <p class="text-xs leading-tight text-muted">Obecności</p>
-            <p class="text-2xl font-black tabular-nums leading-none text-success">{{ attendanceSummary.present_count }}</p>
-          </div>
-          <div class="flex min-h-[5.25rem] flex-col justify-between gap-1 rounded-xl border border-default/50 p-3">
-            <p class="text-xs leading-tight text-muted">Nieobecności</p>
-            <p class="text-2xl font-black tabular-nums leading-none text-error">{{ attendanceSummary.absent_count }}</p>
-          </div>
-          <div class="flex min-h-[5.25rem] flex-col justify-between gap-1 rounded-xl border border-default/50 p-3">
-            <p class="text-xs leading-tight text-muted">Oczekuje</p>
-            <p class="text-2xl font-black tabular-nums leading-none text-warning">{{ attendanceSummary.pending_count }}</p>
-          </div>
-          <div class="flex min-h-[5.25rem] flex-col justify-between gap-1 rounded-xl border border-default/50 p-3">
-            <p class="text-xs leading-tight text-muted">Frekwencja</p>
-            <p class="text-2xl font-black tabular-nums leading-none text-primary">{{ attendanceSummary.attendance_percent }}%</p>
-          </div>
         </div>
       </UCard>
     </div>

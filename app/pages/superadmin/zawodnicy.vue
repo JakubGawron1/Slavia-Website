@@ -2,29 +2,20 @@
 definePageMeta({ middleware: 'superadmin' })
 
 useSeoMeta({
-  title: 'Superadmin — Zarządzanie Zawodnikami',
+  title: 'Superadmin — Baza zawodników',
   robots: 'noindex, nofollow'
 })
 </script>
 
 <template>
-  <UContainer class="py-8 md:py-14 lg:py-16">
-    <div class="mb-8">
-      <div class="flex items-center gap-2 text-sm font-medium uppercase tracking-wider text-red-500">
-        <UIcon
-          name="i-lucide-crown"
-          class="size-4"
-        />
-        SuperAdministracja
-      </div>
-      <h1 class="mt-2 text-3xl font-bold tracking-tight text-highlighted">
-        Baza Zawodników
-      </h1>
-      <p class="mt-2 max-w-2xl text-muted">
-        Jako superadministrator masz pełny dostęp do edycji bazy zawodników.
-      </p>
-    </div>
-
+  <PanelPageLayout>
+    <PanelPageHeader
+      area="superadmin"
+      tone="superadmin"
+      title="Baza zawodników"
+      icon="i-lucide-users"
+      description="Pełny dostęp do edycji profili zawodników i przypisań — widok superadministratora."
+    />
     <ClubPlayersManager />
-  </UContainer>
+  </PanelPageLayout>
 </template>

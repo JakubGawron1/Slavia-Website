@@ -217,32 +217,24 @@ const sortedPhotos = computed(() => {
 </script>
 
 <template>
-  <UContainer class="animate-page-in py-8 sm:py-12 lg:py-14">
-    <div class="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-      <div class="min-w-0">
-        <div v-if="pending" class="space-y-2">
-          <SlaviaShimmerText block width="16rem" height="2rem" />
-          <SlaviaShimmerText block width="28rem" height="1rem" />
-        </div>
-        <template v-else>
-          <h1 class="text-2xl font-bold tracking-tight text-highlighted sm:text-3xl lg:text-4xl">
-            Galeria zdjęć
-          </h1>
-          <p class="mt-2 text-sm text-muted sm:text-base lg:leading-relaxed">
-            Klub w obiektywie — podgląd dla wszystkich; zdjęcia dodaje administrator (np. po wgraniu na CDN).
-          </p>
-        </template>
-      </div>
-      <UButton
-        v-if="isAdmin"
-        icon="i-lucide-image-plus"
-        color="primary"
-        class="min-h-11 w-full shrink-0 justify-center md:w-auto"
-        @click="openCreate"
-      >
-        Dodaj zdjęcie
-      </UButton>
-    </div>
+  <PublicPageLayout>
+    <PublicPageHeader
+      eyebrow="CKS Slavia"
+      title="Galeria zdjęć"
+      description="Klub w obiektywie — podgląd dla wszystkich; zdjęcia dodaje administrator."
+    >
+      <template #actions>
+        <UButton
+          v-if="isAdmin"
+          icon="i-lucide-image-plus"
+          color="primary"
+          class="min-h-11 w-full shrink-0 justify-center md:w-auto"
+          @click="openCreate"
+        >
+          Dodaj zdjęcie
+        </UButton>
+      </template>
+    </PublicPageHeader>
 
     <div
       v-if="pending"
@@ -465,5 +457,5 @@ const sortedPhotos = computed(() => {
         </div>
       </template>
     </UModal>
-  </UContainer>
+  </PublicPageLayout>
 </template>

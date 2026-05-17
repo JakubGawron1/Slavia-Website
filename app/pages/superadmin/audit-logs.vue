@@ -87,22 +87,16 @@ function formatDateTime(iso?: string) {
 </script>
 
 <template>
-  <UContainer class="max-sm:px-3 py-6 sm:py-8 md:py-14 lg:py-16">
-    <header class="relative mb-8 overflow-hidden rounded-2xl border border-default/60 bg-linear-to-br from-card via-muted/10 to-transparent px-4 py-6 shadow-sm ring-1 ring-white/5 max-sm:rounded-[1.35rem] sm:mb-10 sm:rounded-[1.75rem] sm:px-6 sm:py-8 md:mb-12 md:px-10 md:py-10 dark:from-elevated dark:via-card/80">
-      <div class="pointer-events-none absolute right-0 top-0 size-40 translate-x-1/4 -translate-y-1/4 rounded-full bg-primary/10 blur-3xl" />
-      <div class="relative flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-        <div class="min-w-0 max-w-3xl space-y-3">
-          <div class="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-primary">
-            <UIcon name="i-lucide-history" class="size-3.5" />
-            System Audit
-          </div>
-          <h1 class="text-2xl font-black tracking-tight text-highlighted sm:text-3xl md:text-4xl">
-            Logi systemowe
-          </h1>
-          <p class="max-w-2xl text-[15px] leading-relaxed text-muted md:text-base">
-            Historia zmian w systemie: zatwierdzanie płatności, edycja zawodników, logowania i inne operacje administracyjne.
-          </p>
-        </div>
+  <PanelPageLayout padding="compact">
+    <PanelPageHeader
+      area="superadmin"
+      tone="superadmin"
+      eyebrow="System Audit"
+      title="Logi systemowe"
+      icon="i-lucide-history"
+      description="Historia zmian w systemie: zatwierdzanie płatności, edycja zawodników, logowania i inne operacje administracyjne."
+    >
+      <template #actions>
         <UButton
           icon="i-lucide-refresh-cw"
           variant="soft"
@@ -113,8 +107,8 @@ function formatDateTime(iso?: string) {
         >
           Odśwież
         </UButton>
-      </div>
-    </header>
+      </template>
+    </PanelPageHeader>
 
     <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center">
       <UInput
@@ -196,5 +190,5 @@ function formatDateTime(iso?: string) {
         <p class="text-muted">Nie znaleziono logów spełniających kryteria.</p>
       </div>
     </UCard>
-  </UContainer>
+  </PanelPageLayout>
 </template>

@@ -153,28 +153,56 @@ const sortedPublic = computed(() => {
     return String(b.created_at).localeCompare(String(a.created_at))
   })
 })
+
+const boardStats = computed(() => {
+  const list = items.value || []
+  return {
+    total: list.length,
+    pinned: list.filter(a => a.pinned).length,
+    drafts: list.filter(a => !a.published).length
+  }
+})
+
+function bodyPreview(text: string, max = 100) {
+  const t = text.trim()
+  if (t.length <= max) return t
+  return `${t.slice(0, max).trim()}…`
+}
 </script>
 
 <template>
-  <UContainer class="animate-page-in py-8 sm:py-12 lg:py-14">
-    <div class="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-      <div class="min-w-0">
-        <h1 class="text-2xl font-bold tracking-tight text-highlighted sm:text-3xl lg:text-4xl">
-          Tablica ogłoszeń
-        </h1>
-        <p class="mt-2 text-sm text-muted sm:text-base lg:leading-relaxed">
-          Komunikaty organizacyjne i ważne daty — widoczne dla wszystkich; edycja wyłącznie dla administratorów.
-        </p>
-      </div>
-      <UButton
-        v-if="isAdmin"
-        icon="i-lucide-megaphone"
-        color="primary"
-        class="min-h-11 w-full shrink-0 justify-center md:w-auto"
-        @click="openCreate"
-      >
-        Dodaj ogłoszenie
-      </UButton>
+  <PublicPageLayout>
+    <PublicPageHeader
+      eyebrow="CKS Slavia"
+      title="Tablica ogłoszeń"
+      description="Komunikaty organizacyjne i ważne daty — widoczne dla wszystkich; edycja wyłącznie dla administratorów."
+    >
+      <template #actions>
+        <UButton
+          v-if="isAdmin"
+          icon="i-lucide-megaphone"
+          color="primary"
+          class="min-h-11 w-full shrink-0 justify-center md:w-auto"
+          @click="openCreate"
+        >
+          Dodaj ogłoszenie
+        </UButton>
+      </template>
+    </PublicPageHeader>
+
+    <div
+      v-if="!pending && sortedPublic.length"
+      class="mb-6 flex flex-wrap gap-2"
+    >
+      <UBadge color="neutral" variant="subtle" size="sm">
+        Łącznie: {{ boardStats.total }}
+      </UBadge>
+      <UBadge v-if="boardStats.pinned" color="primary" variant="subtle" size="sm">
+        Przypięte: {{ boardStats.pinned }}
+      </UBadge>
+      <UBadge v-if="isAdmin && boardStats.drafts" color="warning" variant="subtle" size="sm">
+        Szkice: {{ boardStats.drafts }}
+      </UBadge>
     </div>
 
     <div
@@ -203,20 +231,59 @@ const sortedPublic = computed(() => {
 
     <div
       v-else-if="!sortedPublic.length"
-      class="rounded-2xl border border-dashed border-default bg-muted/10 px-6 py-14 text-center text-muted"
+      class="slavia-page-card rounded-2xl border border-dashed border-default px-6 py-14 text-center text-muted"
     >
-      Brak ogłoszeń.
+      <UIcon name="i-lucide-megaphone" class="mx-auto mb-3 size-10 text-muted/40" />
+      <p class="font-semibold text-highlighted">
+        Brak ogłoszeń
+      </p>
     </div>
 
-    <div
-      v-else
-      class="space-y-4"
-    >
+    <template v-else>
+      <UCard v-if="isAdmin" class="slavia-page-card mb-8 hidden overflow-hidden md:block">
+        <div class="slavia-data-table overflow-x-auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Tytuł</th>
+                <th class="w-28">Status</th>
+                <th class="w-40">Data</th>
+                <th class="w-32 text-right">Akcje</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="a in sortedPublic"
+                :key="`tbl-${a.id}`"
+                class="slavia-announcement-row"
+                :class="a.pinned ? 'slavia-announcement-pin' : ''"
+              >
+                <td>
+                  <p class="font-semibold text-highlighted">{{ a.title }}</p>
+                  <p class="mt-0.5 line-clamp-2 text-xs text-muted">{{ bodyPreview(a.body) }}</p>
+                </td>
+                <td>
+                  <UBadge v-if="a.pinned" color="primary" variant="subtle" size="xs">Pin</UBadge>
+                  <UBadge v-else-if="!a.published" color="warning" variant="subtle" size="xs">Szkic</UBadge>
+                  <UBadge v-else color="success" variant="subtle" size="xs">Live</UBadge>
+                </td>
+                <td class="text-xs text-muted whitespace-nowrap">{{ formatDate(a.created_at) }}</td>
+                <td class="text-right">
+                  <UButton size="xs" variant="soft" icon="i-lucide-pencil" @click="openEdit(a)" />
+                  <UButton size="xs" variant="ghost" color="error" icon="i-lucide-trash-2" class="ml-1" @click="remove(a.id)" />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </UCard>
+
+      <div :class="isAdmin ? 'space-y-4 md:hidden' : 'space-y-4'">
       <UCard
         v-for="a in sortedPublic"
         :key="a.id"
-        class="overflow-hidden border-default transition-colors"
-        :class="a.pinned ? 'ring-2 ring-primary/35 bg-primary/5' : ''"
+        class="slavia-page-card overflow-hidden transition-colors"
+        :class="a.pinned ? 'slavia-announcement-pin ring-2 ring-primary/35 bg-primary/5' : ''"
       >
         <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div class="min-w-0 flex-1">
@@ -273,7 +340,8 @@ const sortedPublic = computed(() => {
           </div>
         </div>
       </UCard>
-    </div>
+      </div>
+    </template>
 
     <UModal
       v-model:open="modalOpen"
@@ -340,5 +408,5 @@ const sortedPublic = computed(() => {
         </div>
       </template>
     </UModal>
-  </UContainer>
+  </PublicPageLayout>
 </template>

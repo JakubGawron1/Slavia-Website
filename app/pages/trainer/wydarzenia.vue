@@ -49,28 +49,21 @@ const filteredAndSearched = computed(() => {
 </script>
 
 <template>
-  <UContainer class="py-8">
-    <div class="mb-6 flex flex-wrap items-end justify-between gap-3">
-      <div class="min-w-0">
-        <h1 class="text-2xl font-black text-highlighted">Wydarzenia operacyjne</h1>
-        <p class="mt-1 text-sm text-muted">
-          Log aktywności systemu (wyniki, obecność, regeneracja). Wyniki odświeżysz jednym kliknięciem.
-        </p>
-      </div>
-      <div class="flex flex-wrap gap-2">
-        <UButton
-          size="sm"
-          variant="outline"
-          icon="i-lucide-refresh-cw"
-          :loading="pending"
-          @click="() => void refresh()"
-        >
+  <PanelPageLayout>
+    <PanelPageHeader
+      area="trainer"
+      title="Feed wydarzeń"
+      icon="i-lucide-list-collapse"
+      description="Log aktywności systemu (wyniki, obecność, regeneracja)."
+    >
+      <template #actions>
+        <UButton size="sm" variant="outline" icon="i-lucide-refresh-cw" :loading="pending" @click="() => void refresh()">
           Odśwież
         </UButton>
-      </div>
-    </div>
+      </template>
+    </PanelPageHeader>
 
-    <UCard class="mb-5">
+    <UCard class="slavia-page-card mb-5">
       <div class="grid gap-3 md:grid-cols-12 md:items-center">
         <div class="flex flex-wrap gap-2 md:col-span-8">
           <UButton
@@ -175,5 +168,5 @@ const filteredAndSearched = computed(() => {
         variant="subtle"
       />
     </div>
-  </UContainer>
+  </PanelPageLayout>
 </template>

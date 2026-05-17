@@ -217,6 +217,32 @@ const monthAgenda = computed(() => {
     .filter(x => x.events.length > 0)
 })
 
+function eventAgendaKey(event: { id: string | number, type?: string }) {
+  return `${event.id}-${event.type ?? 'event'}`
+}
+
+const monthAgendaRows = computed(() =>
+  monthAgenda.value.map((row) => ({
+    day: row.day,
+    events: row.events.map((ev) => ({
+      key: eventAgendaKey(ev),
+      title: ev.title,
+      subtitle: ev.time || ev.location || '—',
+      chipClass: getEventClasses(ev) || '',
+      icon: getEventIcon(ev)
+    }))
+  }))
+)
+
+function onAgendaSelect(day: Date, ev: { key: string }) {
+  const found = getEventsForDay(day).find((e) => eventAgendaKey(e) === ev.key)
+  if (found) void openModal(day, found)
+}
+
+function onAgendaAddDay(day: Date) {
+  openModal(day)
+}
+
 async function syncExternalCalendars() {
   if (!canSyncExternalCalendars.value) return
   syncLoading.value = true
@@ -540,17 +566,14 @@ function handleDayClick(day: Date) {
 </script>
 
 <template>
-  <UContainer class="py-6 sm:py-10 lg:py-14">
-    <div class="mb-6 flex flex-col gap-5 sm:mb-8 md:flex-row md:items-center md:justify-between md:gap-6 lg:mb-10">
-      <div class="min-w-0 text-center md:text-left">
-        <h1 class="text-2xl font-black uppercase italic tracking-tight text-highlighted sm:text-3xl md:text-4xl lg:text-5xl">
-          Kalendarz <span class="text-primary italic">Slavia</span>
-        </h1>
-        <p class="mt-1 font-medium text-muted">
-          Harmonogram treningów i startów klubowych.
-        </p>
-      </div>
+  <PublicPageLayout padding="compact">
+    <PublicPageHeader
+      eyebrow="CKS Slavia"
+      title="Kalendarz klubowy"
+      description="Harmonogram treningów i startów klubowych."
+    />
 
+    <div class="slavia-toolbar mb-6 flex flex-col gap-5 sm:mb-8 md:flex-row md:items-center md:justify-between md:gap-6 lg:mb-10">
       <div class="flex w-full items-center justify-center gap-2 rounded-xl border border-default bg-muted/20 p-1.5 md:w-auto">
         <UButton
           icon="i-lucide-chevron-left"
@@ -631,8 +654,8 @@ function handleDayClick(day: Date) {
       </div>
     </div>
 
-    <!-- Calendar Grid -->
-    <div class="overflow-hidden rounded-2xl border border-default bg-card shadow-2xl">
+    <!-- Calendar Grid (desktop) -->
+    <div class="hidden sm:block overflow-hidden rounded-2xl border border-default bg-card shadow-2xl">
       <!-- Header -->
       <div class="grid grid-cols-7 border-b border-default bg-muted/30">
         <div
@@ -709,69 +732,13 @@ function handleDayClick(day: Date) {
 
     <!-- Agenda (mobile) -->
     <div class="mt-4 sm:hidden">
-      <UCard class="rounded-2xl border-default/70">
-        <div class="flex items-center justify-between gap-2">
-          <p class="text-xs font-bold uppercase tracking-[0.18em] text-muted">
-            Agenda miesiąca
-          </p>
-          <UBadge variant="subtle" color="neutral">
-            {{ monthAgenda.length }}
-          </UBadge>
-        </div>
-
-        <div class="mt-3 space-y-2">
-          <div
-            v-for="row in monthAgenda"
-            :key="row.day.toISOString()"
-            class="rounded-xl border border-default/60 bg-muted/10 p-3"
-          >
-            <div class="flex items-center justify-between gap-2">
-              <p class="font-bold text-highlighted">
-                {{ format(row.day, 'EEEE · dd.MM', { locale: pl }) }}
-              </p>
-              <UButton
-                v-if="canManageEvents"
-                size="xs"
-                variant="ghost"
-                icon="i-lucide-plus"
-                @click="openModal(row.day)"
-              />
-            </div>
-            <div class="mt-2 space-y-1">
-              <button
-                v-for="event in row.events"
-                :key="event.id"
-                type="button"
-                class="flex w-full items-start justify-between gap-2 rounded-lg border px-2.5 py-2 text-left text-xs"
-                :class="getEventClasses(event)"
-                @click="openModal(undefined, event)"
-              >
-                <span class="min-w-0">
-                  <span class="block truncate font-bold">
-                    {{ event.title }}
-                  </span>
-                  <span class="block truncate opacity-70">
-                    {{ event.time || event.location || '—' }}
-                  </span>
-                </span>
-                <UIcon
-                  :name="getEventIcon(event)"
-                  class="size-4 shrink-0 opacity-80"
-                />
-              </button>
-            </div>
-          </div>
-
-          <UAlert
-            v-if="monthAgenda.length === 0"
-            icon="i-lucide-inbox"
-            title="Brak wydarzeń w tym miesiącu"
-            description="Przełącz miesiąc lub dodaj wydarzenie."
-            color="neutral"
-            variant="subtle"
-          />
-        </div>
-      </UCard>
+      <CalendarMonthAgenda
+        :rows="monthAgendaRows"
+        :can-add-on-day="canManageEvents"
+        empty-description="Przełącz miesiąc lub dodaj wydarzenie."
+        @select="onAgendaSelect"
+        @add-day="onAgendaAddDay"
+      />
     </div>
 
     <!-- Legenda -->
@@ -1026,7 +993,7 @@ function handleDayClick(day: Date) {
         </div>
       </template>
     </UModal>
-  </UContainer>
+  </PublicPageLayout>
 </template>
 
 <style scoped>

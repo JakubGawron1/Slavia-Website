@@ -1115,30 +1115,27 @@ function toastStorageApisAvailability() {
 </script>
 
 <template>
-  <UContainer class="max-sm:px-3 py-5 sm:py-8 lg:py-10">
-    <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
-      <div class="min-w-0">
-        <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">
-          Developer
-        </p>
-        <h1 class="mt-1 text-xl font-black tracking-tight text-highlighted sm:text-2xl md:text-3xl">
-          Narzędzia superadmina
-        </h1>
-        <p class="mt-1 max-w-3xl text-xs leading-snug text-muted sm:text-sm">
-          Konfiguracja deployu, funkcje eksperymentalne, smoke API, schowek, motyw i mapa tras — pod szybki smoke i debug.
-        </p>
-      </div>
-      <UButton
-        to="/superadmin"
-        variant="soft"
-        color="neutral"
-        size="sm"
-        icon="i-lucide-arrow-left"
-        class="shrink-0"
-      >
-        Panel
-      </UButton>
-    </div>
+  <PanelPageLayout padding="compact">
+    <PanelPageHeader
+      area="superadmin"
+      tone="superadmin"
+      eyebrow="Developer"
+      title="Narzędzia superadmina"
+      icon="i-lucide-terminal"
+      description="Konfiguracja deployu, funkcje eksperymentalne, smoke API, schowek, motyw i mapa tras — pod szybki smoke i debug."
+    >
+      <template #actions>
+        <UButton
+          to="/superadmin"
+          variant="soft"
+          color="neutral"
+          size="sm"
+          icon="i-lucide-arrow-left"
+        >
+          Panel
+        </UButton>
+      </template>
+    </PanelPageHeader>
 
     <UCard class="mb-4 rounded-2xl border-primary/25 bg-linear-to-br from-primary/6 via-card to-card p-4 shadow-sm ring-1 ring-primary/15 sm:p-5">
       <div class="flex flex-wrap items-start justify-between gap-3">
@@ -2070,5 +2067,5 @@ function toastStorageApisAvailability() {
         </div>
       </UCard>
     </section>
-  </UContainer>
+  </PanelPageLayout>
 </template>

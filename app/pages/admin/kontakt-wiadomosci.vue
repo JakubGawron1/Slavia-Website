@@ -72,20 +72,17 @@ function formatDate(d: string) {
 </script>
 
 <template>
-  <UContainer class="py-8 md:py-14">
-    <div class="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div>
-        <p class="text-xs font-bold uppercase tracking-wider text-primary">
-          Skrzynka
-        </p>
-        <h1 class="mt-1 text-2xl font-bold text-highlighted sm:text-3xl">
-          Formularz kontaktowy
-        </h1>
-        <p class="mt-2 text-sm text-muted">
-          Nieprzeczytane: <span class="font-semibold text-highlighted">{{ unreadCount }}</span>
-        </p>
-      </div>
-      <div class="flex flex-wrap gap-2">
+  <PanelPageLayout>
+    <PanelPageHeader
+      area="admin"
+      title="Formularz kontaktowy"
+      icon="i-lucide-mail"
+      eyebrow="Skrzynka"
+    >
+      <template #description>
+        Nieprzeczytane: <span class="font-semibold text-highlighted">{{ unreadCount }}</span>
+      </template>
+      <template #actions>
         <UButton
           variant="soft"
           icon="i-lucide-refresh-ccw"
@@ -100,8 +97,8 @@ function formatDate(d: string) {
         >
           Panel admina
         </UButton>
-      </div>
-    </div>
+      </template>
+    </PanelPageHeader>
 
     <div
       v-if="pending"
@@ -199,5 +196,5 @@ function formatDate(d: string) {
         </div>
       </UCard>
     </div>
-  </UContainer>
+  </PanelPageLayout>
 </template>

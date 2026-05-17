@@ -192,16 +192,18 @@ async function createApprovedPayment() {
 </script>
 
 <template>
-  <UContainer class="py-8 md:py-14">
-    <div class="mb-6">
-      <p class="text-sm font-medium uppercase tracking-wider text-primary">Panel trenera</p>
-      <h1 class="mt-2 text-3xl font-bold tracking-tight text-highlighted">Składki klubowe</h1>
-      <p class="mt-2 max-w-2xl text-sm text-muted">
+  <PanelPageLayout>
+    <PanelPageHeader
+      area="trainer"
+      title="Składki klubowe"
+      icon="i-lucide-banknote"
+    >
+      <template #description>
         Widok miesiąca: <span class="font-mono">{{ month }}</span>. Statusy: opłacone, oczekujące, brak wpłaty.
-      </p>
-    </div>
+      </template>
+    </PanelPageHeader>
 
-    <UCard class="mb-6 border-default/70">
+    <UCard class="slavia-page-card mb-6">
       <div class="grid gap-3 md:grid-cols-12 md:items-end">
         <UFormField label="Miesiąc" class="md:col-span-3">
           <UInput v-model="month" type="month" class="w-full" @change="() => refreshOverview()" />
@@ -449,6 +451,6 @@ async function createApprovedPayment() {
         </div>
       </div>
     </div>
-  </UContainer>
+  </PanelPageLayout>
 </template>
 

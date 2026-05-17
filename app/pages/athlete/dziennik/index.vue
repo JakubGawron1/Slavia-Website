@@ -74,21 +74,14 @@ async function removeEntry(e: TrainingLogEntry) {
 </script>
 
 <template>
-  <UContainer class="animate-page-in py-8 md:py-14 lg:py-16">
-    <div class="mb-8 flex flex-wrap items-start justify-between gap-4">
-      <div>
-        <p class="text-xs font-bold uppercase tracking-wider text-primary">
-          Twój panel
-        </p>
-        <h1 class="mt-2 text-3xl font-bold tracking-tight text-highlighted">
-          Dziennik treningów
-        </h1>
-        <p class="mt-2 max-w-2xl text-sm text-muted leading-relaxed">
-          Dodawaj własne notatki po jednostkach — widzą je także trenerzy i administracja.
-          Wpisy od kadry oznaczone są ich nazwą użytkownika. Pełna edycja (TipTap) jest na osobnej stronie — tak jak w panelu trenera.
-        </p>
-      </div>
-      <div class="flex flex-wrap gap-2">
+  <PanelPageLayout>
+    <PanelPageHeader
+      area="athlete"
+      title="Dziennik treningów"
+      icon="i-lucide-book-marked"
+      description="Dodawaj własne notatki po jednostkach — widzą je także trenerzy i administracja. Pełna edycja (TipTap) jest na osobnej stronie."
+    >
+      <template #actions>
         <UButton
           v-if="meAthlete"
           :to="redagujBase"
@@ -113,8 +106,8 @@ async function removeEntry(e: TrainingLogEntry) {
         >
           Wróć do panelu
         </UButton>
-      </div>
-    </div>
+      </template>
+    </PanelPageHeader>
 
     <div
       v-if="pending"
@@ -221,5 +214,5 @@ async function removeEntry(e: TrainingLogEntry) {
         </UCard>
       </div>
     </template>
-  </UContainer>
+  </PanelPageLayout>
 </template>

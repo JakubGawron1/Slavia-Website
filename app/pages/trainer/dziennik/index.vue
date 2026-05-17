@@ -34,18 +34,13 @@ const filtered = computed(() => {
 </script>
 
 <template>
-  <UContainer class="py-8 md:py-14 lg:py-16 animate-page-in">
-    <div class="mb-8">
-      <p class="text-xs font-bold uppercase tracking-wider text-primary">
-        Panel trenera
-      </p>
-      <h1 class="mt-2 text-3xl font-bold tracking-tight text-highlighted">
-        Dzienniki treningów
-      </h1>
-      <p class="mt-2 max-w-2xl text-sm text-muted">
-        Wybierz zawodnika, aby dodać lub edytować wpisy z jednostek treningowych — zawodnik zobaczy je u siebie w panelu.
-      </p>
-    </div>
+  <PanelPageLayout>
+    <PanelPageHeader
+      area="trainer"
+      title="Dzienniki treningów"
+      icon="i-lucide-book-marked"
+      description="Wybierz zawodnika, aby dodać lub edytować wpisy z jednostek treningowych — zawodnik zobaczy je u siebie w panelu."
+    />
 
     <div class="mb-6 max-w-md">
       <UInput
@@ -110,5 +105,5 @@ const filtered = computed(() => {
         Wróć do panelu trenera
       </UButton>
     </div>
-  </UContainer>
+  </PanelPageLayout>
 </template>

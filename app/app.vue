@@ -91,8 +91,21 @@ useSeoMeta({
   twitterTitle: title,
   twitterDescription: description,
   twitterImage: socialImage,
-  twitterCard: 'summary_large_image'
+  twitterCard: 'summary_large_image',
+  robots: 'index, follow'
 })
+
+/** Canonical dla tras publicznych (panele nadpisują plugin `01-seo-route`). */
+watch(
+  () => route.path,
+  (path) => {
+    if (isSlaviaPrivateRoute(path)) return
+    useHead({
+      link: [{ rel: 'canonical', key: 'canonical', href: `${siteUrl.value}${path === '/' ? '' : path}` }]
+    })
+  },
+  { immediate: true }
+)
 
 async function logout() {
   auth.logout()
@@ -158,6 +171,7 @@ useHead({
     { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
     { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
     { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,100..900;1,100..900&family=Outfit:wght@100..900&display=swap' },
+    { rel: 'manifest', href: '/manifest.webmanifest' },
     { rel: 'icon', type: unreadCount.value ? 'image/svg+xml' : 'image/png', href: faviconUrl },
     { rel: 'apple-touch-icon', href: '/logo.png' }
   ],

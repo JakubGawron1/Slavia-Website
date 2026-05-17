@@ -36,14 +36,17 @@ useSeoMeta({
 </script>
 
 <template>
-  <UContainer class="py-8 sm:py-12">
-    <div class="mb-6 flex flex-wrap items-end justify-between gap-3">
-      <div>
-        <h1 class="text-2xl font-bold text-highlighted sm:text-3xl">Historia treningów</h1>
-        <p class="mt-1 text-sm text-muted">Oś czasu: wyniki, obecności i wpisy dziennika.</p>
-      </div>
-      <UButton variant="soft" icon="i-lucide-refresh-cw" @click="() => void refresh()">Odśwież</UButton>
-    </div>
+  <PanelPageLayout>
+    <PanelPageHeader
+      area="athlete"
+      title="Historia treningów"
+      icon="i-lucide-timeline"
+      description="Oś czasu: wyniki, obecności i wpisy dziennika."
+    >
+      <template #actions>
+        <UButton variant="soft" icon="i-lucide-refresh-cw" @click="() => void refresh()">Odśwież</UButton>
+      </template>
+    </PanelPageHeader>
 
     <div v-if="pending" class="space-y-3">
       <div class="rounded-2xl border border-default/60 bg-card px-4 py-3">
@@ -79,5 +82,5 @@ useSeoMeta({
       </div>
       <p v-if="(items || []).length === 0" class="text-sm text-muted">Brak wpisów historii.</p>
     </div>
-  </UContainer>
+  </PanelPageLayout>
 </template>

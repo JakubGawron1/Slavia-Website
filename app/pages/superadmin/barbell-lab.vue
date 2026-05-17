@@ -318,21 +318,16 @@ function drawResults(ctx: CanvasRenderingContext2D, current: {x: number, y: numb
 </script>
 
 <template>
-  <UContainer class="py-10">
+  <PanelPageLayout>
     <ClientOnly>
-      <header class="mb-10">
-        <div class="flex items-center gap-3 text-primary font-bold uppercase tracking-widest text-xs">
-          <UIcon name="i-lucide-beaker" class="size-4" />
-          Superadmin Experimental Lab
-        </div>
-        <h1 class="text-4xl font-black tracking-tight text-highlighted mt-2">
-          Barbell Tracker <span class="text-primary">Benchmark</span>
-        </h1>
-        <p class="text-muted mt-3 max-w-2xl">
-          Porównanie wydajności i dokładności różnych silników śledzenia dla toru sztangi. 
-          Narzędzie służy do wyboru optymalnej biblioteki dla produkcyjnego analizatora.
-        </p>
-      </header>
+      <PanelPageHeader
+        area="superadmin"
+        tone="superadmin"
+        eyebrow="Superadmin Experimental Lab"
+        title="Barbell Tracker Benchmark"
+        icon="i-lucide-beaker"
+        description="Porównanie wydajności i dokładności silników śledzenia toru sztangi — wybór biblioteki dla produkcyjnego analizatora."
+      />
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <aside class="space-y-6">
@@ -395,5 +390,5 @@ function drawResults(ctx: CanvasRenderingContext2D, current: {x: number, y: numb
         </div>
       </div>
     </ClientOnly>
-  </UContainer>
+  </PanelPageLayout>
 </template>

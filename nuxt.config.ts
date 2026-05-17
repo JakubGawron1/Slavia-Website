@@ -28,140 +28,266 @@ function resolvePublicSiteUrl(): string {
   return 'http://localhost:3000'
 }
 
+const publicSiteUrl = resolvePublicSiteUrl()
+const isProd = process.env.NODE_ENV === 'production'
+
 /**
- * ISR na `/` poza prod wyłączone: `payloadCache` tworzy się już przy dowolnym ISR w projekcie
- * (`NUXT_RUNTIME_PAYLOAD_EXTRACTION`); przy zapisie dla URL `/` unstorage rozjeżdża mount
- * `cache:nuxt:payload` → próba zapisu na `.nuxt/cache/nuxt/payload` i `EISDIR` na Windows.
- * Nie używać tu `import.meta.dev` — w kontekście ładowania `nuxt.config` bywa undefined.
+ * ISR na `/` poza prod wyłączone: `payloadCache` + unstorage → `EISDIR` na Windows przy dev.
+ * Nie używać `import.meta.dev` w kontekście ładowania `nuxt.config`.
  */
-const devDisableRootIsr = process.env.NODE_ENV !== 'production'
+const devDisableRootIsr = !isProd
+
+/** Trasy panelu — CSR (SPA), bez SSR i bez cache CDN. */
+const panelNoStore = { ssr: false as const, headers: { 'cache-control': 'private, no-store' } }
 
 export default defineNuxtConfig({
-  // Najnowsze domyślne zachowanie Nitro / presetów modułów dla wybranej osi czasu (bump przy większych upgrade’ach Nuxt).
   compatibilityDate: '2026-05-09',
 
   modules: [
     '@nuxt/eslint',
     '@nuxt/ui',
-    /** Web Analytics na Vercel — moduł: `@vercel/analytics/nuxt` (meta.name: `@vercel/analytics`). */
-    '@vercel/analytics/nuxt'
+    '@vercel/analytics/nuxt',
+    '@nuxtjs/robots',
+    '@nuxtjs/sitemap',
+    '@vite-pwa/nuxt'
   ],
+
+  site: {
+    url: publicSiteUrl,
+    name: 'CKS Slavia Ruda Śląska',
+    description: 'Klub sportowy Slavia Ruda Śląska: zawodnicy, wyniki i społeczność skupiona wokół sportów siłowych.',
+    defaultLocale: 'pl'
+  },
+
+  robots: {
+    disallow: [
+      '/athlete',
+      '/athlete/**',
+      '/trainer',
+      '/trainer/**',
+      '/admin',
+      '/admin/**',
+      '/superadmin',
+      '/superadmin/**',
+      '/chat',
+      '/profil',
+      '/attendance',
+      '/powiadomienia',
+      '/dziennik',
+      '/ogloszenia'
+    ]
+  },
+
+  sitemap: {
+    exclude: [
+      '/athlete/**',
+      '/trainer/**',
+      '/admin/**',
+      '/superadmin/**',
+      '/chat',
+      '/profil',
+      '/attendance',
+      '/powiadomienia',
+      '/dziennik',
+      '/ogloszenia',
+      '/banned'
+    ],
+    defaults: {
+      changefreq: 'weekly',
+      priority: 0.8
+    }
+  },
 
   devtools: { enabled: true },
 
-  /** Pełne sourcemapy mocno wydłużają `nuxt build` (Vite + Nitro). Wyłączone domyślnie; ustaw `NUXT_SOURCEMAP=1` przed buildem, gdy potrzebujesz map do Sentry. */
   sourcemap: {
     client: process.env.NUXT_SOURCEMAP === '1',
     server: process.env.NUXT_SOURCEMAP === '1'
   },
 
+  experimental: {
+    /** Payload przy ISR/SSG — mniejszy HTML, szybsza hydracja (prod). */
+    payloadExtraction: isProd,
+    defaults: {
+      nuxtLink: {
+        prefetch: true,
+        prefetchOn: { interaction: true }
+      }
+    }
+  },
+
+  app: {
+    head: {
+      charset: 'utf-8',
+      link: [
+        { rel: 'manifest', href: '/manifest.webmanifest' },
+        { rel: 'preload', href: '/logo.png', as: 'image', type: 'image/png' }
+      ]
+    }
+  },
+
   nitro: {
-    /** Bez map Nitro szybciej pakuje serwer (domyślnie przy wyłączonym `sourcemap.server` i tak zwykle nie są potrzebne lokalnie). */
-    sourceMap: process.env.NUXT_SOURCEMAP === '1'
+    sourceMap: process.env.NUXT_SOURCEMAP === '1',
+    compressPublicAssets: true,
+    prerender: {
+      crawlLinks: true,
+      failOnError: false,
+      routes: [
+        '/',
+        '/zawodnicy',
+        '/galeria',
+        '/aktualnosci',
+        '/kalendarz',
+        '/kontakt',
+        '/logowanie',
+        '/kalkulator-proporcji',
+        '/kalkulator-sinclair',
+        '/klub/wyzwania'
+      ],
+      ignore: [
+        '/athlete',
+        '/trainer',
+        '/admin',
+        '/superadmin',
+        '/api',
+        '/dev-sw.js'
+      ]
+    }
   },
 
   /**
-   * Strategia pod Vercel: minimalizujemy cold starty i koszt SSR.
-   *
-   * Zasada bezpieczeństwa: SWR/ISR tylko dla tras, które NIE zależą od tokena/roli użytkownika.
-   * W przeciwnym wypadku cache może “pomieszać” widoki publiczne i adminowe.
+   * Renderowanie hybrydowe (Vercel):
+   * - SSG: `static: true` + nitro.prerender
+   * - ISR: publiczne listy / blog
+   * - SSR: domyślnie na trasach bez reguły
+   * - CSR (SPA): panele po zalogowaniu (`ssr: false`)
    */
   routeRules: {
-    // Produkcja: ISR na `/`; lokalnie `import.meta.dev` — patrz `devDisableRootIsr` (payload cache + unstorage).
-    '/': devDisableRootIsr ? { isr: false } : { isr: 600 },
-    '/zawodnicy': { isr: 900 },
-    '/galeria': { isr: 1800 },
-    '/aktualnosci': { isr: 600 },
+    '/': devDisableRootIsr ? { isr: false } : { isr: 600, prerender: true },
+    '/zawodnicy': { isr: 900, prerender: true },
+    '/galeria': { isr: 1800, prerender: true },
+    '/aktualnosci': { isr: 600, prerender: true },
     '/aktualnosci/**': { isr: 600 },
+    '/klub/**': { isr: 900 },
 
-    // Publiczne i bez danych wrażliwych → static shell.
-    '/kalendarz': { static: true },
-    '/kontakt': { static: true },
-    '/logowanie': { static: true },
+    '/kalendarz': { static: true, prerender: true },
+    '/kontakt': { static: true, prerender: true },
+    '/logowanie': { static: true, prerender: true },
     '/banned': { static: true },
-    '/kalkulator-proporcji': { static: true },
-    '/kalkulator-sinclair': { static: true },
+    '/kalkulator-proporcji': { static: true, prerender: true },
+    '/kalkulator-sinclair': { static: true, prerender: true },
 
-    // Trasy wymagające auth/roli → zawsze no-store (unikamy cache per-user).
-    '/ogloszenia': { headers: { 'cache-control': 'private, no-store' } },
+    '/ogloszenia': { ...panelNoStore },
 
-    // Strefy po auth / role → zawsze no-store (unikamy cache per-user).
-    '/athlete/**': { headers: { 'cache-control': 'private, no-store' } },
-    '/trainer/**': { headers: { 'cache-control': 'private, no-store' } },
-    '/admin/**': { headers: { 'cache-control': 'private, no-store' } },
-    '/superadmin/**': { headers: { 'cache-control': 'private, no-store' } },
-    '/chat': { headers: { 'cache-control': 'private, no-store' } },
-    '/profil': { headers: { 'cache-control': 'private, no-store' } },
-    '/attendance': { headers: { 'cache-control': 'private, no-store' } },
-    '/powiadomienia': { headers: { 'cache-control': 'private, no-store' } },
-    '/dziennik': { headers: { 'cache-control': 'private, no-store' } }
+    '/athlete/**': panelNoStore,
+    '/trainer/**': panelNoStore,
+    '/admin/**': panelNoStore,
+    '/superadmin/**': panelNoStore,
+    '/chat': panelNoStore,
+    '/profil': panelNoStore,
+    '/attendance': panelNoStore,
+    '/powiadomienia': panelNoStore,
+    '/dziennik': panelNoStore
+  },
+
+  pwa: {
+    registerType: 'autoUpdate',
+    includeAssets: ['logo.png', 'favicon.ico', 'manifest.webmanifest'],
+    manifest: {
+      name: 'CKS Slavia Ruda Śląska',
+      short_name: 'Slavia',
+      description: 'Aplikacja klubu sportowego CKS Slavia Ruda Śląska: zawodnicy, kalendarz, wyniki i powiadomienia.',
+      theme_color: '#0f172a',
+      background_color: '#0f172a',
+      display: 'standalone',
+      lang: 'pl',
+      start_url: '/',
+      scope: '/',
+      icons: [
+        { src: '/logo.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+        { src: '/logo.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+      ]
+    },
+    workbox: {
+      navigateFallback: '/',
+      navigateFallbackDenylist: [/^\/api\//, /^\/dev-sw/, /^\/_nuxt/, /^\/athlete/, /^\/trainer/, /^\/admin/, /^\/superadmin/],
+      globPatterns: ['**/*.{js,css,html,png,svg,ico,woff2,webmanifest,json}'],
+      cleanupOutdatedCaches: true,
+      runtimeCaching: [
+        {
+          urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+          handler: 'CacheFirst',
+          options: {
+            cacheName: 'google-fonts-stylesheets',
+            expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 }
+          }
+        },
+        {
+          urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+          handler: 'CacheFirst',
+          options: {
+            cacheName: 'google-fonts-webfonts',
+            expiration: { maxEntries: 30, maxAgeSeconds: 60 * 60 * 24 * 365 }
+          }
+        },
+        {
+          urlPattern: ({ url }) => {
+            const p = url.pathname
+            return p.startsWith('/api/athletes')
+              || p.startsWith('/api/posts')
+              || p.startsWith('/api/gallery')
+              || p.startsWith('/api/announcements')
+              || p.startsWith('/api/competitions')
+              || p.startsWith('/api/results/public-board')
+          },
+          handler: 'NetworkFirst',
+          options: {
+            cacheName: 'slavia-public-api',
+            networkTimeoutSeconds: 8,
+            expiration: { maxEntries: 64, maxAgeSeconds: 300 }
+          }
+        }
+      ]
+    },
+    devOptions: {
+      enabled: true,
+      type: 'module',
+      navigateFallback: '/',
+      suppressWarnings: true
+    },
+    client: {
+      installPrompt: true,
+      periodicSyncForUpdates: 3600
+    }
   },
 
   css: ['~/assets/css/main.css'],
 
   runtimeConfig: {
     blobReadWriteToken: process.env.BLOB_READ_WRITE_TOKEN || '',
-    /** Opcjonalny token dla wyższego limitu zapytań do GitHub API (tylko serwer). */
     githubApiToken: process.env.GITHUB_TOKEN || process.env.GITHUB_API_TOKEN || '',
     public: {
-      /**
-       * Zewnętrzny backend — tylko ten URL; brak proxy Nitro, brak kodu serwera w tym repo.
-       * Ustaw w `.env`: NUXT_PUBLIC_API_BASE_URL
-       */
       apiBase: process.env.NUXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000',
-      /**
-       * URL backendu Leapcell (provider przełączany globalnie po stronie API).
-       */
       apiBaseLeapcell: process.env.NUXT_PUBLIC_API_BASE_URL_LEAPCELL || process.env.NUXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000',
-      /**
-       * URL backendu Render (provider przełączany globalnie po stronie API).
-       */
       apiBaseRender:
         process.env.NUXT_PUBLIC_API_BASE_URL_RENDER
         || process.env.NUXT_PUBLIC_API_BASE_URL
         || 'http://127.0.0.1:8000',
-      /**
-       * Publiczny URL strony — używany do canonical/og:url.
-       */
-      siteUrl: resolvePublicSiteUrl(),
-      /**
-       * Lista rozdzielona przecinkami: identyfikatory funkcji eksperymentalnych zawsze wyłączone na buildzie (deploy).
-       * Nadpisuje localStorage i domyślne „włączone”. Zob. `app/data/experimentalFeaturesCatalog.ts`.
-       *
-       * Przykład: `barbell_pose_analysis,club_notification_bell`
-       */
+      siteUrl: publicSiteUrl,
       experimentalKillSwitch: process.env.NUXT_PUBLIC_EXPERIMENTAL_KILL_SWITCH || '',
-      /** Z pola `version` w `package.json` (build-time); stopka — w nagłówku odznaka Dev/Beta wg `SiteHeader`. */
       appVersion: formatPublicAppVersion(packageJsonVersion),
-      /**
-       * Feature flag (env): `NUXT_PUBLIC_FEATURE_ATHLETE_COMPARE=0` wyłącza link do porównania zawodników.
-       * Domyślnie włączone — bez zmiennej środowiskowej moduł jest widoczny.
-       */
       featureAthleteCompare: process.env.NUXT_PUBLIC_FEATURE_ATHLETE_COMPARE !== '0',
-      /**
-       * JSON z flagami boolean (np. `{"foo":false}`). Łączy się z `usePublicFeatures()` / `usePublicFeatureFlag()`.
-       * Nie wstawiaj tu sekretów — zmienna jest publiczna (bundle klienta).
-       */
       featuresJson: process.env.NUXT_PUBLIC_FEATURES_JSON || '',
-      /**
-       * Repozytorium aplikacji mobilnej (GitHub) — `owner/repo`.
-       * Używane do przycisku „Pobierz aplikację” i `/api/mobile/latest-release`.
-       */
       mobileGithubRepo: process.env.NUXT_PUBLIC_MOBILE_GITHUB_REPO || ''
     }
   },
+
   vite: {
     build: {
-      /** Liczenie gzip każdego pliku po bundlu — zbędny koszt czasu przy `pnpm build`. */
       reportCompressedSize: false,
-      /** Nuxt + Tailwind + UI często przekraczają 500 kB w jednym chunku — bez ręcznego splitu Rollup i tak jest szybszy. */
       chunkSizeWarningLimit: 1600
     },
     optimizeDeps: {
-      /**
-       * Ikony: Nuxt Icon w trybie `local` bundluje tylko zainstalowane kolekcje (`package.json` —
-       * obecnie lucide + game-icons). Nie dodawaj całego `@iconify/json` do zależności produkcyjnych.
-       */
       include: [
         'date-fns',
         'date-fns/locale'

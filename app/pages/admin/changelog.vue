@@ -17,6 +17,34 @@ type ChangelogUpdate = {
 
 const updates = [
   {
+    version: 'v3.2.1-dev',
+    date: '17 Maj 2026',
+    title:
+      'Wydajność WWW (SSG/ISR/CSR), PWA, SEO, obecność kadry, redesign paneli',
+    features: [
+      'Witryna v3.2.1-dev: hybrydowe renderowanie — SSG + prerender, ISR na stronach publicznych, CSR (`ssr: false`) w panelach po zalogowaniu; payload extraction w produkcji.',
+      'PWA: `@vite-pwa/nuxt` — service worker w dev i produkcji, manifest, auto-update, cache fontów i publicznego API; usunięty plugin wyłączający SW.',
+      'SEO: `@nuxtjs/robots`, `@nuxtjs/sitemap`, `useSlaviaSeo()`, canonical per trasa, dynamiczne URL-e wpisów bloga; prefetch linków (`interaction`) i `usePrefetchApi()`.',
+      'Obecność (`/attendance`): zatwierdzanie wszystkich oczekujących jednym kliknięciem, kolejka pending, premium UI dla kadry i zawodnika.',
+      'Design system: `PanelPageLayout` / `PanelPageHeader` na dashboardach i stronach pomocniczych; tokeny `slavia-panel-*` w CSS.',
+      'Backend v3.2.1-dev: middleware `Cache-Control` na publicznych GET (zawodnicy, posty, galeria, ogłoszenia, wyniki publiczne, OpenAPI).',
+      'Mobilka: tag `v0.9.3-dev` — cache publicznych GET w pamięci (`PublicApiCache`), `cached_network_image` w zależnościach.'
+    ],
+    type: 'release'
+  },
+  {
+    version: 'v0.9.3-dev',
+    date: '17 Maj 2026',
+    title:
+      'Aplikacja mobilna 0.9.3-dev — cache API, cached_network_image',
+    features: [
+      'Publiczne listy (zawodnicy, ogłoszenia, aktualności, galeria) — krótki TTL w `PublicApiCache`; invalidacja po mutacjach ogłoszeń.',
+      'Zależność `cached_network_image` — gotowa do awatarów i galerii (CDN Cloudinary).',
+      'Tag GitHub: `v0.9.3-dev` — `pubspec` 0.9.3+4; Android `versionName` z tagu.'
+    ],
+    type: 'release'
+  },
+  {
     version: 'v0.9.2',
     date: '15 Maj 2026',
     title:
@@ -502,29 +530,15 @@ const filteredUpdates = computed(() => {
 </script>
 
 <template>
-  <UContainer class="py-8 md:py-14 lg:py-16">
-    <div class="mx-auto max-w-5xl">
-      <div class="relative overflow-hidden rounded-3xl border border-default/60 bg-linear-to-br from-primary/10 via-card to-card p-6 shadow-sm ring-1 ring-primary/10 sm:p-8">
-        <div class="pointer-events-none absolute -right-20 -top-24 size-72 rounded-full bg-primary/20 blur-3xl" />
-        <div class="relative">
-          <div class="flex items-start justify-between gap-4">
-            <div class="min-w-0">
-              <p class="text-[11px] font-black uppercase tracking-[0.25em] text-primary">
-                Administracja
-              </p>
-              <h1 class="mt-2 text-3xl font-black tracking-tight text-highlighted sm:text-4xl">
-                Changelog
-              </h1>
-              <p class="mt-3 max-w-3xl text-sm leading-relaxed text-muted sm:text-base">
-                Historia zmian w aplikacji — szybkie wyszukiwanie i filtrowanie po typie aktualizacji.
-              </p>
-            </div>
-            <span class="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary/12 text-primary ring-1 ring-primary/20">
-              <UIcon name="i-lucide-file-text" class="size-5" />
-            </span>
-          </div>
-
-          <div class="mt-5 flex flex-wrap gap-2">
+  <PanelPageLayout narrow>
+    <PanelPageHeader
+      area="admin"
+      variant="hero"
+      title="Changelog"
+      icon="i-lucide-file-text"
+      description="Historia zmian w aplikacji — szybkie wyszukiwanie i filtrowanie po typie aktualizacji."
+    >
+      <template #badges>
             <UBadge color="primary" variant="subtle" size="sm">
               Nowości: {{ totalByType.get('feature') || 0 }}
             </UBadge>
@@ -540,9 +554,8 @@ const filteredUpdates = computed(() => {
             <UBadge color="neutral" variant="subtle" size="sm">
               Łącznie: {{ updates.length }}
             </UBadge>
-          </div>
-        </div>
-      </div>
+      </template>
+    </PanelPageHeader>
 
       <UCard class="mt-8 rounded-3xl border-default/70 shadow-sm ring-1 ring-default/40">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -682,6 +695,5 @@ const filteredUpdates = computed(() => {
           </div>
         </UCard>
       </div>
-    </div>
-  </UContainer>
+  </PanelPageLayout>
 </template>

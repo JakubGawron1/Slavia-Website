@@ -182,7 +182,7 @@ watch(selectedPlanId, () => {
       </UContainer>
     </div>
 
-    <UContainer class="mt-8">
+    <PanelPageLayout padding="compact">
       <!-- Loading State -->
       <div v-if="pending && plans.length === 0" class="flex flex-col items-center justify-center py-20 gap-4">
         <UIcon name="i-lucide-loader-2" class="size-12 animate-spin text-primary/40" />
@@ -357,7 +357,7 @@ watch(selectedPlanId, () => {
           </div>
         </div>
       </div>
-    </UContainer>
+    </PanelPageLayout>
 
     <!-- Plan Details Modal (Nuxt UI v4) -->
     <UModal 

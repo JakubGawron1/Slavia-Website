@@ -88,22 +88,14 @@ function athleteHref(row: LeaderboardRow) {
 </script>
 
 <template>
-  <UContainer class="py-10 md:py-14">
-    <header class="mb-10 max-w-3xl">
-      <p class="text-xs font-bold uppercase tracking-[0.22em] text-primary">
-        Klub · community
-      </p>
-      <h1 class="mt-2 text-3xl font-black tracking-tight text-highlighted md:text-4xl">
-        Wyzwanie miesiąca
-      </h1>
-      <p class="mt-3 text-muted leading-relaxed">
-        Ranking oparty na liczbie
-        <strong class="text-highlighted">wpisów w dzienniku treningów</strong>
-        w wybranym miesiącu (MVP „community challenges”; pełny tonnage — po rozszerzeniu modelu wpisów).
-      </p>
-    </header>
+  <PublicPageLayout>
+    <PublicPageHeader
+      eyebrow="Klub · community"
+      title="Wyzwanie miesiąca"
+      description="Ranking oparty na liczbie wpisów w dzienniku treningów w wybranym miesiącu."
+    />
 
-    <UCard class="mb-8 border-default/60">
+    <UCard class="slavia-page-card mb-8">
       <div class="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-end">
         <UFormField label="Miesiąc (YYYY-MM)" class="max-w-xs">
           <div class="flex gap-2">
@@ -187,5 +179,5 @@ function athleteHref(row: LeaderboardRow) {
         </tbody>
       </table>
     </div>
-  </UContainer>
+  </PublicPageLayout>
 </template>

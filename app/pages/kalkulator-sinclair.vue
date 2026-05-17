@@ -175,31 +175,24 @@ useSeoMeta({
 </script>
 
 <template>
-  <div>
-    <UContainer class="py-8 md:py-14 lg:py-16">
-      <div class="mx-auto max-w-3xl text-center">
-        <p class="text-sm font-medium uppercase tracking-wider text-primary">
-          Narzędzie
-        </p>
-        <h1 class="mt-2 text-3xl font-bold tracking-tight text-highlighted sm:text-4xl lg:text-5xl">
-          Kalkulator Sinclair
-        </h1>
-        <p class="mx-auto mt-4 max-w-2xl text-lg text-muted">
-          Przelicznik na okres <strong class="text-default">2025–2028</strong> — porównywanie wyników zawodników o różnej masie ciała (dwubój: rwanie + podrzut).
-        </p>
+  <PublicPageLayout>
+    <PublicPageHeader
+      eyebrow="Narzędzie"
+      title="Kalkulator Sinclair"
+      description="Przelicznik na okres 2025–2028 — porównywanie wyników zawodników o różnej masie ciała (dwubój: rwanie + podrzut)."
+    />
 
-        <UAlert
-          v-if="profileWarning"
-          color="warning"
-          variant="subtle"
-          icon="i-lucide-alert-triangle"
-          class="mt-6 text-left"
-          :title="profileWarning"
-          :actions="[{ label: 'Przejdź do profilu', to: '/profil', color: 'warning' }]"
-        />
-      </div>
+    <UAlert
+      v-if="profileWarning"
+      color="warning"
+      variant="subtle"
+      icon="i-lucide-alert-triangle"
+      class="mb-8 max-w-3xl"
+      :title="profileWarning"
+      :actions="[{ label: 'Przejdź do profilu', to: '/profil', color: 'warning' }]"
+    />
 
-      <div class="mx-auto mt-12 grid max-w-5xl gap-8 lg:grid-cols-5">
+      <div class="grid max-w-5xl gap-8 lg:grid-cols-5">
         <UCard class="border-default/80 shadow-sm lg:col-span-2">
           <template #header>
             <h2 class="text-lg font-semibold text-highlighted">
@@ -392,15 +385,13 @@ useSeoMeta({
         </div>
       </div>
 
-      <div class="mx-auto mt-10 max-w-3xl">
-        <UAlert
-          color="neutral"
-          variant="subtle"
-          icon="i-lucide-info"
-          title="Informacja"
-          description="Przelicznik jest liczony jak na podnoszenieciezarow.pl (okres 2025–2028): mężczyźni b = 201 kg, kobiety b = 164 kg; stała A dopasowana do ich tabeli. Ewentualne różnice w ostatnich miejscach wynikają z zaokrągleń po stronie serwisu referencyjnego."
-        />
-      </div>
-    </UContainer>
-  </div>
+    <UAlert
+      class="mt-10 max-w-3xl"
+      color="neutral"
+      variant="subtle"
+      icon="i-lucide-info"
+      title="Informacja"
+      description="Przelicznik jest liczony jak na podnoszenieciezarow.pl (okres 2025–2028): mężczyźni b = 201 kg, kobiety b = 164 kg; stała A dopasowana do ich tabeli. Ewentualne różnice w ostatnich miejscach wynikają z zaokrągleń po stronie serwisu referencyjnego."
+    />
+  </PublicPageLayout>
 </template>

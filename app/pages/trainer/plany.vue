@@ -197,11 +197,13 @@ const planVsDiaryHref = computed(() => {
 </script>
 
 <template>
-  <UContainer class="py-8">
-    <div class="mb-10">
-      <h1 class="text-3xl font-black text-highlighted tracking-tight">Plany treningowe</h1>
-      <p class="text-muted mt-2">Zarządzaj cyklami treningowymi swoich zawodników.</p>
-    </div>
+  <PanelPageLayout>
+    <PanelPageHeader
+      area="trainer"
+      title="Plany treningowe"
+      icon="i-lucide-clipboard-list"
+      description="Zarządzaj cyklami treningowymi swoich zawodników."
+    />
 
     <!-- Toolbar -->
     <div class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6 bg-card/40 p-6 rounded-3xl border border-default">
@@ -446,5 +448,5 @@ const planVsDiaryHref = computed(() => {
         </div>
       </template>
     </div>
-  </UContainer>
+  </PanelPageLayout>
 </template>

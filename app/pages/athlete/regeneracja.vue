@@ -49,18 +49,14 @@ const scaleLegend = [
 </script>
 
 <template>
-  <UContainer class="max-w-5xl py-8 sm:py-12">
-    <header class="mb-10">
-      <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-primary">
-        Dobrostan
-      </p>
-      <h1 class="mt-2 text-3xl font-black tracking-tight text-highlighted sm:text-4xl">
-        Regeneracja
-      </h1>
-      <p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted sm:text-base">
-        Krótki check-in pomaga trenerowi widzieć trend snu i zmęczenia — nie zastępuje rozmowy, ale ułatwia planowanie obciążeń.
-      </p>
-    </header>
+  <PanelPageLayout narrow>
+    <PanelPageHeader
+      area="athlete"
+      eyebrow="Dobrostan"
+      title="Regeneracja"
+      icon="i-lucide-heart-pulse"
+      description="Krótki check-in pomaga trenerowi widzieć trend snu i zmęczenia — nie zastępuje rozmowy, ale ułatwia planowanie obciążeń."
+    />
 
     <div class="mb-10 grid gap-4 sm:grid-cols-3">
       <UCard
@@ -151,5 +147,5 @@ const scaleLegend = [
         </p>
       </div>
     </section>
-  </UContainer>
+  </PanelPageLayout>
 </template>

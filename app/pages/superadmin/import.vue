@@ -114,15 +114,14 @@ useSeoMeta({
 </script>
 
 <template>
-  <UContainer class="py-8 sm:py-12 lg:py-14">
-    <div class="mb-8">
-      <h1 class="text-2xl font-bold tracking-tight text-highlighted sm:text-3xl lg:text-4xl">
-        Import danych z federacji
-      </h1>
-      <p class="mt-2 text-sm text-muted sm:text-base lg:leading-relaxed">
-        Import danych zawodników z federacji został wyłączony. Synchronizacja zawodów nadal działa w module kalendarza klubowego.
-      </p>
-    </div>
+  <PanelPageLayout>
+    <PanelPageHeader
+      area="superadmin"
+      tone="superadmin"
+      title="Import danych z federacji"
+      icon="i-lucide-database"
+      description="Import danych zawodników z federacji został wyłączony. Synchronizacja zawodów nadal działa w module kalendarza klubowego."
+    />
 
     <UCard>
       <template #header>
@@ -257,5 +256,5 @@ useSeoMeta({
         </UButton>
       </template>
     </UCard>
-  </UContainer>
+  </PanelPageLayout>
 </template>

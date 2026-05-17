@@ -2,6 +2,10 @@
 import { pickPostLoginPath } from '~/composables/useAuth'
 import { getApiErrorMessage } from '~/composables/useApi'
 
+definePageMeta({
+  middleware: 'guest'
+})
+
 const auth = useAuth()
 const route = useRoute()
 const toast = useToast()
@@ -31,13 +35,11 @@ async function submit() {
       totpStep.value ? totpCode.value : null
     )
     const raw = route.query.redirect
-    const redirect = typeof raw === 'string' ? raw : undefined
-
-    if (redirect) {
-      await navigateTo(redirect)
-    } else {
-      await navigateTo(pickPostLoginPath(user?.roles ?? []))
-    }
+    const redirect =
+      typeof raw === 'string' && raw.startsWith('/') && !raw.startsWith('//')
+        ? raw
+        : undefined
+    await navigateTo(redirect ?? pickPostLoginPath(user?.roles ?? []))
   } catch (e) {
     const msg = getApiErrorMessage(e, '')
     if (!totpStep.value && msg === 'totp_required') {

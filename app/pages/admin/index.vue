@@ -6,6 +6,7 @@ import DashboardKpiCard from '~/components/dashboard/DashboardKpiCard.vue'
 import DashboardModuleCard from '~/components/dashboard/DashboardModuleCard.vue'
 import DashboardUrgentList from '~/components/dashboard/DashboardUrgentList.vue'
 import DashboardMonthlySummary from '~/components/dashboard/DashboardMonthlySummary.vue'
+import { dashboardLink, type DashboardModuleLink } from '~/utils/dashboardLink'
 
 definePageMeta({ middleware: 'admin' })
 
@@ -136,170 +137,59 @@ async function syncMobileReleases() {
   }
 }
 
-const quickLinksAll = [
-  {
-    title: 'Zawodnicy',
-    description: 'Zarządzaj listą zawodników i ich danymi',
-    icon: 'i-lucide-users',
-    to: '/admin/zawodnicy',
-    color: 'text-blue-500',
-    bg: 'bg-blue-500/10',
-    trainerOnly: false
-  },
-  {
-    title: 'Kalendarz',
-    description: 'Dodawaj i edytuj wydarzenia oraz zawody',
-    icon: 'i-lucide-calendar',
-    to: '/kalendarz',
-    color: 'text-purple-500',
-    bg: 'bg-purple-500/10',
-    trainerOnly: false
-  },
-  {
-    title: 'Aktualności',
-    description: 'Wpisy informacyjne i relacje (jak wcześniej „blog”)',
-    icon: 'i-lucide-newspaper',
-    to: '/aktualnosci',
-    color: 'text-orange-500',
-    bg: 'bg-orange-500/10',
-    trainerOnly: false
-  },
-  {
-    title: 'Strony klubu',
-    description: 'Ogłoszenia, galeria, wiadomości z formularza kontaktowego',
-    icon: 'i-lucide-layout-grid',
-    to: '/ogloszenia',
-    color: 'text-violet-500',
-    bg: 'bg-violet-500/10',
-    trainerOnly: false
-  },
-  {
-    title: 'Wiadomości (kontakt)',
-    description: 'Skrzynka z publicznego formularza',
-    icon: 'i-lucide-mail',
-    to: '/admin/kontakt-wiadomosci',
-    color: 'text-info',
-    bg: 'bg-info/12',
-    trainerOnly: false
-  },
-  {
-    title: 'Rankingi',
-    description: 'Przeglądaj zawodników i wyniki',
-    icon: 'i-lucide-trophy',
-    to: '/zawodnicy',
-    color: 'text-yellow-500',
-    bg: 'bg-yellow-500/10',
-    trainerOnly: false
-  },
-  {
-    title: 'Changelog',
-    description: 'Zobacz nowości w systemie',
-    icon: 'i-lucide-file-text',
-    to: '/admin/changelog',
-    color: 'text-success',
-    bg: 'bg-success/12',
-    trainerOnly: false
-  },
-  {
-    title: 'Proporcje (ratio)',
-    description: '„Złote proporcje” i widełki % między bojami',
-    icon: 'i-lucide-sigma',
-    to: '/kalkulator-proporcji',
-    color: 'text-success',
-    bg: 'bg-success/12',
-    trainerOnly: false
-  },
-  {
-    title: 'Analiza toru sztangi',
-    description: 'Wideo i szkielet ruchu — narzędzie kadry (ścieżka trenera)',
-    icon: 'i-lucide-scan-line',
-    to: '/trainer/analiza-sztangi',
-    color: 'text-orange-500',
-    bg: 'bg-orange-500/10',
-    trainerOnly: false
-  },
-  {
-    title: 'Konta kadry',
-    description: 'Login, e-mail i hasła kont administracyjnych',
-    icon: 'i-lucide-key-round',
-    to: '/admin/konta',
-    color: 'text-rose-500',
-    bg: 'bg-rose-500/10',
-    trainerOnly: false
-  },
-  {
-    title: 'Wszystkie starty',
-    description: 'Historia startów — poprawki i usuwanie wpisów',
-    icon: 'i-lucide-list-checks',
-    to: '/trainer/wyniki',
-    color: 'text-teal-500',
-    bg: 'bg-teal-500/10',
-    trainerOnly: true
-  },
-  {
-    title: 'Dzienniki treningów',
-    description: 'Wpisy po jednostkach — widok trenera',
-    icon: 'i-lucide-book-marked',
-    to: '/trainer/dziennik',
-    color: 'text-cyan-600',
-    bg: 'bg-cyan-500/10',
-    trainerOnly: true
-  },
-  {
-    title: 'Ustawienia konta',
-    description: 'E-mail, avatar i hasło',
-    icon: 'i-lucide-user-cog',
-    to: '/profil',
-    color: 'text-neutral-500',
-    bg: 'bg-neutral-500/10',
-    trainerOnly: false
-  }
-]
-
-const quickLinks = computed(() => {
-  if (isPureAdmin.value) {
-    return quickLinksAll.filter(l => !l.trainerOnly)
-  }
-  return quickLinksAll
-})
-
-const moduleGroups = computed(() => {
-  const list = quickLinks.value
-  const byTo = new Map<string, typeof list[number]>()
-  for (const l of list) byTo.set(String(l.to), l)
-
-  const pick = (to: string) => byTo.get(to)
+const moduleGroups = computed((): { title: string, items: DashboardModuleLink[] }[] => {
   const isTrainerScope = !isPureAdmin.value
-  return [
+  const admin: { title: string, items: DashboardModuleLink[] }[] = [
     {
       title: 'Najczęstsze',
       items: [
-        pick('/admin/zawodnicy'),
-        pick('/admin/konta'),
-        pick('/admin/kontakt-wiadomosci'),
-        pick('/admin/changelog')
-      ].filter(Boolean)
+        dashboardLink('Zawodnicy', 'Lista i dane zawodników', 'i-lucide-users', '/admin/zawodnicy', 'text-blue-500', 'bg-blue-500/10'),
+        dashboardLink('Konta kadry', 'Login, e-mail, hasła', 'i-lucide-key-round', '/admin/konta', 'text-rose-500', 'bg-rose-500/10'),
+        dashboardLink('Wiadomości (kontakt)', 'Skrzynka formularza', 'i-lucide-mail', '/admin/kontakt-wiadomosci', 'text-info', 'bg-info/12'),
+        dashboardLink('Changelog', 'Historia wydań', 'i-lucide-file-text', '/admin/changelog', 'text-success', 'bg-success/12'),
+        dashboardLink('Powiadomienia', 'Alerty systemowe', 'i-lucide-bell', '/powiadomienia', 'text-amber-600', 'bg-amber-500/10')
+      ]
     },
     {
       title: 'Treści publiczne',
       items: [
-        pick('/aktualnosci'),
-        pick('/ogloszenia'),
-        pick('/galeria'),
-        pick('/kontakt')
-      ].filter(Boolean)
+        dashboardLink('Aktualności', 'Wpisy na stronie', 'i-lucide-newspaper', '/aktualnosci', 'text-orange-500', 'bg-orange-500/10'),
+        dashboardLink('Ogłoszenia', 'Tablica klubu', 'i-lucide-megaphone', '/ogloszenia', 'text-violet-500', 'bg-violet-500/10'),
+        dashboardLink('Galeria', 'Zdjęcia', 'i-lucide-images', '/galeria', 'text-pink-500', 'bg-pink-500/10'),
+        dashboardLink('Ranking zawodników', 'Wyniki publiczne', 'i-lucide-trophy', '/zawodnicy', 'text-yellow-500', 'bg-yellow-500/10'),
+        dashboardLink('Wyzwania miesiąca', 'Aktywność w klubie', 'i-lucide-flame', '/klub/wyzwania', 'text-orange-500', 'bg-orange-500/10'),
+        dashboardLink('Kalendarz', 'Wydarzenia', 'i-lucide-calendar', '/kalendarz', 'text-purple-500', 'bg-purple-500/10')
+      ]
     },
     {
-      title: 'Narzędzia',
+      title: 'Konto i narzędzia',
       items: [
-        pick('/kalendarz'),
-        pick('/zawodnicy'),
-        pick('/kalkulator-proporcji'),
-        pick('/profil'),
-        ...(isTrainerScope ? [pick('/trainer/wyniki'), pick('/trainer/dziennik'), pick('/trainer/analiza-sztangi')] : [])
-      ].filter(Boolean)
+        dashboardLink('Proporcje (ratio)', 'Kalkulator bojów', 'i-lucide-sigma', '/kalkulator-proporcji', 'text-success', 'bg-success/12'),
+        dashboardLink('Ustawienia konta', 'Profil', 'i-lucide-user-cog', '/profil', 'text-neutral-500', 'bg-neutral-500/10')
+      ]
     }
-  ] as const
+  ]
+  if (!isTrainerScope) return admin
+  const trainerBlock: { title: string, items: DashboardModuleLink[] } = {
+    title: 'Kadra trenera',
+    items: [
+      dashboardLink('Starty zawodników', 'Lista startów', 'i-lucide-list-checks', '/trainer/wyniki', 'text-teal-500', 'bg-teal-500/10'),
+      dashboardLink('Składki klubowe', 'Zatwierdzanie wpłat', 'i-lucide-banknote', '/trainer/skladki', 'text-green-600', 'bg-green-500/10'),
+      dashboardLink('Lista obecności', 'Weryfikacja', 'i-lucide-user-check', '/attendance', 'text-indigo-600', 'bg-indigo-500/10'),
+      dashboardLink('Dzienniki', 'Wpisy treningowe', 'i-lucide-book-marked', '/trainer/dziennik', 'text-cyan-600', 'bg-cyan-500/10'),
+      dashboardLink('Plany treningowe', 'Monitoring progresu', 'i-lucide-clipboard-list', '/trainer/plany', 'text-emerald-600', 'bg-emerald-500/10'),
+      dashboardLink('Regeneracja', 'Check-in zawodników', 'i-lucide-heart-pulse', '/trainer/regeneracja', 'text-rose-600', 'bg-rose-500/10'),
+      dashboardLink('Feed wydarzeń', 'Aktywności', 'i-lucide-list-collapse', '/trainer/wydarzenia', 'text-fuchsia-600', 'bg-fuchsia-500/10'),
+      dashboardLink('Inne ćwiczenia', 'Ranking siłowy', 'i-lucide-bar-chart-3', '/trainer/exercises', 'text-lime-600', 'bg-lime-500/10'),
+      dashboardLink('Słownik ćwiczeń', 'Baza do planów', 'i-lucide-library', '/trainer/cwiczenia', 'text-indigo-500', 'bg-indigo-500/10'),
+      dashboardLink('Analiza sztangi', 'Wideo', 'i-lucide-scan-line', '/trainer/analiza-sztangi', 'text-orange-500', 'bg-orange-500/10'),
+      dashboardLink('Monitoring', 'Metryki', 'i-lucide-activity', '/trainer/monitoring', 'text-sky-600', 'bg-sky-500/10'),
+      dashboardLink('Czat', 'Wiadomości 1:1', 'i-lucide-messages-square', '/chat', 'text-info', 'bg-info/12')
+    ]
+  }
+  const [most, content, account] = admin
+  if (!most || !content || !account) return admin
+  return [most, content, trainerBlock, account]
 })
 
 function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral' {
@@ -318,6 +208,7 @@ function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 
 const lowerDashboards = computed(() => {
   const list: { label: string, to: string, icon: string }[] = []
   const roles = new Set(auth.roles.value || [])
+  if (roles.has('SuperAdmin')) list.push({ label: 'Panel SuperAdmin', to: '/superadmin', icon: 'i-lucide-crown' })
   if (roles.has('Trainer')) list.push({ label: 'Panel trenera', to: '/trainer', icon: 'i-lucide-dumbbell' })
   if (roles.has('Athlete')) list.push({ label: 'Panel zawodnika', to: '/athlete', icon: 'i-lucide-user' })
   return list
@@ -325,7 +216,7 @@ const lowerDashboards = computed(() => {
 </script>
 
 <template>
-  <UContainer class="py-8 md:py-14 lg:py-16">
+  <UContainer class="slavia-panel-page py-8 md:py-14 lg:py-16">
     <DashboardHero
       eyebrow="Administracja"
       :title="`Witaj, ${auth.user.value?.username || 'Adminie'}!`"
@@ -334,10 +225,6 @@ const lowerDashboards = computed(() => {
       :badges="[
         { label: `Wyniki do zatwierdzenia: ${pendingCount}`, color: pendingCount ? 'warning' : 'neutral' },
         { label: `Zawodnicy: ${athletesCount}`, color: 'neutral' }
-      ]"
-      :actions="[
-        { label: 'Zawodnicy', to: '/admin/zawodnicy', icon: 'i-lucide-users', variant: 'soft', color: 'primary' },
-        { label: 'Wiadomości', to: '/admin/kontakt-wiadomosci', icon: 'i-lucide-mail', variant: 'outline', color: 'neutral' }
       ]"
     />
 
@@ -353,7 +240,7 @@ const lowerDashboards = computed(() => {
           :to="{ path: '/admin', hash: '#wyniki-oczekujace' }"
         />
         <DashboardKpiCard label="Składki (opłacone)" :value="`${paymentProgress}%`" icon="i-lucide-banknote" tone="success" to="/admin/zawodnicy" />
-        <DashboardKpiCard label="Obecność (30d)" :value="`${avgAttendance}%`" icon="i-lucide-user-check" tone="primary" to="/trainer" />
+        <DashboardKpiCard label="Obecność (30d)" :value="`${avgAttendance}%`" icon="i-lucide-user-check" tone="primary" to="/attendance" hint="Lista i weryfikacja na /attendance" />
       </div>
       <div class="lg:col-span-1">
         <DashboardMonthlySummary
@@ -461,23 +348,23 @@ const lowerDashboards = computed(() => {
       </DashboardUrgentList>
     </div>
 
-    <div class="mt-12 space-y-8">
+    <div class="slavia-panel-section space-y-8">
       <div v-for="g in moduleGroups" :key="g.title">
         <div class="mb-3 flex items-end justify-between gap-3">
-          <h2 class="text-xl font-semibold text-highlighted">
+          <h2 class="slavia-panel-section-title">
             {{ g.title }}
           </h2>
         </div>
         <div class="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <DashboardModuleCard
             v-for="link in g.items"
-            :key="String(link!.to)"
-            :title="link!.title"
-            :description="link!.description"
-            :icon="link!.icon"
-            :to="link!.to"
-            :tone="toneFromBg(link!.bg)"
-            :icon-wrapper-class="`${link!.bg} ${link!.color}`"
+            :key="link.to"
+            :title="link.title"
+            :description="link.description"
+            :icon="link.icon"
+            :to="link.to"
+            :tone="toneFromBg(link.bg)"
+            :icon-wrapper-class="`${link.bg} ${link.color}`"
           />
         </div>
       </div>

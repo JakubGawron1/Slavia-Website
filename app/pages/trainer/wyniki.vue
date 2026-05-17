@@ -403,40 +403,28 @@ function badgeColorForKind(k: string | undefined) {
 </script>
 
 <template>
-  <UContainer class="py-8 md:py-14 lg:py-16 animate-page-in">
-    <div class="mb-8 flex flex-wrap items-end justify-between gap-4">
-      <div>
-        <p class="text-xs font-bold uppercase tracking-wider text-primary">
-          Kadra
-        </p>
-        <h1 class="mt-2 text-3xl font-bold tracking-tight text-highlighted">
-          Wszystkie starty zawodników
-        </h1>
-        <p class="mt-2 max-w-2xl text-sm text-muted">
-          Pełna lista zgłoszeń (oczekujących i zatwierdzonych). Jako kadra możesz
-          <strong class="text-highlighted">dodać start od razu jako zatwierdzony</strong>
-          — bez kolejki akceptacji. Edycja i usuwanie jak dotąd.
-        </p>
-      </div>
-      <div class="flex flex-wrap gap-2">
-        <UButton
-          icon="i-lucide-plus-circle"
-          @click="openAddModal"
-        >
+  <PanelPageLayout>
+    <PanelPageHeader
+      area="trainer"
+      title="Wszystkie starty zawodników"
+      icon="i-lucide-list-checks"
+    >
+      <template #description>
+        Pełna lista zgłoszeń (oczekujących i zatwierdzonych). Jako kadra możesz
+        <strong class="text-highlighted">dodać start od razu jako zatwierdzony</strong>
+        — bez kolejki akceptacji. Edycja i usuwanie jak dotąd.
+      </template>
+      <template #actions>
+        <UButton icon="i-lucide-plus-circle" @click="openAddModal">
           Dodaj wynik (zatwierdzony)
         </UButton>
-        <UButton
-          icon="i-lucide-refresh-ccw"
-          variant="soft"
-          :loading="pending"
-          @click="refresh()"
-        >
+        <UButton icon="i-lucide-refresh-ccw" variant="soft" :loading="pending" @click="refresh()">
           Odśwież
         </UButton>
-      </div>
-    </div>
+      </template>
+    </PanelPageHeader>
 
-    <div class="mb-4 flex flex-wrap items-center gap-2 rounded-2xl border border-default/60 bg-muted/15 p-1.5">
+    <div class="slavia-toolbar mb-4">
       <UButton
         size="sm"
         :variant="kindFilter === 'all' ? 'solid' : 'ghost'"
@@ -1010,5 +998,5 @@ function badgeColorForKind(k: string | undefined) {
         </div>
       </template>
     </UModal>
-  </UContainer>
+  </PanelPageLayout>
 </template>
