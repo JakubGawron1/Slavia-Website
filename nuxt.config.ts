@@ -127,6 +127,10 @@ export default defineNuxtConfig({
   },
 
   nitro: {
+    /** Vercel: natywne ISR zamiast legacy `static`/`swr` w Build Options API. */
+    future: {
+      nativeSWR: true
+    },
     sourceMap: process.env.NUXT_SOURCEMAP === '1',
     compressPublicAssets: true,
     prerender: {
@@ -157,8 +161,8 @@ export default defineNuxtConfig({
 
   /**
    * Renderowanie hybrydowe (Vercel):
-   * - SSG: `static: true` + nitro.prerender
-   * - ISR: publiczne listy / blog
+   * - SSG: `prerender: true` + nitro.prerender
+   * - ISR: publiczne listy / blog (`isr` + opcjonalnie prerender)
    * - SSR: domyślnie na trasach bez reguły
    * - CSR (SPA): panele po zalogowaniu (`ssr: false`)
    */
@@ -170,12 +174,12 @@ export default defineNuxtConfig({
     '/aktualnosci/**': { isr: 600 },
     '/klub/**': { isr: 900 },
 
-    '/kalendarz': { static: true, prerender: true },
-    '/kontakt': { static: true, prerender: true },
-    '/logowanie': { static: true, prerender: true },
-    '/banned': { static: true },
-    '/kalkulator-proporcji': { static: true, prerender: true },
-    '/kalkulator-sinclair': { static: true, prerender: true },
+    '/kalendarz': { prerender: true },
+    '/kontakt': { prerender: true },
+    '/logowanie': { prerender: true },
+    '/banned': { prerender: true },
+    '/kalkulator-proporcji': { prerender: true },
+    '/kalkulator-sinclair': { prerender: true },
 
     '/ogloszenia': { ...panelNoStore },
 

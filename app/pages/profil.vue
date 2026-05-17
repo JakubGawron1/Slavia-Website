@@ -318,7 +318,7 @@ async function save() {
             Ustawienia konta
           </h1>
           <p class="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
-            Awatar, wygląd aplikacji (wszystkie presety kolorystyczne klubu), hasło i logowanie 2FA. Login zmienia administrator.
+            Profil, instalacja PWA i aplikacji Android, motyw klubu, hasło oraz 2FA. Login zmienia administrator.
           </p>
         </div>
         <div class="flex shrink-0 flex-wrap items-center justify-end gap-2">
@@ -340,7 +340,7 @@ async function save() {
           Ustawienia
         </h1>
         <p class="mt-2 text-sm leading-relaxed text-muted">
-          Awatar, motyw aplikacji, hasło i 2FA działają na każdej kolorystyce ustawionej przez klub (Black gym, Slavia…).
+          Profil, PWA na ekranie głównym, APK Android i bezpieczeństwo konta.
         </p>
       </div>
 
@@ -360,6 +360,11 @@ async function save() {
             <p v-if="auth.rolesDisplayShort" class="truncate text-xs text-muted">
               {{ auth.rolesDisplayShort }}
             </p>
+            <nav class="mt-3 flex flex-wrap gap-1.5 text-xs">
+              <a href="#aplikacje" class="rounded-lg border border-primary/25 bg-primary/10 px-2.5 py-1.5 font-medium text-primary">PWA</a>
+              <a href="#wyglad" class="rounded-lg border border-default/50 px-2.5 py-1.5 text-muted">Wygląd</a>
+              <a href="#bezpieczenstwo" class="rounded-lg border border-default/50 px-2.5 py-1.5 text-muted">2FA</a>
+            </nav>
             <nav class="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1">
               <UButton :to="dashboardLink" variant="soft" color="primary" size="xs" icon="i-lucide-layout-dashboard" class="min-h-8">
                 Panel
@@ -400,7 +405,17 @@ async function save() {
                 {{ auth.rolesDisplayShort }}
               </p>
             </div>
-            <nav class="flex flex-col gap-2">
+            <nav class="flex flex-col gap-1.5 border-b border-default/40 pb-5 text-sm">
+              <p class="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted">
+                Na tej stronie
+              </p>
+              <a href="#profil" class="rounded-lg px-3 py-2 text-muted transition hover:bg-muted/20 hover:text-highlighted">Profil i awatar</a>
+              <a href="#aplikacje" class="rounded-lg px-3 py-2 text-muted transition hover:bg-muted/20 hover:text-highlighted">Aplikacje (PWA + APK)</a>
+              <a href="#wyglad" class="rounded-lg px-3 py-2 text-muted transition hover:bg-muted/20 hover:text-highlighted">Wygląd</a>
+              <a href="#konto" class="rounded-lg px-3 py-2 text-muted transition hover:bg-muted/20 hover:text-highlighted">Hasło</a>
+              <a href="#bezpieczenstwo" class="rounded-lg px-3 py-2 text-muted transition hover:bg-muted/20 hover:text-highlighted">Bezpieczeństwo</a>
+            </nav>
+            <nav class="flex flex-col gap-2 pt-5">
               <UButton :to="dashboardLink" variant="soft" color="primary" block size="md" icon="i-lucide-layout-dashboard" class="justify-center font-semibold">
                 Mój panel
               </UButton>
@@ -437,7 +452,9 @@ async function save() {
         </aside>
 
         <div class="min-w-0 md:col-span-7 lg:col-span-8">
-          <div class="flex flex-col gap-5 md:gap-6 lg:gap-8">
+          <div class="flex flex-col gap-8 md:gap-10">
+            <div id="profil" class="scroll-mt-28">
+              <p class="mb-5 px-1 text-[10px] font-black uppercase tracking-[0.2em] text-primary">Profil</p>
             <section class="rounded-2xl border border-default/50 bg-card p-6 shadow-sm ring-1 ring-default/20 sm:p-7">
               <div class="flex flex-wrap items-start justify-between gap-3">
                 <div>
@@ -510,10 +527,13 @@ async function save() {
                 </UFormField>
               </div>
             </section>
+            </div>
 
+            <div id="wyglad" class="scroll-mt-28 space-y-5 md:space-y-6">
+              <p class="px-1 text-[10px] font-black uppercase tracking-[0.2em] text-primary">Wygląd</p>
             <section class="rounded-2xl border border-default/50 bg-card p-6 shadow-sm ring-1 ring-default/20 sm:p-7">
               <h2 class="text-base font-bold text-highlighted">
-                Wygląd
+                Motyw i tryb ekranu
               </h2>
               <p class="mt-1 text-sm leading-relaxed text-muted">
                 Tryb ekranu i motyw z tokenów klubu — automatycznie dopasuje się także w Black gym i innych presetach.
@@ -575,6 +595,14 @@ async function save() {
                 </UFormField>
               </div>
             </section>
+
+            </div>
+
+            <div id="aplikacje" class="scroll-mt-28 space-y-5 md:space-y-6">
+              <p class="px-1 text-[10px] font-black uppercase tracking-[0.2em] text-primary">
+                Aplikacje
+              </p>
+              <ProfilePwaInstall />
 
             <section
               v-if="mobileDownloadHref"
@@ -640,20 +668,16 @@ async function save() {
                 </p>
                 <ul class="mt-3 list-disc space-y-1.5 pl-5 text-sm text-muted">
                   <li>
-                    <span class="text-highlighted">Nawigacja (0.9.0-dev):</span>
-                    dolny pasek zakładek, menu boczne i sekcja „Więcej” z kalkulatorami i narzędziami.
+                    <span class="text-highlighted">v0.9.3-dev:</span>
+                    cache publicznych list API, pakiet <code class="text-xs">cached_network_image</code> pod zdjęcia z CDN.
+                  </li>
+                  <li>
+                    <span class="text-highlighted">v0.9.2:</span>
+                    tryb Competition, eksport ICS startów, Quick Actions z najbliższym startem.
                   </li>
                   <li>
                     <span class="text-highlighted">Klub:</span>
-                    aktualności i galeria w aplikacji; odznaki osiągnięć (Sinclair, dwubój, boje, frekwencja).
-                  </li>
-                  <li>
-                    <span class="text-highlighted">Zdrowie i starty:</span>
-                    dziennik regeneracji, przypisanie do zawodów, frekwencja z buforem offline.
-                  </li>
-                  <li>
-                    <span class="text-highlighted">Biometria i aktualizacje:</span>
-                    poprawiona blokada biometryczna (Android), sprawdzanie APK z GitHub Releases.
+                    aktualności, galeria, odznaki osiągnięć; frekwencja z buforem offline.
                   </li>
                   <li>
                     <span class="text-highlighted">Sesja:</span>
@@ -671,7 +695,10 @@ async function save() {
                 </p>
               </div>
             </section>
+            </div>
 
+            <div id="konto" class="scroll-mt-28 space-y-5 md:space-y-6">
+              <p class="px-1 text-[10px] font-black uppercase tracking-[0.2em] text-primary">Konto</p>
             <section class="rounded-2xl border border-default/50 bg-card p-6 shadow-sm ring-1 ring-default/20 sm:p-7">
               <h2 class="text-base font-bold text-highlighted">
                 Hasło
@@ -701,6 +728,10 @@ async function save() {
               </div>
             </section>
 
+            </div>
+
+            <div id="bezpieczenstwo" class="scroll-mt-28 space-y-5 md:space-y-6">
+              <p class="px-1 text-[10px] font-black uppercase tracking-[0.2em] text-primary">Bezpieczeństwo</p>
             <section class="rounded-2xl border border-default/50 bg-card p-6 shadow-sm ring-1 ring-default/20 sm:p-7">
               <h2 class="text-base font-bold text-highlighted">
                 Uwierzytelnianie dwuskładnikowe
@@ -800,6 +831,7 @@ async function save() {
                 <USwitch v-model="hidePaymentReminder" size="lg" />
               </div>
             </section>
+            </div>
           </div>
         </div>
       </div>
