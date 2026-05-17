@@ -21,6 +21,9 @@ export function usePrefetchApi<T>(
 
   async function run() {
     if (inflight >= maxConcurrent) return
+    if (!nuxtApp.payload.data) {
+      nuxtApp.payload.data = {}
+    }
     const existing = nuxtApp.payload.data[key]
     if (existing !== undefined) return
     inflight++

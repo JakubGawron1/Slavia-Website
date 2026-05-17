@@ -13,12 +13,27 @@ export interface MobileLatestRelease {
   apiError?: boolean
 }
 
+const MOBILE_RELEASE_KEY = 'mobile-latest-release'
+
+function readPayloadCache(nuxtApp: ReturnType<typeof useNuxtApp>, key: string) {
+  const bucket = nuxtApp.payload?.data
+  if (!bucket || !Object.prototype.hasOwnProperty.call(bucket, key)) {
+    return undefined
+  }
+  return bucket[key] as MobileLatestRelease
+}
+
 export function useMobileAppRelease() {
-  const { data: mobileRelease } = useFetch<MobileLatestRelease>('/api/mobile/latest-release', {
-    key: 'mobile-latest-release',
-    server: true,
-    default: () => ({ configured: false })
-  })
+  const { data: mobileRelease } = useAsyncData(
+    MOBILE_RELEASE_KEY,
+    () => $fetch<MobileLatestRelease>('/api/mobile/latest-release'),
+    {
+      default: (): MobileLatestRelease => ({ configured: false }),
+      getCachedData(key, nuxtApp) {
+        return readPayloadCache(nuxtApp, key)
+      }
+    }
+  )
 
   const mobileDownloadHref = computed(() => {
     if (!mobileRelease.value?.configured) return ''
