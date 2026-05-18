@@ -198,7 +198,7 @@ export function useAuth() {
       user.value = null
       return
     }
-    if (!options?.force && user.value?.roles?.length) return
+    if (!options?.force && user.value && isAdmin.value) return
     await fetchMe()
   }
 

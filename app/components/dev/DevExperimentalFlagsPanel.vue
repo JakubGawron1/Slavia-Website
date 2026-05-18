@@ -1,5 +1,12 @@
 <script setup lang="ts">
+import type { ComponentPublicInstance } from 'vue'
 import type { ExperimentalFeatureDefinition } from '~/data/experimentalFeaturesCatalog'
+
+type ScrollRefTarget = Element | ComponentPublicInstance | null
+
+function bindScrollEl(elRef: Ref<HTMLElement | null>, n: ScrollRefTarget) {
+  elRef.value = n instanceof HTMLElement ? n : null
+}
 
 const props = defineProps<{
   stableDefs: ExperimentalFeatureDefinition[]
@@ -59,6 +66,14 @@ function useHorizontalScroll() {
 
 const stableScroll = useHorizontalScroll()
 const experimentScroll = useHorizontalScroll()
+
+function setStableScrollEl(n: ScrollRefTarget) {
+  bindScrollEl(stableScroll.el, n)
+}
+
+function setExperimentScrollEl(n: ScrollRefTarget) {
+  bindScrollEl(experimentScroll.el, n)
+}
 
 watch(
   () => [props.stableDefs.length, props.experimentDefs.length, props.resolved],
@@ -143,7 +158,7 @@ watch(
           aria-hidden="true"
         />
         <div
-          :ref="(n) => { stableScroll.el.value = n as HTMLElement | null }"
+          :ref="setStableScrollEl"
           class="dev-flags-scroll -mx-1 flex gap-2 overflow-x-auto pb-2 pt-1 snap-x snap-mandatory"
           tabindex="0"
           role="region"
@@ -218,7 +233,7 @@ watch(
           aria-hidden="true"
         />
         <div
-          :ref="(n) => { experimentScroll.el.value = n as HTMLElement | null }"
+          :ref="setExperimentScrollEl"
           class="dev-flags-scroll -mx-1 flex gap-2 overflow-x-auto pb-2 pt-1 snap-x snap-mandatory"
           tabindex="0"
           role="region"

@@ -14,7 +14,7 @@ useSeoMeta({
   twitterCard: 'summary_large_image'
 })
 
-const { auth, canManage } = useClubContentAdmin()
+const { auth, canManage, sessionReady } = useClubContentAdmin()
 const apiFetch = useApi()
 const toast = useToast()
 const config = useRuntimeConfig()
@@ -167,7 +167,7 @@ function editPostUrl(post: BlogPost) {
     >
       <template #actions>
         <UButton
-          v-if="canManage"
+          v-show="canManage"
           to="/aktualnosci/nowy"
           icon="i-lucide-pen-tool"
           color="primary"
@@ -216,6 +216,26 @@ function editPostUrl(post: BlogPost) {
       </h3>
       <p class="text-muted mt-1">
         Zaglądaj tu wkrótce po nowości ze świata ciężarów.
+      </p>
+      <UButton
+        v-show="canManage"
+        class="mt-6"
+        to="/aktualnosci/nowy"
+        icon="i-lucide-pen-tool"
+        color="primary"
+        size="lg"
+      >
+        Dodaj pierwszy wpis
+      </UButton>
+      <p
+        v-if="auth.isLoggedIn && !canManage && sessionReady"
+        class="mt-4 max-w-md text-center text-xs text-muted"
+      >
+        Tworzenie wpisów mają konta z rolą Administrator lub SuperAdmin.
+        <NuxtLink to="/profil" class="font-semibold text-primary underline">
+          Sprawdź swoje role
+        </NuxtLink>
+        — po zmianie roli wyloguj się i zaloguj ponownie.
       </p>
     </div>
 

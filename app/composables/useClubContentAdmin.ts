@@ -1,6 +1,6 @@
 /**
  * Sesja CMS na stronach publicznych (blog, galeria, ogłoszenia).
- * Po hydracji odświeża role z GET /api/auth/me (baza, nie tylko JWT).
+ * Odświeża role z GET /api/auth/me (baza) przed pokazaniem przycisków tworzenia.
  */
 export function useClubContentAdmin() {
   const auth = useAuth()
@@ -16,9 +16,28 @@ export function useClubContentAdmin() {
     sessionReady.value = true
   }
 
-  onMounted(() => {
-    void hydrateSession()
-  })
+  if (import.meta.client) {
+    onBeforeMount(() => {
+      void hydrateSession()
+    })
+    onNuxtReady(() => {
+      void hydrateSession()
+    })
+    watch(
+      () => auth.token.value,
+      (t) => {
+        if (t) void hydrateSession()
+        else sessionReady.value = true
+      }
+    )
+    watch(
+      () => auth.roles.value,
+      () => {
+        sessionReady.value = true
+      },
+      { deep: true }
+    )
+  }
 
   return {
     auth,

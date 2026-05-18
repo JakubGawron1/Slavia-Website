@@ -20,7 +20,7 @@ useSeoMeta({
   robots: 'index, follow'
 })
 
-const { auth, canManage } = useClubContentAdmin()
+const { auth, canManage, sessionReady } = useClubContentAdmin()
 const apiFetch = useApi()
 const toast = useToast()
 const config = useRuntimeConfig()
@@ -229,7 +229,7 @@ const sortedPhotos = computed(() => {
     >
       <template #actions>
         <UButton
-          v-if="canManage"
+          v-show="canManage"
           icon="i-lucide-image-plus"
           color="primary"
           class="min-h-11 w-full shrink-0 justify-center md:w-auto"
@@ -266,6 +266,26 @@ const sortedPhotos = computed(() => {
       class="rounded-2xl border border-dashed border-default bg-muted/10 px-6 py-14 text-center text-muted"
     >
       Galeria jest pusta.
+      <UButton
+        v-show="canManage"
+        class="mt-6"
+        icon="i-lucide-image-plus"
+        color="primary"
+        size="lg"
+        @click="openCreate"
+      >
+        Dodaj pierwsze zdjęcie
+      </UButton>
+      <p
+        v-if="auth.isLoggedIn && !canManage && sessionReady"
+        class="mx-auto mt-4 max-w-md text-center text-xs text-muted"
+      >
+        Galerię uzupełniają konta Administrator lub SuperAdmin.
+        <NuxtLink to="/profil" class="font-semibold text-primary underline">
+          Sprawdź swoje role
+        </NuxtLink>
+        — po zmianie roli wyloguj się i zaloguj ponownie.
+      </p>
     </div>
 
     <div

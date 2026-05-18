@@ -120,14 +120,14 @@ const descriptionClass = computed(() => {
       >
         <UIcon :name="icon" class="size-5" />
       </span>
+    </div>
 
-      <div
-        v-if="$slots.actions"
-        class="flex shrink-0 flex-wrap gap-2"
-        :class="variant === 'centered' ? 'mt-6 justify-center' : 'md:ml-auto'"
-      >
-        <slot name="actions" />
-      </div>
+    <div
+      v-if="$slots.actions"
+      class="relative mt-4 flex w-full flex-wrap gap-2 border-t border-default/40 pt-4"
+      :class="variant === 'centered' ? 'justify-center' : 'sm:justify-end'"
+    >
+      <slot name="actions" />
     </div>
   </header>
 </template>

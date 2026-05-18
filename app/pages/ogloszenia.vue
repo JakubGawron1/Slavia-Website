@@ -25,7 +25,7 @@ useSeoMeta({
   robots: 'index, follow'
 })
 
-const { auth, canManage } = useClubContentAdmin()
+const { auth, canManage, sessionReady } = useClubContentAdmin()
 const apiFetch = useApi()
 const toast = useToast()
 
@@ -178,7 +178,7 @@ function bodyPreview(text: string, max = 100) {
     >
       <template #actions>
         <UButton
-          v-if="canManage"
+          v-show="canManage"
           icon="i-lucide-megaphone"
           color="primary"
           class="min-h-11 w-full shrink-0 justify-center md:w-auto"
@@ -235,6 +235,26 @@ function bodyPreview(text: string, max = 100) {
       <UIcon name="i-lucide-megaphone" class="mx-auto mb-3 size-10 text-muted/40" />
       <p class="font-semibold text-highlighted">
         Brak ogłoszeń
+      </p>
+      <UButton
+        v-show="canManage"
+        class="mt-6"
+        icon="i-lucide-megaphone"
+        color="primary"
+        size="lg"
+        @click="openCreate"
+      >
+        Dodaj pierwsze ogłoszenie
+      </UButton>
+      <p
+        v-if="auth.isLoggedIn && !canManage && sessionReady"
+        class="mx-auto mt-4 max-w-md text-center text-xs text-muted"
+      >
+        Tablicę uzupełniają konta Administrator lub SuperAdmin.
+        <NuxtLink to="/profil" class="font-semibold text-primary underline">
+          Sprawdź swoje role
+        </NuxtLink>
+        — po zmianie roli wyloguj się i zaloguj ponownie.
       </p>
     </div>
 
