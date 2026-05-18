@@ -2,7 +2,7 @@
   "name": "Slavia-frontend",
   "private": true,
   "type": "module",
-  "version": "3.2.2-dev",
+  "version": "3.2.3-dev",
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",

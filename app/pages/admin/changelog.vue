@@ -17,6 +17,21 @@ type ChangelogUpdate = {
 
 const updates = [
   {
+    version: 'v3.2.3-dev',
+    date: '18 Maj 2026',
+    title:
+      'Slavia-cms, konta i awatary, historia klubu, QR WWW, mobilka v0.9.6-dev',
+    features: [
+      'Slavia-cms: upload mediów galerii i bloga (GitHub Contents API); panel statusu CMS i wyświetlanie treści na witrynie.',
+      'Admin: zarządzanie kontami — awatar, upload zdjęcia profilu, lista kont z profilem zawodnika (`avatar_url`).',
+      'Klub: interaktywna oś czasu historii (idea #2417); obecność QR na WWW z ochroną przed duplikatami check-in.',
+      'Mobilka v0.9.6-dev: analiza sztangi (MVP), nawigacja 4 zakładek, fallback instalacji APK, sync wydań GitHub (prerelease + `GITHUB_TOKEN`), czytelniejsze komunikaty aktualizacji.',
+      'Backend v3.2.3-dev: `mobile_releases` z prerelease, limity uploadu, API feature adoption i QR check-in.',
+      'Dev: batch ideas, narzędzia developerskie; łagodniejsze pobieranie wydań mobilnych na profilu.'
+    ],
+    type: 'release'
+  },
+  {
     version: 'v3.2.2-dev',
     date: '18 Maj 2026',
     title:
