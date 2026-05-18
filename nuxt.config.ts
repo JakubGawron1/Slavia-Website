@@ -146,7 +146,8 @@ export default defineNuxtConfig({
         '/logowanie',
         '/kalkulator-proporcji',
         '/kalkulator-sinclair',
-        '/klub/wyzwania'
+        '/klub/wyzwania',
+        '/o-klubie'
       ],
       ignore: [
         '/athlete',

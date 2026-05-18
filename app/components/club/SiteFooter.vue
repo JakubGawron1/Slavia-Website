@@ -41,6 +41,12 @@ const appReleaseLabel = computed(() => String(config.public.appVersion ?? ''))
         </div>
         <div class="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs">
           <NuxtLink
+            to="/o-klubie"
+            class="font-semibold text-primary underline-offset-2 hover:underline"
+          >
+            O klubie
+          </NuxtLink>
+          <NuxtLink
             to="/klub/wyzwania"
             class="font-semibold text-primary underline-offset-2 hover:underline"
           >

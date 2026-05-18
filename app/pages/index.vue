@@ -235,6 +235,12 @@ const tools: ClubTool[] = [
     icon: 'i-lucide-camera'
   },
   {
+    to: '/o-klubie',
+    label: 'O klubie',
+    description: 'Historia sekcji, kamienie milowe i tradycja CKS Slavia od założenia.',
+    icon: 'i-lucide-history'
+  },
+  {
     to: '/kontakt',
     label: 'Kontakt',
     description: 'Napisz do nas — pomożemy zacząć przygodę z ciężarami.',
@@ -491,6 +497,29 @@ const trainingDays = [
               </p>
             </div>
           </div>
+        </div>
+      </UContainer>
+    </section>
+
+    <!-- HISTORIA KLUBU -->
+    <section class="relative py-12 lg:py-20">
+      <UContainer>
+        <ClubHistoryTimeline
+          :limit="4"
+          compact
+          heading-id="home-club-history-heading"
+        />
+        <div class="mt-10 flex justify-center">
+          <UButton
+            to="/o-klubie"
+            size="lg"
+            color="neutral"
+            variant="outline"
+            trailing-icon="i-lucide-arrow-right"
+            class="font-bold"
+          >
+            Pełna historia klubu
+          </UButton>
         </div>
       </UContainer>
     </section>
