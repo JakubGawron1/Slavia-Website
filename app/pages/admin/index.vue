@@ -236,6 +236,7 @@ const lowerDashboards = computed(() => {
 </script>
 
 <template>
+  <div>
   <UContainer class="slavia-panel-page py-8 md:py-14 lg:py-16">
     <DashboardHero
       eyebrow="Administracja"
@@ -391,7 +392,9 @@ const lowerDashboards = computed(() => {
       </div>
     </div>
 
-    <!-- [2002] Modal zatwierdzenia/odrzucenia wyniku z powodem -->
+  </UContainer>
+
+  <!-- [2002] Modal zatwierdzenia/odrzucenia wyniku z powodem -->
   <UModal
     v-model:open="reviewModalOpen"
     :title="reviewMode === 'approve' ? 'Zatwierdź wynik' : 'Odrzuć wynik'"
@@ -423,4 +426,5 @@ const lowerDashboards = computed(() => {
       </div>
     </template>
   </UModal>
+  </div>
 </template>
