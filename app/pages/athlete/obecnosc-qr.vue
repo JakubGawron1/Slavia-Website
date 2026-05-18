@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Html5Qrcode } from 'html5-qrcode'
 import { apiRoutes } from '~/config/api'
 import { getApiErrorMessage } from '~/composables/useApi'
 
@@ -14,14 +15,16 @@ useSeoMeta({
   robots: 'noindex, nofollow'
 })
 
+const SCANNER_ID = 'slavia-attendance-qr-reader'
+
 const sessionDate = computed(() => new Date().toISOString().slice(0, 10))
 const busy = ref(false)
 const lastMessage = ref<string | null>(null)
 const success = ref(false)
 const manualPayload = ref('')
-const videoRef = ref<HTMLVideoElement | null>(null)
-const streamRef = shallowRef<MediaStream | null>(null)
-const scanSupported = ref(false)
+const scanActive = ref(false)
+const scanError = ref<string | null>(null)
+let html5Qr: Html5Qrcode | null = null
 
 async function submitCheckin(payload: string) {
   const raw = payload.trim()
@@ -39,6 +42,7 @@ async function submitCheckin(payload: string) {
     success.value = true
     lastMessage.value = `Obecność zapisana na ${sessionDate.value}`
     toast.add({ title: 'Zatwierdzono obecność', color: 'success' })
+    await stopCameraScan()
     setTimeout(() => router.push('/attendance'), 1500)
   } catch (e) {
     const msg = getApiErrorMessage(e)
@@ -49,74 +53,73 @@ async function submitCheckin(payload: string) {
   }
 }
 
-function stopCamera() {
-  streamRef.value?.getTracks().forEach(t => t.stop())
-  streamRef.value = null
-  if (videoRef.value) {
-    videoRef.value.srcObject = null
+async function stopCameraScan() {
+  scanActive.value = false
+  if (!html5Qr) {
+    return
   }
+  try {
+    if (html5Qr.isScanning) {
+      await html5Qr.stop()
+    }
+    html5Qr.clear()
+  } catch {
+    /* ignore */
+  }
+  html5Qr = null
 }
 
 async function startCameraScan() {
-  if (!import.meta.client) {
+  if (!import.meta.client || !qrEnabled.value || scanActive.value) {
     return
   }
-  // BarcodeDetector — eksperymentalne API Chromium / Safari (iOS 17+)
-  const Detector = (window as unknown as { BarcodeDetector?: new (opts?: { formats?: string[] }) => { detect: (src: ImageBitmapSource) => Promise<{ rawValue?: string }[]> } }).BarcodeDetector
-  if (!Detector || !navigator.mediaDevices?.getUserMedia) {
-    scanSupported.value = false
+  scanError.value = null
+  await stopCameraScan()
+  await nextTick()
+
+  if (!navigator.mediaDevices?.getUserMedia) {
+    scanError.value = 'Ta przeglądarka nie obsługuje kamery — użyj pola ręcznego lub aplikacji mobilnej.'
     return
   }
-  scanSupported.value = true
-  stopCamera()
+
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: 'environment' } },
-      audio: false
-    })
-    streamRef.value = stream
-    if (videoRef.value) {
-      videoRef.value.srcObject = stream
-      await videoRef.value.play()
-    }
-    const detector = new Detector({ formats: ['qr_code'] })
-    const tick = async () => {
-      if (!videoRef.value || !streamRef.value || busy.value) {
-        return
+    html5Qr = new Html5Qrcode(SCANNER_ID)
+    await html5Qr.start(
+      { facingMode: 'environment' },
+      { fps: 8, qrbox: { width: 240, height: 240 }, aspectRatio: 1 },
+      (decodedText) => {
+        void submitCheckin(decodedText)
+      },
+      () => {
+        /* brak kodu w klatce — normalne */
       }
-      try {
-        const codes = await detector.detect(videoRef.value)
-        const raw = codes[0]?.rawValue?.trim()
-        if (raw) {
-          await submitCheckin(raw)
-          return
-        }
-      } catch {
-        /* kolejna klatka */
-      }
-      if (streamRef.value) {
-        requestAnimationFrame(() => { void tick() })
-      }
-    }
-    void tick()
-  } catch {
-    scanSupported.value = false
+    )
+    scanActive.value = true
+  } catch (e) {
+    scanError.value = getApiErrorMessage(e) || 'Brak dostępu do kamery'
     toast.add({
-      title: 'Brak dostępu do kamery',
-      description: 'Wpisz kod ręcznie lub użyj aplikacji mobilnej.',
+      title: 'Nie udało się uruchomić kamery',
+      description: 'Zezwól na kamerę w przeglądarce lub wpisz kod ręcznie.',
       color: 'warning'
     })
   }
 }
 
-onMounted(() => {
-  if (qrEnabled.value) {
-    void startCameraScan()
-  }
-})
+watch(
+  qrEnabled,
+  async (on) => {
+    if (on) {
+      await nextTick()
+      await startCameraScan()
+    } else {
+      await stopCameraScan()
+    }
+  },
+  { immediate: true }
+)
 
 onBeforeUnmount(() => {
-  stopCamera()
+  void stopCameraScan()
 })
 </script>
 
@@ -139,13 +142,36 @@ onBeforeUnmount(() => {
     />
 
     <template v-else>
-      <UCard class="rounded-2xl border-default/70 overflow-hidden">
-        <div v-if="scanSupported" class="relative aspect-4/3 bg-black">
-          <video ref="videoRef" class="size-full object-cover" playsinline muted />
-          <div class="pointer-events-none absolute inset-8 rounded-xl border-2 border-primary/70" />
+      <UCard class="overflow-hidden rounded-2xl border-default/70">
+        <div
+          :id="SCANNER_ID"
+          class="relative min-h-[280px] bg-black sm:min-h-[320px]"
+        />
+        <div class="flex flex-wrap gap-2 border-t border-default/50 p-3">
+          <UButton
+            v-if="!scanActive"
+            color="primary"
+            icon="i-lucide-camera"
+            :loading="busy"
+            @click="startCameraScan"
+          >
+            Włącz kamerę
+          </UButton>
+          <UButton
+            v-else
+            variant="outline"
+            color="neutral"
+            icon="i-lucide-camera-off"
+            @click="stopCameraScan"
+          >
+            Wyłącz kamerę
+          </UButton>
         </div>
-        <p v-else class="p-4 text-sm text-muted">
-          Przeglądarka nie obsługuje skanera QR — wklej treść kodu poniżej (np. z aplikacji aparatu).
+        <p v-if="scanError" class="px-4 pb-4 text-sm text-warning">
+          {{ scanError }}
+        </p>
+        <p v-else-if="!scanActive" class="px-4 pb-4 text-sm text-muted">
+          Jeśli kamera nie startuje sama, naciśnij „Włącz kamerę”. Wymagane HTTPS i zgoda na dostęp do aparatu.
         </p>
       </UCard>
 
