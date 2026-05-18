@@ -208,7 +208,7 @@ function rowAccentClass(s: string) {
           Wpisane: {{ filledCount }}
         </UBadge>
       </template>
-    </PanelPageHeader>
+    </PublicPageHeader>
 
       <div class="grid gap-8 lg:grid-cols-5">
         <UCard class="rounded-3xl border-default/70 shadow-sm ring-1 ring-default/40 lg:col-span-2">

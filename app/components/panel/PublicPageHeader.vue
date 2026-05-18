@@ -10,6 +10,11 @@ const props = withDefaults(
     variant?: 'default' | 'hero' | 'centered'
   }>(),
   {
+    eyebrow: undefined,
+    title: undefined,
+    description: undefined,
+    icon: undefined,
+    backTo: undefined,
     variant: 'default',
     backLabel: 'Wróć'
   }
