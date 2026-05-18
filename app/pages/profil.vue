@@ -16,7 +16,12 @@ const auth = useAuth()
 const apiFetch = useApi()
 const toast = useToast()
 const { preset, presets, setPreset, colorMode } = useSlaviaAppearance()
-const { mobileRelease, mobileDownloadHref, mobileDownloadLabel } = useMobileAppRelease()
+const {
+  mobileRelease,
+  mobileDownloadHref,
+  mobileDownloadLabel,
+  mobileReleaseHint
+} = useMobileAppRelease()
 const athlete = ref<Athlete | null>(null)
 const athleteLoading = ref(false)
 
@@ -626,6 +631,12 @@ async function save() {
                     <span v-if="mobileRelease?.tagName" class="font-mono">{{ mobileRelease.tagName }}</span>
                     <span v-if="mobileRelease?.tagName && mobileRelease?.name"> · </span>
                     <span v-if="mobileRelease?.name">{{ mobileRelease.name }}</span>
+                  </p>
+                  <p
+                    v-else-if="mobileReleaseHint"
+                    class="mt-2 text-xs leading-relaxed text-muted"
+                  >
+                    {{ mobileReleaseHint }}
                   </p>
                 </div>
                 <UBadge variant="soft" color="success" size="xs" class="shrink-0 uppercase tracking-wide">

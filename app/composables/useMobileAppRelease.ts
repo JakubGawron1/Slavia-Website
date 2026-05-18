@@ -46,5 +46,24 @@ export function useMobileAppRelease() {
     return mobileRelease.value.apkDownloadUrl ? 'Pobierz aplikację (APK)' : 'Pobierz aplikację'
   })
 
-  return { mobileRelease, mobileDownloadHref, mobileDownloadLabel }
+  const mobileReleaseApiError = computed(() => mobileRelease.value?.apiError === true)
+
+  const mobileReleaseHint = computed(() => {
+    if (!mobileRelease.value?.configured) return ''
+    if (mobileRelease.value.apiError) {
+      return 'Nie udało się pobrać szczegółów z GitHub — link prowadzi do strony wydań. Spróbuj ponownie później.'
+    }
+    if (!mobileRelease.value.tagName?.trim()) {
+      return 'Brak tagu wydania — użyj linku do strony GitHub Releases.'
+    }
+    return ''
+  })
+
+  return {
+    mobileRelease,
+    mobileDownloadHref,
+    mobileDownloadLabel,
+    mobileReleaseApiError,
+    mobileReleaseHint
+  }
 }

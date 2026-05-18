@@ -58,11 +58,27 @@ export default defineEventHandler(async () => {
 
   const base = `https://api.github.com/repos/${repo}`
 
+  async function fetchReleaseList() {
+    const list = await $fetch<GhRelease[]>(`${base}/releases`, {
+      headers,
+      query: { per_page: 30 }
+    })
+    return Array.isArray(list) ? list[0] : undefined
+  }
+
   try {
     const data = await $fetch<GhRelease>(`${base}/releases/latest`, { headers })
     return mapRelease(data, fallbackUrl)
   } catch (err) {
     if (!isNotFound(err)) {
+      try {
+        const first = await fetchReleaseList()
+        if (first?.tag_name) {
+          return mapRelease(first, fallbackUrl)
+        }
+      } catch {
+        /* ignore */
+      }
       return {
         configured: true as const,
         tagName: '',
@@ -76,11 +92,7 @@ export default defineEventHandler(async () => {
     }
 
     try {
-      const list = await $fetch<GhRelease[]>(`${base}/releases`, {
-        headers,
-        query: { per_page: 10 }
-      })
-      const first = Array.isArray(list) ? list[0] : undefined
+      const first = await fetchReleaseList()
       if (first) {
         return mapRelease(first, fallbackUrl)
       }

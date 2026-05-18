@@ -283,7 +283,8 @@ export default defineNuxtConfig({
       appVersion: formatPublicAppVersion(packageJsonVersion),
       featureAthleteCompare: process.env.NUXT_PUBLIC_FEATURE_ATHLETE_COMPARE !== '0',
       featuresJson: process.env.NUXT_PUBLIC_FEATURES_JSON || '',
-      mobileGithubRepo: process.env.NUXT_PUBLIC_MOBILE_GITHUB_REPO || ''
+      mobileGithubRepo:
+        process.env.NUXT_PUBLIC_MOBILE_GITHUB_REPO || 'JakubGawron1/Slavia-Mobile'
     }
   },
 
