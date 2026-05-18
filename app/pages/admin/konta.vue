@@ -8,12 +8,13 @@ useSeoMeta({
 </script>
 
 <template>
-  <PanelPageLayout>
+  <PanelPageLayout padding="compact">
     <PanelPageHeader
       area="admin"
-      title="Konta kadry"
+      variant="hero"
+      title="Zarządzanie kontami"
       icon="i-lucide-key-round"
-      description="Lista kont z backendu (pogrupowana): kadra, trenerzy, zawodnicy. Jako administrator bez roli superadministratora nie widzisz ani nie edytujesz żadnego konta, które ma rolę SuperAdmin — ich zarządzanie jest wyłącznie po zalogowaniu jako SuperAdmin. Reszcie użytkowników możesz zmieniać login, e-mail i hasło; zmianę zestawu ról wykonuje superadministrator."
+      description="Lista kont systemowych z wyszukiwarką i filtrami ról. Możesz edytować login, hasło i zdjęcie profilowe użytkowników bez roli SuperAdmin. Tworzenie kont, zmiana ról, ban i usuwanie — wyłącznie dla superadministratora (także w /superadmin/administratorzy)."
     />
     <ClubAdminsManager />
   </PanelPageLayout>

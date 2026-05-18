@@ -3,6 +3,7 @@ import { apiRoutes } from '~/config/api'
 import { getApiErrorMessage } from '~/composables/useApi'
 import type { Athlete } from '~/types/models'
 import { resolveAuthProfilePhotoSrc } from '~/utils/profilePhoto'
+import { buildUploadFormData } from '~/utils/uploadFormData'
 
 definePageMeta({ middleware: 'auth' })
 
@@ -93,14 +94,16 @@ async function onAvatarFileChange(e: Event) {
   const file = input.files?.[0]
   input.value = ''
   if (!file || !file.type.startsWith('image/')) {
-    toast.add({ title: 'Wybierz plik graficzny', color: 'warning' })
+    toast.add({ title: 'Wybierz plik graficzny (JPG, PNG, WebP)', color: 'warning' })
+    return
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    toast.add({ title: 'Plik jest za duży', description: 'Maksymalny rozmiar to ok. 10 MB.', color: 'warning' })
     return
   }
   uploadLoading.value = true
   try {
-    const fd = new FormData()
-    fd.append('file', file)
-    fd.append('purpose', 'avatar')
+    const fd = buildUploadFormData(file, 'avatar')
     const res = await apiFetch<{ url: string }>('/api/upload', { method: 'POST', body: fd })
     const url = (res.url || '').trim()
     if (!url) {
@@ -462,7 +465,7 @@ async function save() {
                     Zdjęcie profilowe
                   </h2>
                   <p class="mt-1 text-sm leading-relaxed text-muted">
-                    Wgranie pliku zapisuje od razu URL na koncie. Możesz też wkleić link — wtedy „Zapisz” na dole lub w panelu obok.
+                    Wgranie pliku (JPG, PNG, WebP, maks. ok. 10 MB) zapisuje od razu URL na koncie. Możesz też wkleić link — wtedy „Zapisz” na dole lub w panelu obok.
                   </p>
                 </div>
                 <UBadge variant="soft" color="neutral" size="xs" class="shrink-0 font-mono uppercase tracking-wide">

@@ -25,6 +25,8 @@ export interface AuthUser {
   athlete_image_url?: string | null
   /** `athletes.id` powiązany profil (`GET /api/auth/me`). */
   athlete_id?: string | null
+  /** Imię i nazwisko powiązanego zawodnika (panel kont). */
+  athlete_full_name?: string | null
 }
 
 export interface LoginResponse {

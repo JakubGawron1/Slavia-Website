@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { apiRoutes, urlAdminAccount, urlAdminBan, urlAdminUnban, urlSuperadminAdmin } from '~/config/api'
 import type { AdminAccount, Athlete, GroupedAdminAccounts, UserRole } from '~/types/models'
+import { resolveAuthProfilePhotoSrc } from '~/utils/profilePhoto'
+import { athleteProfilePath } from '~/utils/slug'
 
 const api = useApi()
 const auth = useAuth()
 const toast = useToast()
-const expBanUi = useExperimentalFlag('admin_accounts_ban_ui')
 
 /** Do szablonu (TS nie widzi auto-unwrap Ref z useState w zagnieżdżonym obiekcie). */
 const authUserId = computed(() => auth.user.value?.id ?? null)
@@ -28,22 +29,26 @@ const ROLE_LABELS: Record<UserRole, string> = {
   Athlete: 'Zawodnik'
 }
 
-const ROLE_FILTER_META: Record<UserRole, { hint: string, pillClass: string }> = {
+const ROLE_FILTER_META: Record<UserRole, { hint: string, pillClass: string, tooltip: string }> = {
   SuperAdmin: {
     hint: 'Pełny dostęp administracyjny',
-    pillClass: 'border-violet-500/35 bg-violet-500/10 text-violet-700 dark:text-violet-300'
+    pillClass: 'border-violet-500/35 bg-violet-500/10 text-violet-700 dark:text-violet-300',
+    tooltip: 'SuperAdmin: pełny dostęp do całej aplikacji, w tym panelu superadministratora i kont innych superadminów.'
   },
   Admin: {
     hint: 'Panel administracyjny',
-    pillClass: 'border-info/35 bg-info/10 text-info'
+    pillClass: 'border-info/35 bg-info/10 text-info',
+    tooltip: 'Admin: panel administracyjny (zawodnicy, składki, treści). Nie widzi kont SuperAdmin.'
   },
   Trainer: {
     hint: 'Panel trenera',
-    pillClass: 'border-success/35 bg-success/10 text-success'
+    pillClass: 'border-success/35 bg-success/10 text-success',
+    tooltip: 'Trener: panel trenera (zawodnicy, plany, obecność). Bez roli Admin nie ma panelu administracyjnego.'
   },
   Athlete: {
     hint: 'Strefa zawodnika',
-    pillClass: 'border-default bg-muted/40 text-highlighted'
+    pillClass: 'border-default bg-muted/40 text-highlighted',
+    tooltip: 'Zawodnik: strefa zawodnika (składki, kalendarz, dziennik). Może być powiązany z profilem sportowym.'
   }
 }
 
@@ -129,6 +134,16 @@ function initialsFromUsername(username: string) {
   return slice || '?'
 }
 
+function accountPhotoSrc(a: AdminAccount) {
+  return resolveAuthProfilePhotoSrc(a) || ''
+}
+
+function athletePublicPath(a: AdminAccount) {
+  if (!a.athlete_id) return null
+  const name = a.athlete_full_name?.trim() || a.username
+  return athleteProfilePath(name, a.athlete_id)
+}
+
 function roleBadgeColor(role: UserRole): 'primary' | 'info' | 'success' | 'neutral' {
   switch (role) {
     case 'SuperAdmin':
@@ -164,6 +179,8 @@ const accountSaving = ref(false)
 const accountTarget = ref<AdminAccount | null>(null)
 const accountUsername = ref('')
 const accountPassword = ref('')
+const accountAvatarUrl = ref('')
+const accountInitialAvatarUrl = ref('')
 const accountAthleteId = ref<string>('')
 const accountInitialAthleteId = ref<string>('')
 
@@ -195,7 +212,6 @@ function canDeleteAccount(a: AdminAccount) {
 }
 
 function canBanFor(a: AdminAccount) {
-  if (!expBanUi.value) return false
   if (!canEditAccount.value) return false
   if (auth.user.value?.id === a.id) return false
   if (a.roles.includes('SuperAdmin')) return false
@@ -294,6 +310,8 @@ function openAccountEdit(a: AdminAccount) {
   accountTarget.value = a
   accountUsername.value = a.username
   accountPassword.value = ''
+  accountAvatarUrl.value = a.avatar_url?.trim() || a.athlete_image_url?.trim() || ''
+  accountInitialAvatarUrl.value = a.avatar_url?.trim() || ''
   accountAthleteId.value = a.athlete_id || ''
   accountInitialAthleteId.value = a.athlete_id || ''
   accountModalOpen.value = true
@@ -308,11 +326,15 @@ async function saveAccountEdit() {
   }
   accountSaving.value = true
   try {
-    const body: { username: string, password?: string } = {
+    const body: { username: string, password?: string, avatar_url?: string } = {
       username: accountUsername.value.trim()
     }
     if (accountPassword.value) {
       body.password = accountPassword.value
+    }
+    const av = accountAvatarUrl.value.trim()
+    if (av !== accountInitialAvatarUrl.value) {
+      body.avatar_url = av
     }
     await api(urlAdminAccount(accountTarget.value.id), {
       method: 'PATCH',
@@ -508,7 +530,7 @@ onMounted(() => {
           </div>
           <p class="text-sm leading-relaxed text-muted sm:text-[15px]">
             <span v-if="canSuper">Jedna lista użytkowników — filtry ról, szybkie wyszukiwanie, edycja przypisań. Konta tworzysz i usuwasz jako superadmin; własnego konta nie zmienisz z tego widoku.</span>
-            <span v-else>Możesz edytować login, e-mail i hasło przypisanych kont. Przypisywanie ról pozostaje po stronie superadministratora.</span>
+            <span v-else>Możesz edytować login, hasło i zdjęcie profilowe przypisanych kont. Przypisywanie ról pozostaje po stronie superadministratora.</span>
           </p>
         </div>
         <div class="flex w-full flex-col gap-3 sm:w-auto sm:shrink-0 sm:flex-row sm:flex-wrap sm:items-center">
@@ -609,7 +631,7 @@ onMounted(() => {
 
       <UInput
         v-model="searchQuery"
-        placeholder="Szukaj: login, e-mail, trener, SuperAdmin…"
+        placeholder="Szukaj: login, rola (trener, zawodnik, admin)…"
         icon="i-lucide-search"
         size="lg"
         class="w-full min-h-11 touch-manipulation rounded-xl text-base"
@@ -672,11 +694,13 @@ onMounted(() => {
         <div class="flex flex-col gap-5 p-4 sm:flex-row sm:items-start sm:gap-6 sm:p-6">
           <!-- Avatar + user -->
           <div class="flex min-w-0 flex-1 gap-4">
-            <div
-              class="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-primary/25 to-primary/5 text-lg font-black text-primary ring-2 ring-primary/20 sm:size-16 sm:text-xl"
-            >
-              {{ initialsFromUsername(a.username) }}
-            </div>
+            <UAvatar
+              :src="accountPhotoSrc(a) || undefined"
+              :alt="a.username"
+              :text="accountPhotoSrc(a) ? undefined : initialsFromUsername(a.username)"
+              size="3xl"
+              class="size-14 shrink-0 rounded-2xl ring-2 ring-primary/20 sm:size-16"
+            />
             <div class="min-w-0 flex-1 space-y-1">
               <div class="flex flex-wrap items-center gap-2">
                 <h3 class="truncate text-lg font-bold tracking-tight text-highlighted">
@@ -700,8 +724,25 @@ onMounted(() => {
                   Zbanowany
                 </UBadge>
               </div>
-              <p class="text-xs italic text-muted">
-                Konto bez e-maila
+              <p
+                v-if="a.athlete_id && a.athlete_full_name"
+                class="truncate text-xs text-muted"
+              >
+                Profil sportowy:
+                <NuxtLink
+                  v-if="athletePublicPath(a)"
+                  :to="athletePublicPath(a)!"
+                  class="font-medium text-primary underline-offset-2 hover:underline"
+                  target="_blank"
+                >
+                  {{ a.athlete_full_name }}
+                </NuxtLink>
+              </p>
+              <p
+                v-else
+                class="text-xs text-muted"
+              >
+                Konto logowania — bez powiązanego profilu zawodnika
               </p>
             </div>
           </div>
@@ -775,16 +816,20 @@ onMounted(() => {
               class="space-y-2"
             >
               <div class="flex flex-wrap items-center gap-2">
-                <UBadge
+                <UTooltip
                   v-for="role in a.roles"
                   :key="role"
-                  :color="roleBadgeColor(role as UserRole)"
-                  variant="subtle"
-                  size="md"
-                  class="font-semibold"
+                  :text="ROLE_FILTER_META[role as UserRole]?.tooltip ?? role"
                 >
-                  {{ ROLE_LABELS[role as UserRole] ?? role }}
-                </UBadge>
+                  <UBadge
+                    :color="roleBadgeColor(role as UserRole)"
+                    variant="subtle"
+                    size="md"
+                    class="cursor-help font-semibold"
+                  >
+                    {{ ROLE_LABELS[role as UserRole] ?? role }}
+                  </UBadge>
+                </UTooltip>
                 <UButton
                   v-if="canEditRoleFor(a)"
                   size="xs"
@@ -1009,7 +1054,14 @@ onMounted(() => {
                 Dane logowania
               </div>
             </div>
-            <div class="slavia-form-panel__body space-y-4">
+            <div class="slavia-form-panel__body space-y-5">
+              <ClubProfileAvatarField
+                v-model="accountAvatarUrl"
+                purpose="avatar"
+                :avatar-alt="accountUsername"
+                :initials="initialsFromUsername(accountUsername)"
+                hint="Wgranie zapisuje URL — kliknij „Zapisz” na dole, aby przypisać zdjęcie do konta użytkownika."
+              />
               <UFormField
                 label="Login"
                 required
@@ -1041,6 +1093,18 @@ onMounted(() => {
                   size="lg"
                 />
               </UFormField>
+              <UButton
+                v-if="accountTarget?.athlete_id && athletePublicPath(accountTarget)"
+                :to="athletePublicPath(accountTarget)!"
+                variant="soft"
+                color="primary"
+                size="sm"
+                icon="i-lucide-external-link"
+                class="rounded-xl"
+                target="_blank"
+              >
+                Profil publiczny zawodnika
+              </UButton>
             </div>
           </div>
           <div class="slavia-form-actions border-t border-default/60 pt-4">
