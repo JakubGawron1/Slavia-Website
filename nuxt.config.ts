@@ -200,7 +200,7 @@ export default defineNuxtConfig({
     manifest: {
       name: 'CKS Slavia Ruda Śląska',
       short_name: 'Slavia',
-      description: 'Aplikacja klubu sportowego CKS Slavia Ruda Śląska: zawodnicy, kalendarz, wyniki i powiadomienia.',
+      description: `Aplikacja klubu sportowego CKS Slavia Ruda Śląska: zawodnicy, kalendarz, wyniki i powiadomienia. Wersja ${formatPublicAppVersion(packageJsonVersion)}`,
       theme_color: '#0f172a',
       background_color: '#0f172a',
       display: 'standalone',

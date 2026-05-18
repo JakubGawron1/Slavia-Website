@@ -49,6 +49,25 @@ const selectedTrainingDay = ref<Date | null>(null)
 
 const recurringOverrides = ref<Array<{ session_date: string, status: string }>>([])
 
+type CompetitionRow = { id: string, date: string, category?: string | null, status?: string }
+
+const { data: calendarCompetitions, refresh: refreshCalendarCompetitions } = await useLazyAsyncData(
+  'attendance-calendar-competitions',
+  () => api<CompetitionRow[]>(apiRoutes.competitions.collection).catch(() => []),
+  { default: () => [], server: false }
+)
+
+const extraTrainingDates = computed(() => {
+  const set = new Set<string>()
+  for (const c of calendarCompetitions.value ?? []) {
+    const cat = (c.category ?? '').toLowerCase()
+    if (cat !== 'training') continue
+    if ((c.status ?? 'scheduled') === 'cancelled') continue
+    if (c.date) set.add(c.date.slice(0, 10))
+  }
+  return set
+})
+
 const { data: athletes } = await useAsyncData('attendance-athletes', async (): Promise<Athlete[]> => {
   if (isStaff.value) {
     return api<Athlete[]>('/api/athletes/admin').catch(() => [])
@@ -125,11 +144,17 @@ const recurringStatusByDate = computed(() => {
 })
 
 function isTrainingDay(date: Date) {
+  const key = format(date, 'yyyy-MM-dd')
+  if (extraTrainingDates.value.has(key)) return true
+  const override = recurringStatusByDate.value.get(key)
+  if (override === 'extra') return true
+  if (override === 'cancelled' || override === 'moved') return false
   return [1, 3, 5].includes(getDay(date))
 }
 
 function trainingStatusForDate(date: Date) {
   const key = format(date, 'yyyy-MM-dd')
+  if (extraTrainingDates.value.has(key)) return 'scheduled'
   return recurringStatusByDate.value.get(key) ?? 'scheduled'
 }
 
@@ -238,7 +263,12 @@ async function refreshPendingQueue() {
 }
 
 async function refreshAll() {
-  await Promise.all([refreshHistory(), refreshPendingQueue(), refreshTrainingOverrides()])
+  await Promise.all([
+    refreshHistory(),
+    refreshPendingQueue(),
+    refreshTrainingOverrides(),
+    refreshCalendarCompetitions()
+  ])
 }
 
 async function refreshTrainingOverrides() {
@@ -369,8 +399,10 @@ onMounted(() => {
       icon="i-lucide-user-check"
       :description="isStaff
         ? 'Zatwierdzaj zgłoszenia zawodników jednym kliknięciem i przeglądaj kalendarz treningów Pn/Śr/Pt.'
-        : 'Zgłoś obecność na trening — kadra zweryfikuje wpis w panelu.'"
+        : 'Zgłoś obecność na trening — kadra zweryfikuje wpis lub użyj skanera QR w aplikacji mobilnej.'"
     />
+
+    <AttendanceQrPanel v-if="isStaff" />
 
     <section
       v-if="isStaff"
@@ -471,7 +503,8 @@ onMounted(() => {
         Zgłoś obecność na trening
       </h2>
       <p class="mt-1 text-sm text-muted">
-        Kadra zweryfikuje wpis po zgłoszeniu.
+        Na sali zeskanuj kod QR w aplikacji mobilnej Slavia (menu → Skaner obecności) — wpis jest od razu zatwierdzony.
+        Poniżej możesz też wysłać ręczne zgłoszenie do weryfikacji przez trenera.
       </p>
       <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <UFormField label="Data treningu">

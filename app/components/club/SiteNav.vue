@@ -368,6 +368,11 @@ const calculatorDropdownItems = [
             </UButton>
           </template>
         </nav>
+        <div class="mt-4 pb-6 text-center">
+          <p class="text-[10px] font-mono text-muted/50 uppercase tracking-widest">
+            Aplikacja w wersji {{ useRuntimeConfig().public.appVersion }}
+          </p>
+        </div>
       </template>
     </UDrawer>
   </div>

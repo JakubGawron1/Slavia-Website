@@ -82,12 +82,18 @@ export const apiRoutes = {
     athlete: (athleteId: string) => `/api/attendance/${encodeURIComponent(athleteId)}`,
     summary: (athleteId: string) => `/api/attendance/summary/${encodeURIComponent(athleteId)}`,
     verifyRecord: (recordId: string) =>
-      `/api/attendance/record/${encodeURIComponent(recordId)}/verify`
+      `/api/attendance/record/${encodeURIComponent(recordId)}/verify`,
+    qrConfig: '/api/attendance/qr-config',
+    qrRegenerate: '/api/attendance/qr-config/regenerate',
+    qrCheckin: '/api/attendance/qr-checkin'
   },
   chat: {
     threads: '/api/chat/threads',
     thread: (threadId: string) => `/api/chat/threads/${encodeURIComponent(threadId)}`,
     messages: (threadId: string) => `/api/chat/threads/${encodeURIComponent(threadId)}/messages`,
+    presence: '/api/chat/presence',
+    messageReaction: (messageId: string) =>
+      `/api/chat/messages/${encodeURIComponent(messageId)}/reactions`,
     /** Admin-only: ręczne czyszczenie bezczynnych wątków (POST, opcjonalny `?days=N`). */
     adminPrune: '/api/chat/admin/prune'
   },

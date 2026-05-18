@@ -96,7 +96,6 @@ function getProgress(badge: Badge) {
   return Math.min(100, ((badge.current - prev) / (next - prev)) * 100)
 }
 
-
 const colorMap: Record<string, string> = {
   amber: 'text-amber-500 bg-amber-500/10 border-amber-500/20',
   primary: 'text-primary bg-primary/10 border-primary/20',
@@ -112,6 +111,71 @@ function openBadgeDetails(badge: Badge) {
   selectedBadge.value = badge
   isModalOpen.value = true
 }
+
+// ── [2070] Badge-unlock celebration ───────────────────────────────────────────
+const BADGE_LS_KEY = 'slavia_badge_levels_v1'
+
+const celebrationOpen = ref(false)
+const celebrationBadge = ref<{ label: string; level: number; icon: string } | null>(null)
+const confettiActive = ref(false)
+
+function loadStoredLevels(): Record<string, number> {
+  if (!import.meta.client) return {}
+  try {
+    const raw = localStorage.getItem(BADGE_LS_KEY)
+    return raw ? JSON.parse(raw) : {}
+  } catch { return {} }
+}
+
+function saveStoredLevels(levels: Record<string, number>) {
+  if (!import.meta.client) return
+  try { localStorage.setItem(BADGE_LS_KEY, JSON.stringify(levels)) } catch { /* ignore */ }
+}
+
+function checkForNewBadges() {
+  const stored = loadStoredLevels()
+  const current: Record<string, number> = {}
+  let firstNew: { label: string; level: number; icon: string } | null = null
+
+  for (const badge of badges.value) {
+    const lvl = getLevel(badge)
+    current[badge.id] = lvl
+    const prev = stored[badge.id] ?? 0
+    if (lvl > prev && lvl > 0 && !firstNew) {
+      firstNew = { label: badge.label, level: lvl, icon: badge.icon }
+    }
+  }
+
+  saveStoredLevels(current)
+
+  if (firstNew) {
+    celebrationBadge.value = firstNew
+    celebrationOpen.value = true
+    confettiActive.value = true
+    setTimeout(() => { confettiActive.value = false }, 3500)
+  }
+}
+
+onMounted(() => {
+  // Small delay to allow athlete data to settle from SSR hydration
+  setTimeout(checkForNewBadges, 600)
+})
+
+async function shareBadge() {
+  const b = celebrationBadge.value
+  if (!b) return
+  const text = `Właśnie odblokowałem/am poziom ${b.level} odznaki „${b.label}" w aplikacji CKS Slavia Ruda Śląska! 🏋️`
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: 'Nowa odznaka — CKS Slavia', text, url: window.location.origin })
+    } catch { /* user cancelled */ }
+  } else {
+    try {
+      await navigator.clipboard.writeText(text)
+      alert('Tekst skopiowany do schowka!')
+    } catch { /* ignore */ }
+  }
+}
 </script>
 
 <template>
@@ -124,11 +188,10 @@ function openBadgeDetails(badge: Badge) {
       @click="openBadgeDetails(badge)"
     >
       <div
-        class="flex size-12 shrink-0 items-center justify-center rounded-xl border transition-transform group-hover:scale-110"
+        class="relative flex size-12 shrink-0 items-center justify-center rounded-xl border transition-transform group-hover:scale-110"
         :class="getLevel(badge) > 0 ? colorMap[badge.color] : 'bg-muted/10 border-default text-muted'"
       >
         <UIcon :name="badge.icon" class="size-6" />
-        
         <!-- Level indicator -->
         <div
           v-if="getLevel(badge) > 0"
@@ -148,7 +211,6 @@ function openBadgeDetails(badge: Badge) {
           </span>
           <span class="text-[10px] font-bold text-muted uppercase">{{ badge.unit }}</span>
         </div>
-        
         <!-- Progress Bar -->
         <div class="relative h-1 w-full overflow-hidden rounded-full bg-muted/20">
           <div
@@ -229,12 +291,94 @@ function openBadgeDetails(badge: Badge) {
           </div>
 
           <div class="flex justify-end">
-            <UButton color="neutral" variant="soft" @click="isModalOpen = false">
-              Zamknij
-            </UButton>
+            <UButton color="neutral" variant="soft" @click="isModalOpen = false">Zamknij</UButton>
+          </div>
+        </div>
+      </template>
+    </UModal>
+
+    <!-- [2070] Badge unlock celebration modal with confetti + share -->
+    <UModal
+      v-model:open="celebrationOpen"
+      title="Nowa odznaka odblokowana! 🏆"
+      :ui="{ content: 'sm:max-w-md rounded-3xl overflow-hidden' }"
+    >
+      <template #content>
+        <div class="relative overflow-hidden">
+          <!-- Animated confetti particles -->
+          <div v-if="confettiActive" class="pointer-events-none absolute inset-0 z-10 overflow-hidden">
+            <div
+              v-for="i in 30"
+              :key="i"
+              class="absolute size-2 rounded-full"
+              :style="{
+                left: `${(i * 3.37) % 100}%`,
+                top: '-8px',
+                backgroundColor: ['#f59e0b','#10b981','#3b82f6','#8b5cf6','#ef4444','#f97316','#ec4899'][(i - 1) % 7],
+                animation: `confettiFall ${1.0 + (i % 6) * 0.25}s ease-in ${(i % 8) * 0.08}s forwards`,
+                opacity: 0,
+              }"
+            />
+          </div>
+
+          <div class="space-y-5 p-6">
+            <!-- Badge icon with glow -->
+            <div class="flex flex-col items-center gap-4 text-center">
+              <div class="relative">
+                <div class="absolute inset-0 rounded-3xl bg-amber-500/30 blur-xl" />
+                <div class="relative flex h-24 w-24 items-center justify-center rounded-3xl bg-amber-500/15 text-amber-500 ring-2 ring-amber-500/40 shadow-xl">
+                  <UIcon :name="celebrationBadge?.icon || 'i-lucide-award'" class="size-12" />
+                </div>
+              </div>
+              <div>
+                <p class="text-2xl font-black text-highlighted">{{ celebrationBadge?.label }}</p>
+                <p class="mt-1 text-sm text-muted">
+                  Osiągnąłeś/aś
+                  <span class="font-bold text-amber-500">poziom {{ celebrationBadge?.level }}</span>!
+                </p>
+              </div>
+              <!-- Stars row -->
+              <div class="flex gap-1.5">
+                <UIcon
+                  v-for="s in (celebrationBadge?.level ?? 0)"
+                  :key="s"
+                  name="i-lucide-star"
+                  class="size-5 text-amber-400 drop-shadow-sm"
+                />
+              </div>
+            </div>
+
+            <p class="text-center text-sm text-muted leading-relaxed">
+              Podziel się swoim osiągnięciem ze znajomymi lub zamknij, by kontynuować trening!
+            </p>
+
+            <div class="flex justify-center gap-3 border-t border-default/60 pt-4">
+              <UButton
+                color="neutral"
+                variant="outline"
+                icon="i-lucide-x"
+                @click="celebrationOpen = false"
+              >
+                Zamknij
+              </UButton>
+              <UButton
+                color="warning"
+                icon="i-lucide-share-2"
+                @click="shareBadge"
+              >
+                Udostępnij
+              </UButton>
+            </div>
           </div>
         </div>
       </template>
     </UModal>
   </div>
 </template>
+
+<style scoped>
+@keyframes confettiFall {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(340px) rotate(600deg); opacity: 0; }
+}
+</style>

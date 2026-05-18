@@ -92,6 +92,75 @@ export const EXPERIMENTAL_FEATURES: ExperimentalFeatureDefinition[] = [
     description:
       'W analizie toru sztangi dodaje tryb śledzenia punktu referencyjnego z ciała (barki i łokcie).',
     defaultEnabled: true
+  },
+  {
+    id: 'attendance_qr_checkin',
+    label: 'Obecność: kod QR + skaner zawodnika',
+    description:
+      'Stały kod QR dla kadry (druk) oraz skaner w aplikacji mobilnej — natychmiastowa, zatwierdzona obecność.',
+    defaultEnabled: true
+  },
+  {
+    id: 'mobile_feature_flags_api',
+    label: 'Mobile: flagi funkcji z API',
+    description:
+      'Odczyt globalnych feature_flags z backendu (włączanie eksperymentalnych ekranów bez nowego APK).',
+    defaultEnabled: true
+  },
+  {
+    id: 'athlete_share_result_graphic',
+    label: 'Mobile: udostępnianie wyniku jako grafika',
+    description: 'Eksport karty wyniku (total, Sinclair) do natywnego share sheet.',
+    defaultEnabled: true
+  },
+  {
+    id: 'push_notifications_grouped',
+    label: 'Mobile: powiadomienia grupowane po typie',
+    description: 'Kanały Android „Slavia: czat”, „Slavia: klub” dla mniejszego szumu.',
+    defaultEnabled: true
+  },
+  {
+    id: 'experimental_beta_badges',
+    label: 'Badge „beta” przy narzędziach eksperymentalnych',
+    description:
+      'Widoczna etykieta beta przy wybranych modułach (analiza sztangi, QR obecności) z linkiem do /superadmin/developer.',
+    defaultEnabled: true
+  },
+  {
+    id: 'chat_online_presence',
+    label: 'Czat: status online rozmówcy',
+    description: 'Wskaźnik „na żywo” gdy druga osoba była aktywna w ostatnich kilku minutach.',
+    defaultEnabled: true
+  },
+  {
+    id: 'chat_message_reactions',
+    label: 'Czat: reakcje emoji na wiadomościach',
+    description: 'Szybkie potwierdzenie (👍 ✅ itd.) bez pisania odpowiedzi.',
+    defaultEnabled: true
+  },
+  {
+    id: 'calendar_tablet_compact',
+    label: 'Kalendarz: tryb kompaktowy (tablet)',
+    description: 'Wyższa gęstość siatki miesiąca na szerszych ekranach.',
+    defaultEnabled: true
+  },
+  {
+    id: 'mobile_local_encryption',
+    label: 'Mobile: szyfrowane dane wrażliwe offline',
+    description: 'Token i zapisane dane logowania w secure storage zamiast zwykłego SharedPreferences.',
+    defaultEnabled: true
+  },
+  {
+    id: 'mobile_sinclair_isolates',
+    label: 'Mobile: obliczenia Sinclair w isolate',
+    description: 'Ciężkie przeliczenia bez blokowania UI przy dużych zestawach danych.',
+    defaultEnabled: true
+  },
+  {
+    id: 'mobile_foldable_two_pane',
+    label: 'Mobile: układ dwukolumnowy (tablet / składany)',
+    description: 'Lista + szczegóły obok siebie w czacie i liście zawodników na szerokim ekranie.',
+    defaultEnabled: true
   }
 ]
 
@@ -105,3 +174,14 @@ export type ExperimentalFeatureId =
   | 'dev_viewport_iframe_preview'
   | 'barbell_plate_tracking'
   | 'barbell_body_reference_tracking'
+  | 'attendance_qr_checkin'
+  | 'mobile_feature_flags_api'
+  | 'athlete_share_result_graphic'
+  | 'push_notifications_grouped'
+  | 'experimental_beta_badges'
+  | 'chat_online_presence'
+  | 'chat_message_reactions'
+  | 'calendar_tablet_compact'
+  | 'mobile_local_encryption'
+  | 'mobile_sinclair_isolates'
+  | 'mobile_foldable_two_pane'

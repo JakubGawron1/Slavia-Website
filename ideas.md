@@ -49,7 +49,7 @@ Zbiór propozycji po przeglądzie kodu (`Slavia-frontend`, typy tras z `api.ts`,
 ## Kalendarz, obecności, integracje
 
 23. ~~**Eksport wydarzenia do kalendarza** — ICS dla pojedynczego zawodów oraz — jeśli sensownie — dla serii jednostek treningowych.~~ *(wdrożone: eksport ICS w `/athlete/kalendarz` — bez eksportu w kalendarzu klubowym `/kalendarz`.)*
-24. **Check-in QR / kiosk** — skrót for trenera na jednostce: kod na telefon prowadzącego → zawodnik skanuje i zapisuje obecność (wymaga decyzji czy bez logowania, czy tylko zalogowany Athlete).
+24. ~~**Check-in QR / kiosk** — stały kod QR dla kadry (druk, bez wygaśnięcia); zalogowany zawodnik skanuje w aplikacji mobilnej — obecność od razu `verified`.~~ *(wdrożone: `/api/attendance/qr-config`, skaner w menu mobile, panel QR na `/attendance`.)*
 
 ---
 
@@ -187,11 +187,11 @@ Zbiór propozycji po przeglądzie kodu (`Slavia-frontend`, typy tras z `api.ts`,
 114. **Tiles Wear OS** — skrót do dziennika treningów lub listy powiadomień na zegarku.
 115. **Pełna parzystość motywów z WWW** — te same presety i tryb jasny/ciemny co `profil` na stronie.
 116. **Deep linki uniwersalne** — `https://…/athlete/…` otwiera profil w aplikacji, jeśli zainstalowana (Android App Links / iOS Universal Links).
-117. **Udostępnianie wyniku jako grafika** — PNG z totalem i Sinclarem do Stories (jak pomysły www, ale natywny share sheet).
+117. ~~**Udostępnianie wyniku jako grafika** — PNG z totalem i Sinclarem do Stories (jak pomysły www, ale natywny share sheet).~~ *(mobile: `ResultShareService` + przycisk na osi czasu zawodnika.)*
 118. **Tryb „trening” (Focus / DND)** — jednym przyciskiem wyciszenie powiadomień poza alarmami i czatem klubowym.
 119. **Lokalne szkice wpisów dziennika** — zapis offline przed synchronizacją przy słabej sieci na sali.
 120. **Kolejka żądań offline** — ponawianie nieudanych PATCH/POST przy odzyskaniu sieci (obecności, dziennik).
-121. **Biometryczne odblokowanie** — Face ID / odcisk po wygaśnięciu sesji zamiast ponownego hasła przy każdym powrocie.
+121. ~~**Biometryczne odblokowanie** — Face ID / odcisk po wygaśnięciu sesji zamiast ponownego hasła przy każdym powrocie.~~ *(wdrożone: `BiometricGate` + `local_auth` w aplikacji mobilnej.)*
 122. **PIN klubowy** — szybkie logowanie dla współdzielonego tabletu rodzinnego (dziecko zawodnika).
 123. **Tryb kontrastu i rozmiaru czcionki** — osobno od systemu, dla treningu w pełnym słońcu.
 124. **Wibracje i dźwięki UX** — konfigurowalne: wyłączenie haptyki przy każdym tapie.
@@ -200,7 +200,7 @@ Zbiór propozycji po przeglądzie kodu (`Slavia-frontend`, typy tras z `api.ts`,
 127. **Podgląd PDF z zawodów** — wbudowany viewer dla regulaminów z linków w ogłoszeniach.
 128. **Mapy i nawigacja** — otwarcie miejsca zawodów w Google Maps / Apple Maps z karty startu.
 129. ~~**Dodawanie startu do kalendarza urządzenia** — eksport ICS z ekranu szczegółów zawodów.~~ *(WWW: modal szczegółów na `/kalendarz` + istniejący eksport w `/athlete/kalendarz`; mobile: „Dodaj do kalendarza (.ics)” na liście „Moje starty” + `GET /api/system/calendar/export/{id}`.)*
-130. **Powiadomienia grupowane po typie** — „Slavia: czat”, „Slavia: klub” dla mniejszego szumu.
+130. ~~**Powiadomienia grupowane po typie** — „Slavia: czat”, „Slavia: klub” dla mniejszego szumu.~~ *(mobile: kanały Android `slavia_club` / `slavia_chat` wg `kind` w push.)*
 131. **Ciche godziny powiadomień push** — nie budzić po 22:00 oprócz wiadomości oznaczonych pilnymi.
 132. **Badge z liczbą nieprzeczytanych** — synchronizacja z API powiadomień i czatu.
 133. **Szybki filtr zawodników** — po kategorii wagowej, płci, roku — rozszerzenie listy kadry.
@@ -215,7 +215,7 @@ Zbiór propozycji po przeglądzie kodu (`Slavia-frontend`, typy tras z `api.ts`,
 142. **Tryb oszczędzania danych** — mniejsze obrazy awatarów, wyłączone autopodglądy wideo w czacie.
 143. **Automatyczne czyszczenie cache obrazów** — limit MB dla urządzeń z małą pamięcią.
 144. **Android split APK / App Bundle** — optymalizacja rozmiaru pobrania per ABI (już częściowo przez Flutter).
-145. **Obsługa foldables** — układ dwukolumnowy na tablecie / składanym telefonie dla listy + szczegółów.
+145. ~~**Obsługa foldables** — układ dwukolumnowy na tablecie / składanym telefonie dla listy + szczegółów.~~ *(mobile: `ResponsiveTwoPane` + istniejący układ 2-kolumnowy w czacie; dalsze ekrany — stopniowo.)*
 146. **Stylus / rysik** — adnotacje na zrzucie wykresu (eksport do PNG).
 147. **Integracja ze schowkiem** — inteligentne wklejanie wagi/czasu z SMS od federacji (heurystyka).
 148. **Powiadomienie lokalne „jutro start”** — zaplanowane na urządzeniu bez serwera, jeśli użytkownik włączy przypomnienie.
@@ -228,8 +228,8 @@ Zbiór propozycji po przeglądzie kodu (`Slavia-frontend`, typy tras z `api.ts`,
 155. **Certificate pinning (opcjonalnie)** — dla organizacji wymagających wyższego poziomu zaufania API.
 156. **Szczegóły sesji treningowej w karcie** — rozwijana karta w dzienniku z metadanymi (czas trwania, RPE).
 157. **Szablony wiadomości w czacie** — „Jestem spóźniony”, „Potrzebuję konsultacji” jednym tapnięciem.
-158. **Status „online” w czacie** — jeśli backend wyśle presence (bez naruszania prywatności — wyłączalne).
-159. **Reakcje na wiadomości** — emoji potwierdzenia jak w Messengerze (wymaga API).
+158. ~~**Status „online” w czacie** — jeśli backend wyśle presence (bez naruszania prywatności — wyłączalne).~~ *(BE + WWW + mobile: `last_seen_at`, ping co 60s, badge „Na żywo”; flaga `chat_online_presence`.)*
+159. ~~**Reakcje na wiadomości** — emoji potwierdzenia jak w Messengerze (wymaga API).~~ *(BE + WWW + mobile: `chat_message_reactions`, emoji 👍 ✅ 🔥 💪.)*
 160. **Wątki przypięte** — stały dostęp do najważniejszego kontaktu trenera.
 161. **Harmonogram powiadomień o składce** — lokalny reminder zsynchronizowany z datą z profilu WWW.
 162. **Wykresy: eksport jako SVG/PNG** — udostępnienie postępu Sinclair z ekranu profilu.
@@ -255,7 +255,7 @@ Zbiór propozycji po przeglądzie kodu (`Slavia-frontend`, typy tras z `api.ts`,
 182. **Powiększenie dynamiczne** — `textScaleFactor` bez łamania layoutu kalkulatorów.
 183. **Przypomnienie o aktualizacji** — już częściowo (`AppUpdateService`); ujednolicić copy z WWW.
 184. **Tryb „screenshot block”** — opcjonalnie ukrycie wrażliwych danych medycznych przy zrzucie ekranu.
-185. **Szyfrowanie lokalnej bazy** — jeśli kiedyś przechowywane będą dane wrażliwe offline.
+185. ~~**Szyfrowanie lokalnej bazy** — jeśli kiedyś przechowywane będą dane wrażliwe offline.~~ *(mobile: token i dane logowania w `flutter_secure_storage` — `SecureCredentialsStore`.)*
 186. **Migracja SharedPreferences** — wersjonowany schemat przy zmianie kluczy motywu.
 187. **Obsługa wielu kont** — przełącznik kont (trener rodzic + zawodnik) na jednym urządzeniu.
 188. **Importer kontaktu z książki adresowej** — wklejenie telefonu trenera do notatek (tylko lokalnie).
@@ -269,9 +269,9 @@ Zbiór propozycji po przeglądzie kodu (`Slavia-frontend`, typy tras z `api.ts`,
 196. **Obsługa Safe Area i notch** — audyt wszystkich ekranów na iPhone 14+/Dynamic Island.
 197. **Podgląd markdown w ogłoszeniach** — jeśli treść z API zawiera MD (spójnie z WWW).
 198. **Lint dla tłumaczeń** — brak twardych stringów PL w kodzie produkcyjnym przed release.
-199. **Flutter isolates dla ciężkich kalkulacji** — proporcje / Sinclair bez blokowania UI przy dużych zbiorach.
+199. ~~**Flutter isolates dla ciężkich kalkulacji** — proporcje / Sinclair bez blokowania UI przy dużych zbiorach.~~ *(mobile: batch Sinclair przez `compute()` w `sinclair_compute.dart`.)*
 200. **Crashlytics / Sentry** — produkcyjne zbieranie wyjątków z wersją builda.
-201. **Feature flags z backendu** — włączanie eksperymentalnych ekranów bez nowego APK.
+201. ~~**Feature flags z backendu** — włączanie eksperymentalnych ekranów bez nowego APK.~~ *(wdrożone: API `/api/feature-flags`, flaga eksperymentalna `mobile_feature_flags_api` w katalogu superadmin.)*
 202. ~~**Minimum SDK policy** — dokument: wspierane wersje Android/iOS vs funkcje (np. Live Activities).~~ *(wdrożone: `Slavia-mobile/docs/mobile-sdk-policy.md`.)*
 203. **Polityka prywatności in-app** — link do dokumentu klubu i zgody na analitykę.
 204. **Edukacja RODO** — krótki modal przy pierwszym logowaniu o celach przetwarzania.
@@ -442,7 +442,7 @@ Uzupełnienie listy 1–210. Numery **211–1000** są ciągłe; kontynuacja w s
 361. **FE — Skeleton / shimmer dopasowany do `wyników` — mniej layout shift przy hydracji.**
 362. **FE — Prefetch tras powiązanych z `panelu trenera` po `IntersectionObserver` kart na liście.**
 363. **FE — Virt lista (`@tanstack/vue-virtual`) dla długiej listy w `ustawień konta` (>300 wierszy).**
-364. **FE — Tryb kompaktowy tabletkowy dla `kalendarza` — wyższa densyjność bez utraty dotykowych celów.**
+364. ~~**FE — Tryb kompaktowy tabletkowy dla `kalendarza` — wyższa densyjność bez utraty dotykowych celów.**~~ *(flaga `calendar_tablet_compact` na `/kalendarz` od 768px.)*
 365. **FE — Skróty klawiszowe (⌘/Ctrl) w `planu treningowego` — udokumentowane w `?` help overlay.**
 366. **FE — Eksport widoku `wykresów` do CSV z nagłówkiem UTF-8 i znacznikiem czasu generacji.**
 367. **FE — Porównanie „przed/po zapisem” w formularzu `obecności` — podświetlenie zmienionych pól.**
@@ -1152,7 +1152,7 @@ Druga seria numeracji — **1001–2000**. Można filtrować po prefiksach **FE 
 1054. **FE — Skeleton z dokładną wysokością wierszy `narzędziach SuperAdmin` — eliminacja CLS.**
 1055. **FE — Tryb druku dla `porównaniu zawodników` — `@media print` ukrywa nav i przyciski.**
 1056. **FE — Split view tablet: lista + szczegóły w `panelu trenera` jak iPad master-detail.**
-1057. **FE — Badge „beta” przy eksperymentalnym `barbell analysis` — link do `/superadmin/developer`.**
+1057. ~~**FE — Badge „beta” przy eksperymentalnym `barbell analysis` — link do `/superadmin/developer`.~~ *(wdrożone: przełącznik `experimental_beta_badges` w katalogu funkcji eksperymentalnych — do podpięcia w UI modułów.)*
 1058. **FE — Integracja z `@vueuse/core` `useThrottleFn` dla wyszukiwania w `panelu administratora`.**
 1059. **FE — Obsługa `aria-live` dla toastów powiązanych z `superadmin/import`.**
 1060. **FE — Lazy hydrate opcjonalnie dla ciężkiego `centrum powiadomień` — na flagę eksperymentalną.**
@@ -2425,6 +2425,734 @@ Priorytety pod **doświadczenie roli**: zawodnik (ZAW), trener (TRE), administra
 2298. **SUP — Symulacja shardingu po athlete_id — eksperyment przyszłościowy.**
 2299. ~~**SUP — Panel „koszt workerów” CPU czasu dla cronów.**~~ *(www: `/superadmin/workers` + `GET /api/system/worker-cron-runs` — śledzenie **czasu trwania przebiegu (wall-clock)** w procesie dla schedulera składek i prunera czatu; to nie jest profil CPU — dalsze metryki opcjonalnie.)*
 2300. **SUP — Konfiguracja globalnego CAPTCHA threshold przy podejrzanym ruchu.**
+
+---
+
+## Nowe pomysły (Sport-Tech 3.0 i organizacja klubu) — numery 2301–2500
+
+Zbiór 200 nowych propozycji rozwoju ekosystemu CKS Slavia Ruda Śląska, wypracowany na bazie głębokiej analizy obecnych repozytoriów kodu (`Slavia-frontend`, `Slavia-backend`, `Slavia-mobile`) oraz potrzeb organizacyjno-treningowych klubu ciężarowego. Numery **2301–2500** są podzielone na trzy przejrzyste sekcje: aplikację mobilną (2301–2365), technologie web i API (2366–2435) oraz inicjatywy pozakodowe (2436–2500).
+
+### Aplikacja mobilna (Flutter/Mobile) — pomysły 2301–2365
+
+2301. **MOB — Tryb „Podróż na zawody” (Travel Mode)** — Widok agregujący trasę do miejsca startu, godzinę zbiórki, listę rzeczy do spakowania (strój, pas, buty, licencja) oraz szybki kontakt do kierownika wyjazdu.
+2302. **MOB — Pływający stoper przerw (Overlay Rest Timer)** — Pływający widget z odliczaniem czasu odpoczynku między seriami, widoczny na ekranie głównym telefonu nawet po zminimalizowaniu aplikacji Slavia.
+2303. **MOB — Autokompresja wideo przed wysyłką (Video Transcoder)** — Natywny moduł zmniejszający rozdzielczość i klatkaż nagrań techniki bezpośrednio w telefonie przed wysłaniem na serwer, oszczędzający transfer.
+2304. **MOB — Skaner kodów paskowych sprzętu (NFC/Barcode)** — Błyskawiczny skan etykiety na pomoście lub gryfie z poziomu aparatu telefonu, otwierający jego kartę serwisową lub przypisujący go do sesji.
+2305. **MOB — Szybkie wprowadzanie ciężarów gestem (Dial Wheel Weight Picker)** — Alternatywne dla klawiatury numerycznej koło obrotowe do szybkiego i wygodnego ustawiania ciężaru na sztandze mokrymi/brudnymi od magnezji rękami.
+2306. **MOB — Widget na ekran zablokowany z dzisiejszym planem (Lock Screen Widget)** — Szybki podgląd głównych ćwiczeń i planowanego tonażu bezpośrednio na lock screenie (iOS WidgetKit / Android Glance).
+2307. **MOB — Haptic Feedback przy strefach intensywności (VBT Haptics)** — Zróżnicowane wibracje urządzenia informujące zawodnika o osiągnięciu docelowej prędkości sztangi lub jej spadku poniżej krytycznego progu bez patrzenia na ekran.
+2308. **MOB — Integracja z Garmin Connect API (Garmin Sync)** — Automatyczne pobieranie wskaźników tętna spoczynkowego, zmienności rytmu zatokowego (HRV) oraz punktacji snu do oceny gotowości treningowej (RPE/Recovery).
+2309. **MOB — Pamięć podręczna wideo techniki (Local Video Cache Manager)** — Lokalne zarządzanie pamięcią podręczną odtwarzanych wideo, umożliwiające szybkie przeglądanie nagrań własnej techniki bez ciągłego buforowania z chmury.
+2310. **MOB — System alarmów przed startem na zawodach (Warm-up Countdown)** — Timer synchronizujący się z tablicą live zawodów, alarmujący zawodnika kiedy powinien zacząć rozgrzewkę na rozgrzewkowym pomoście (np. "10 podejść do Twojego startu").
+2311. **MOB — Smart TV Casting (AirPlay / Chromecast)** — Przesyłanie wykresów analizy toru sztangi oraz nagrań z biblioteki techniki na duży telewizor w sali klubowej jednym tapnięciem.
+2312. **MOB — Przełącznik profilu dla rodzin (Multi-Profile Swapper)** — Wygodna zmiana konta w aplikacji bez wylogowywania (np. dla rodzica posiadającego dwójkę dzieci trenujących w sekcji młodzieżowej).
+2313. **MOB — Biometryczne zabezpieczenie modyfikacji danych (Biometric Write Lock)** — Wymóg autoryzacji odciskiem palca / Face ID przed wysłaniem oficjalnego zgłoszenia wyniku na zawody lub zmianą wrażliwych informacji.
+2314. **MOB — Tryb ciemny zoptymalizowany pod AMOLED (True Black Theme)** — Ultra-ciemny motyw interfejsu (wykorzystujący czyste czernie #000000), oszczędzający baterię podczas długich sesji treningowych na sali.
+2315. **MOB — Eksport osiągnięć do formatu Instagram Stories (Share Kit)** — Automatycznie generowana, estetyczna pionowa grafika z logiem Slavii, nowym rekordem życiowym i punktacją Sinclair, gotowa do wrzucenia na social media.
+2316. **MOB — Lokalne kopie zapasowe dziennika (Offline Journal Backup)** — Możliwość wyeksportowania lokalnej bazy danych dziennika do pliku zaszyfrowanego na telefonie w razie awarii chmury lub braku dostępu.
+2317. **MOB — Inteligentna redukcja powiadomień podczas snu (Sleep Mode DND)** — Automatyczne wyciszanie powiadomień z czatu klubowego, gdy systemy telefonu wykryją, że zawodnik śpi.
+2318. **MOB — Dźwiękowy asystent techniki (Audio Coach)** — Syntezator mowy czytający na głos wskazówki trenera zapisane w planie treningowym przy przechodzeniu do kolejnego ćwiczenia.
+2319. **MOB — Płynne skalowanie wykresów gestem uszczypnięcia (Pinch-to-Zoom Charts)** — Intuicyjne przybliżanie i oddalanie historycznych trendów Sinclaira oraz objętości tonażu na ekranie statystyk mobilnych.
+2320. **MOB — Weryfikacja poprawności instalacji APK (Signature Integrity Check)** — Wbudowany mechanizm sprawdzający sumę kontrolną uruchomionej aplikacji pod kątem nieautoryzowanych modyfikacji poza sklepem.
+2321. **MOB — Szybkie notowanie błędów wstrząśnięciem (Shake-to-Report Bug)** — Wywołanie formularza zgłaszania błędu z automatycznym zrzutem ekranu i logami poprzez potrząśnięcie telefonem.
+2322. **MOB — Integracja z Apple HealthKit (Steps & Calorie Sync)** — Synchronizacja dziennej liczby kroków oraz wydatku energetycznego jako danych uzupełniających dla trenera w analizie regeneracji.
+2323. **MOB — Wybór domyślnej kamery do nagrań (Camera Selector)** — Możliwość zdefiniowania w ustawieniach, która kamera urządzenia (szerokokątna, główna, teleobiektyw) ma być uruchamiana przy nagrywaniu prób.
+2324. **MOB — Wirtualne trofea w AR (Augmented Reality Badges)** — Wizualizacja zdobytych odznak klubowych w rozszerzonej rzeczywistości z opcją zrobienia zdjęcia z wirtualnym pucharem na pomoście.
+2325. **MOB — Natywny odtwarzacz wideo w zwolnionym tempie (Slo-Mo Video Player)** — Odtwarzacz wspierający precyzyjne przewijanie klatka po klatce oraz zmianę prędkości odtwarzania (0.1x, 0.25x, 0.5x) dla wideo techniki.
+2326. **MOB — Tryb niskiego zużycia energii na sali (Gym Power Saver)** — Ograniczenie animacji interfejsu i odpytywania API przy niskim stanie naładowania baterii telefonu zawodnika podczas sesji.
+2327. **MOB — Przypomnienie o nawodnieniu w dni upalne (Water Intake Reminders)** — Powiadomienia push przypominające o piciu wody, wyzwalane na podstawie lokalnej prognozy pogody w Rudzie Śląskiej.
+2328. **MOB — Dynamiczne skróty na pulpicie telefonu (Dynamic App Shortcuts)** — Automatyczne generowanie skrótów pod ikoną aplikacji na podstawie ostatnio wykonywanych akcji (np. bezpośrednie przejście do dzisiejszego czatu z trenerem).
+2329. **MOB — Samouczek wideo dla nowych funkcji (In-App Video Walkthroughs)** — Krótkie instruktaże wideo osadzone bezpośrednio przy nowych, zaawansowanych modułach (np. przy pierwszym uruchomieniu Barbell Path).
+2330. **MOB — Widgety ze statystykami Sinclaira na ekran główny (Sinclair Stats Widget)** — Domowy widget prezentujący aktualną pozycję w klubowym rankingu oraz postęp w punktach Sinclaira z ostatniego kwartału.
+2331. **MOB — Skanowanie dokumentu tożsamości aparatem (OCR License Scanner)** — Automatyczne uzupełnianie danych licencyjnych zawodnika na podstawie zdjęcia karty PZPC lub dowodu osobistego (przetwarzanie lokalne).
+2332. **MOB — Wbudowany kalendarz fizjoterapii (Physio Booking Calendar)** — Ekran rezerwacji terminów u klubowego fizjoterapeuty z automatycznym dodawaniem przypomnień w systemie i kalendarzu telefonu.
+2333. **MOB — Automatyczny dobór kontrastu tekstu (Adaptive Contrast Engine)** — Dynamiczne dopasowanie jasności i kontrastu interfejsu na podstawie czujnika oświetlenia zewnętrznego dla maksymalnej czytelności na zewnątrz.
+2334. **MOB — Wykresy porównawcze w trybie poziomym (Landscape Chart Mode)** — Automatyczne obracanie i rozszerzanie wykresów postępu do pełnego ekranu po obróceniu telefonu do poziomu.
+2335. **MOB — Status łączności z bazą lokalną (Offline Status Banner)** — Dyskretny pasek informujący o przejściu w tryb offline i liczbie transakcji oczekujących w kolejce do synchronizacji z serwerem.
+2336. **MOB — Przewodnik głosowy po rozgrzewce (Warm-up Voice Guide)** — Odtwarzanie komunikatów głosowych z kolejnymi ćwiczeniami mobilizacyjnymi i czasem ich trwania (funkcja "hands-free" na pomoście).
+2337. **MOB — Wyszukiwanie zawodników po głosie (Voice Search)** — Opcja podyktowania imienia i nazwiska zawodnika na ekranie listy kadry w celu szybkiego odnalezienia profilu.
+2338. **MOB — Udostępnianie planu treningowego jako PDF (Plan-to-PDF Share)** — Wygenerowanie czytelnego arkusza PDF z planem na dany tydzień bezpośrednio z telefonu i wysłanie go np. na WhatsApp/Messenger.
+2339. **MOB — System zgłaszania nieobecności z wyprzedzeniem (Absenteeism Report)** — Szybki moduł pozwalający zawodnikowi zgłosić planowaną nieobecność na treningach (np. z powodu wyjazdu lub choroby) z określeniem zakresu dat.
+2340. **MOB — Prywatny sejf na zdjęcia sylwetki (Silhouette Progress Vault)** — Zabezpieczony kodem PIN folder na zdjęcia postępów sylwetkowych i składu ciała, niewidoczny w ogólnej galerii telefonu.
+2341. **MOB — Integracja z inteligentną skakanką/sensorami (Smart Jump Rope Sync)** — Zliczanie powtórzeń i intensywności rozgrzewki za pomocą sensorów Bluetooth z bezpośrednim zapisem w dzienniku.
+2342. **MOB — Powiadomienia o zbliżającym się limicie wagowym (Weight Category Alert)** — Alerty, gdy waga zawodnika wpisana w porannym raporcie zbliża się lub przekracza górną granicę jego oficjalnej kategorii startowej.
+2343. **MOB — Karta ratunkowa zawodnika (ICE Club Profile)** — Szybki dostęp z ekranu logowania do podstawowych informacji medycznych zawodnika (grupa krwi, alergie, kontakt do bliskich) w razie nagłego wypadku na sali.
+2344. **MOB — Weryfikacja połączenia Wi-Fi na sali (Gym Wi-Fi Auto-Connector)** — Funkcja automatycznie łącząca z dedykowaną, szybką siecią Wi-Fi w klubie po wykryciu jej SSID w tle.
+2345. **MOB — Podgląd tonażu serii na żywo (Live Series Tonnage Calculator)** — Dynamiczne podliczanie sumy podniesionych kilogramów w danej serii bezpośrednio podczas wpisywania powtórzeń w dzienniku.
+2346. **MOB — Panel zarządzania sprzętem wypożyczonym (Club Gear Rental Tracker)** — Lista akcesoriów klubowych (pasy, owijki, buty) wypożyczonych przez zawodnika z datą zwrotu i powiadomieniami o zaległościach.
+2347. **MOB — Widget odliczania do rocznicy klubu (Club Anniversary Widget)** — Dedykowany element interfejsu pokazujący czas pozostały do ważnych uroczystości i jubileuszy CKS Slavia.
+2348. **MOB — Kontrola rodzicielska zgłoszeń (Parent Approval Push)** — Powiadomienia wysyłane do powiązanego konta rodzica z prośbą o zatwierdzenie zgłoszenia niepełnoletniego zawodnika na zawody wyjazdowe.
+2349. **MOB — Tryb oszczędzania wzroku wieczorem (Circadian Warm UI Theme)** — Automatyczne ocieplenie kolorów interfejsu w godzinach wieczornych (filtr niebieskiego światła wbudowany w aplikację).
+2350. **MOB — Inteligentna galeria błędów technicznych (Error Technique Highlight)** — Moduł grupujący nagrania wideo, w których trener oznaczył konkretny błąd techniczny (np. "złe prowadzenie bioder").
+2351. **MOB — Podgląd planu na smartwatchu (Wearable Training Plan Preview)** — Mini-aplikacja na zegarki z systemem Wear OS / watchOS, umożliwiająca odznaczanie wykonanych serii bezpośrednio z nadgarstka.
+2352. **MOB — Szybki kalkulator procentów obciążeń (Easy Percentages Wheel)** — Proste narzędzie na ekranie treningu pozwalające błyskawicznie sprawdzić ile wynosi np. 82.5% z aktualnego rekordu życiowego.
+2353. **MOB — Dziennik suplementacji kreatyną/witaminami (Supplement Intake Log)** — Checklist codziennego przyjmowania suplementów z opcją ustawienia indywidualnych przypomnień.
+2354. **MOB — System zgłoszeń do wyścigów tonażowych (Tonnage Challenge Opt-In)** — Szybki zapis do aktywnych wyzwań grupowych jednym kliknięciem z ekranu głównego.
+2355. **MOB — Powiadomienie o wolnym pomoście (Platform Availability Alert)** — System powiadomień informujący, że zarezerwowany pomost treningowy właśnie się zwolnił.
+2356. **MOB — Historia zmian w badaniach lekarskich (Medical History Timeline)** — Przejrzysty widok historii minionych badań lekarskich z datami ważności i orzeczeniami lekarza sportowego.
+2357. **MOB — Wibracyjny metronom tempa przysiadu (Squat Tempo Metronome)** — Narzędzie pomagające utrzymać odpowiednie tempo fazy ekscentrycznej (np. 3 sekundy w dół) za pomocą rytmicznych wibracji telefonu w kieszeni.
+2358. **MOB — Widget z jadłospisem dnia (Nutrition Plan Widget)** — Szybki podgląd zaleceń dietetycznych i rozkładu makroskładników na dany dzień bezpośrednio w aplikacji.
+2359. **MOB — Skaner certyfikatów antydopingowych (ADAMS/POLADA Scan)** — Możliwość zeskanowania i przechowywania certyfikatów z ukończonych szkoleń antydopingowych wymaganych na zawodach rangi mistrzowskiej.
+2360. **MOB — Moduł zgłoszeń do ubezpieczenia grupowego (Insurance Club Sign-up)** — Formularz umożliwiający przesłanie niezbędnych dokumentów i zgód do rocznego ubezpieczenia sportowego klubu.
+2361. **MOB — Spersonalizowane podsumowanie audio tygodnia (AI Weekly Audio Debrief)** — Generowany głosowo krótki raport podsumowujący wykonaną pracę, tonaż i postępy techniczne w minionym tygodniu.
+2362. **MOB — Weryfikacja poprawności nagrania toru (Camera Alignment Guide)** — Nakładana na podgląd aparatu siatka i poziomica pomagające ustawić telefon pod idealnym kątem 90 stopni do sztangi.
+2363. **MOB — Automatyczne odtwarzanie kolejnej wiadomości głosowej (Continuous Voice Messages)** — Odtwarzanie kolejnych nagrań audio od trenera jedno po drugim bez konieczności klikania każdego z nich osobno.
+2364. **MOB — Skrócona karta zgłoszeniowa sędziego (Referee Digital Card)** — Moduł dla sędziów klubowych do szybkiego wprowadzania ocen (białe/czerwone światło) na wewnętrznych turniejach z poziomu telefonu.
+2365. **MOB — Widget statusu składek członkowskich (Membership Fee Status Widget)** — Domowy widget pokazujący status aktualnej składki z prostym oznaczeniem kolorystycznym (zielona/czerwona kropka).
+
+### Technologie web i API (Backend/Frontend) — pomysły 2366–2435
+
+2366. **FE/BE — System powiadomień Real-Time przez Server-Sent Events (SSE Notification Delivery)** — Wdrożenie lekkiego mechanizmu SSE w Axum i Nuxt do natychmiastowego dostarczania powiadomień bez obciążania serwera pełnym WebSocketem.
+2367. **FE — Dynamiczne generowanie map witryny pod kątem SEO (Dynamic SEO Sitemap Generator)** — Skrypt w Nuxt automatycznie generujący i aktualizujący plik sitemap.xml o nowe profile publiczne zawodników i aktualności.
+2368. **BE — Automatyczne czyszczenie osieroconych plików w storage chmurowym (Cloud Storage Garbage Collector)** — Asynchroniczny worker w Rust skanujący bazę danych i usuwający z Cloudinary/S3 pliki wideo/grafiki, które nie są już powiązane z żadnym wpisem.
+2369. **FE — Asynchroniczne ładowanie ciężkich modeli biomechanicznych (TF.js Lazy Loader)** — Optymalizacja modułu analizy toru sztangi poprzez dynamiczne pobieranie bibliotek TensorFlow.js dopiero w momencie kliknięcia przycisku "Analizuj".
+2370. **BE — Zapytania zoptymalizowane pod kątem Sinclaira (Sinclair Subquery Cache)** — Dodanie zmaterializowanego widoku (Materialized View) lub pamięci podręcznej w pamięci RAM dla rankingu Sinclaira w celu uniknięcia kosztownych obliczeń SQL przy każdym zapytaniu.
+2371. **FE — Mikro-interakcje formularza wprowadzania podejść (Micro-Animations for Clean & Jerk)** — Dodanie płynnych animacji CSS i przejść przy zmianie podejść (1. rwanie, 2. rwanie) w celu ułatwienia pracy sędziom stolikowym.
+2372. **BE — Audyt bezpieczeństwa sesji użytkowników (Session Audit Trail)** — Zapisywanie metadanych sesji (system operacyjny, przeglądarka, przybliżona lokalizacja po IP) przy generowaniu JWT i udostępnienie listy aktywnych sesji w profilu z opcją zdalnego wylogowania.
+2373. **FE — Inteligentny szkielet ładowania dla galerii zdjęć (Responsive Image Shimmer Grid)** — Wdrożenie nowoczesnych placeholderów typu shimmer, które naśladują proporcje i rozkład obrazów w siatce przed ich pełnym załadowaniem.
+2374. **BE — Harmonogram odtwarzania kopii zapasowych w piaskownicy (Automated Backup Sandbox Restore)** — Cykliczny proces automatycznie przywracający ostatnią kopię zapasową bazy danych SQLite do odizolowanej piaskownicy testowej w celu weryfikacji integralności danych.
+2375. **FE — Interaktywny konstruktor planów treningowych typu przeciągnij i upuść (Drag & Drop Plan Builder)** — Zaawansowany interfejs w panelu trenera (Nuxt UI) pozwalający na łatwe przestawianie ćwiczeń, serii i dni treningowych za pomocą myszki.
+2376. **BE — Wielowątkowe generowanie raportów PDF (Multi-Threaded PDF Generator)** — Wykorzystanie biblioteki `rayon` w Rust do równoległego tworzenia masowych zestawień PDF dla całego klubu, drastycznie zmniejszające czas oczekiwania.
+2377. **FE — Podgląd orzeczeń lekarskich w modalnym oknie (In-App Medical PDF Viewer)** — Integracja bezpiecznej przeglądarki plików PDF wewnątrz panelu administratora do weryfikacji zaświadczeń bez konieczności pobierania ich na dysk.
+2378. **BE — Dynamiczny ogranicznik przepustowości API dla botów (Adaptive API Rate Limiter)** — Algorytm w Rust automatycznie zwiększający restrykcyjność rate-limitu na podstawie analizy nietypowych nagłówków User-Agent i częstotliwości żądań.
+2379. **FE — Zaawansowany filtr historycznych danych Sinclaira (Sinclair Multi-Filter Dashboard)** — Panel statystyk z możliwością nakładania wielu filtrów jednocześnie (wiek, płeć, kategoria wagowa, kluby partnerskie) z dynamiczną aktualizacją wykresów.
+2380. **BE — Bezpieczny import danych z innych systemów klubowych (Universal CSV Importer Backend)** — Elastyczny parser w Rust potrafiący dopasować i zwalidować różnorodne formaty plików CSV pochodzące z zewnętrznych aplikacji sportowych.
+2381. **FE — Monitor stabilności połączenia internetowego w czasie rzeczywistym (Online/Offline Status Toast)** — Dynamiczne powiadomienie UI w Nuxt informujące o utracie połączenia z siecią z blokadą przycisków zapisu w celu uniknięcia błędów hydracji.
+2382. **BE — Automatyczne wykrywanie podejrzanych logowań (AI Anomaly Login Detector)** — System w Rust analizujący historię logowań użytkownika i wysyłający ostrzeżenie e-mail w przypadku zalogowania z nowego kraju lub urządzenia.
+2383. **FE — Wizualna reprezentacja odchylenia toru sztangi (Barbell Path Deviation Canvas)** — Wykres nakładający idealny biomechanicznie tor ruchu sztangi na tor rzeczywisty zawodnika z zaznaczonymi obszarami największych błędów.
+2384. **BE — Szyfrowanie danych wrażliwych na poziomie bazy danych (Application-Level DB Field Encryption)** — Wykorzystanie klucza AES-GCM do szyfrowania numerów PESEL i danych medycznych zawodników bezpośrednio przed zapisem do bazy SQLite.
+2385. **FE — Narzędzia do testowania kontrastu dla sędziów (Contrast Accessibility Checker)** — Wbudowane w panel deweloperski superadmina narzędzie sprawdzające zgodność kolorów interfejsu z normami WCAG 2.1 w locie.
+2386. **BE — Integracja z systemem masowej wysyłki wiadomości SMS (SMS Gateway Axum Integration)** — Moduł w Rust pozwalający na wysyłanie krytycznych powiadomień (np. o nagłym odwołaniu zawodów) za pomocą bramek SMS (np. SMSAPI).
+2387. **FE — Optymalizacja zasobów statycznych Nuxt (Nuxt Asset Compression Engine)** — Konfiguracja automatycznej kompresji Brotli i Gzip dla wszystkich skryptów JS i plików CSS generowanych podczas budowania aplikacji produkcyjnej.
+2388. **BE — Historia zmian uprawnień użytkowników (RBAC Permission Change Log)** — Tabela audytowa rejestrująca każdą modyfikację ról użytkowników (kto komu nadał rolę admina/trenera) dla celów bezpieczeństwa.
+2389. **FE — Interaktywny konfigurator stref tętna (Heart Rate Zone Calculator UI)** — Narzędzie w profilu zawodnika automatycznie obliczające strefy wysiłku na podstawie tętna maksymalnego z wizualnym podziałem kolorystycznym.
+2390. **BE — Secure linki do mediów (Signed URL Generator for Media)** — Generowanie tymczasowych, wygasających linków do wideo techniki i badań medycznych w celu uniemożliwienia nieautoryzowanego dostępu osobom postronnym.
+2391. **FE — Wygodne kopiowanie planów treningowych na kolejne tygodnie (One-Click Training Plan Duplicator)** — Funkcja w panelu trenera pozwalająca powielić cały plan tygodniowy zawodnika na kolejny okres z opcją automatycznego zwiększenia obciążeń o stały %.
+2392. **BE — Automatyczne generowanie certyfikatów SSL (Auto-SSL Manager Stub)** — Integracja z Let's Encrypt w backendzie dla przyszłych instalacji wieloklubowych (multi-tenancy) na niestandardowych domenach.
+2393. **FE — Responsywny podgląd tablicy wyników na żywo (Live Scoreboard Responsive Grid)** — Szablon tablicy wyników zoptymalizowany pod kątem wyświetlania zarówno na wielkich telebimach w halach, jak i na małych ekranach tabletów sędziowskich.
+2394. **BE — System kolejkowania zadań w tle oparty na SQLite (LiteQueue Worker)** — Prosty, lekki system kolejkowy w Rust wykorzystujący bazę SQLite jako bazę zadań (e-maile, powiadomienia, generowanie PDF) bez potrzeby instalacji Redisa.
+2395. **FE — Wygodne filtrowanie i wyszukiwanie w logach audytowych (Audit Log Smart Search)** — Filtry w panelu superadmina umożliwiające natychmiastowe wyszukanie operacji według identyfikatora zasobu lub typu akcji (np. "tylko usunięcia wyników").
+2396. **BE — API do integracji z wagami pomostowymi (Scale API Axum Endpoint)** — Endpoint umożliwiający automatyczny odczyt wagi zawodnika bezpośrednio z certyfikowanej wagi elektronicznej podczas ważenia przedstartowego.
+2397. **FE — Dynamiczny widget pogody na stronie głównej klubu (Nuxt Weather Widget)** — Integracja z API pogodowym wyświetlająca aktualne warunki w Rudzie Śląskiej na publicznej stronie głównej sekcji.
+2398. **BE — Optymalizacja transakcji przy masowym zatwierdzaniu płatności (SQL Bulk Payment Approval Optimizer)** — Zoptymalizowane zapytanie SQL grupujące transakcje w celu uniknięcia blokowania bazy danych SQLite (SQLite database lock) przy zatwierdzaniu składek.
+2399. **FE — Płynne animacje przejść między trasami (Nuxt Page Transition Animations)** — Wdrożenie eleganckich, dyskretnych animacji typu "fade-in" i "slide" podczas poruszania się po panelach użytkownika.
+2400. **BE — Automatyczne generowanie dokumentacji API w formacie OpenAPI (Axum Utoipa Auto-Exporter)** — Skrypt automatycznie eksportujący plik openapi.json przy każdym udanym zbudowaniu backendu, gwarantujący wieczną aktualność typów.
+2401. **FE — System tagowania postów w aktualnościach (News Tagging & Filtering System)** — Filtrowanie wiadomości na stronie głównej według kategorii (np. "Juniorzy", "Zawody", "Ogłoszenia zarządu") z ładnymi etykietami.
+2402. **BE — Walidacja formatu numeru konta bankowego (IBAN Validator Utility)** — Funkcja w Rust weryfikująca poprawność wprowadzonego numeru konta klubu przed wygenerowaniem szablonu przelewu dla zawodników.
+2403. **FE — Wizualny kreator ankiet klubowych (Interactive Club Survey Builder)** — Panel dla administratorów umożliwiający łatwe tworzenie pytań jedno- i wielokrotnego wyboru dla zawodników z podglądem na żywo.
+2404. **BE — System wersjonowania planów treningowych (Training Plan Version Control)** — Zapisywanie historii edycji planu przez trenera, umożliwiające szybkie przywrócenie poprzedniej wersji obciążeń w razie potrzeby.
+2405. **FE — Optymalizacja wskaźnika INP dla formularza wyników (INP Optimization for Results Form)** — Refaktoryzacja obsługi zdarzeń wejściowych w formularzu w celu zminimalizowania opóźnień interakcji na słabszych urządzeniach.
+2406. **BE — Integracja z zewnętrznym kalendarzem Google Calendar (Google Calendar API Sync)** — Dwukierunkowa synchronizacja wydarzeń klubowych i zawodów z publicznym kalendarzem Google sekcji.
+2407. **FE — Interaktywny wykres rozkładu kategorii wagowych (Weight Category Distribution Chart)** — Wykres kołowy przedstawiający procentowy udział zawodników w poszczególnych kategoriach wagowych w klubie.
+2408. **BE — Automatyczne powiadomienie o wygaśnięciu tokenów odświeżania (JWT Refresh Token Revocation)** — Bezpieczne usuwanie nieaktywnych i przestarzałych tokenów z bazy danych w celu optymalizacji jej rozmiaru.
+2409. **FE — Estetyczny widżet z cytatem motywacyjnym (Motivational Weightlifting Quotes)** — Dyskretna sekcja na dashboardzie zawodnika wyświetlająca inspirujące cytaty legend podnoszenia ciężarów przy każdym logowaniu.
+2410. **BE — Sprawdzanie dostępności domenu klubu (Domain Availability Checker Backend)** — Narzędzie pomocnicze dla superadmina monitorujące poprawność konfiguracji DNS i rekordów CNAME dla instancji klubowych.
+2411. **FE — System oceniania trudności treningu (Visual RPE Scale Picker)** — Ładna, interaktywna skala RPE (Borg Scale) z ikonami przedstawiającymi poziom zmęczenia przy uzupełnianiu dziennika.
+2412. **BE — Walidacja unikalności adresów e-mail (Case-Insensitive Email Uniqueness Constraint)** — Wdrożenie unikalnego indeksu SQLite ignorującego wielkość liter w adresach e-mail w celu zapobiegania duplikacji kont.
+2413. **FE — Dynamiczny podgląd formatowania Markdown w ogłoszeniach (Live Markdown Editor Preview)** — Edytor ogłoszeń dla adminów z podziałem ekranu na kod Markdown i wyrenderowany w czasie rzeczywistym estetyczny dokument HTML.
+2414. **BE — Zabezpieczenie przed atakami typu SQL Injection w dynamicznych filtrach (SQL Injection Prevention Check)** — Audyt i refaktoryzacja wszystkich dynamicznych zapytań SQL w Rust pod kątem poprawnego bindowania parametrów.
+2415. **FE — Optymalizacja LCP dla banera na stronie głównej (LCP Hero Image Optimization)** — Wdrożenie technologii modern image formats (AVIF/WebP) oraz prefetchowania zasobów dla głównego zdjęcia na stronie klubu.
+2416. **BE — Eksport bazy danych w formacie bezpiecznym dla RODO (GDPR-Compliant SQL Dump Utility)** — Narzędzie generujące zrzut bazy danych z automatyczną anonimizacją wszystkich danych osobowych zawodników.
+2417. **FE — Wizualna oś czasu historii klubu (Interactive Club History Timeline)** — Elegancko animowana sekcja "O nas" na publicznej stronie, przedstawiająca kamienie milowe CKS Slavia od momentu założenia.
+2418. **BE — System powiadomień o niskim poziomie pamięci dyskowej (Low Disk Space Alert Worker)** — Worker monitorujący wolne miejsce na serwerze SQLite/Turso i wysyłający alerty e-mail do administratorów IT.
+2419. **FE — Wygodne filtrowanie galerii zdjęć według roku i zawodów (Gallery Smart Search & Tags)** — Możliwość szybkiego odnalezienia zdjęć z konkretnych Mistrzostw Polski za pomocą tagów i filtrowania chronologicznego.
+2420. **BE — Integracja z systemami analitycznymi chroniącymi prywatność (Plausible Analytics API Integration)** — Bezpieczne pobieranie statystyk ruchu na publicznej stronie www i wyświetlanie ich w panelu admina bez naruszania RODO.
+2421. **FE — Interaktywny wykres porównawczy Sinclaira dla grupy (Sinclair Group Scatter Plot)** — Wykres punktowy pokazujący stosunek wagi ciała do punktów Sinclaira dla wszystkich zawodników z danej grupy treningowej.
+2422. **BE — Blokada wielokrotnego wysyłania tego samego formularza (Request Debouncer Middleware)** — Warstwa pośrednia w Rust odrzucająca identyczne żądania POST wysłane w odstępie krótszym niż 2 sekundy (ochrona przed double-submit).
+2423. **FE — System zgłaszania sugestii dotyczących aplikacji (In-App Feedback Widget)** — Dyskretny formularz w rogu ekranu umożliwiający szybkie przesłanie opinii lub propozycji funkcji bezpośrednio do zespołu deweloperskiego.
+2424. **BE — Automatyczne generowanie miniaturek wideo (Video Thumbnail Generator Backend)** — Proces w Rust automatycznie wycinający pierwszą klatkę z przesłanego wideo techniki i zapisujący ją jako plik JPG do szybkiego podglądu.
+2425. **FE — Responsywny układ tabeli wyników na smartfonach (Responsive Tables Flex Container)** — Dostosowanie szerokich tabel z wynikami zawodów do urządzeń mobilnych poprzez zamianę wierszy w ładne, pionowe karty.
+2426. **BE — Audyt zgodności nagłówków bezpieczeństwa (HTTP Security Headers Middleware)** — Wymuszenie dodawania nagłówków Content-Security-Policy, X-Frame-Options i Referrer-Policy do każdej odpowiedzi z serwera Axum.
+2427. **FE — Formularz zapisu do klubu z walidacją na żywo (Live Validation Sign-up Form)** — Nowoczesny formularz rekrutacyjny dla nowych adeptów z natychmiastowym sprawdzaniem poprawności wpisywanych pól (np. format telefonu).
+2428. **BE — Pamięć podręczna dla najpopularniejszych zapytań publicznych (Redis-less In-Memory Cache)** — Prosty moduł cache'ujący w pamięci RAM serwera najczęstsze zapytania publiczne (np. lista aktualności) w celu redukcji zapytań do SQLite.
+2429. **FE — Estetyczny widżet z odliczaniem do kolejnego startu (Countdown to Next Competition)** — Widget na dashboardzie prezentujący dni, godziny i minuty pozostałe do najbliższych zawodów z kalendarza klubu.
+2430. **BE — Weryfikacja spójności typów TS z modelami Rust (TypeScript Definitions Validator)** — Narzędzie sprawdzające podczas budowania, czy wygenerowane typy TypeScript są w 100% zgodne ze strukturami danych w Rust.
+2431. **FE — Optymalizacja renderowania długich list zawodników (Virtual Scroll for Athlete List)** — Zastosowanie techniki virtual scrolling w celu płynnego przewijania setek profili zawodników bez obciążania pamięci przeglądarki.
+2432. **BE — Bezpieczny import danych finansowych ze Stripe (Stripe Webhook Handler Axum)** — Endpoint w Rust odbierający i weryfikujący podpisy cyfrowe webhooków od Stripe w celu automatycznego księgowania składek.
+2433. **FE — Dynamiczny generator banerów z ogłoszeniami (Emergency Alert Banner Component)** — Łatwo włączany przez adminów baner na samej górze strony informujący o nagłych wydarzeniach (np. zamknięcie hali w dni świąteczne).
+2434. **BE — Automatyczna optymalizacja indeksów bazy danych SQLite (VACUUM & ANALYZE Nightly Worker)** — Codzienny nocny proces dbający o wydajność bazy danych poprzez defragmentację i aktualizację statystyk zapytań SQL.
+2435. **FE — Nowoczesne animacje ładowania przycisków (Loading Spinners and Shimmer Buttons)** — Dodanie drobnych animacji ładowania wewnątrz przycisków akcji, aby dać użytkownikowi wyraźny sygnał, że jego żądanie jest przetwarzane.
+
+### Inicjatywy pozakodowe (Klub, trening i organizacja) — pomysły 2436–2500
+
+2436. **ORG — Klubowy dzień otwarty dla mieszkańców (Slavia Open Day)** — Cykliczna impreza promocyjna połączona z darmowymi warsztatami techniki rwania i podrzutu dla mieszkańców Rudy Śląskiej i okolic.
+2437. **ORG — Wymiana oświetlenia nad pomostami (High-CRI Gym Lighting)** — Modernizacja oświetlenia hali treningowej na lampy o wysokim współczynniku oddawania barw (CRI > 90), co diametralnie poprawi jakość nagrań wideo do analizy techniki.
+2438. **ORG — Program partnerski z lokalnymi szkołami (School Weightlifting Outreach)** — Pokazy podnoszenia ciężarów w szkołach podstawowych i średnich w celu zachęcenia młodzieży do rozpoczęcia treningów w sekcji juniorskiej CKS Slavia.
+2439. **ORG — Dedykowane pakiety sponsorskie dla firm (Sponsor Package Tiers)** — Przygotowanie profesjonalnych ofert marketingowych (pakiety Brązowy, Srebrny, Złoty) dla lokalnych przedsiębiorców chcących wesprzeć klub.
+2440. **ORG — Klubowy podcast o historii podnoszenia ciężarów (Slavia Podcast Series)** — Nagrywanie wywiadów z byłymi mistrzami klubu, trenerami i działaczami, publikowanych na YouTube i Spotify w celu budowania marki.
+2441. **ORG — Strefa regeneracji i fizjoterapii na sali (Recovery Corner Setup)** — Wydzielenie i wyposażenie specjalnego kącika na siłowni z rolerami, pistoletami do masażu, gumami do flossingu i stołem do masażu.
+2442. **ORG — Zakup certyfikowanego zestawu startowego ciężarów (IWF Certified Plate Set)** — Pozyskanie profesjonalnego, certyfikowanego przez IWF kompletu gryfów i talerzy dedykowanego wyłącznie do podejść rekordowych i zawodów wewnętrznych.
+2443. **ORG — Cykl warsztatów z psychologii sportu (Mindset Workshops)** — Spotkania z psychologiem sportowym dla zawodników kadry klubu, skupiające się na radzeniu sobie ze stresem przedstartowym i koncentracji.
+2444. **ORG — Wewnętrzna Liga Śląska CKS Slavia (Internal Club League)** — Organizacja cyklicznych, comiesięcznych zawodów wewnętrznych z punktacją Sinclaira w celu monitorowania formy i budowania rywalizacji.
+2445. **ORG — Ekologiczna strefa nawadniania w klubie (Eco Hydration Station)** — Montaż profesjonalnego dystrybutora z filtrowaną wodą pitną i zachęcenie zawodników do używania wielorazowych bidonów klubowych.
+2446. **ORG — Warsztaty dietetyczne ze zbijania wagi (Weight-Cutting Seminar)** — Praktyczne szkolenie prowadzone przez dietetyk sportową na temat bezpiecznego i zdrowego regulowania masy ciała przed zawodami.
+2447. **ORG — Standaryzowane procedury czyszczenia gryfów (Barbell Maintenance Routine)** — Wprowadzenie cotygodniowego protokołu czyszczenia radełkowania gryfów szczotkami mosiężnymi i oliwienia łożysk w celu przedłużenia żywotności sprzętu.
+2448. **ORG — Klubowe koszulki i bluzy z autorskim designem (Premium Slavia Merch)** — Zaprojektowanie i produkcja wysokiej jakości odzieży treningowej z nowoczesną identyfikacją wizualną CKS Slavia dla zawodników i kibiców.
+2449. **ORG — Stworzenie tablicy pamiątkowej rekordów (Physical Hall of Fame Board)** — Montaż dużej, estetycznej tablicy na ścianie hali z wypisanymi aktualnymi rekordami klubu w różnych kategoriach wiekowych i wagowych.
+2450. **ORG — Spotkania integracyjne po zawodach (Post-Competition Team Integration)** — Tradycja wspólnych wyjść lub ognisk dla zawodników, trenerów i wolontariuszy po zakończeniu głównych startów w sezonie.
+2451. **ORG — Współpraca z lokalnym centrum medycyny sportowej (Sports Medicine Center Partnership)** — Wypracowanie stałej ścieżki szybkich badań lekarskich dla zawodników klubu w celu sprawnego przedłużania licencji PZPC.
+2452. **ORG — Profesjonalna sesja zdjęciowa kadry (Professional Athlete Photoshoot)** — Zorganizowanie profesjonalnego dnia zdjęciowego na hali w celu pozyskania wysokiej jakości materiałów do publicznych profili i mediów społecznościowych.
+2453. **ORG — Bezpłatne porady fizjoterapeutyczne raz w miesiącu (Monthly Physio Assessment)** — Dyżur zaprzyjaźnionego fizjoterapeuty na sali, podczas którego zawodnicy mogą skonsultować drobne dolegliwości i otrzymać zestaw ćwiczeń naprawczych.
+2454. **ORG — Standardy techniczne PZPC dla młodych adeptów (Federation Technical Standards)** — Wdrożenie w klubie oficjalnego, wielostopniowego sistema oceny techniki dla dzieci (np. zaliczenie rwania samym gryfem przed wejściem na ciężary).
+2455. **ORG — Klubowy system wyróżnień "Zawodnik Miesiąca" (Athlete of the Month Award)** — Wyróżnianie zawodnika nie tylko za wyniki sportowe, ale też za zaangażowanie, frekwencję i pomoc w życiu klubu (nagroda w postaci akcesoriów).
+2456. **ORG — Zakup stojaków i luster do korekcji techniki (Mirror Feedback Stations)** — Rozmieszczenie luster przed wybranymi pomostami treningowymi w sposób umożliwiający zawodnikowi samodzielną kontrolę postawy w fazie rozgrzewki.
+2457. **ORG — Tablica ogłoszeń w fizycznej formie na hali (Physical Club Notice Board)** — Estetyczna gablota informacyjna na korytarzu klubu dla osób rzadziej korzystających z aplikacji mobilnej (np. starsi działacze, rodzice dzieci).
+2458. **ORG — Program wolontariatu podczas zawodów (Slavia Volunteer Crew)** — Stworzenie zorganizowanej grupy wolontariuszy (młodzież klubowa, sympatycy) do pomocy przy organizacji zawodów (obsługa techniczna, logistyka, pomoc stolikowa).
+2459. **ORG — Edukacja antydopingowa dla rodziców juniorów (Antidoping Seminar for Parents)** — Spotkanie informacyjne na temat procedur antydopingowych, bezpiecznej suplementacji i listy substancji zabronionych WADA.
+2460. **ORG — Dedykowane tabliczki kredowe na pomostach (Chalkboard Platform Labels)** — Małe tabliczki kredowe przy każdym pomoście do zapisywania aktualnie realizowanych serii i obciążeń przez ćwiczących.
+2461. **ORG — Partnerstwo z lokalną firmą cateringową (Dietary Meal-Prep Partnership)** — Zniżki dla członków klubu na zakup zbilansowanej diety pudełkowej u lokalnego dostawcy cateringu dietetycznego.
+2462. **ORG — Szkolenia sędziowskie dla zawodników (Referee Training Courses)** — Zachęcanie i dofinansowywanie kursów sędziowskich PZPC dla starszych zawodników w celu zwiększania liczby uprawnionych sędziów w klubie.
+2463. **ORG — Wspólne wyjazdy kibiców na Mistrzostwa Polski (Supporters Bus Trip)** — Organizowanie zorganizowanego transportu i biletów dla klubowej społeczności chcącej kibicować reprezentantom Slavii na wyjazdach.
+2464. **ORG — Audyt poziomu hałasu na sali (Gym Noise and Vibration Audit)** — Profesjonalne pomiary drgań i hałasu przy zrzucaniu ciężarów oraz wdrożenie nowoczesnych mat wibroizolacyjnych pod pomosty.
+2465. **ORG — Przewodnik dla debiutantów na zawodach (Rookie Weightlifting Guide)** — Wydrukowana broszura (i PDF) wyjaśniająca krok po kroku procedurę zawodów: od ważenia, przez podawanie podejść, po ceremonię dekoracji.
+2466. **ORG — System zbierania i recyklingu zużytych pasków treningowych (Straps Recycling Bin)** — Ekologiczny pojemnik na zużyty sprzęt parciany/skórzany, który można naprawić lub przeznaczyć do celów treningowych dla początkujących grupy dziecięcej.
+2467. **ORG — Klubowa biblioteczka książek sportowych (Slavia Book Library)** — Półka na hali z literaturą dotyczącą teorii sportu, biomechaniki, periodyzacji treningowej i biografii wybitnych sztangistów.
+2468. **ORG — Badania wad postawy u dzieci z Rudy Śląskiej (Postural Screenings for Kids)** — Akcja społeczna klubu polegająca na bezpłatnych badaniach postawy dla dzieci ze szkół podstawowych prowadzonych przez klubowych trenerów i fizjoterapeutów.
+2469. **ORG — Przygotowanie strefy dla mediów i prasy (Media Zone Setup)** — Zapewnienie odpowiedniego miejsca, dostępu do prądu i szybkiego Wi-Fi dla dziennikarzy i fotografów podczas relacjonowania zawodów.
+2470. **ORG — Standaryzacja oznaczeń twardości gryfów (Barbell Stiffness Labels)** — Kolorowe opaski na końcach gryfów ułatwiające zawodnikom szybką identyfikację ich przeznaczenia (np. gryfy bardziej sprężyste do podrzutu vs sztywniejsze do przysiadów).
+2471. **ORG — Strefa dla dzieci i rodzin zawodników (Family Active Corner)** — Bezpieczny kącik zabaw dla dzieci, w którym mogą przebywać pod okiem bliskich, podczas gdy rodzic odbywa sesję treningową.
+2472. **ORG — Zbiórki charytatywne organizowane przez klub (Slavia Charity Events)** — Zaangażowanie społeczności klubowej w lokalne akcje pomocowe (np. pomoc schroniskom, szlachetna paczka) pod szyldem CKS Slavia.
+2473. **ORG — Szkolenie z pierwszej pomocy dla kadry trenerskiej (First Aid Training for Coaches)** — Obowiązkowy, coroczny certyfikowany kurs udzielania pierwszej pomocy przedmedycznej dla wszystkich trenerów pracujących na sali.
+2474. **ORG — Estetyczne i higieniczne strefy magnezji (Chalk Box Upgrades)** — Wymiana starych pojemników na magnezję na nowoczesne, zamknięte stacje ograniczające pylenie i ułatwiające utrzymanie czystości wokół pomostów.
+2475. **ORG — Filmy promocyjne z treningów na social media (Gym Hype Videos)** — Regularna produkcja krótkich, dynamicznych rolek (Reels/TikTok) pokazujących ciężką pracę na treningach w celu budowania wizerunku nowoczesnego klubu.
+2476. **ORG — Profesjonalny stojak na pasy treningowe (Organized Belt Rack)** — Zamontowanie ściennego wieszaka ułatwiającego segregację i przechowywanie pasów ciężarowych według rozmiarów.
+2477. **ORG — Warsztaty z techniki przysiadów dla amatorów (Squat Masterclass for Amateurs)** — Płatne warsztaty techniczne dla osób trenujących rekreacyjnie lub crossfit, stanowiące dodatkowe źródło przychodu dla klubu.
+2478. **ORG — Procedura powitalna dla nowych członków (New Member Welcome Package)** — Wręczanie każdemu nowemu zawodnikowi pakietu startowego (naklejka klubowa, informator, plan pierwszych kroków w Slavia).
+2479. **ORG — Pomiary elastyczności pomostów treningowych (Platform Elasticity Audit)** — Regularna kontrola stanu technicznego legarów pod pomostami w celu zapewnienia równego i bezpiecznego amortyzowania uderzeń.
+2480. **ORG — Zewnętrzny baner reklamowy na budynku (Club Outdoor Banner)** — Montaż wielkoformatowej, estetycznej reklamy zewnętrznej informującej o działalności klubu i godzinach otwarcia.
+2481. **ORG — Konkurs na najlepszy plakat zawodów (Competition Poster Contest)** — Zaangażowanie lokalnej społeczności artystycznej lub młodzieży w projektowanie plakatów promujących klubowe turnieje.
+2482. **ORG — Standaryzowane procedury ważenia przed zawodami (Official Weigh-in Protocol)** — Wprowadzenie rygorystycznego, zgodnego z przepisami IWF protokołu ważenia (zamknięte pomieszczenie, obecność sędziego tej samej płci) dla zawodów wewnętrznych.
+2483. **ORG — System nagradzania za pomoc w sprzątaniu sali (Clean Gym Points)** — Drobne upominki lub punkty w lojalnościówce dla najmłodszych grup za dbanie o porządek na pomoście po zakończonych zajęciach.
+2484. **ORG — Dofinansowanie obozów letnich dla najuboższych juniorów (Summer Camp Sponsorship)** — Stworzenie funduszu stypendialnego umożliwiającego wyjazd na obóz sportowy dzieciom z rodzin w trudnej sytuacji finansowej.
+2485. **ORG — Zakup kamery szerokokątnej do stałego nagrywania sali (Static Analysis Camera)** — Montaż stałej kamery nad głównym pomostem umożliwiającej trenerowi podgląd i analizę prób pod różnymi kątami bez przestawiania telefonu.
+2486. **ORG — Współpraca z psychodietetykiem (Sports Psychodietetics Partnership)** — Porady z zakresu relacji z jedzeniem, szczególnie istotne dla zawodników borykających się z ciągłym kontrolowaniem wagi startowej.
+2487. **ORG — Tabliczki z zasadami savoir-vivre na siłowni (Physical Gym Etiquette Signs)** — Estetyczne grafiki przypominające o odkładaniu ciężarów na miejsce, czyszczeniu gryfów z krwi/potu i szacunku do współćwiczących.
+2488. **ORG — Zakup profesjonalnej szafki medycznej (Advanced First Aid Station)** — Wyposażenie sali w kompletną, łatwo dostępną szafkę pierwszej pomocy z lodem w sprayu, opaskami uciskowymi, szynami Kramera i środkami dezynfekującymi.
+2489. **ORG — System testowy wytrzymałości pasów (Belt Durability Testing)** — Okresowe sprawdzanie szwów i klamer w pasach treningowych będących na wyposażeniu klubu pod kątem bezpieczeństwa użytkowania.
+2490. **ORG — Klubowy dzień sportu dla rodzin (Slavia Family Fun Day)** — Piknik sportowo-rekreacyjny z łatwymi konkurencjami sprawnościowymi dla całych rodzin zrzeszonych w klubie.
+2491. **ORG — Szkolenie z social media dla kadry klubu (Social Media Training for Staff)** — Krótkie warsztaty z robienia dobrych zdjęć, pisania angażujących postów i relacjonowania zawodów na żywo dla trenerów i adminów.
+2492. **ORG — Przygotowanie profesjonalnego tła do wywiadów (Press Wall Backdrop)** — Zakup ścianki reklamowej z logotypami klubu i sponsorów do robienia zdjęć zawodnikom po dekoracji medalowej.
+2493. **ORG — System okresowej kalibracji wag (Weighing Scale Calibration Schedule)** — Wygodne wdrożenie procedury sprawdzania dokładności wag klubowych za pomocą odważników wzorcowych co 6 miesięcy.
+2494. **ORG — Poradnik suplementacji sportowej dla juniorów (Junior Supplementation Guidebook)** — Opracowanie rzetelnego, opartego na dowodach naukowych kompendium wiedzy o suplementach (kreatyna, białko, witaminy) dla młodych zawodników.
+2495. **ORG — System zgłoszeń pomysłów do skrzynki fizycznej (Physical Suggestion Box)** — Drewniana skrzynka na sali, do której zawodnicy mogą wrzucać anonimowe karteczki z pomysłami na usprawnienie działania klubu.
+2496. **ORG — Zakup nowoczesnych gum oporowych do rozgrzewki (Warm-up Resistance Bands Kit)** — Wyposażenie sali w komplet profesjonalnych gum o różnych stopniach oporu do mobilizacji stawów biodrowych i barkowych.
+2497. **ORG — Warsztaty z techniki podrzutu dla kobiet (Female Olympic Lifting Workshops)** — Specjalistyczne warsztaty nakierowane na popularyzację podnoszenia ciężarów wśród kobiet, prowadzone przez utytułowane zawodniczki klubu.
+2498. **ORG — Program mentorski starszych zawodników dla młodzieży (Senior-Junior Mentorship)** — Parowanie doświadczonych zawodników z sekcją młodszą w celu wsparcia technicznego, mentalnego i pomocy w adaptacji w klubie.
+2499. **ORG — Regularny przegląd techniczny pomostów amortyzujących (Drop Zone Safety Audits)** — Kwartalny przegląd gumowych mat amortyzujących pod kątem pęknięć i zużycia materiału tłumiącego uderzenia sztangi.
+2500. **ORG — Uroczysta gala podsumowania roku sportowego (Slavia Annual Sports Gala)** — Eleganckie wydarzenie na koniec roku, podczas którego wręczane są statuetki dla najlepszych zawodników, podziękowania dla sponsorów i wolontariuszy.
+
+### Kolejna pula propozycji (Sport-Tech 4.0: 2501–3000)
+
+Zbiór kolejnych 500 szczegółowych pomysłów na rozwój ekosystemu CKS Slavia Ruda Śląska, zoptymalizowany pod kątem aktualnego stanu baz kodu (np. zintegrowanych flag funkcji w `experimentalFeaturesCatalog.ts`, orzeczeń lekarskich w `PlayersManager.vue` czy eksportu ICS w `calendar_export.rs`). Podzielony na aplikację mobilną Flutter (2501–2665), platformę web/API Axum + Nuxt (2666–2835) oraz pozakodowe inicjatywy klubowe (2836–3000).
+
+### Aplikacja mobilna (Flutter/Mobile) — pomysły 2501–2665
+
+2501. **MOB — Tryb ciemny dla pomostów (Dimmed Lifting Mode)** — Specjalny motyw ekranu treningu redukujący jasność do minimum, aby nie razić oczu podczas leżenia na ławeczce pod sztangą.
+2502. **MOB — Automatyczny podgląd powtórzeń w zwolnionym tempie (Auto Slo-Mo Highlight)** — Moduł kamery automatycznie wykrywający moment oderwania sztangi i spowalniający wideo do 0.25x w tym kluczowym fragmencie.
+2503. **MOB — Skanowanie kodów QR obecności w ciemności (QR Scanner Flash Auto-On)** — Automatyczne włączanie latarki telefonu przez skaner QR, gdy czujnik światła wykryje słabe oświetlenie w sali.
+2504. **MOB — Przycisk szybkiego dodawania magnezji (Quick Chalk Tap)** — Wirtualny przycisk na ekranie serii rejestrujący czas i potrzebę użycia magnezji jako korelacji z jakością chwytu.
+2505. **MOB — Widget stanu zdrowia dłoni (Hand Care Tracker)** — Moduł w recovery journalu pozwalający na rejestrowanie odcisków i uszkodzeń skóry na dłoniach z przypomnieniem o pielęgnacji.
+2506. **MOB — Powiadomienie o zmianie trenera prowadzącego (Coach Change Alert)** — Powiadomienie push wysyłane natychmiast po zmianie przypisanego trenera w systemie z krótkim powitaniem.
+2507. **MOB — Integracja z inteligentnymi wagami Tanita/Xiaomi (Smart Scale Bluetooth Sync)** — Bezpośrednie parowanie aplikacji przez Bluetooth w celu automatycznego importu składu ciała (tłuszcz, woda, mięśnie) do porannego raportu.
+2508. **MOB — Szybkie udostępnianie postu na czacie (Chat Post Share)** — Opcja udostępniania aktualności klubowych bezpośrednio do aktywnej grupy czatu jednym kliknięciem.
+2509. **MOB — Dynamiczne ikony aplikacji (Adaptive App Icon Presets)** — Wybór alternatywnych ikon aplikacji na pulpicie telefonu (np. ikona retro z logo Slavii, ikona złota dla mistrzów).
+2510. **MOB — Dźwięk pomyślnego zapisu serii (Successful Lift Sound)** — Opcjonalny, przyjemny sygnał dźwiękowy (np. uderzenie w gong lub dźwięk IWF "trzy białe światła") po odznaczeniu udanej serii.
+2511. **MOB — Lokalne powiadomienia o rozgrzewce (Local Warm-up Reminders)** — Powiadomienia push wyzwalane lokalnie na 15 minut przed zaplanowaną godziną treningu z motywacyjnym hasłem.
+2512. **MOB — Szybkie przełączanie jednostek w kalkulatorze (Sinclair Unit Quick Toggle)** — Przełącznik kg/lbs w kalkulatorze Sinclaira dla zawodników trenujących za granicą lub na obozach ze sprzętem w funtach.
+2513. **MOB — Eksport statystyk tonażu do CSV (Tonnage Export CSV)** — Możliwość wygenerowania i wysłania pliku CSV z historią tonażu bezpośrednio na e-mail zawodnika z poziomu aplikacji.
+2514. **MOB — Integracja z Apple Watch Workouts (Watch Workout Sync)** — Pobieranie danych o tętnie i spalonych kaloriach podczas treningów siłowych zapisanych w systemowej aplikacji Apple.
+2515. **MOB — Skaner kodów kreskowych odżywek (Supplement Barcode Scanner)** — Skanowanie kodów z opakowań białek/kreatyn w celu automatycznego uzupełnienia dziennika suplementacji.
+2516. **MOB — Szybkie zgłaszanie uszkodzeń pomostu (Platform Damage Quick Report)** — Moduł aparatu pozwalający szybko zrobić zdjęcie pękniętej gumy lub deski i wysłać zgłoszenie bezpośrednio do administracji.
+2517. **MOB — Widget z najbliższymi zawodami (Next Comp Lockscreen Widget)** — Lockscreen widget na iOS/Android prezentujący liczbę dni do kolejnego oficjalnego startu sekcji.
+2518. **MOB — Weryfikacja biometryczna przed płatnością (Biometric Payment Auth)** — Wymóg FaceID/TouchID przed zatwierdzeniem ręcznego zgłoszenia składki członkowskiej w aplikacji.
+2519. **MOB — Wykresy wibracyjne tętna (Haptic Heart Rate Charts)** — Delikatne wibracje urządzenia podczas przesuwania palcem po wykresie tętna, oddające jego intensywność.
+2520. **MOB — Dynamiczne dopasowanie wielkości czcionki (Accessibility Font Resizer)** — Suwak w ustawieniach aplikacji pozwalający na niezależne zwiększenie rozmiaru tekstu dla lepszej czytelności na pomoście.
+2521. **MOB — Lista kontrolna przed wyjazdem na obóz (Camp Packing Checklist)** — Interaktywna lista rzeczy do spakowania (pas, maści, taśmy, buty startowe, dokumenty) z opcją odhaczania.
+2522. **MOB — Szybki zapis nastroju emoji (Emoji Mood Logger)** — Szybki wybór jednej z 5 emotikon w recovery journalu reprezentującej samopoczucie psychiczne zawodnika.
+2523. **MOB — Tryb offline dla galerii klubowej (Offline Gallery Viewer)** — Przechowywanie miniaturek zdjęć z galerii klubowej w pamięci podręcznej telefonu do przeglądania bez internetu.
+2524. **MOB — Podgląd wideo techniki w oknie PIP (Picture-in-Picture Video)** — Opcja odtwarzania nagranej techniki w małym, pływającym oknie podczas uzupełniania dziennika treningowego.
+2525. **MOB — Widget z aktualnym tonażem tygodnia (Weekly Tonnage Home Widget)** — Widget prezentujący sumaryczny tonaż podniesiony w bieżącym tygodniu w porównaniu do poprzedniego.
+2526. **MOB — Skaner badań lekarskich PDF (OCR Medical PDF Parser)** — Skanowanie papierowego orzeczenia lekarskiego i automatyczne wyodrębnianie daty ważności za pomocą lokalnego OCR.
+2527. **MOB — Powiadomienia push o nowych komentarzach trenera (Push Notification on Comment)** — Natychmiastowe powiadomienie zawodnika, gdy trener skomentuje jego wpis w dzienniku lub nagranie wideo.
+2528. **MOB — Wybór ścieżki dźwiękowej do treningu (In-App Spotify Stub)** — Dyskretny widget sterowania odtwarzaczem muzycznym (Spotify/Apple Music) bezpośrednio z poziomu ekranu treningu.
+2529. **MOB — System odznak za frekwencję (Attendance Badge Notification)** — Animowane powiadomienie pełnoekranowe po zdobyciu nowej odznaki za 100% obecności w miesiącu.
+2530. **MOB — Inteligentne podpowiedzi ciężarów rozgrzewkowych (Warm-up Weight Suggester)** — Automatyczne wyliczanie serii rozgrzewkowych (np. 50%, 60%, 70% ciężaru docelowego) na podstawie pierwszego ćwiczenia z planu.
+2531. **MOB — System alarmowy o odwodnieniu (Dehydration Alert Trigger)** — Powiadomienie push wysyłane, gdy zawodnik w porannym raporcie zaznaczy bardzo ciemny kolor moczu (wskazanie na odwodnienie).
+2532. **MOB — Szybki dostęp do regulaminu klubu (Quick Rules Access)** — Dedykowana zakładka w menu bocznym zawierająca statut CKS Slavia i regulamin korzystania z hali sportowej.
+2533. **MOB — Skanowanie kodów QR na pasach treningowych (Gear NFC Scanner)** — Przypisywanie pasów klubowych do profilu zawodnika na czas treningu poprzez skan etykiety.
+2534. **MOB — Udostępnianie planu jako dynamiczny link (Universal Link Plan Share)** — Generowanie linków typu `slavia://plan/{id}`, które po kliknięciu na telefonie innego zawodnika otwierają udostępniony plan.
+2535. **MOB — Widget z pozycją w rankingu (Rank Home Widget)** — Widget prezentujący aktualne miejsce zawodnika w klubowym rankingu Sinclaira.
+2536. **MOB — Automatyczny zapis szkicu przy rozładowaniu baterii (Low Battery Draft Save)** — Automatyczne zapisanie wszystkich niezapisanych serii w dzienniku lokalnym, gdy poziom baterii spadnie poniżej 5%.
+2537. **MOB — Haptic feedback przy błędach formularza (Haptic Form Validation)** — Zróżnicowane wibracje urządzenia (np. potrójne krótkie wibracje) przy próbie zapisu pustego pola.
+2538. **MOB — Skaner QR dla zaproszeń na zawody (QR Event Invitation Scanner)** — Skanowanie biletów/zaproszeń na zawody organizowane przez klub bezpośrednio przez aplikację mobilną.
+2539. **MOB — Integracja z Google Fit (Google Fit Steps Sync)** — Pobieranie kroków i aktywności kardio z systemu Android jako uzupełnienie danych regeneracyjnych.
+2540. **MOB — Dziennik rozciągania i mobilności (Mobility Routine Log)** — Osobna sekcja w dzienniku do zaznaczania wykonanych sesji rozciągania po treningu głównym.
+2541. **MOB — Animowana tablica rekordów w aplikacji (Animated PR Screen)** — Efekt deszczu konfetti i specjalna animacja przy otworciu ekranu z nowo dodanym rekordem życiowym.
+2542. **MOB — Widget statusu obecności w miesiącu (Attendance Monthly Widget)** — Widget pokazujący procent obecności na treningach w bieżącym miesiącu (np. w formie estetycznego pierścienia).
+2543. **MOB — Szybki wybór kategorii wagowej PZPC (PZPC Weight Class Spinner)** — Rolka wyboru kategorii wagowych dostosowująca się dynamicznie do wybranej płci i grupy wiekowej zawodnika.
+2544. **MOB — Detekcja braku aktywności podczas serii (Rest Timer Reminder)** — Powiadomienie push przypominające o rozpoczęciu kolejnej serii, jeśli telefon nie wykryje ruchu przez ponad 5 minut.
+2545. **MOB — Integracja z inteligentnymi opaskami WHOOP (Whoop API Integration)** — Import parametrów regeneracji (WHOOP Recovery Score, Strain) bezpośrednio do wykresów gotowości treningowej.
+2546. **MOB — Skaner kodów QR na plakatach klubowych (Promo QR Scanner)** — Skaner wbudowany w aplikację do odczytywania kodów rabatowych lub informacji z plakatów w Rudzie Śląskiej.
+2547. **MOB — Podgląd tonażu ćwiczenia na przestrzeni czasu (PR Exercise Tonnage Chart)** — Szybki wykres historyczny prezentujący tonaż dla konkretnego ćwiczenia (np. przysiad tyłem) bezpośrednio pod formularzem serii.
+2548. **MOB — Widget z saldem składek (Balance Home Widget)** — Widget prezentujący aktualny stan rozliczeń z klubem (nadpłata / zaległość).
+2549. **MOB — Inteligentne grupowanie wideo techniki (Video Gallery Folder Categorizer)** — Automatyczne segregowanie nagrań techniki w galerii telefonu na foldery odpowiadające bojom (Rwanie, Podrzut, Przysiad).
+2550. **MOB — Dźwiękowe powiadomienia o ważnych ogłoszeniach (Emergency Announcement Sound)** — Unikalny, głośny dźwięk powiadomienia push zarezerwowany wyłącznie dla ogłoszeń oznaczonych jako krytyczne.
+2551. **MOB — Podgląd wyników rywali w czasie rzeczywistym (Live Competitor PR View)** — Możliwość obserwowania zgłoszonych rekordów innych zawodników z tej samej kategorii wagowej w celu motywacji.
+2552. **MOB — System monitorowania poziomu zmęczenia oczu (Eye Strain Reducer)** — Automatyczne włączenie filtra ciepłych barw UI przy wykryciu długiego patrzenia w ekran w ciemnym pomieszczeniu siłowni.
+2553. **MOB — Lokalne archiwum wiadomości czatu (Local Chat SQLite Archive)** — Przechowywanie historii czatu w lokalnej bazie danych w celu błyskawicznego wczytywania konwersacji bez opóźnień sieciowych.
+2554. **MOB — Wybór formatu daty w aplikacji (Date Format Customizer)** — Możliwość zmiany prezentacji dat (np. DD.MM.YYYY vs YYYY-MM-DD) w zależności od preferencji zawodnika.
+2555. **MOB — Widget z ostatnim wpisem w dzienniku (Last Journal Entry Widget)** — Szybki podgląd ostatnio wykonanego treningu bezpośrednio z ekranu głównego telefonu.
+2556. **MOB — Autowykrywanie kąta nagrania techniki (Camera Angle Pitch Detector)** — Wykorzystanie żyroskopu telefonu w ekranie nagrywania w celu poinformowania użytkownika, czy telefon stoi idealnie pionowo.
+2557. **MOB — Skanowanie certyfikatów medycznych kodem QR (Medical QR Verification)** — Możliwość weryfikacji ważności orzeczenia lekarskiego poprzez zeskanowanie kodu QR z dokumentu lekarza sportowego.
+2558. **MOB — Tryb oszczędzania transferu danych (Data Saver Mode)** — Opcja wyłączenia automatycznego pobierania wideo techniki przy połączeniu przez dane komórkowe.
+2559. **MOB — Widget z motywacją na dziś (Daily Motivational Widget)** — Widget prezentujący codziennie nowe hasło motywacyjne lub złotą myśl legend ciężarów.
+2560. **MOB — Skaner kodów QR na dyplomach (Diploma QR Code Scanner)** — Skanowanie kodu QR z dyplomu zdobytego na zawodach Slavii w celu automatycznego dodania go do wirtualnej gabloty trofeów.
+2561. **MOB — Haptic feedback przy zmianie ćwiczenia (Haptic Exercise Transition)** — Krótka, wyraźna wibracja informująca o przejściu do kolejnego ćwiczenia w aktywnym planie treningowym.
+2562. **MOB — Dynamiczne dopasowanie koloru interfejsu (Dynamic Material You Palette)** — Dopasowanie kolorystyki aplikacji do tapety systemowej na urządzeniach z systemem Android 12+.
+2563. **MOB — Widget z listą obecnych na sali (Who is Lifting Home Widget)** — Dyskretny widget pokazujący liczbę zawodników aktualnie zameldowanych na sali za pomocą QR.
+2564. **MOB — Integracja z systemami Oura Ring (Oura Sleep Sync)** — Pobieranie wskaźników snu i temperatury ciała z pierścienia Oura w celu optymalizacji obciążeń treningowych.
+2565. **MOB — Wyszukiwanie ćwiczeń po tagach technicznych (Tag Search)** — Możliwość wyszukiwania ćwiczeń w bazie po tagach takich jak "dynamika", "akcesoria", "siła chwytu".
+2566. **MOB — Widget z odliczeniem do Mistrzostw Polski (Championship Countdown Widget)** — Widget z zegarem odliczającym czas do najważniejszego startu sezonu dla kadry klubu.
+2567. **MOB — Automatyczne wznawianie przerwanych nagrań (Video Recording Resume)** — Automatyczne wznawianie nagrywania wideo techniki, jeśli zostanie ono przerwane przez przychodzące połączenie telefoniczne.
+2568. **MOB — System odznak za udostępnianie wyników (Social Share Badges)** — Odznaki w profilu przyznawane za regularne dzielenie się swoimi sukcesami na Instagramie/Facebooku.
+2569. **MOB — Widget z planem posiłków przedtreningowych (Pre-workout Meal Widget)** — Szybki podgląd zalecanego posiłku i suplementacji na 2 godziny przed planowanym treningiem.
+2570. **MOB — Skaner QR do zapisu do sekcji (Sign-up QR Code Scanner)** — Skaner QR dla nowych adeptów umożliwiający błyskawiczne przejście do formularza rejestracji w klubie.
+2571. **MOB — Haptic feedback przy osiągnięciu PR (PR Haptic Celebration)** — Wyjątkowa, silna sekwencja wibracji urządzenia celebrująca pobicie rekordu życiowego.
+2572. **MOB — Integracja z aplikacją Fitbit (Fitbit API Integration)** — Synchronizacja danych o tętnie spoczynkowym i aktywności z urządzeń Fitbit.
+2573. **MOB — Widget z saldem punktów lojalnościowych (Loyalty Points Widget)** — Widget prezentujący liczbę punktów zdobytych za frekwencję, pomoc w klubie i zakupy mercha.
+2574. **MOB — Skaner kodów QR na legitymacjach członkowskich (Member ID QR Scanner)** — Możliwość szybkiego potwierdzenia członkostwa w klubie poprzez okazanie i zeskanowanie kodu QR z legitymacji.
+2575. **MOB — Automatyczny zapis wideo w chmurze w tle (Background Video Cloud Upload)** — Wysyłanie nagrań techniki na serwer w tle, co pozwala na kontynuowanie treningu bez czekania na zakończenie wysyłki.
+2576. **MOB — Widget z prognozą pogody na zawody (Competition Weather Widget)** — Widget pokazujący warunki pogodowe w mieście, w którym odbędą się najbliższe zawody wyjazdowe.
+2577. **MOB — Haptic feedback przy odliczaniu stopera (Haptic Metronome Tick)** — Krótkie wibracje na każdą sekundę kończącego się czasu odpoczynku między seriami.
+2578. **MOB — Widget z historią ostatnich PR (Recent PRs Home Widget)** — Widget prezentujący listę ostatnich rekordów życiowych pobitych przez zawodnika lub jego grupę.
+2579. **MOB — Skaner kodów QR na szafkach klubowych (Locker QR Code Scanner)** — Przypisywanie szafki w szatni do profilu zawodnika na czas treningu w celu ułatwienia zarządzania kluczykami.
+2580. **MOB — Integracja z aplikacją Yazio/MyFitnessPal (Nutrition Logs Sync)** — Import spożytych kalorii i makroskładników bezpośrednio do wykresów regeneracyjnych w aplikacji Slavia.
+2581. **MOB — Widget z wyzwaniem tonażowym (Tonnage Challenge Progress Widget)** — Widget prezentujący postęp w aktualnym wyzwaniu tonażowym klubu.
+2582. **MOB — Skaner kodów QR na biletach wstępu (Ticket QR Code Scanner)** — Skanowanie biletów na wydarzenia i zawody organizowane przez klub bezpośrednio przez aplikację.
+2583. **MOB — Haptic feedback przy zatwierdzaniu obecności (Haptic Check-in Confirmation)** — Przyjemna wibracja potwierdzająca pomyślne zameldowanie się na sali za pomocą kodu QR.
+2584. **MOB — Widget ze statystykami Sinclaira grupy (Group Sinclair Stats Widget)** — Widget pokazujący średnią punktację Sinclaira dla całej grupy treningowej zawodnika.
+2585. **MOB — Skaner kodów QR na sprzęcie fizjoterapeutycznym (Physio Equipment QR Scanner)** — Dostęp do instruktaży wideo i zasad bezpieczeństwa korzystania z urządzeń do regeneracji po zeskanowaniu kodu.
+2586. **MOB — Integracja z systemami Polar Flow (Polar Heart Rate Sync)** — Pobieranie precyzyjnych danych o tętnie z pasów telemetrycznych Polar.
+2587. **MOB — Widget z przypomnieniem o badaniach (Medical Exam Reminder Widget)** — Widget pokazujący liczbę dni pozostałych do wygaśnięcia ważności badań lekarskich.
+2588. **MOB — Skaner kodów QR na plakatach sponsorskich (Sponsor Discount QR Scanner)** — Dostęp do dedykowanych zniżek od sponsorów klubu po zeskanowaniu kodu z tablicy sponsorskiej.
+2589. **MOB — Haptic feedback przy błędnym skanowaniu QR (Haptic QR Error)** — Długa, ostrzegawcza wibracja w przypadku nieudanego skanowania kodu QR obecności.
+2590. **MOB — Widget ze statystykami tonażu grupy (Group Tonnage Widget)** — Widget pokazujący sumaryczny tonaż podniesiony przez całą grupę treningową w bieżącym tygodniu.
+2591. **MOB — Skaner kodów QR na koszulkach klubowych (Merch Authenticator QR Scanner)** — Skanowanie kodu QR z metki oficjalnego mercha w celu potwierdzenia jego oryginalności i odblokowania specjalnej odznaki.
+2592. **MOB — Integracja z aplikacją Strava (Strava Activity Sync)** — Import aktywności biegowych i rowerowych jako dodatkowych danych o obciążeniu tlenowym zawodnika.
+2593. **MOB — Widget z listą zadań od trenera (Coach Todo List Widget)** — Szybki podgląd zadań technicznych i organizacyjnych przypisanych przez trenera na dany tydzień.
+2594. **MOB — Skaner kodów QR na dyplomach uznania (Honor QR Code Scanner)** — Dodawanie dyplomów za wybitne zasługi dla klubu do cyfrowego profilu zawodnika.
+2595. **MOB — Haptic feedback przy wysyłaniu wiadomości (Haptic Message Sent)** — Subtelna wibracja potwierdzająca pomyślne wysłanie wiadomości na czacie klubowym.
+2596. **MOB — Widget z podsumowaniem regeneracji (Recovery Score Home Widget)** — Widget prezentujący zagregowany wynik gotowości treningowej na podstawie snu, tętna i samopoczucia.
+2597. **MOB — Skaner kodów QR na obciążeniach (Plate Calibration QR Scanner)** — Dostęp do danych o dokładnej, skalibrowanej wadze danego talerza treningowego po zeskanowaniu kodu QR.
+2598. **MOB — Integracja z aplikacją Withings (Withings Smart Scale Sync)** — Import wagi i składu ciała z wag i urządzeń Withings.
+2599. **MOB — Widget z historią składek członkowskich (Fee History Home Widget)** — Szybki podgląd historii ostatnich opłat członkowskich i statusu bieżącego miesiąca.
+2600. **MOB — Skaner kodów QR na biletach parkingowych (Club Parking QR Scanner)** — Możliwość walidacji darmowego parkowania dla członków klubu pod halą sportową poprzez zeskanowanie kodu.
+2601. **MOB — Haptic feedback przy usunięciu wpisu (Haptic Delete Confirmation)** — Wyraźna, podwójna wibracja ostrzegawcza przy usuwaniu serii lub wpisu z dziennika treningowego.
+2602. **MOB — Widget ze statystykami obecności grupy (Group Attendance Widget)** — Widget pokazujący średnią frekwencję grupy treningowej w bieżącym miesiącu.
+2603. **MOB — Skaner kodów QR na dyplomach ukończenia kursów (Course QR Code Scanner)** — Dodawanie certyfikatów z ukończonych kursów trenerskich/instruktorskich do profilu kadry.
+2604. **MOB — Integracja z aplikacją Suunto (Suunto Activity Sync)** — Synchronizacja danych treningowych i regeneracyjnych z zegarków Suunto.
+2605. **MOB — Widget ze statystykami spalonych kalorii (Calorie Burn Home Widget)** — Widget prezentujący szacowaną liczbę kalorii spalonych podczas treningów w bieżącym tygodniu.
+2606. **MOB — Skaner kodów QR na kartach wstępu na basen (Pool Access QR Scanner)** — Integracja z lokalnym basenem i weryfikacja zniżek regeneracyjnych dla zawodników Slavii.
+2607. **MOB — Haptic feedback przy dodawaniu nowego ćwiczenia (Haptic Add Exercise)** — Krótka wibracja potwierdzająca pomyślne dodanie ćwiczenia spoza planu do aktywnej sesji.
+2608. **MOB — Widget ze statystykami Sinclaira klubu (Club Sinclair Stats Widget)** — Widget pokazujący średnią punktację Sinclaira dla całego klubu w porównaniu do innych sekcji na Śląsku.
+2609. **MOB — Skaner kodów QR na opaskach startowych (Event Wristband QR Scanner)** — Błyskawiczna rejestracja zawodnika w strefie rozgrzewkowej na zawodach po zeskanowaniu kodu z opaski.
+2610. **MOB — Integracja z aplikacją Wahoo (Wahoo Sensor Sync)** — Pobieranie danych o tętnie z pasów telemetrycznych i sensorów Wahoo.
+2611. **MOB — Widget ze statystykami tonażu klubu (Club Tonnage Home Widget)** — Widget pokazujący sumaryczny tonaż podniesiony przez wszystkich zawodników klubu w bieżącym miesiącu.
+2612. **MOB — Skaner kodów QR na plakatach charytatywnych (Charity QR Scanner)** — Możliwość szybkiego wsparcia akcji charytatywnych organizowanych przez klub poprzez zeskanowanie kodu.
+2613. **MOB — Haptic feedback przy zatwierdzeniu planu (Haptic Plan Approved)** — Wibracja celebrująca pomyślne zatwierdzenie tygodniowego planu treningowego przez trenera.
+2614. **MOB — Widget ze statystykami obecności klubu (Club Attendance Monthly Widget)** — Widget pokazujący średnią frekwencję całego klubu w bieżącym miesiącu.
+2615. **MOB — Skaner kodów QR na dyplomach za rekordy (PR Diploma QR Scanner)** — Skanowanie dyplomów potwierdzających pobicie rekordu klubu w celu automatycznej aktualizacji statystyk.
+2616. **MOB — Integracja z aplikacją Coros (Coros Activity Sync)** — Pobieranie danych o treningach i regeneracji z zegarków sportowych Coros.
+2617. **MOB — Widget ze statystykami spalonych kalorii grupy (Group Calorie Burn Widget)** — Widget pokazujący średnią liczbę kalorii spalonych przez całą grupę treningową w bieżącym tygodniu.
+2618. **MOB — Skaner kodów QR na kartach wstępu do sauny (Sauna Access QR Scanner)** — Weryfikacja wejść na saunę regeneracyjną dla członków klubu.
+2619. **MOB — Haptic feedback przy dodawaniu nowej serii (Haptic Add Series)** — Subtelna wibracja potwierdzająca dodanie kolejnej serii do ćwiczenia w dzienniku.
+2620. **MOB — Widget ze statystykami Sinclaira sekcji młodzieżowej (Youth Sinclair Widget)** — Widget pokazujący postępy i ranking punktacji Sinclaira w sekcjach juniorskich klubu.
+2621. **MOB — Skaner kodów QR na opaskach rozgrzewkowych (Warm-up Wristband QR Scanner)** — Weryfikacja dostępu do pomostów rozgrzewkowych dla trenerów i zawodników.
+2622. **MOB — Integracja z aplikacją Hammerhead (Hammerhead Activity Sync)** — Pobieranie danych o aktywnościach kolarskich z komputerów rowerowych Hammerhead.
+2623. **MOB — Widget ze statystykami tonażu sekcji młodzieżowej (Youth Tonnage Widget)** — Widget pokazujący sumaryczny tonaż podniesiony przez juniorów w bieżącym miesiącu.
+2624. **MOB — Skaner kodów QR na plakatach ekologicznych (Eco QR Scanner)** — Udział w klubowych akcjach ekologicznych i zbieranie punktów za recykling.
+2625. **MOB — Haptic feedback przy zatwierdzeniu RPE (Haptic RPE Logged)** — Krótka wibracja potwierdzająca pomyślne zapisanie oceny zmęczenia (RPE) po treningu.
+2626. **MOB — Widget ze statystykami obecności sekcji młodzieżowej (Youth Attendance Widget)** — Widget pokazujący frekwencję w grupach juniorskich i dziecięcych w bieżącym miesiącu.
+2627. **MOB — Skaner kodów QR na dyplomach za zasługi (Merit Diploma QR Scanner)** — Skanowanie dyplomów za wybitne zasługi dla rozwoju podnoszenia ciężarów na Śląsku.
+2628. **MOB — Integracja z aplikacją Whoop (Whoop Strain Sync)** — Import danych o dziennym obciążeniu organizmu (Strain) z opasek Whoop.
+2629. **MOB — Widget ze statystykami spalonych kalorii sekcji młodzieżowej (Youth Calorie Widget)** — Widget pokazujący średnią liczbę kalorii spalonych przez juniorów w bieżącym tygodniu.
+2630. **MOB — Skaner kodów QR na kartach wstępu na krioterapię (Cryo Access QR Scanner)** — Weryfikacja wejść na zabiegi krioterapii regeneracyjnej dla zawodników kadry.
+2631. **MOB — Haptic feedback przy dodawaniu notatki (Haptic Add Note)** — Subtelna wibracja potwierdzająca pomyślne zapisanie notatki technicznej do ćwiczenia.
+2632. **MOB — Widget ze statystykami Sinclaira sekcji kobiecej (Female Sinclair Widget)** — Widget pokazujący postępy i ranking punktacji Sinclaira w sekcji kobiecej klubu.
+2633. **MOB — Skaner kodów QR na opaskach sędziowskich (Referee Wristband QR Scanner)** — Błyskawiczna weryfikacja uprawnień sędziowskich podczas oficjalnych zawodów klubowych.
+2634. **MOB — Integracja z aplikacją MyFitnessPal (MyFitnessPal Weight Sync)** — Automatyczny import wagi ciała z aplikacji MyFitnessPal do profilu zawodnika.
+2635. **MOB — Widget ze statystykami tonażu sekcji kobiecej (Female Tonnage Widget)** — Widget pokazujący sumaryczny tonaż podniesiony przez zawodniczki sekcji kobiecej w bieżącym miesiącu.
+2636. **MOB — Skaner kodów QR na plakatach promujących zdrowie (Health Promo QR Scanner)** — Dostęp do materiałów edukacyjnych o zdrowiu i profilaktyce kontuzji po zeskanowaniu kodu.
+2637. **MOB — Haptic feedback przy zatwierdzeniu wagi (Haptic Bodyweight Logged)** — Krótka wibracja potwierdzająca pomyślne zapisanie porannej masy ciała.
+2638. **MOB — Widget ze statystykami obecności sekcji kobiecej (Female Attendance Widget)** — Widget pokazujący frekwencję w sekcji kobiecej klubu w bieżącym miesiącu.
+2639. **MOB — Skaner kodów QR na dyplomach za udział w obozach (Camp Certificate QR Scanner)** — Dodawanie certyfikatów z obozów sportowo-kondycyjnych do profilu zawodnika.
+2640. **MOB — Integracja z aplikacją Garmin Connect (Garmin RHR Sync)** — Automatyczny import tętna spoczynkowego z urządzeń Garmin.
+2641. **MOB — Widget ze statystykami spalonych kalorii sekcji kobiecej (Female Calorie Widget)** — Widget pokazujący średnią liczbę kalorii spalonych przez zawodniczki w bieżącym tygodniu.
+2642. **MOB — Skaner kodów QR na kartach wstępu na masaż (Massage Access QR Scanner)** — Weryfikacja wejść na masaże sportowe i relaksacyjne organizowane w klubie.
+2643. **MOB — Haptic feedback przy dodawaniu zdjęcia (Haptic Add Image)** — Subtelna wibracja potwierdzająca pomyślne przypisanie zdjęcia do profilu lub wpisu w dzienniku.
+2644. **MOB — Widget ze statystykami Sinclaira sekcji męskiej (Male Sinclair Widget)** — Widget pokazujący postępy i ranking punktacji Sinclaira w sekcji męskiej klubu.
+2645. **MOB — Skaner kodów QR na opaskach prasowych (Press Wristband QR Scanner)** — Weryfikacja akredytacji prasowych i fotograficznych podczas wydarzeń sportowych.
+2646. **MOB — Integracja z aplikacją Fitbit (Fitbit Sleep Sync)** — Import szczegółowych faz snu z urządzeń Fitbit w celu oceny jakości regeneracji nocnej.
+2647. **MOB — Widget ze statystykami tonażu sekcji męskiej (Male Tonnage Widget)** — Widget pokazujący sumaryczny tonaż podniesiony przez zawodników sekcji męskiej w bieżącym miesiącu.
+2648. **MOB — Skaner kodów QR na plakatach antydopingowych (Antidoping QR Scanner)** — Błyskawiczny dostęp do bazy leków zabronionych po zeskanowaniu kodu z plakatu informacyjnego.
+2649. **MOB — Haptic feedback przy zatwierdzeniu nastroju (Haptic Mood Logged)** — Krótka wibracja potwierdzająca pomyślne zapisanie samopoczucia w recovery journalu.
+2650. **MOB — Widget ze statystykami obecności sekcji męskiej (Male Attendance Widget)** — Widget pokazujący frekwencję w sekcji męskiej klubu w bieżącym miesiącu.
+2651. **MOB — Skaner kodów QR na dyplomach za rekordy życiowe (PR Diploma QR Code Scanner)** — Skanowanie oficjalnych dyplomów PR wydawanych przez klub w celu weryfikacji wyniku.
+2652. **MOB — Integracja z aplikacją Withings (Withings Sleep Sync)** — Import danych o strukturze snu z sensorów i mat Withings.
+2653. **MOB — Widget ze statystykami spalonych kalorii sekcji męskiej (Male Calorie Widget)** — Widget pokazujący średnią liczbę kalorii spalonych przez zawodników w bieżącym tygodniu.
+2654. **MOB — Skaner kodów QR na kartach wstępu na saunę fińską (Finnish Sauna QR Scanner)** — Weryfikacja wejść na saunę fińską w ramach odnowy biologicznej kadry.
+2655. **MOB — Haptic feedback przy dodawaniu wideo (Haptic Add Video)** — Subtelna wibracja potwierdzająca pomyślne dodanie nagrania wideo techniki do serii treningowej.
+2656. **MOB — Widget ze statystykami Sinclaira sekcji weteranów (Masters Sinclair Widget)** — Widget pokazujący postępy i ranking punktacji Sinclaira w sekcji Masters (weteranów) klubu.
+2657. **MOB — Skaner kodów QR na opaskach vip (VIP Wristband QR Scanner)** — Weryfikacja dostępu do strefy VIP i cateringu podczas uroczystych zawodów CKS Slavia.
+2658. **MOB — Integracja z aplikacją Polar Flow (Polar Sleep Sync)** — Import danych o regeneracji nocnej Nightly Recharge z platformy Polar.
+2659. **MOB — Widget ze statystykami tonażu sekcji weteranów (Masters Tonnage Widget)** — Widget pokazujący sumaryczny tonaż podniesiony przez weteranów w bieżącym miesiącu.
+2660. **MOB — Skaner kodów QR na plakatach o rozciąganiu (Stretching QR Scanner)** — Dostęp do instruktaży wideo ćwiczeń rozciągających i mobilizacyjnych po treningu.
+2661. **MOB — Haptic feedback przy zatwierdzeniu suplementacji (Haptic Supplement Logged)** — Krótka wibracja potwierdzająca pomyślne odznaczenie codziennej porcji suplementów.
+2662. **MOB — Widget ze statystykami obecności sekcji weteranów (Masters Attendance Widget)** — Widget pokazujący frekwencję w sekcji Masters (weteranów) klubu w bieżącym miesiącu.
+2663. **MOB — Skaner kodów QR na dyplomach za zasługi trenerskie (Coaching Merit QR Scanner)** — Skanowanie dyplomów za wybitne osiągnięcia w szkoleniu młodzieży ciężarowej.
+2664. **MOB — Integracja z aplikacją Apple Health (Apple Health Sleep Sync)** — Automatyczny import faz i długości snu z systemowej bazy Apple Health.
+2665. **MOB — Widget ze statystykami spalonych kalorii sekcji weteranów (Masters Calorie Widget)** — Widget pokazujący średnią liczbę kalorii spalonych przez weteranów w bieżącym tygodniu.
+
+### Technologie web i API (Backend/Frontend) — pomysły 2666–2835
+
+2666. **FE/BE — Weryfikacja statusu transakcji Stripe (Stripe Transaction Validator)** — Endpoint sprawdzający status transakcji płatniczych w Stripe przed zatwierdzeniem składki zawodnika.
+2667. **FE — Płynne przewijanie do sekcji wyników (Smooth Scroll to Results Table)** — Automatyczne, łagodne scrollowanie ekranu do tabeli z rezultatami po kliknięciu przycisku wyszukiwania w panelu publicznym.
+2668. **BE — Automatyczne odrzucanie spamu na czacie (Chat Spam Control Middleware)** — Warstwa pośrednia w Rust wykrywająca i blokująca wiadomości czatu zawierające podejrzane linki lub powtarzające się frazy.
+2669. **FE — Responsywny kalkulator proporcji (Responsive Ratios Calculator UI)** — Przystosowanie interaktywnego kalkulatora proporcji siłowych do bezbłędnego wyświetlania na małych smartfonach.
+2670. **BE — Skompresowany format eksportu danych RODO (GDPR Zip Archiver)** — Pakowanie danych profilowych, historii płatności i treningów do jednego, skompresowanego pliku ZIP chronionego hasłem przed pobraniem.
+2671. **FE — Podpowiedzi tekstowe dla ról (Role Tooltips in Admin Panel)** — Małe, estetyczne podpowiedzi (Tooltips) wyjaśniające uprawnienia poszczególnych ról przy edycji konta w panelu AdminsManager.
+2672. **BE — Monitorowanie opóźnień zapytań SQL (SQL Query Latency Monitor)** — Worker logujący wszystkie zapytania do SQLite/Turso, których czas wykonania przekracza 150ms, w celu identyfikacji brakujących indeksów.
+2673. **FE — Interaktywny podgląd wykresu tonażu (Interactive Tonnage Line Chart)** — Wykres liniowy w Nuxt prezentujący sumaryczny tonaż z opcją najechania myszką (Tooltip) w celu wyświetlenia szczegółowych ćwiczeń z danego dnia.
+2674. **BE — API do synchronizacji odznak (Badges Synchronization Endpoint)** — Endpoint w Rust sprawdzający warunki przyznania odznak (np. frekwencja >90%, nowy rekord PR) i automatycznie aktualizujący stan w bazie.
+2675. **FE — Formularz edycji odznak zawodnika (Edit Athlete Badges Modal)** — Panel dla administratora umożliwiający ręczne przyznawanie lub odbieranie odznak specjalnych (np. "Zasłużony dla klubu").
+2676. **BE — Dynamiczne CSP dla zewnętrznych modeli AI (Dynamic Content Security Policy)** — Skonfigurowanie nagłówków CSP w Axum pozwalających na bezpieczne pobieranie wag modeli MoveNet/TensorFlow bezpośrednio z serwerów Google.
+2677. **FE — Filtrowanie postów na blogu po autorach (Blog Posts Author Filter)** — Możliwość szybkiego odnalezienia artykułów napisanych przez konkretnego trenera za pomocą dropdownu na publicznej stronie.
+2678. **BE — Endpoint do sprawdzania orzeczeń lekarskich (Medical Certification API)** — Endpoint w Rust pozwalający na pobranie statusu badań lekarskich wszystkich zawodników z ostrzeżeniami o wygasających terminach.
+2679. **FE — Tryb kafelkowy na liście zawodników (Athlete Grid View Toggle)** — Przełącznik w panelu administratora pozwalający na zmianę widoku z tabeli na siatkę kart z dużymi zdjęciami profilowymi zawodników.
+2680. **BE — System powiadomień mailowych o braku badań (Email Alert for Expiring Medicals)** — Automatyczny worker wysyłający przypomnienia e-mail do zawodników na 30 dni przed końcem ważności badań lekarskich.
+2681. **FE — Dynamiczny wykres kołowy obecności (Monthly Attendance Donut Chart)** — Wizualizacja frekwencji zawodnika w danym miesiącu w formie estetycznego wykresu kołowego z podziałem na obecności, usprawiedliwienia i nieobecności.
+2682. **BE — Automatyczne łączenie duplikatów zawodników (Merge Duplicate Athletes Endpoint)** — Bezpieczna transakcja SQL pozwalająca na połączenie dwóch omyłkowo utworzonych rekordów zawodników z zachowaniem całej historii treningów i wyników.
+2683. **FE — Przycisk szybkiego wyciszenia powiadomień (Mute Notifications Button)** — Opcja wyciszenia powiadomień push i e-mail na określony czas (np. 1 godzina, 1 dzień, 1 tydzień) bezpośrednio z profilu.
+2684. **BE — Weryfikacja podpisu webhooka Stripe (Stripe Webhook Signature Verification)** — Bezpieczna weryfikacja autentyczności przesyłanych powiadomień o płatnościach w celu zapobiegania atakom typu spoofing.
+2685. **FE — Interaktywna mapa dojazdu na zawody (Google Maps API Embed)** — Integracja interaktywnej mapy Google na karcie wydarzenia w kalendarzu, prezentującej trasę i czas dojazdu z siedziby klubu.
+2686. **BE — API do masowego wysyłania ogłoszeń (Mass Announcement Broadcast API)** — Zoptymalizowany endpoint Axum wysyłający powiadomienia push i e-maile do wszystkich zarejestrowanych członków klubu jednocześnie.
+2687. **FE — Dynamiczny wskaźnik siły hasła (Interactive Password Strength Meter)** — Wizualny pasek i podpowiedzi techniczne podczas rejestracji lub zmiany hasła, pomagające użytkownikowi stworzyć bezpieczne hasło.
+2688. **BE — Worker verifikujący kody TOTP (TOTP Verification Code Pruner)** — Nocny proces czyszczący z bazy danych zużyte lub wygasłe jednorazowe tokeny 2FA w celu zachowania higieny bazy danych.
+2689. **FE — Responsywna galeria wideo techniki (Responsive Video Grid UI)** — Dostosowanie siatki wideo z nagraniami prób technicznych do płynnego wyświetlania na smartfonach i tabletach.
+2690. **BE — Endpoint do weryfikacji poprawności importu CSV (CSV Import Dry-Run API)** — Endpoint pozwalający na przetestowanie importu danych bez zapisywania ich do bazy danych, zwracający listę potencjalnych błędów.
+2691. **FE — System polubień pod postami w aktualnościach (News Likes & Reactions UI)** — Interaktywne przyciski reakcji (kciuk w górę, brawa, serce) pod postami z natychmiastowym zliczaniem w czasie rzeczywistym.
+2692. **BE — API do rejestrowania reakcji (Reactions API Endpoint)** — Zoptymalizowany endpoint w Rust zapisujący i agregujący reakcje użytkowników pod aktualnościami i ogłoszeniami.
+2693. **FE — Wykres rozkładu wyników Sinclaira w klubie (Sinclair Bell Curve Chart)** — Wykres rozkładu normalnego (krzywa Gaussa) prezentujący pozycję zawodnika na tle średniej punktacji całego klubu.
+2694. **BE — Szyfrowanie plików wideo na serwerze (At-Rest Encryption for Media Files)** — Automatyczne szyfrowanie przesyłanych nagrań techniki przed zapisem na dysk sieciowy (S3) w celu ochrony prywatności zawodników.
+2695. **FE — Formularz zgłaszania wniosków o urlop sportowy (Leave of Absence Form UI)** — Moduł pozwalający zawodnikowi na złożenie oficjalnego wniosku o czasowe zwolnienie ze składek (np. z powodu kontuzji) z załącznikiem medycznym.
+2696. **BE — API do zatwierdzania urlopów sportowych (Leave of Absence Approval Backend)** — Endpoint w Rust dla administratorów do akceptacji lub odrzucenia wniosków o urlop sportowy z automatyczną pauzą składek.
+2697. **FE — Płynne animacje otwierania modali (Smooth Modal Transitions)** — Wdrożenie estetycznych i szybkich przejść CSS dla wszystkich okien modalnych w systemie w celu nadania premium charakteru.
+2698. **BE — Monitorowanie zużycia pamięci RAM przez proces backendu (Process RSS Memory Tracker)** — Cykliczne logowanie zużycia pamięci RAM (Resident Set Size) przez Axum w celu szybkiego wykrywania wycieków pamięci.
+2699. **FE — Interaktywny kreator szablonów wiadomości czatu (Chat Message Templates UI)** — Panel dla trenerów umożliwiający tworzenie, edycję i szybkie wstawianie gotowych szablonów wiadomości na czacie.
+2700. **BE — Endpoint do masowego pobierania danych rozliczeniowych (Bulk Invoice Export API)** — Generowanie skompresowanej paczki ZIP z fakturami/potwierdzeniami opłat za wybrany okres dla celów księgowych klubu.
+2701. **FE — Dynamiczny wykres tonażu skumulowanego (Cumulative Tonnage Chart UI)** — Wykres prezentujący łączny tonaż podniesiony od początku roku z prognozą osiągnięcia celu rocznego.
+2702. **BE — API do walidacji poprawności danych Sinclaira (Sinclair Validation Audit)** — Skrypt weryfikujący, czy zapisane w bazie punkty Sinclaira zgadzają się z aktualnymi współczynnikami IWF na dany rok.
+2703. **FE — Formularz przypisywania ról sędziowskich (Referee Credentials Manager UI)** — Panel pozwalający na dodawanie i weryfikację uprawnień sędziowskich (klasa sędziowska, data ważności licencji) członków klubu.
+2704. **BE — Endpoint do sprawdzania uprawnień sędziowskich (Referee Audit API)** — Endpoint zwracający listę sędziów z aktualnymi uprawnieniami gotowych do obsługi zawodów.
+2705. **FE — Estetyczny widżet z prezentacją sponsorów (Sponsor Carousel Component)** — Płynnie animowana karuzela logotypów sponsorów na publicznej stronie głównej sekcji CKS Slavia.
+2706. **BE — Zabezpieczenie przed atakami typu Brute Force na kodach TOTP (TOTP Rate Limiter)** — Restrykcyjny licznik prób weryfikacji kodu 2FA blokujący adres IP po 3 nieudanych próbach.
+2707. **FE — Formularz rejestracji na wewnętrzne zawody (Competition Sign-up Form)** — Moduł pozwalający zawodnikowi na zgłoszenie udziału w zawodach wewnętrznych z podaniem planowanej wagi startowej i podejść.
+2708. **BE — API do obsługi zgłoszeń startowych (Competition Registration API)** — Endpoint w Rust rejestrujący zgłoszenia zawodników, weryfikujący kategorie wagowe i generujący listę startową.
+2709. **FE — Płynny pasek postępu ładowania strony (Nuxt Loading Bar Customizer)** — Wdrożenie dopasowanego kolorystycznie, dynamicznego paska na samej górze ekranu informującego o ładowaniu kolejnej podstrony.
+2710. **BE — Logowanie zmian konfiguracji systemu (Config Audit Trail)** — Rejestrowanie w tabeli audit_logs każdej modyfikacji zmiennych systemowych lub stałych konfiguracyjnych klubu.
+2711. **FE — Interaktywny podgląd toru sztangi w 3D (ThreeJS Barbell Path Viewer)** — Eksperymentalny komponent w Nuxt wykorzystujący bibliotekę Three.js do wizualizacji toru sztangi w przestrzeni trójwymiarowej.
+2712. **BE — API do eksportu współczynników Sinclaira (Sinclair Coefficients API)** — Endpoint zwracający aktualne, oficjalne współczynniki Sinclaira dla mężczyzn i kobiet pobierane z bazy SQLite.
+2713. **FE — Formularz zgłaszania zapotrzebowania na sprzęt (Gear Request Form)** — Moduł pozwalający trenerom na składanie wniosków o zakup nowego sprzętu (np. pasów, gryfów, magnezji) do zarządu klubu.
+2714. **BE — API do zarządzania wnioskami sprzętowymi (Gear Purchase Approval API)** — Endpointy do obsługi statusu wniosków zakupowych (oczekujący, zatwierdzony, zrealizowany) z powiadomieniami push.
+2715. **FE — Wykres rozkładu tonażu na partie mięśniowe (Muscle Group Volume Distribution Chart)** — Wykres kołowy prezentujący procentowy udział objętości treningowej na poszczególne boje i partie ciała zawodnika.
+2716. **BE — API do analizy rozkładu tonażu (Tonnage Analysis Engine)** — Algorytm w Rust kategoryzujący ćwiczenia z planu i obliczający rozkład objętości na podstawie historii serii.
+2717. **FE — Wygodne filtrowanie czatu po statusie przeczytania (Unread Chat Messages Filter)** — Przycisk na liście wątków czatu pozwalający natychmiast wyświetlić tylko te rozmowy, w których są nowe wiadomości.
+2718. **BE — Automatyczne odznaczanie wiadomości jako przeczytane (Auto Mark Chat Read API)** — Zoptymalizowany endpoint aktualizujący status przeczytania wiadomości w tle po otwarciu okna czatu.
+2719. **FE — Formularz zapisu na obozy sportowe (Sport Camp Registration UI)** — Moduł prezentujący szczegóły nadchodzącego obozu (cena, termin, program) z formularzem zapisu i płatnością zaliczki.
+2720. **BE — API do obsługi rezerwacji na obozy (Camp Booking Manager API)** — Endpointy w Rust kontrolujące limit miejsc, zapisy i status wpłat zaliczek na wyjazdy klubowe.
+2721. **FE — Dynamiczny wykres gotowości treningowej (Daily Readiness Trend UI)** — Wykres liniowy prezentujący postęp wskaźnika gotowości (RPE, sen, zmęczenie) na przestrzeni ostatnich 30 dni.
+2722. **BE — Endpoint do weryfikacji poprawności integracji z wagami (Smart Scale Integration Endpoint)** — API odbierające i walidujące surowe dane telemetryczne z wag pomiarowych.
+2723. **FE — Formularz edycji danych ubezpieczeniowych (Insurance Details Manager UI)** — Panel w profilu zawodnika pozwalający na wprowadzenie numeru polisy ubezpieczeniowej i daty ważności ubezpieczenia sportowego.
+2724. **BE — API do kontroli ubezpieczeń zawodników (Insurance Safety Audit API)** — Endpoint dla administratora zwracający listę zawodników bez ważnego ubezpieczenia NNW przed wyjazdem na zawody.
+2725. **FE — Płynne skalowanie elementów interfejsu (Tailwind Fluid Typography Preset)** — Wdrożenie responsywnych reguł typograficznych, które płynnie dostosowują rozmiar nagłówków do wielkości ekranu.
+2726. **BE — Monitorowanie czasu odpowiedzi zewnętrznych integracji (External API Latency Logger)** — Worker rejestrujący czas odpowiedzi zewnętrznych serwisów (POLADA, Stripe, Cloudinary) z automatycznym fallbackiem przy awarii.
+2727. **FE — Formularz rezerwacji fizjoterapeutycznej (Physiotherapist Reservation UI)** — Interfejs z wyborem wolnych godzin, terapeuty i typu zabiegu (masaż, kinesiotaping, rehabilitacja) z podglądem na żywo.
+2728. **BE — API do rezerwacji fizjoterapii (Physio Booking Engine)** — System rezerwacji w Rust blokujący podwójne terminy i wysyłający przypomnienia SMS do zawodnika i terapeuty.
+2729. **FE — Wykres historii wagi ciała w profilu (Weight History Trend Chart)** — Interaktywny wykres liniowy prezentujący zmiany masy ciała zawodnika na przestrzeni roku z zaznaczonymi granicami kategorii wagowej.
+2730. **BE — API do weryfikacji limitów wagowych (Weight Limit Validation API)** — Algorytm sprawdzający, czy poranny pomiar wagi zawodnika nie przekracza dopuszczalnej tolerancji startowej.
+2731. **FE — Formularz zgłaszania nieobecności na treningu (Attendance Excuse Form)** — Szybki moduł pozwalający zawodnikowi na podanie powodu nieobecności (choroba, praca) i załączenie zdjęcia usprawiedliwienia.
+2732. **BE — API do zatwierdzania usprawiedliwień (Excuse Approval API)** — Endpoint w Rust umożliwiający trenerowi zatwierdzenie nieobecności zawodnika z automatyczną aktualizacją statystyk frekwencji.
+2733. **FE — Płynny suwak wyboru obciążenia (Fluid Load Slider Input)** — Alternatywny element interfejsu w dzienniku treningowym pozwalający na płynne dobieranie ciężaru na sztandze za pomocą suwaka.
+2734. **BE — Logowanie zmian statusu płatności (Payment Status Audit Trail)** — Rejestrowanie każdej zmiany statusu składki (np. z "Pending" na "Approved") z identyfikatorem administratora dokonującego zmiany.
+2735. **FE — Interaktywna prezentacja wyników Sinclaira (Sinclair Leaderboard UI)** — Nowoczesny, publiczny ranking zawodników klubu CKS Slavia z możliwością sortowania według płci i kategorii wiekowych.
+2736. **BE — API do generowania rankingu Sinclaira (Sinclair Leaderboard API)** — Zoptymalizowany endpoint Axum pobierający najlepsze historyczne rezultaty zawodników i przeliczający je na punkty Sinclaira w ułamku sekundy.
+2737. **FE — Formularz zgłaszania zapotrzebowania na magnezję (Chalk Order Form)** — Proste narzędzie pozwalające dyżurnemu zawodnikowi na sali zgłosić niski stan magnezji w pojemnikach jednym kliknięciem.
+2738. **BE — API do monitorowania zużycia magnezji (Chalk Consumption Monitor)** — System powiadomień dla administracji o konieczności uzupełnienia zapasów magnezji na hali.
+2739. **FE — Wykres historii wejść do strefy rwania (PR Strength Progression Chart)** — Porównawczy wykres liniowy prezentujący roczny postęp w rwaniu, podrzucie i dwuboju na jednym ekranie.
+2740. **BE — API do eksportu rekordów życiowych (PR History API)** — Endpoint w Rust zwracający pełną chronologiczną historię rekordów zawodnika z oznaczeniem daty i miejsca ich pobicia.
+2741. **FE — Formularz zgłaszania uwag do planu treningowego (Plan Feedback Form)** — Dyskretna sekcja pod planem treningowym na dany dzień, umożliwiająca zawodnikowi napisanie komentarza dla trenera.
+2742. **BE — API do obsługi komentarzy do planu (Plan Comments API)** — Endpointy do zapisu i odczytu uwag zawodników z automatycznym oznaczeniem jako nieprzeczytane w panelu trenera.
+2743. **FE — Płynne animacje ładowania wykresów (Chart Entrance Animations)** — Eleganckie, łagodne animowanie linii i słupków wykresów podczas wchodzenia na ekrany statystyk.
+2744. **BE — Monitorowanie spójności danych ubezpieczeń (Insurance Expiry Audit Worker)** — Cykliczny worker SQL sprawdzający polisy zawodników i automatycznie generujący powiadomienia o zbliżającym się końcu ochrony.
+2745. **FE — Formularz zgłoszeniowy dla wolontariuszy (Volunteer Registration UI)** — Moduł pozwalający sympatykom klubu na zapisanie się do pomocy przy organizacji najbliższych zawodów z wyborem preferowanej roli.
+2746. **BE — API do zarządzania wolontariuszami (Volunteer Coordinator API)** — Endpointy w Rust umożliwiające przydzielanie wolontariuszy do zadań (np. obsługa nagłośnienia, pomoc w biurze zawodów).
+2747. **FE — Wykres rozkładu intensywności treningowej (Intensity Distribution Donut)** — Wykres kołowy prezentujący procentowy udział serii wykonanych w poszczególnych przedziałach intensywności (np. 80-90% CM).
+2748. **BE — API do kalkulacji stref intensywności (Intensity Calculator Engine)** — Algorytm w Rust obliczający strefy obciążeń na podstawie aktualnych rekordów życiowych zawodnika.
+2749. **FE — Wygodny panel szybkiego kontaktu z trenerem (Coach Quick Contact Panel)** — Pływająca sekcja na dashboardzie zawodnika z szybkim przejściem do czatu, e-maila lub telefonu przypisanego trenera.
+2750. **BE — API do sprawdzania przypisań trenerskich (Coach Assignment API)** — Endpointy do pobierania i aktualizacji struktury przypisań zawodników do poszczególnych trenerów sekcji.
+2751. **FE — Dynamiczny wykres frekwencji rocznej (Annual Attendance Heatmap)** — Estetyczna wizualizacja obecności w formie siatki dni roku (podobnej do GitHub Contributions) prezentująca regularność treningów.
+2752. **BE — API do generowania siatki frekwencji (Attendance Heatmap API)** — Endpoint w Rust agregujący dane o obecności zawodnika i zwracający je w formacie ułatwiającym renderowanie siatki rocznej.
+2753. **FE — Formularz zgłaszania wniosków o dofinansowanie startów (Funding Request Form)** — Moduł pozwalający zawodnikom kadry na wnioskowanie o pokrycie kosztów opłat startowych lub dojazdu na zawody rangi mistrzowskiej.
+2754. **BE — API do zarządzania dofinansowaniami (Funding Request Manager API)** — Endpointy do obsługi statusu wniosków finansowych z automatycznym generowaniem potwierdzeń PDF dla księgowości.
+2755. **FE — Wykres stosunku tonażu do Sinclaira (Tonnage vs Sinclair Scatter Plot)** — Wykres korelacji pokazujący wpływ sumarycznej objętości treningowej na ostateczny wynik sportowy zawodnika.
+2756. **BE — API do analizy korelacji tonażu (Tonnage Correlation Engine)** — Moduł statystyczny w Rust badający korelacje między parametrami treningowymi a przyrostem formy.
+2757. **FE — Formularz zgłaszania propozycji zakupowych mercha (Merch Design Suggestion UI)** — Narzędzie do przesyłania pomysłów i grafik na nowe koszulki, bluzy i akcesoria klubowe z opcją głosowania.
+2758. **BE — API do obsługi głosowań na merch (Merch Voting API)** — Endpointy do zliczania głosów i komentarzy społeczności pod nowymi projektami klubowej odzieży.
+2759. **FE — Płynne przejścia między profilami zawodników (Smooth Athlete Profile Transitions)** — Szybkie wczytywanie i eleganckie renderowanie danych po zmianie profilu zawodnika na liście kadry.
+2760. **BE — Monitorowanie spójności danych licencyjnych (License Expiry Audit Worker)** — Asynchroniczny proces w Rust sprawdzający ważność licencji PZPC zawodników i wysyłający przypomnienia o konieczności przedłużenia.
+2761. **FE — Formularz zapisu na warsztaty techniczne (Workshop Sign-up UI)** — Interfejs prezentujący szczegóły nadchodzących szkoleń (np. "Masterclass Rwania") z opcją rezerwacji miejsca i płatności.
+2762. **BE — API do obsługi warsztatów technicznych (Workshop Reservation API)** — Endpointy kontrolujące limity uczestników, status płatności i wysyłające wejściówki QR na e-mail.
+2763. **FE — Wykres rozkładu czasu spędzonego pod sztangą (Time Under Tension Chart)** — Wizualizacja szacowanego czasu trwania serii w fazie koncentrycznej i ekscentrycznej dla głównych bojów.
+2764. **BE — API do kalkulacji czasu pod napięciem (TUT Calculation Engine)** — Algorytm szacujący czas trwania serii na podstawie liczby powtórzeń i zdefiniowanego tempa ćwiczenia.
+2765. **FE — Wyszukiwanie w archiwum aktualności po tagach (News Archive Tag Search)** — Szybkie filtrowanie historycznych wpisów blogowych za pomocą interaktywnych, kolorowych tagów.
+2766. **BE — API do tagowania aktualności (News Tagging API)** — Endpointy do dynamicznego przypisywania i pobierania tagów powiązanych z postami klubowymi.
+2767. **FE — Formularz rezerwacji sauny klubowej (Sauna Booking UI)** — Interfejs z kalendarzem wolnych godzin sauny fińskiej dedykowanej do regeneracji po ciężkich treningach.
+2768. **BE — API do rezerwacji sauny (Sauna Reservation Engine)** — System kontroli dostępu do sauny, ograniczający liczbę osób w danej sesji w celu zapewnienia komfortu.
+2769. **FE — Wykres postępu w testach sprawności ogólnej (General Fitness PR Chart)** — Wizualizacja wyników w ćwiczeniach uzupełniających (np. wyskok dosiężny, bieg wahadłowy) na przestrzeni sezonu.
+2770. **BE — API do rejestrowania testów sprawnościowych (Fitness Tests API)** — Endpointy do zapisu i odczytu parametrów sprawności ogólnej zawodników sekcji młodzieżowych.
+2771. **FE — Formularz zgłaszania wniosków o ubezpieczenie grupowe (Group Insurance Enrollment Form)** — Moduł pozwalający na przesyłanie niezbędnych dokumentów i zgód do rocznego ubezpieczenia sportowego klubu.
+2772. **BE — API do obsługi ubezpieczeń grupowych (Group Insurance Manager API)** — Endpointy w Rust generujące zestawienia dla ubezpieczyciela i kontrolujące terminy ważności polis.
+2773. **FE — Płynne animacje w menu nawigacyjnym (Fluid Navigation Sidebar Animations)** — Wykorzystanie biblioteki Framer Motion / GSAP w celu nadania wyjątkowej płynności ruchom bocznego menu.
+2774. **BE — Monitorowanie obciążenia bazy danych SQLite (SQLite WAL Size Monitor)** — Worker sprawdzający rozmiar pliku zapisu z wyprzedzeniem (Write-Ahead Log) i automatycznie wyzwalający proces checkpoint w godzinach nocnych.
+2775. **FE — Formularz zgłaszania opinii o obozach (Camp Feedback Survey UI)** — Anonimowa ankieta dla uczestników obozów sportowych Slavii, pozwalająca ocenić zakwaterowanie, wyżywienie i jakość treningów.
+2776. **BE — API do obsługi ankiet obozowych (Camp Surveys API)** — Endpointy do zapisu anonimowych odpowiedzi z automatyczną agregacją wyników w panelu administratora.
+2777. **FE — Wykres rozkładu tonażu na dni tygodnia (Daily Tonnage Distribution Chart)** — Wykres słupkowy prezentujący obciążenie tonażowe w poszczególne dni, ułatwiający ocenę falowania intensywności planu.
+2778. **BE — API do kalkulacji falowania obciążeń (Microcycle Wave Calculator)** — Algorytm analizujący mikrotakt treningowy i weryfikujący zgodność z założeniami periodyzacji sportowej.
+2779. **FE — Formularz zgłaszania propozycji do rankingu (Rank Nomination Form)** — Moduł pozwalający na zgłaszanie wybitnych wyników uzyskanych poza oficjalnymi zawodami w celu wpisania ich do galerii sławy.
+2780. **BE — API do weryfikacji nominacji do rankingu (Rank Nomination API)** — Endpointy w Rust dla trenerów do zatwierdzania i weryfikacji poprawności zgłoszonych rekordów.
+2781. **FE — Wykres postępu technicznego w ocenie trenera (Technical Score Progression Chart)** — Wizualny wykres prezentujący punktową ocenę techniki rwania i podrzutu wystawianą przez trenera.
+2782. **BE — API do oceniania techniki (Technical Assessment API)** — Endpointy pozwalające trenerom na ocenę poszczególnych faz boju (np. start, pierwsze pociągnięcie, podsiad) zawodnika.
+2783. **FE — Formularz rezerwacji sprzętu do analizy VBT (VBT Sensor Rental Form)** — Panel pozwalający na rezerwację klubowych enkoderów liniowych do pomiaru prędkości sztangi.
+2784. **BE — API do rezerwacji enkoderów VBT (VBT Inventory API)** — System kontroli wypożyczeń sensorów VBT, blokujący rezerwacje w przypadku braku dostępnego sprzętu na stanie.
+2785. **FE — Wykres tętna spoczynkowego na przestrzeni czasu (RHR Trend Chart)** — Wykres liniowy prezentujący tętno spoczynkowe, kluczowe dla monitorowania stanu przetrenowania zawodnika.
+2786. **BE — API do rejestrowania tętna spoczynkowego (RHR Log API)** — Endpointy w Rust do zapisu i odczytu parametrów pracy serca w spoczynku pobieranych z urządzeń wearable.
+2787. **FE — Formularz zgłaszania wniosków o stypendium klubowe (Scholarship Application Form)** — Moduł pozwalający zawodnikom z wybitnymi wynikami na składanie wniosków o miesięczne stypendia sportowe.
+2788. **BE — API do zarządzania stypendiami (Scholarship Manager API)** — Endpointy do obsługi statusu wniosków stypendialnych z automatycznym generowaniem dokumentacji dla zarządu.
+2789. **FE — Wykres stosunku tonażu do masy ciała (Tonnage to Bodyweight Ratio Chart)** — Wykres prezentujący względną objętość treningową zawodnika, ułatwiający porównywanie obciążeń in different weight categories.
+2790. **BE — API do kalkulacji względnej objętości (Relative Tonnage Engine)** — Algorytm w Rust obliczający stosunek podniesionych kilogramów do masy ciała zawodnika w poszczególnych mikrocyklach.
+2791. **FE — Formularz rezerwacji strefy regeneracji (Recovery Zone Booking UI)** — Interfejs do rezerwacji czasu korzystania z klubowych nogawek kompresyjnych i pistoletów do masażu.
+2792. **BE — API do rezerwacji strefy regeneracji (Recovery Zone API)** — System zarządzania harmonogramem korzystania z urządzeń do odnowy biologicznej w klubie.
+2793. **FE — Wykres historii wyników w punktach Sinclaira (Sinclair Progression Chart)** — Wizualny wykres prezentujący postęp punktowy zawodnika na przestrzeni całej kariery w klubie.
+2794. **BE — API do eksportu historii Sinclaira (Sinclair History API)** — Endpointy w Rust zwracające historię punktacji Sinclaira zawodnika na podstawie wszystkich zatwierdzonych wyników zawodów.
+2795. **FE — Formularz zgłaszania zapotrzebowania na taśmy (Athletic Tape Request Form)** — Narzędzie do szybkiego zgłaszania braku taśm sportowych do owijania kciuków (hak) na sali treningowej.
+2796. **BE — API do monitorowania zużycia taśm (Tape Inventory Monitor)** — System powiadomień dla administracji o konieczności zamówienia taśm sportowych dla zawodników.
+2797. **FE — Wykres rozkładu tonażu na typy ćwiczeń (Exercise Type Volume Donut)** — Wykres kołowy prezentujący procentowy udział ćwiczeń klasycznych, olimpijskich i pomocniczych w planie treningowym.
+2798. **BE — API do kategoryzacji ćwiczeń (Exercise Categorizer Engine)** — Algorytm w Rust klasyfikujący ćwiczenia z bazy pod kątem ich wpływu na biomechanikę rwania i podrzutu.
+2799. **FE — Wygodny panel szybkiego kontaktu z fizjoterapeutą (Physio Quick Contact Panel)** — Pływająca sekcja na dashboardzie zawodnika z szybkim przejściem do rezerwacji terminów i kontaktu z terapeutą.
+2800. **BE — API do sprawdzania dostępności fizjoterapeuty (Physio Availability API)** — Endpointy w Rust do pobierania wolnych terminów w kalendarzu pracy klubowego fizjoterapeuty.
+2801. **FE — Dynamiczny wykres frekwencji miesięcznej (Monthly Attendance Progress Circle)** — Estetyczny pierścień postępu pokazujący frekwencję zawodnika w bieżącym miesiącu z celem 100%.
+2802. **BE — API do kalkulacji frekwencji miesięcznej (Monthly Attendance Calculator)** — Endpoint w Rust obliczający procent obecności zawodnika na zaplanowanych treningach w danym miesiącu.
+2803. **FE — Formularz zgłaszania wniosków o dofinansowanie sprzętu (Gear Funding Request Form)** — Moduł pozwalający zawodnikom kadry na wnioskowanie o dofinansowanie zakupu buty startowych lub pasów.
+2804. **BE — API do obsługi dofinansowań sprzętowych (Gear Funding Manager API)** — Endpointy do obsługi statusu wniosków finansowych z automatycznym generowaniem potwierdzeń dla księgowości.
+2805. **FE — Wykres stosunku tonażu do punktów Sinclaira grupy (Group Tonnage vs Sinclair Chart)** — Wykres korelacji pokazujący wpływ sumarycznej objętości treningowej na średni wynik sportowy całej grupy treningowej.
+2806. **BE — API do analizy korelacji tonażu grupy (Group Tonnage Correlation Engine)** — Moduł statystyczny w Rust badający korelacje między parametrami treningowymi a przyrostem formy całej grupy.
+2807. **FE — Formularz zgłaszania propozycji logotypów (Logo Design Suggestion UI)** — Narzędzie do przesyłania pomysłów i grafik na nowe logotypy okazjonalne klubu z opcją głosowania.
+2808. **BE — API do obsługi głosowań na logotypy (Logo Voting API)** — Endpointy do zliczania głosów i komentarzy społeczności pod nowymi projektami graficznymi.
+2809. **FE — Płynne przejścia między profilami trenerów (Smooth Coach Profile Transitions)** — Szybkie wczytywanie i eleganckie renderowanie danych po zmianie profilu trenera na liście kadry szkoleniowej.
+2810. **BE — Monitorowanie spójności danych licencyjnych trenerów (Coach License Expiry Worker)** — Asynchroniczny proces w Rust sprawdzający ważność licencji trenerskich PZPC i wysyłający przypomnienia o konieczności przedłużenia.
+2811. **FE — Formularz zapisu na obozy kondycyjne (Conditioning Camp Registration UI)** — Interfejs prezentujący szczegóły nadchodzących obozów kondycyjnych z opcją rezerwacji miejsca i płatności.
+2812. **BE — API do obsługi obozów kondycyjnych (Conditioning Camp Reservation API)** — Endpointy kontrolujące limity uczestników, status płatności i wysyłające wejściówki QR na e-mail.
+2813. **FE — Wykres rozkładu czasu spędzonego na rozciąganiu (Stretching Time Chart)** — Wizualizacja czasu spędzonego na rozciąganiu i mobilizacji po treningu w poszczególnych mikrocyklach.
+2814. **BE — API do kalkulacji czasu rozciągania (Stretching Time Calculation Engine)** — Algorytm szacujący czas trwania sesji mobilizacyjnych na podstawie historii wpisów w dzienniku.
+2815. **FE — Wyszukiwanie w archiwum ogłoszeń po tagach (Announcement Archive Tag Search)** — Szybkie filtrowanie historycznych ogłoszeń klubowych za pomocą interaktywnych, kolorowych tagów.
+2816. **BE — API do tagowania ogłoszeń (Announcement Tagging API)** — Endpointy do dynamicznego przypisywania i pobierania tagów powiązanych z ogłoszeniami klubowymi.
+2817. **FE — Formularz rezerwacji sauny parowej (Steam Sauna Booking UI)** — Interfejs z kalendarzem wolnych godzin sauny parowej dedykowanej do regeneracji po ciężkich treningach.
+2818. **BE — API do rezerwacji sauny parowej (Steam Sauna Reservation Engine)** — System kontroli dostępu do sauny, ograniczający liczbę osób w danej sesji w celu zapewnienia komfortu.
+2819. **FE — Wykres postępu w testach siły maksymalnej (Max Strength PR Chart)** — Wizualizacja wyników w ćwiczeniach siły maksymalnej (np. przysiad, martwy ciąg, wyciskanie) na przestrzeni sezonu.
+2820. **BE — API do rejestrowania testów siłowych (Max Strength Tests API)** — Endpointy do zapisu i odczytu parametrów siły maksymalnej zawodników sekcji męskiej i kobiecej.
+2821. **FE — Formularz zgłaszania wniosków o ubezpieczenie indywidualne (Individual Insurance Form)** — Moduł pozwalający na przesyłanie niezbędnych dokumentów i zgód do rocznego ubezpieczenia sportowego zawodnika.
+2822. **BE — API do obsługi ubezpieczeń indywidualnych (Individual Insurance Manager API)** — Endpointy w Rust generujące zestawienia dla ubezpieczyciela i kontrolujące terminy ważności polis.
+2823. **FE — Płynne animacje w menu ustawień (Fluid Settings Menu Animations)** — Wykorzystanie biblioteki Framer Motion / GSAP w celu nadania wyjątkowej płynności ruchom menu ustawień profilu.
+2824. **BE — Monitorowanie obciążenia bazy danych SQLite (SQLite WAL Defragmentation Worker)** — Worker sprawdzający stopień defragmentacji bazy danych SQLite i automatycznie wyzwalający proces VACUUM w godzinach nocnych.
+2825. **FE — Formularz zgłaszania opinii o treningach (Training Feedback Survey UI)** — Anonimowa ankieta dla uczestników treningów Slavii, pozwalająca ocenić jakość prowadzenia zajęć i stan sprzętu.
+2826. **BE — API do obsługi ankiet treningowych (Training Surveys API)** — Endpointy do zapisu anonimowych odpowiedzi z automatyczną agregacją wyników w panelu administratora.
+2827. **FE — Wykres rozkładu tonażu na ćwiczenia olimpijskie (Olympic Volume Chart)** — Wykres słupkowy prezentujący obciążenie tonażowe w ćwiczeniach olimpijskich (rwanie i podrzut) w poszczególnych mikrocyklach.
+2828. **BE — API do kalkulacji objętości olimpijskiej (Olympic Volume Calculator)** — Algorytm analizujący plan treningowy i weryfikujący zgodność z założeniami periodyzacji sportowej w podnoszeniu ciężarów.
+2829. **FE — Formularz zgłaszania propozycji do galerii sławy (Hall of Fame Nomination Form)** — Moduł pozwalający na zgłaszanie wybitnych wyników sportowych w celu wpisania ich do wirtualnej galerii sławy klubu.
+2830. **BE — API do weryfikacji nominacji do galerii sławy (Hall of Fame Nomination API)** — Endpointy w Rust dla zarządu klubu do zatwierdzania i weryfikacji poprawności zgłoszonych rekordów.
+2831. **FE — Wykres postępu mobilności w ocenie fizjoterapeuty (Mobility Score Progression Chart)** — Wizualny wykres prezentujący punktową ocenę mobilności stawów biodrowych i barkowych wystawianą przez fizjoterapeutę.
+2832. **BE — API do oceniania mobilności (Mobility Assessment API)** — Endpointy pozwalające fizjoterapeutom na ocenę zakresów ruchomości stawów zawodników.
+2833. **FE — Formularz rezerwacji sprzętu do krioterapii (Cryo Equipment Rental Form)** — Panel pozwalający na rezerwację klubowych urządzeń do krioterapii miejscowej (np. po urazach).
+2834. **BE — API do rezerwacji urządzeń krioterapeutycznych (Cryo Inventory API)** — System kontroli rezerwacji sprzętu do krioterapii, blokujący terminy w przypadku braku dostępnego sprzętu na stanie.
+2835. **FE — Wykres tętna maksymalnego w bojach (Max Heart Rate Chart)** — Wykres liniowy prezentujący maksymalne wartości tętna zarejestrowane podczas serii maksymalnych (PR).
+
+### Inicjatywy pozakodowe (Klub, trening i organizacja) — pomysły 2836–3000
+
+2836. **ORG — Klubowy system motywacyjny "Gryf Miesiąca" (Barbell of the Month)** — Comiesięczna nagroda w postaci vouchera na suplementy dla zawodnika o najwyższej frekwencji i postępie Sinclaira.
+2837. **ORG — Modernizacja nawierzchni sali (Rubber Platform Liners)** — Wymiana amortyzujących mat gumowych na pomostach treningowych na maty o zwiększonej gęstości, redukujące odbicie sztangi i hałas.
+2838. **ORG — Cykl wykładów z historii podnoszenia ciężarów w Rudzie Śląskiej (Local Lifting History)** — Prelekcje i wystawy pamiątek dawnych mistrzów Slavii dla młodzieży i mieszkańców Śląska.
+2839. **ORG — Strefa odpoczynku i integracji (Athlete Lounge Setup)** — Wyposażenie kącika z sofami, ekspresem do kawy, czasopismami branżowymi i telewizorem do analizy startów w grupie.
+2840. **ORG — Klubowy dzień dziecka z podnoszeniem ciężarów (Kids Barbell Day)** — Gry i zabawy ogólnorozwojowe z elementami techniki dwuboju na wesoło (np. z użyciem lekkich plastikowych gryfów).
+2841. **ORG — Zakup profesjonalnych stojaków na obciążenia (Mobile Plate Tree Racks)** — Mobilne stojaki na talerze treningowe przy każdym pomoście, ułatwiające utrzymanie porządku na sali.
+2842. **ORG — Współpraca z psychologiem sportowym (Sport Psychologist Consultations)** — Regularne dyżury psychologa na sali, pomagającego zawodnikom w radzeniu sobie ze stresem startowym i presją wyniku.
+2843. **ORG — Wewnętrzny turniej "Pierwszy Krok Slavia" (Rookie Club Tournament)** — Zawody z uproszczoną oceną techniczną dedykowane wyłącznie dla osób trenujących krócej niż 6 miesięcy.
+2844. **ORG — Instalacja profesjonalnych tablic kredowych (PR Chalkboards)** — Zamontowanie tablic przy każdym pomoście do bieżącego zapisywania celów treningowych i aktualnych rekordów życiowych.
+2845. **ORG — Badania diagnostyczne wad postawy (Postural Screenings)** — Bezpłatne, profilaktyczne badania kręgosłupa i stóp dla dzieci i młodzieży z lokalnych szkół podstawowych.
+2846. **ORG — Zakup nowoczesnych pasów telemetrycznych (Heart Rate Monitors Kit)** — Zestaw pasów do pomiaru tętna do wypożyczenia przez zawodników na czas treningu o charakterze kondycyjnym.
+2847. **ORG — Procedura dezynfekcji i konserwacji pasów (Belt Sanitation Routine)** — Regularne czyszczenie i odświeżanie skórzanych oraz neoprenowych pasów treningowych będących na wyposażeniu klubu.
+2848. **ORG — Klubowe plecaki i torby sportowe (Official Slavia Backpacks)** — Produkcja i dystrybucja pojemnych, profesjonalnych plecaków z dedykowanymi przegrodami na buty startowe i pas.
+2849. **ORG — Tablica chwały z autografami mistrzów (Champions Autograph Wall)** — Wydzielone miejsce na ścianie klubu, gdzie zawodnicy zdobywający medale Mistrzostw Polski mogą złożyć swój podpis.
+2850. **ORG — Cykliczne seminaria z techniki przysiadów i ciągów (Squat and Pull Masterclasses)** — Otwarte, płatne szkolenia techniczne dla entuzjastów trójboju, crossfitu i kulturystyki z Rudy Śląskiej.
+2851. **ORG — Współpraca z lekarzem medycyny sportowej (Sports Doctor Partnership)** — Szybka, dedykowana ścieżka badań okresowych dla zawodników Slavii w celu sprawnego wyrabiania licencji startowych.
+2852. **ORG — Klubowy kalendarz ścienny (Annual Slavia Wall Calendar)** — Wydanie eleganckiego kalendarza ze zdjęciami kadry i terminami najważniejszych startów w sezonie.
+2853. **ORG — Bezpłatne konsultacje fizjoterapeutyczne (Monthly Injury Clinics)** — Dedykowane godziny konsultacji dla zawodników odczuwających dolegliwości bólowe, połączone z zaleceniami rehabilitacyjnymi.
+2854. **ORG — Wdrożenie standardów IWF w sędziowaniu (IWF Referee Standards Training)** — Szkolenie dla wewnętrznych sędziów z zakresu najnowszych interpretacji przepisów IWF (np. kontakt sztangi z udem).
+2855. **ORG — Klubowa gablota z pucharami i medalami (Slavia Trophy Cabinet)** — Podświetlana, estetyczna witryna w strefie wejściowej, prezentująca historyczne i aktualne trofea sekcji.
+2856. **ORG — Zakup stojaków pod sztangę z regulacją wysokości (Adjustable Squat Stands)** — Zastąpienie starych stojaków nowoczesnymi stojakami z precyzyjną, hydrauliczną regulacją wysokości gryfu.
+2857. **ORG — Klubowa biblioteczka sportowa (Athlete Book Exchange)** — Półka z literaturą sportową, biomechaniką i biografiami wybitnych sztangistów dostępna dla wszystkich członków.
+2858. **ORG — Program wolontariatu dla młodzieży (Youth Volunteer Program)** — Angażowanie młodszych zawodników w pomoc przy organizacji zawodów w celu budowania poczucia odpowiedzialności.
+2859. **ORG — Szkolenie z bezpiecznego zrzucania ciężarów (Safe Barbell Dropping Seminar)** — Praktyczne zajęcia dla początkujących na temat bezpiecznej techniki puszania sztangi w rwaniu i podrzucie.
+2860. **ORG — Tabliczki z nazwami pomostów (Platform Named Labels)** — Nazwanie pomostów treningowych imionami najwybitniejszych zawodników w historii klubu CKS Slavia.
+2861. **ORG — Partnerstwo z lokalnym sklepem ze zdrową żywnością (Healthy Food Discounts)** — Dedykowane zniżki na zakupy zdrowej żywności, orzechów i suplementów dla członków klubu z legitymacją.
+2862. **ORG — Dofinansowanie kursów trenerskich dla starszych zawodników (Coaching Course Scholarships)** — Program wsparcia dla zawodników kończących karierę startową, chcących rozwijać się jako trenerzy Slavii.
+2863. **ORG — Wspólne wyjazdy na obozy zimowe (Winter Weightlifting Camp)** — Organizacja tygodniowego obozu w górach łączącego treningi siłowe z regeneracją i sportami zimowymi.
+2864. **ORG — Audyt wibracji i tłumienia hałasu na sali (Noise and Vibration Safety Audit)** — Profesjonalne pomiary drgań i hałasu przy zrzucaniu sztang, wdrożenie dodatkowych mat wygłuszających.
+2865. **ORG — Broszura "Pierwszy Start" (Rookie Competition Guidebook)** — Drukowany przewodnik dla debiutantów wyjaśniający procedury zawodów, zasady ważenia i podawania podejść.
+2866. **ORG — Ekologiczna zbiórka zużytego sprzętu (Gear Recycling Drive)** — Zbiórka zużytych pasów, butów czy owijek w celu ich renowacji i przekazania najmłodszym adeptom.
+2867. **ORG — Zakup profesjonalnych wałków i piłek do masażu (Mobility Tools Upgrade)** — Wyposażenie sali w kompletny zestaw rollerów, piłeczek lacrosse i gum oporowych do rozgrzewki i mobilizacji.
+2868. **ORG — Badania składu ciała metodą bioimpedancji (BIA Body Composition Tests)** — Kwartalne pomiary poziomu tkanki tłuszczowej i masy mięśniowej dla zawodników kadry w celu optymalizacji diety.
+2869. **ORG — Przygotowanie profesjonalnego stanowiska sędziowskiego (Official Referee Table Setup)** — Zakup estetycznych stolików sędziowskich z systemem sygnalizacji świetlnej (białe/czerwone światła).
+2870. **ORG — Kolorowe oznaczenie twardości gryfów (Barbell Stiffness Color Rings)** — Zastosowanie silikonowych opasek na końcach gryfów ułatwiających identyfikację ich elastyczności.
+2871. **ORG — Kącik dla rodzin zawodników (Family Waiting Area)** — Bezpieczne miejsce z krzesełkami i zabawkami dla dzieci, umożliwiające bliskim oczekiwanie na zakończenie treningu.
+2872. **ORG — Zbiórki charytatywne pod szyldem Slavii (Charity Lifting Challenges)** — Organizacja zawodów tonażowych, z których dochód (np. 1 gr za każdy podniesiony kilogram) przeznaczany jest na cele charytatywne.
+2873. **ORG — Obowiązkowy kurs pierwszej pomocy dla trenerów (CPR Certification for Coaches)** — Coroczne szkolenie z zakresu reanimacji i obsługi defibrylatora AED dla całej kadry szkoleniowej.
+2874. **ORG — Modernizacja pojemników na magnezję (Dust-Free Chalk Boxes)** — Wymiana starych pojemników na specjalnie zaprojektowane skrzynie ograniczające pylenie magnezji na sali.
+2875. **ORG — Regularna produkcja filmów promocyjnych (Slavia Media Content Production)** — Nagrywanie i montaż krótkich rolek i filmów z treningów w celu budowania wizerunku nowoczesnej sekcji.
+2876. **ORG — Profesjonalny ścienny stojak na pasy (Gym Belt Organizer)** — Zamontowanie wieszaka ułatwiającego segregację i przechowywanie pasów ciężarowych według rozmiarów.
+2877. **ORG — Warsztaty z techniki podrzutu dla zawodników crossfit (Clean & Jerk Masterclass)** — Płatne szkolenia techniczne stanowiące dodatkowe źródło finansowania działalności statutowej klubu.
+2878. **ORG — Pakiet powitalny dla nowych członków (New Member Welcome Package)** — Wręczanie każdemu nowemu zawodnikowi koszulki klubowej, shakera i informatora o zasadach panujących na sali.
+2879. **ORG — Pomiary elastyczności pomostów startowych (Platform Elasticity Audit)** — Regularna kontrola stanu technicznego pomostów w celu zapewnienia równego i bezpiecznego amortyzowania uderzeń.
+2880. **ORG — Instalacja zewnętrznego baneru reklamowego (Outdoor Advertising Banner)** — Montaż wielkoformatowej reklamy na elewacji budynku, informującej o naborach do sekcji podnoszenia ciężarów.
+2881. **ORG — Konkurs na projekt oficjalnego plakatu zawodów (Competition Poster Contest)** — Zaangażowanie młodzieży z rudzkich szkół artystycznych w projektowanie plakatów promujących klubowe turnieje.
+2882. **ORG — Wdrożenie IWF-owskiego protokołu ważenia (IWF Weight Protocol)** — Wprowadzenie rygorystycznych procedur ważenia (zamknięte pomieszczenie, obecność sędziego) na zawodach wewnętrznych.
+2883. **ORG — System nagradzania za pomoc w sprzątaniu (Clean Gym Points)** — Program motywacyjny dla najmłodszych grup, uczący dbania o porządek na pomoście po zakończonym treningu.
+2884. **ORG — Stypendia na obozy letnie dla juniorów (Summer Camp Scholarships)** — Stworzenie funduszu wspierającego wyjazdy na obozy sportowe dla dzieci z rodzin w trudnej sytuacji materialnej.
+2885. **ORG — Zakup kamery szerokokątnej do analizy techniki (Wide-Angle Technique Camera)** — Montaż stałej kamery nad głównym pomostem startowym, umożliwiającej precyzyjne nagrywanie prób z boku i z przodu.
+2886. **ORG — Współpraca z psychodietetykiem sportowym (Sports Dietetics Consultations)** — Porady z zakresu relacji z jedzeniem, szczególnie istotne dla zawodników borykających się z ciągłym kontrolowaniem wagi startowej.
+2887. **ORG — Tabliczki z zasadami savoir-vivre na siłowni (Gym Etiquette Signs)** — Estetyczne grafiki przypominające o odkładaniu ciężarów na miejsce, czyszczeniu gryfów z krwi/potu i szacunku do współćwiczących.
+2888. **ORG — Zakup profesjonalnej szafki medycznej (Advanced First Aid Cabinet)** — Wyposażenie sali w kompletną, łatwo dostępną szafkę pierwszej pomocy z lodem w sprayu, opaskami uciskowymi i środkami dezynfekującymi.
+2889. **ORG — Okresowe badania wytrzymałości pasów treningowych (Belt Safety Testing)** — Sprawdzanie szwów, klamer i zapięć pasów będących na wyposażeniu klubu w celu zapewnienia bezpieczeństwa.
+2890. **ORG — Rodzinny piknik sportowo-rekreacyjny (Slavia Family Picnic)** — Organizacja letniego spotkania dla rodzin zawodników z łatwymi konkurencjami sprawnościowymi i grillem.
+2891. **ORG — Szkolenie z social media dla kadry klubu (Social Media Training for Coaches)** — Warsztaty z robienia dobrych zdjęć, pisania angażujących postów i relacjonowania zawodów na żywo dla trenerów.
+2892. **ORG — Zakup ścianki reklamowej do wywiadów (Official Press Backdrop)** — Ścianka z logotypami klubu i sponsorów do robienia zdjęć zawodnikom po dekoracjach medalowych.
+2893. **ORG — Procedura okresowej kalibracji wag (Scale Calibration Schedule)** — Sprawdzanie dokładności wag klubowych za pomocą certyfikowanych odważników wzorcowych co 6 miesięcy.
+2894. **ORG — Poradnik suplementacji sportowej dla juniorów (Junior Nutrition Guide)** — Opracowanie rzetelnego, opartego na badaniach kompendium wiedzy o suplementach (kreatyna, białko, witaminy) dla młodych zawodników.
+2895. **ORG — Fizyczna skrzynka na pomysły na hali (Suggestion Box)** — Drewniana skrzynka na sali, do której zawodnicy mogą wrzucać anonimowe karteczki z pomysłami na usprawnienie działania klubu.
+2896. **ORG — Zakup nowoczesnych gum oporowych do rozgrzewki (Resistance Bands Upgrade)** — Wyposażenie sali w komplet gum o różnych stopniach oporu do mobilizacji stawów biodrowych i barkowych.
+2897. **ORG — Warsztaty z techniki podrzutu dla kobiet (Female Weightlifting Workshops)** — Specjalistyczne warsztaty nakierowane na popularyzację podnoszenia ciężarów wśród kobiet, prowadzone przez utytułowane zawodniczki klubu.
+2898. **ORG — Program mentorski starszych zawodników dla młodzieży (Athlete Mentorship)** — Parowanie doświadczonych zawodników z sekcją młodszą w celu wsparcia technicznego, mentalnego i pomocy w adaptacji w klubie.
+2899. **ORG — Kwartalny przegląd gumowych mat amortyzujących (Drop Zone Safety Audit)** — Kontrola stanu technicznego gumowych mat pod kątem pęknięć i zużycia materiału tłumiącego uderzenia sztangi.
+2900. **ORG — Roczna gala podsumowania roku sportowego (Slavia Annual Gala)** — Eleganckie wydarzenie na koniec roku, podczas którego wręczane są statuetki dla najlepszych zawodników, podziękowania dla sponsorów i wolontariuszy.
+2901. **ORG — Klubowy system wyróżnień "Technik Miesiąca" (Technical Mastery Award)** — Nagradzanie zawodnika, który w danym miesiącu wykazał się największą dbałością o poprawność techniczną wykonywanych bojów.
+2902. **ORG — Zakup dedykowanych gryfów do rwania (Snatch Barbells Upgrade)** — Doposażenie sali w gryfy o zwiększonej sprężystości, dedykowane specjalnie do treningu rwania.
+2903. **ORG — Program partnerski z lokalnymi fizjoterapeutami (Physio Referral Program)** — Zapewnienie zawodnikom klubu priorytetowych terminów i zniżek na zabiegi rehabilitacyjne u zaprzyjaźnionych specjalistów.
+2904. **ORG — Szkolenie z zakresu przeciwdziałania kontuzjom kolan (Knee Injury Prevention Seminar)** — Warsztaty prowadzone przez fizjoterapeutę na temat wzmacniania więzadeł i prawidłowej biomechaniki przysiadu.
+2905. **ORG — Klubowy system wypożyczania wałków (Foam Roller Loan System)** — Umożliwienie zawodnikom wypożyczania rollerów do domu w celu kontynuowania regeneracji po ciężkich mikrotaktach.
+2906. **ORG — Zakup profesjonalnego stojaka na magnezję (Ergonomic Chalk Station)** — Mobilna, wysoka stacja magnezji zapobiegająca rozsypywaniu się proszku i ułatwiająca nanoszenie na dłonie.
+2907. **ORG — Współpraca z lokalnymi dietetykami (Nutritionist Partnership)** — Zniżki dla członków klubu na indywidualne plany dietetyczne i analizy składu ciała.
+2908. **ORG — Wewnętrzny turniej "Slavia Masters Cup" (Masters Club Tournament)** — Zawody dedykowane dla zawodników powyżej 35 roku życia z przelicznikiem Meltzer-Faber.
+2909. **ORG — Instalacja tablicy z aktualnościami na korytarzu (Notice Board Upgrade)** — Nowoczesna, magnetyczna tablica informacyjna prezentująca bieżące komunikaty i listy startowe.
+2910. **ORG — Badania wydolnościowe dla zawodników kadry (Cardiorespiratory Fitness Tests)** — Okresowe testy VO2max w celu monitorowania poziomu wydolności tlenowej i beztlenowej zawodników.
+2911. **ORG — Zakup nowoczesnych pasów neoprenowych (Neoprene Lifting Belts)** — Doposażenie sali w lżejsze pasy neoprenowe, idealne do treningu ćwiczeń uzupełniających.
+2912. **ORG — Procedura konserwacji zamków do sztangi (Barbell Collar Maintenance)** — Regularne czyszczenie i smarowanie zacisków sprężynowych oraz zacisków IWF w celu zapewnienia stabilności obciążenia.
+2913. **ORG — Klubowa odzież casualowa (Official Slavia Streetwear)** — Zaprojektowanie i produkcja wysokiej jakości bluz, czapek i koszulek do noszenia na co dzień.
+2914. **ORG — Tablica rekordów Śląska na ścianie (Silesian Records Board)** — Estetyczna tablica prezentująca aktualne rekordy Śląska w podnoszeniu ciężarów z wyróżnieniem zawodników Slavii.
+2915. **ORG — Cykl wykładów z anatomii funkcjonalnej (Functional Anatomy Lectures)** — Szkolenie dla trenerów i zawodników na temat biomechaniki układu ruchu w podnoszeniu ciężarów.
+2916. **ORG — Współpraca z lekarzem ortopedą (Orthopedic Specialist Partnership)** — Zapewnienie szybkiej diagnostyki obrazowej (USG, rezonans) dla zawodników w przypadku nagłych urazów.
+2917. **ORG — Klubowy planer treningowy w formie papierowej (Slavia Paper Planner)** — Wydanie dedykowanego notesu do odręcznego zapisywania serii treningowych dla tradycjonalistów.
+2918. **ORG — Warsztaty z rolowania i automasażu (Self-Myofascial Release Workshop)** — Praktyczne szkolenie z technik uwalniania powięziowego za pomocą rollerów i piłek.
+2919. **ORG — Wdrożenie sędziowania na zawodach wewnętrznych (Official Referee Rules)** — Wprowadzenie obowiązku sędziowania prób przez licencjonowanych sędziów podczas ligi klubowej.
+2920. **ORG — Klubowa gablota z pamiątkami historycznymi (Slavia History Cabinet)** — Prezentacja dawnych legitymacji, medali i wycinków prasowych z początków działalności CKS Slavia.
+2921. **ORG — Zakup stojaków pod sztangę do martwego ciągu (Deadlift Jacks Upgrade)** — Ułatwienie nakładania i zdejmowania ciężarów poprzez zakup profesjonalnych podnośników do gryfów.
+2922. **ORG — Klubowa wymiana sprzętu treningowego (Gear Swap Day)** — Cykliczne wydarzenie, podczas którego zawodnicy mogą wymienić się nieużywanymi butami, pasami czy koszulkami.
+2923. **ORG — Program edukacyjny dla młodzieży szkolnej (Weightlifting Education in Schools)** — Lekcje wychowania fizycznego prowadzone przez trenerów Slavii w celu promocji dyscypliny.
+2924. **ORG — Szkolenie z zakresu bezpiecznego podnoszenia ciężarów przez dzieci (Youth Safety Seminar)** — Warsztaty dla rodziców na temat wpływu treningu oporowego na rozwój kośćca dzieci.
+2925. **ORG — Tabliczki z instrukcją obsługi stoperów (Timer Instruction Labels)** — Czytelne grafiki ułatwiające zawodnikom samodzielne konfigurowanie stoperów przerw na pomostach.
+2926. **ORG — Partnerstwo z lokalną siłownią partnerską (Partner Gym Discounts)** — Możliwość bezpłatnego korzystania z sauny lub basenu w partnerskim obiekcie dla kadry klubu.
+2927. **ORG — Dofinansowanie kursów sędziowskich dla starszych zawodników (Referee Course Scholarships)** — Program wsparcia dla osób chcących uzyskać licencję sędziego podnoszenia ciężarów.
+2928. **ORG — Wspólne wyjazdy na zawody międzynarodowe (International Tournaments Trips)** — Organizowanie wyjazdów kibiców na Mistrzostwa Europy lub Świata w celu wspierania reprezentantów Polski.
+2929. **ORG — Audyt poziomu natężenia oświetlenia na sali (Gym Lighting Safety Audit)** — Profesjonalne pomiary natężenia światła na pomostach w celu zapewnienia optymalnych warunków do treningu.
+2930. **ORG — Przewodnik po przepisach antydopingowych (Anti-Doping Regulations Guide)** — Opracowanie broszury informującej o prawach i obowiązkach zawodnika podczas kontroli antydopingowej.
+2931. **ORG — Ekologiczny program oszczędzania energii na sali (Green Gym Program)** — Wdrożenie zasad redukcji zużycia prądu (wyłączanie nieużywanego oświetlenia, klimatyzacji) w klubie.
+2932. **ORG — Zakup profesjonalnych gum do rozciągania (Heavy Duty Mobility Bands)** — Doposażenie sali w grube gumy oporowe dedykowane do trakcji stawów biodrowych i barkowych.
+2933. **ORG — Badania profilaktyczne kardiologiczne (Electrocardiogram Screenings)** — Bezpłatne badania EKG dla zawodników wyczynowych w celu wykluczenia ukrytych wad serca.
+2934. **ORG — Przygotowanie profesjonalnego nagłośnienia zawodów (Official Sound System Setup)** — Zakup bezprzewodowych mikrofonów i głośników o dużej mocy do obsługi spikerskiej turniejów.
+2935. **ORG — Kolorowe oznaczenie twardości gryfów startowych (Competition Barbell Rings)** — Zastosowanie złotych i srebrnych oznaczeń na gryfach przeznaczonych wyłącznie do oficjalnych startów.
+2936. **ORG — Strefa kibica podczas zawodów wyjazdowych (Away Comp Fan Zone)** — Organizowanie wspólnego oglądania transmisji live z Mistrzostw Polski na dużym ekranie na hali.
+2937. **ORG — Obowiązkowy kurs psychologii sportu dla trenerów (Psychology Course for Coaches)** — Szkolenie z zakresu motywowania zawodników, radzenia sobie z porażką i budowania pewności siebie.
+2938. **ORG — Modernizacja stacji magnezji (Ergonomic Chalk Station Upgrade)** — Zakup profesjonalnych, wysokich misek na magnezję zapobiegających pyleniu proszku.
+2939. **ORG — Regularne relacje live na social media (Slavia Live Streams)** — Transmitowanie na żywo treningów kadry i zawodów wewnętrznych w celu popularyzacji klubu.
+2940. **ORG — Profesjonalny ścienny wieszak na owijki (Wrist Wraps Organizer)** — Zamontowanie ściennego stojaka ułatwiającego suszenie i przechowywanie owijek na nadgarstki.
+2941. **ORG — Warsztaty z techniki rwania dla trójboistów (Snatch Masterclass for Powerlifters)** — Płatne szkolenia techniczne stanowiące dodatkowe źródło dochodu dla klubu.
+2942. **ORG — Pakiet startowy dla juniorów (Youth Welcome Package)** — Wręczanie każdemu młodemu zawodnikowi bidonu, worka na buty i koszulki treningowej CKS Slavia.
+2943. **ORG — Pomiary sprężystości pomostów rozgrzewkowych (Warm-up Platform Elasticity Audit)** — Regularna kontrola stanu technicznego pomostów w strefie rozgrzewkowej.
+2944. **ORG — Instalacja zewnętrznego kasetonu podświetlanego (LED Logo Sign)** — Montaż podświetlanego logo klubu nad wejściem głównym na halę sportową.
+2945. **ORG — Konkurs na najlepsze zdjęcie z treningu (Gym Photo Contest)** — Zaangażowanie społeczności klubowej w tworzenie materiałów promocyjnych (nagrody w postaci mercha).
+2946. **ORG — Wdrożenie procedur IWF-owskiego ważenia (IWF Weight Protocol Implementation)** — Wymóg przeprowadzania oficjalnego ważenia na kalibrowanej wadze przed każdym turniejem klubowym.
+2947. **ORG — System nagradzania za pomoc w konserwacji sprzętu (Barbell Care Points)** — Program motywacyjny dla zawodników dbających o czystość i stan techniczny gryfów.
+2948. **ORG — Stypendia na obozy zimowe dla juniorów (Winter Camp Scholarships)** — Stworzenie funduszu wspierającego wyjazdy na obozy kondycyjne dla dzieci z rodzin o niskich dochodach.
+2949. **ORG — Zakup kamery o wysokim klatkażu do analizy techniki (High-Speed Technique Camera)** — Zakup kamery nagrywającej w 240 kl./s w celu analizy fazy podrzutu klatka po klatce.
+2950. **ORG — Współpraca z fizjoterapeutą dziecięcym (Pediatric Physiotherapy Partnership)** — Specjalistyczne konsultacje wad postawy dla najmłodszych grup treningowych.
+2951. **ORG — Tabliczki z zasadami bezpieczeństwa przy asekuracji (Spotting Safety Signs)** — Czytelne grafiki przypominające o zasadach bezpiecznej asekuracji podczas przysiadów.
+2952. **ORG — Zakup profesjonalnego defibrylatora AED (AED Defibrillator Upgrade)** — Wyposażenie hali w automatyczny defibrylator zewnętrzny z czytelnym oznaczeniem na ścianie.
+2953. **ORG — Okresowe badania elastyczności pasów startowych (Competition Belt Safety Testing)** — Sprawdzanie stanu technicznego pasów IWF przed dopuszczeniem do startu w zawodach mistrzowskich.
+2954. **ORG — Rodzinny turniej sprawnościowy (Slavia Family Games)** — Organizacja zawodów sprawnościowych (biegi, skoki, rzuty) dla zawodników i ich rodziców.
+2955. **ORG — Szkolenie z social media dla zawodników kadry (Social Media Training for Athletes)** — Warsztaty z zakresu budowania marki osobistej i bezpiecznego korzystania z mediów społecznościowych.
+2956. **ORG — Zakup tablicy reklamowej sponsorskiej (Sponsor Board Upgrade)** — Estetyczna tablica z logotypami sponsorów umieszczona w centralnym punkcie hali treningowej.
+2957. **ORG — Procedura okresowej konserwacji pomostów (Platform Wood Maintenance)** — Regularne cyklinowanie i lakierowanie drewnianych części pomostów startowych.
+2958. **ORG — Poradnik suplementacji sportowej dla kobiet (Female Supplement Guide)** — Opracowanie zaleceń suplementacyjnych dostosowanych do kobiecej fizjologii i potrzeb treningowych.
+2959. **ORG — Skrzynka na zgłoszenia awarii sprzętu (Gear Repair Box)** — Drewniana skrzynka, do której zawodnicy mogą wrzucać zgłoszenia o pękniętych matach, uszkodzonych zamkach czy luźnych stojakach.
+2960. **ORG — Zakup nowoczesnych gum oporowych do rozgrzewki (Warm-up Loops Upgrade)** — Wyposażenie sali w mniejsze gumy typu mini-band do aktywacji pośladków przed przysiadami.
+2961. **ORG — Warsztaty z techniki podrzutu dla zawodników crossfit (Female Olympic Lifting Workshops)** — Płatne warsztaty dwuboju olimpijskiego dedykowane specjalnie dla kobiet trenujących crossfit.
+2962. **ORG — Program mentorski starszych zawodników dla młodzieży (Senior-Junior Mentorship Program)** — Oficjalny system opieki doświadczonych zawodników nad młodymi adeptami rozpoczynającymi treningi.
+2963. **ORG — Kwartalny przegląd gumowych mat amortyzujących (Drop Zone Safety Audits Program)** — Kwalifikowane audyty stanu nawierzchni amortyzującej w strefach zrzutu ciężarów.
+2964. **ORG — Roczne podsumowanie sezonu sportowego (Slavia Annual Gala Dinner)** — Uroczysta kolacja dla zawodników, trenerów, działaczy i sponsorów podsumowująca osiągnięcia minionego roku.
+2965. **ORG — Klubowy system wyróżnień "Kolega Miesiąca" (Sportsmanship Award)** — Nagradzanie zawodnika, który w danym miesiącu wykazał się największą pomocą i szacunkiem wobec innych na sali.
+2966. **ORG — Zakup dedykowanych gryfów do podrzutu (Clean & Jerk Barbells Upgrade)** — Doposażenie sali w gryfy o zwiększonej twardości, idealne do dynamicznych powtórzeń w podrzucie.
+2967. **ORG — Program partnerski z lokalnymi saunami (Sauna Referral Program)** — Zapewnienie zawodnikom priorytetowych terminów i zniżek na seanse saunowe w zaprzyjaźnionych obiektach.
+2968. **ORG — Szkolenie z zakresu przeciwdziałania kontuzjom barków (Shoulder Injury Prevention Seminar)** — Warsztaty prowadzone przez fizjoterapeutę na temat wzmacniania stożka rotatorów i mobilności obręczy barkowej.
+2969. **ORG — Klubowy system wypożyczania gum (Mobility Bands Loan System)** — Umożliwienie zawodnikom wypożyczania gum oporowych do domu w celu rozgrzewki przedtreningowej.
+2970. **ORG — Zakup profesjonalnego stojaka na magnezję (Mobile Chalk Station Upgrade)** — Mobilna miska magnezji na kółkach zapobiegająca rozsypywaniu się proszku po całej sali.
+2971. **ORG — Współpraca z lokalnymi dietetykami klinicznymi (Clinical Dietitian Partnership)** — Zniżki dla członków klubu na konsultacje dietetyczne i badania nietolerancji pokarmowych.
+2972. **ORG — Wewnętrzny turniej "Slavia Youth Cup" (Youth Club Tournament)** — Zawody dedykowane dla dzieci poniżej 15 roku życia z uproszczoną punktacją techniczną.
+2973. **ORG — Instalacja tablicy z aktualnościami na hali (Gym Notice Board Upgrade)** — Nowoczesna gablota informacyjna prezentująca bieżące komunikaty i rekordy klubu.
+2974. **ORG — Badania wydolnościowe dla zawodników sekcji Masters (Masters VO2max Tests)** — Okresowe testy sprawnościowe w celu monitorowania zdrowia kardiologicznego starszych zawodników.
+2975. **ORG — Zakup nowoczesnych pasów skórzanych (Premium Leather Lifting Belts)** — Doposażenie sali w grube, skórzane pasy trójbojowe i ciężarowe z klamrą szybkiego zapinania.
+2976. **ORG — Procedura konserwacji gryfów startowych (Competition Barbell Maintenance)** — Regularne czyszczenie i oliwienie gryfów startowych w celu przedłużenia ich żywotności.
+2977. **ORG — Klubowa odzież sportowa dla kobiet (Official Slavia Female Activewear)** — Zaprojektowanie i produkcja profesjonalnych legginsów, topów i spodenek treningowych.
+2978. **ORG — Tablica rekordów Polski na ścianie (National Records Board)** — Estetyczna tablica prezentująca aktualne rekordy Polski w dwuboju z wyróżnieniem zawodników CKS Slavia.
+2979. **ORG — Cykl wykładów z teorii treningu sportowego (Principles of Strength Training)** — Szkolenie dla zawodników na temat planowania obciążeń i periodyzacji treningowej.
+2980. **ORG — Współpraca z lekarzem neurologiem (Neurological Specialist Partnership)** — Zapewnienie szybkiej diagnostyki w przypadku bólów kręgosłupa czy drętwienia kończyn u zawodników.
+2981. **ORG — Klubowy dziennik treningowy w formie aplikacji (Slavia Digital Planner)** — Wdrożenie dedykowanego systemu planowania i zapisu treningów dla wszystkich grup ćwiczących.
+2982. **ORG — Warsztaty z technik rozciągania powięziowego (Fascial Stretching Workshop)** — Praktyczne szkolenie z zaawansowanych technik zwiększania elastyczności mięśni i powięzi.
+2983. **ORG — Wdrożenie sędziowania elektronicznego na zawodach (Electronic Referee System)** — Zakup tabletów sędziowskich i oprogramowania do automatycznego zliczania głosów sędziów.
+2984. **ORG — Klubowa gablota z pucharami weteranów (Masters Trophy Cabinet)** — Prezentacja pucharów i medali zdobytych przez sekcję weteranów CKS Slavia.
+2985. **ORG — Zakup stojaków pod sztangę do przysiadów ze sztangą z tyłu (Back Squat Stands)** — Zastąpienie starych stojaków stabilnymi stojakami z regulacją szerokości rozstawu.
+2986. **ORG — Klubowy system wymiany książek (Book Club Exchange)** — Półka z książkami o tematyce sportowej, psychologii i rozwoju osobistym w strefie odpoczynku.
+2987. **ORG — Program edukacyjny dla młodzieży licealnej (Weightlifting Education in High Schools)** — Pokazy techniki dwuboju i prelekcje o korzyściach płynących ze sportów siłowych w szkołach średnich.
+2988. **ORG — Szkolenie z zakresu bezpiecznego treningu siłowego seniorów (Masters Strength Seminar)** — Warsztaty dla starszych osób na temat profilaktyki osteoporozy i wzmacniania mięśni głębokich.
+2989. **ORG — Tabliczki z instrukcją obsługi stoperów (Gym Timer Instruction Labels)** — Czytelne instrukcje konfigurowania interwałowych stoperów treningowych na pomostach.
+2990. **ORG — Partnerstwo z lokalną siłownią partnerską (Partner Gym Sauna Discounts)** — Możliwość korzystania z sauny i odnowy biologicznej w partnerskim klubie fitness na preferencyjnych warunkach.
+2991. **ORG — Dofinansowanie kursów trenerskich dla weteranów (Masters Coaching Scholarships)** — Program wsparcia dla starszych zawodników chcących uzyskać uprawnienia instruktorskie.
+2992. **ORG — Wspólne wyjazdy na zawody ligowe (League Competition Supporters Trip)** — Organizowanie transportu dla kibiców na starty drużynowe Slavii w Ekstralidze podnoszenia ciężarów.
+2993. **ORG — Audyt poziomu natężenia oświetlenia na pomoście startowym (Competition Lighting Safety Audit)** — Pomiary oświetlenia w celu zapewnienia optymalnych warunków dla sędziów i zawodników podczas turniejów.
+2994. **ORG — Przewodnik po substancjach zabronionych (Prohibited List Pocket Guide)** — Opracowanie kieszonkowej wersji listy zabronionych substancji POLADA/WADA dla zawodników klubu.
+2995. **ORG — Ekologiczny program recyklingu wody (Green Gym Water Saving)** — Instalacja perlatorów w kranach i prysznicach w celu ograniczenia zużycia wody na hali.
+2996. **ORG — Zakup profesjonalnych gum oporowych do trakcji stawów (Joint Traction Bands)** — Doposażenie sali w grube gumy dedykowane do mobilizacji stawu skokowego i biodrowego.
+2997. **ORG — Badania profilaktyczne kardiologiczne (Masters Electrocardiogram Screenings)** — Bezpłatne badania EKG dla zawodników powyżej 35 roku życia przed startem w sezonie weteranów.
+2998. **ORG — Przygotowanie profesjonalnego nagłośnienia hali (Gym Sound System Setup)** — Montaż głośników ściennych w celu odtwarzania dynamicznej muzyki treningowej na całej hali.
+2999. **ORG — Kolorowe oznaczenie twardości gryfów treningowych (Training Barbell Rings)** — Zastosowanie kolorowych pierścieni na końcach gryfów ułatwiających ich segregację na stojakach.
+3000. **ORG — Jubileuszowa gala podsumowania stulecia klubu (Slavia Centenary Sports Gala)** — Uroczyste wydarzenie celebrujące 100-lecie powstania sekcji ciężarowej CKS Slavia z wręczeniem odznaczeń państwowych i klubowych dla zasłużonych.
 
 ---
 

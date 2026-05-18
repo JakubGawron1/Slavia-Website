@@ -7,6 +7,14 @@ export interface ChatThread {
   title?: string | null
   created_at: string
   updated_at: string
+  peer_last_seen_at?: string | null
+  peer_online?: boolean
+}
+
+export interface ChatReactionSummary {
+  emoji: string
+  count: number
+  reacted_by_me: boolean
 }
 
 export interface ChatMessage {
@@ -17,14 +25,34 @@ export interface ChatMessage {
   created_at: string
   sender_username?: string | null
   sender_photo_url?: string | null
+  reactions?: ChatReactionSummary[]
 }
 
 export function useChat() {
   const api = useApi()
+  const chatPresenceOn = useExperimentalFlag('chat_online_presence')
+  const chatReactionsOn = useExperimentalFlag('chat_message_reactions')
   const threads = ref<ChatThread[]>([])
   const activeThreadId = ref<string | null>(null)
   const messages = ref<ChatMessage[]>([])
   const loading = ref(false)
+  let presenceTimer: ReturnType<typeof setInterval> | null = null
+
+  function stopPresencePing() {
+    if (presenceTimer) {
+      clearInterval(presenceTimer)
+      presenceTimer = null
+    }
+  }
+
+  function startPresencePing() {
+    if (!import.meta.client || !chatPresenceOn.value) return
+    stopPresencePing()
+    void api(apiRoutes.chat.presence, { method: 'POST' }).catch(() => {})
+    presenceTimer = setInterval(() => {
+      void api(apiRoutes.chat.presence, { method: 'POST' }).catch(() => {})
+    }, 60_000)
+  }
 
   async function refreshThreads() {
     loading.value = true
@@ -59,6 +87,21 @@ export function useChat() {
       return
     }
     messages.value = await api<ChatMessage[]>(apiRoutes.chat.messages(activeThreadId.value)).catch(() => [])
+    startPresencePing()
+  }
+
+  async function toggleReaction(messageId: string, emoji: string) {
+    if (!chatReactionsOn.value) return
+    const updated = await api<ChatReactionSummary[]>(apiRoutes.chat.messageReaction(messageId), {
+      method: 'POST',
+      body: { emoji }
+    })
+    const idx = messages.value.findIndex(m => m.id === messageId)
+    if (idx >= 0) {
+      const copy = [...messages.value]
+      copy[idx] = { ...copy[idx]!, reactions: updated }
+      messages.value = copy
+    }
   }
 
   async function sendMessage(body: string) {
@@ -89,15 +132,27 @@ export function useChat() {
     await refreshMessages()
   }
 
+  const activeThread = computed(() =>
+    threads.value.find(t => t.id === activeThreadId.value) ?? null
+  )
+
+  onScopeDispose(() => stopPresencePing())
+
   return {
     threads,
     activeThreadId,
+    activeThread,
     messages,
     loading,
+    chatPresenceOn,
+    chatReactionsOn,
     refreshThreads,
     openThread,
     refreshMessages,
     sendMessage,
+    toggleReaction,
+    startPresencePing,
+    stopPresencePing,
     updateThreadTitle,
     deleteThread
   }

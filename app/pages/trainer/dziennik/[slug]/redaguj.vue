@@ -17,6 +17,9 @@ const toast = useToast()
 const slugSegment = computed(() => String(route.params.slug || ''))
 const athleteId = computed(() => parseSlugId(slugSegment.value))
 const wpisId = computed(() => String(route.query.wpis || '').trim())
+const planIdFromQuery = computed(() => String(route.query.plan_id || '').trim())
+const planTitleFromQuery = computed(() => String(route.query.plan_title || '').trim())
+const planSessionFromQuery = computed(() => String(route.query.session_date || '').trim())
 
 const diaryListPath = computed(() => `/trainer/dziennik/${slugSegment.value}`)
 
@@ -86,9 +89,14 @@ function applyEntryToForm(id: string) {
 
 watch(wpisId, (id) => {
   if (!id) {
-    form.session_date = new Date().toISOString().slice(0, 10)
-    form.title = ''
-    form.notes = '<p></p>'
+    form.session_date = planSessionFromQuery.value || new Date().toISOString().slice(0, 10)
+    if (planTitleFromQuery.value) {
+      form.title = `Plan: ${planTitleFromQuery.value}`
+      form.notes = `<p><strong>Powiązanie z planem</strong> (${planIdFromQuery.value || '—'}).</p><p></p>`
+    } else {
+      form.title = ''
+      form.notes = '<p></p>'
+    }
     return
   }
   applyEntryToForm(id)

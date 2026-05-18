@@ -37,6 +37,20 @@ function publicBase() {
 }
 
 const canManageEvents = computed(() => auth.isTrainer.value || auth.isSuperAdmin.value)
+const calendarCompactOn = useExperimentalFlag('calendar_tablet_compact')
+const viewportWidth = ref(1280)
+const isCompactTablet = computed(
+  () => calendarCompactOn.value && viewportWidth.value >= 768
+)
+onMounted(() => {
+  if (!import.meta.client) return
+  const sync = () => {
+    viewportWidth.value = window.innerWidth
+  }
+  sync()
+  window.addEventListener('resize', sync)
+  onUnmounted(() => window.removeEventListener('resize', sync))
+})
 const canSyncExternalCalendars = computed(() => auth.isAdmin.value || auth.isSuperAdmin.value)
 
 const syncLoading = ref(false)
@@ -672,8 +686,9 @@ function handleDayClick(day: Date) {
         <div
           v-for="day in days"
           :key="day.toString()"
-          class="group relative min-h-[92px] border-b border-r border-default p-1.5 transition-colors last:border-r-0 hover:bg-primary/5 sm:min-h-[120px] sm:p-2 md:min-h-[140px]"
+          class="group relative border-b border-r border-default transition-colors last:border-r-0 hover:bg-primary/5"
           :class="[
+            isCompactTablet ? 'min-h-[72px] p-1 sm:min-h-[88px]' : 'min-h-[92px] p-1.5 sm:min-h-[120px] sm:p-2 md:min-h-[140px]',
             !isSameMonth(day, monthStart) ? 'bg-muted/10 opacity-30' : '',
             isToday(day) ? 'bg-primary/5' : ''
           ]"
@@ -696,7 +711,10 @@ function handleDayClick(day: Date) {
             />
           </div>
 
-          <div class="scrollbar-hide max-h-[76px] space-y-1 overflow-y-auto sm:max-h-[100px]">
+          <div
+            class="scrollbar-hide space-y-1 overflow-y-auto"
+            :class="isCompactTablet ? 'max-h-[56px]' : 'max-h-[76px] sm:max-h-[100px]'"
+          >
             <div
               v-for="event in getEventsForDay(day)"
               :key="event.id"

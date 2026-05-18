@@ -668,6 +668,10 @@ async function save() {
                 </p>
                 <ul class="mt-3 list-disc space-y-1.5 pl-5 text-sm text-muted">
                   <li>
+                    <span class="text-highlighted">v0.9.5-dev:</span>
+                    skaner QR obecności, share wyniku jako grafika, czat (online + reakcje), bezpieczne przechowywanie sesji, kanały powiadomień.
+                  </li>
+                  <li>
                     <span class="text-highlighted">v0.9.3-dev:</span>
                     cache publicznych list API, pakiet <code class="text-xs">cached_network_image</code> pod zdjęcia z CDN.
                   </li>

@@ -30,7 +30,14 @@ const { data: athleteCandidates } = await useAsyncData('chat-athlete-candidates'
 onMounted(async () => {
   await chat.refreshThreads()
   await chat.refreshMessages()
+  chat.startPresencePing()
 })
+
+onUnmounted(() => {
+  chat.stopPresencePing()
+})
+
+const reactionEmojis = ['👍', '✅', '🔥', '💪']
 
 watch(() => chat.activeThreadId.value, async () => {
   await chat.refreshMessages()
@@ -166,7 +173,17 @@ async function sendMessage() {
       </UCard>
 
       <UCard class="lg:col-span-8">
-        <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-muted">Wiadomości</p>
+        <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+          <p class="text-xs font-semibold uppercase tracking-wider text-muted">Wiadomości</p>
+          <UBadge
+            v-if="chat.chatPresenceOn.value && chat.activeThread.value?.peer_online"
+            color="success"
+            variant="subtle"
+            size="sm"
+          >
+            Na żywo
+          </UBadge>
+        </div>
         <div v-if="chat.activeThreadId.value" class="mb-3 flex flex-col gap-2 rounded-lg border border-default/60 bg-muted/10 p-3 sm:flex-row sm:items-end">
           <UFormField label="Tytuł konwersacji" class="min-w-0 flex-1">
             <UInput v-model="threadTitleDraft" class="w-full min-w-0" placeholder="Wpisz tytuł..." />
@@ -194,6 +211,35 @@ async function sendMessage() {
               :class="m.sender_user_id === auth.user.value?.id ? 'bg-primary/20 text-highlighted rounded-br-md' : 'bg-background text-highlighted rounded-bl-md border border-default/60'"
             >
               <p class="whitespace-pre-wrap wrap-break-word text-sm">{{ m.body }}</p>
+              <div
+                v-if="chat.chatReactionsOn.value && (m.reactions?.length || 0) > 0"
+                class="mt-2 flex flex-wrap gap-1"
+              >
+                <button
+                  v-for="r in m.reactions"
+                  :key="`${m.id}-${r.emoji}`"
+                  type="button"
+                  class="rounded-full border border-default/60 bg-muted/30 px-2 py-0.5 text-xs"
+                  :class="r.reacted_by_me ? 'border-primary/50 bg-primary/15' : ''"
+                  @click="chat.toggleReaction(m.id, r.emoji)"
+                >
+                  {{ r.emoji }} {{ r.count }}
+                </button>
+              </div>
+              <div
+                v-if="chat.chatReactionsOn.value"
+                class="mt-1 flex flex-wrap gap-1 opacity-80"
+              >
+                <button
+                  v-for="em in reactionEmojis"
+                  :key="`${m.id}-add-${em}`"
+                  type="button"
+                  class="rounded-full px-1.5 py-0.5 text-sm hover:bg-muted/40"
+                  @click="chat.toggleReaction(m.id, em)"
+                >
+                  {{ em }}
+                </button>
+              </div>
               <p class="mt-1 text-right text-[10px] text-muted">{{ formatTimestamp(m.created_at) }}</p>
             </div>
             <UAvatar

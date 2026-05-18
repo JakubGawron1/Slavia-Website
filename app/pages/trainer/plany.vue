@@ -194,6 +194,18 @@ const planVsDiaryHref = computed(() => {
   if (!a?.id || !a.full_name) return null
   return trainerDiaryAthletePath(a.full_name, a.id)
 })
+
+function diaryEntryForPlanHref(plan: TrainingPlan) {
+  const a = selectedAthleteMeta.value
+  if (!a?.id || !a.full_name) return null
+  const base = `${trainerDiaryAthletePath(a.full_name, a.id)}/redaguj`
+  const q = new URLSearchParams({
+    plan_id: plan.id,
+    plan_title: plan.title,
+    session_date: plan.week_start.slice(0, 10)
+  })
+  return `${base}?${q.toString()}`
+}
 </script>
 
 <template>
@@ -401,7 +413,18 @@ const planVsDiaryHref = computed(() => {
               </div>
             </div>
 
-            <div class="flex gap-2 shrink-0">
+            <div class="flex flex-wrap gap-2 shrink-0">
+              <UButton
+                v-if="diaryEntryForPlanHref(p)"
+                :to="diaryEntryForPlanHref(p)!"
+                size="lg"
+                color="info"
+                variant="soft"
+                class="rounded-2xl px-5 font-bold"
+                icon="i-lucide-book-marked"
+              >
+                Wpis do dziennika
+              </UButton>
               <UButton 
                 size="lg" 
                 color="primary" 

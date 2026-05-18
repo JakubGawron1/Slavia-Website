@@ -184,31 +184,37 @@ function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 
   return 'neutral'
 }
 
-async function approveResult(id: string) {
-  try {
-    await apiFetch(`/api/results/${id}/approve`, { method: 'PATCH' })
-    toast.add({ title: 'Wynik zatwierdzony', color: 'success' })
-    await refreshPending()
-  } catch (e) {
-    toast.add({
-      title: 'Nie udało się zatwierdzić',
-      description: getApiErrorMessage(e),
-      color: 'error'
-    })
-  }
+// [2002] Review modal state
+const reviewModalOpen = ref(false)
+const reviewingId = ref('')
+const reviewMode = ref<'approve' | 'reject'>('approve')
+const reviewNote = ref('')
+const reviewSaving = ref(false)
+
+function openReviewModal(id: string, mode: 'approve' | 'reject') {
+  reviewingId.value = id
+  reviewMode.value = mode
+  reviewNote.value = ''
+  reviewModalOpen.value = true
 }
 
-async function rejectResult(id: string) {
+async function submitReview() {
+  reviewSaving.value = true
   try {
-    await apiFetch(`/api/results/${id}/reject`, { method: 'PATCH' })
-    toast.add({ title: 'Wynik odrzucony', color: 'success' })
+    const body = reviewNote.value.trim() ? { review_note: reviewNote.value.trim() } : undefined
+    if (reviewMode.value === 'approve') {
+      await apiFetch(`/api/results/${reviewingId.value}/approve`, { method: 'PATCH', body })
+      toast.add({ title: 'Wynik zatwierdzony', color: 'success' })
+    } else {
+      await apiFetch(`/api/results/${reviewingId.value}/reject`, { method: 'PATCH', body })
+      toast.add({ title: 'Wynik odrzucony', color: 'success' })
+    }
+    reviewModalOpen.value = false
     await refreshPending()
   } catch (e) {
-    toast.add({
-      title: 'Nie udało się odrzucić',
-      description: getApiErrorMessage(e),
-      color: 'error'
-    })
+    toast.add({ title: 'Błąd weryfikacji', description: getApiErrorMessage(e), color: 'error' })
+  } finally {
+    reviewSaving.value = false
   }
 }
 
@@ -243,6 +249,7 @@ async function rejectPayment(id: string) {
 </script>
 
 <template>
+  <div>
   <UContainer class="slavia-panel-page py-8 md:py-14 lg:py-16">
     <DashboardHero
       eyebrow="Panel trenera"
@@ -356,8 +363,8 @@ async function rejectPayment(id: string) {
           title: labelForResult(r),
           subtitle: `Rwanie ${r.snatch} · Podrzut ${r.clean_and_jerk} · Razem ${r.total} · ${r.date.slice(0,10)}`,
           badge: { label: 'Pending', color: 'warning' },
-          primaryAction: { label: 'Zatwierdź', onClick: () => { void approveResult(r.id) } },
-          secondaryAction: { label: 'Odrzuć', color: 'error', onClick: () => { void rejectResult(r.id) } }
+          primaryAction: { label: 'Zatwierdź', onClick: () => { openReviewModal(r.id, 'approve') } },
+          secondaryAction: { label: 'Odrzuć', color: 'error', onClick: () => { openReviewModal(r.id, 'reject') } }
         }))"
       >
         <template #actions>
@@ -409,4 +416,38 @@ async function rejectPayment(id: string) {
     </div>
 
   </UContainer>
+
+  <!-- [2002] Modal zatwierdzenia/odrzucenia wyniku z powodem -->
+  <UModal
+    v-model:open="reviewModalOpen"
+    :title="reviewMode === 'approve' ? 'Zatwierdź wynik' : 'Odrzuć wynik'"
+    :ui="{ content: 'sm:max-w-lg rounded-3xl' }"
+  >
+    <template #body>
+      <div class="space-y-4">
+        <UFormField :label="reviewMode === 'approve' ? 'Uwaga do zawodnika (opcjonalnie)' : 'Powód odrzucenia (zalecane)'">
+          <UTextarea
+            v-model="reviewNote"
+            :rows="3"
+            :placeholder="reviewMode === 'approve' ? 'Np. Dobry start, wynik zatwierdzony.' : 'Np. Brak zaświadczenia / Błędna data'"
+            class="w-full"
+          />
+        </UFormField>
+        <p class="text-xs text-muted">
+          Powód zostanie dostarczony zawodnikowi jako powiadomienie w aplikacji.
+        </p>
+        <div class="flex justify-end gap-2 border-t border-default/60 pt-3">
+          <UButton color="neutral" variant="outline" @click="reviewModalOpen = false">Anuluj</UButton>
+          <UButton
+            :color="reviewMode === 'approve' ? 'primary' : 'error'"
+            :loading="reviewSaving"
+            @click="submitReview"
+          >
+            {{ reviewMode === 'approve' ? 'Zatwierdź' : 'Odrzuć' }}
+          </UButton>
+        </div>
+      </div>
+    </template>
+  </UModal>
+  </div>
 </template>

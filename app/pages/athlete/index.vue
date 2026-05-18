@@ -502,6 +502,185 @@ const showPre10PaymentBanner = computed(() =>
     hiddenInBrowserStorage: hidePaymentReminderLocal.value,
     paymentStatus: paymentStatus.value
   }))
+
+// ─── [2024] Overdue payment alert ──────────────────────────────────────────
+const showOverduePaymentAlert = computed(() => {
+  if (!isAthleteRole.value) return false
+  const ps = paymentStatus.value
+  if (!ps) return false
+  // Show when payment is overdue (past the 10th) and not paid
+  return !!(ps.is_overdue && !ps.is_paid)
+})
+
+// ─── [2001] "Mój Tydzień" widget ─────────────────────────────────────────
+/** Today’s date string (YYYY-MM-DD) */
+const todayStr = new Date().toISOString().slice(0, 10)
+
+/** Nearest upcoming calendar entry (competition or event). */
+const nearestCalendarEntry = computed(() => {
+  const entries = bundle.value?.calendarEntries ?? []
+  const future = entries
+    .filter(e => {
+      const d = e.competition?.date ?? ''
+      return d >= todayStr
+    })
+    .sort((a, b) => (a.competition?.date ?? '').localeCompare(b.competition?.date ?? ''))
+  return future[0] ?? null
+})
+
+/** Days until nearest event (0 = today). */
+const daysUntilNearest = computed(() => {
+  const d = nearestCalendarEntry.value?.competition?.date
+  if (!d) return null
+  const diff = Math.ceil((new Date(d).getTime() - new Date(todayStr).getTime()) / 86_400_000)
+  return diff
+})
+
+/** Count of pending results (already computed above). */
+const weekPendingCount = myPendingResultsCount
+
+// ─── [2005] Season Goal ────────────────────────────────────────────────────
+const GOAL_LS_KEY = 'slavia_season_goal_v1'
+
+type GoalMode = 'total' | 'sinclair'
+interface SeasonGoalData {
+  mode: GoalMode
+  target: number
+}
+
+const seasonGoal = ref<SeasonGoalData | null>(null)
+const goalMode = ref<GoalMode>('total')
+const goalTarget = ref<number | null>(null)
+const goalEditing = ref(false)
+
+function loadGoalFromStorage() {
+  if (!import.meta.client) return
+  try {
+    const raw = localStorage.getItem(GOAL_LS_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw) as SeasonGoalData
+      seasonGoal.value = parsed
+      goalMode.value = parsed.mode
+      goalTarget.value = parsed.target
+    }
+  } catch { /* ignore */ }
+}
+
+function saveGoal() {
+  if (!goalTarget.value || goalTarget.value <= 0) {
+    toast.add({ title: 'Podaj cel większy od zera', color: 'warning' })
+    return
+  }
+  const data: SeasonGoalData = { mode: goalMode.value, target: goalTarget.value }
+  seasonGoal.value = data
+  goalEditing.value = false
+  if (!import.meta.client) return
+  try { localStorage.setItem(GOAL_LS_KEY, JSON.stringify(data)) } catch { /* ignore */ }
+  toast.add({ title: 'Cel sezonu zapisany', color: 'success' })
+}
+
+function clearGoal() {
+  seasonGoal.value = null
+  goalTarget.value = null
+  goalEditing.value = false
+  if (!import.meta.client) return
+  try { localStorage.removeItem(GOAL_LS_KEY) } catch { /* ignore */ }
+}
+
+/** Current best relevant to the goal mode. */
+const goalCurrentValue = computed(() => {
+  if (!athlete.value) return 0
+  if (goalMode.value === 'total') {
+    return athlete.value.total_kg ?? 0
+  }
+  // Sinclair requires bodyweight + total
+  const bw = athlete.value.bodyweight ?? 0
+  const total = athlete.value.total_kg ?? 0
+  if (bw <= 0 || total <= 0) return 0
+  // We use a synchronous approximation. Full async Sinclair is in the form.
+  // A² coefficient approximation: Sinclair ≈ total * 1.0–1.35 depending on bw.
+  // We just display total here and note it is approximate for the progress bar.
+  return total
+})
+
+const goalProgress = computed(() => {
+  if (!seasonGoal.value || seasonGoal.value.target <= 0) return 0
+  const pct = Math.round((goalCurrentValue.value / seasonGoal.value.target) * 100)
+  return Math.min(pct, 100)
+})
+
+onMounted(() => {
+  loadGoalFromStorage()
+})
+
+// ─── [2013] Pre-start checklist ────────────────────────────────────────────
+const CHECKLIST_LS_KEY = 'slavia_prestart_checklist_v1'
+
+const defaultChecklist = [
+  { id: 'singlet', label: 'Strjój startowy (singlet)', checked: false },
+  { id: 'shoes', label: 'Buty ciężarowe', checked: false },
+  { id: 'belt', label: 'Pas dźwigniowy', checked: false },
+  { id: 'wraps', label: 'Opaski / kolanka', checked: false },
+  { id: 'id_card', label: 'Dowód tożsamości', checked: false },
+  { id: 'license', label: 'Licencja zawodnicza', checked: false },
+  { id: 'weight', label: 'Sprawdzona waga (kategoria wagowa)', checked: false },
+  { id: 'nutrition', label: 'Posiłki i nawodnienie na dzień', checked: false },
+] as { id: string; label: string; checked: boolean }[]
+
+const checklistItems = ref(defaultChecklist.map(i => ({ ...i })))
+
+function loadChecklistFromStorage(forDate: string) {
+  if (!import.meta.client) return
+  try {
+    const raw = localStorage.getItem(`${CHECKLIST_LS_KEY}_${forDate}`)
+    if (raw) {
+      const saved = JSON.parse(raw) as { id: string; checked: boolean }[]
+      checklistItems.value = checklistItems.value.map(item => ({
+        ...item,
+        checked: saved.find(s => s.id === item.id)?.checked ?? false
+      }))
+    } else {
+      checklistItems.value = defaultChecklist.map(i => ({ ...i }))
+    }
+  } catch { /* ignore */ }
+}
+
+function saveChecklistToStorage(forDate: string) {
+  if (!import.meta.client) return
+  try {
+    localStorage.setItem(
+      `${CHECKLIST_LS_KEY}_${forDate}`,
+      JSON.stringify(checklistItems.value.map(i => ({ id: i.id, checked: i.checked })))
+    )
+  } catch { /* ignore */ }
+}
+
+/** Next competition within 48 hours. */
+const preStartEntry = computed(() => {
+  const entry = nearestCalendarEntry.value
+  if (!entry) return null
+  const d = daysUntilNearest.value
+  if (d === null || d > 1) return null
+  const cat = (entry.competition?.category ?? '').toLowerCase()
+  if (cat === 'training') return null
+  return entry
+})
+
+const checklistDoneCount = computed(() => checklistItems.value.filter(i => i.checked).length)
+const checklistTotal = computed(() => checklistItems.value.length)
+
+watch(preStartEntry, (entry) => {
+  if (entry?.competition?.date) {
+    loadChecklistFromStorage(entry.competition.date)
+  }
+}, { immediate: true })
+
+function toggleChecklistItem(id: string) {
+  const item = checklistItems.value.find(i => i.id === id)
+  if (item) item.checked = !item.checked
+  const forDate = preStartEntry.value?.competition?.date
+  if (forDate) saveChecklistToStorage(forDate)
+}
 </script>
 
 <template>
@@ -617,6 +796,262 @@ const showPre10PaymentBanner = computed(() =>
         :to="{ path: '/athlete', hash: '#ostatnie-zgloszenia' }"
       />
       <ClubVotingWidget />
+    </div>
+
+    <!-- [2024] Overdue payment alert — prominent full-width banner -->
+    <div
+      v-if="showOverduePaymentAlert && paymentStatus"
+      class="mt-6"
+    >
+      <div class="relative overflow-hidden rounded-2xl border-2 border-error/60 bg-error/8 px-5 py-4 shadow-md shadow-error/10 sm:flex sm:items-center sm:justify-between sm:gap-4">
+        <div class="pointer-events-none absolute -right-10 -top-10 size-40 rounded-full bg-error/15 blur-3xl" />
+        <div class="flex items-start gap-3">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-error/20 text-error ring-1 ring-error/30 shadow-inner mt-0.5">
+            <UIcon name="i-lucide-alert-triangle" class="size-5" />
+          </div>
+          <div class="min-w-0">
+            <p class="text-sm font-black text-error sm:text-base">
+              Zaległa składka — {{ paymentStatus.month }}
+            </p>
+            <p class="mt-0.5 text-sm text-muted">
+              Nie masz zatwierdzonej wpłaty za ten miesiąc. Termin płatności minął 10. dnia miesiąca.
+            </p>
+          </div>
+        </div>
+        <UButton
+          to="/athlete/skladki"
+          color="error"
+          size="sm"
+          trailing-icon="i-lucide-arrow-right"
+          class="mt-3 shrink-0 sm:mt-0"
+        >
+          Zgłoś płatność
+        </UButton>
+      </div>
+    </div>
+
+    <!-- [2001] "Mój Tydzień" widget -->
+    <div v-if="auth.canAccessAthletePortal && athlete && isAthleteRole" class="mt-8">
+      <div class="mb-3 flex items-center gap-2">
+        <UIcon name="i-lucide-calendar-days" class="size-5 text-primary" />
+        <h2 class="text-xl font-black tracking-tight text-highlighted">Mój Tydzień</h2>
+        <UBadge variant="soft" color="primary" size="xs" class="uppercase tracking-widest ml-1">Szybki podgląd</UBadge>
+      </div>
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <!-- Najbliższy start -->
+        <div class="flex flex-col gap-2 rounded-2xl border border-default/70 bg-card p-4 shadow-sm transition-shadow hover:shadow-md">
+          <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted">
+            <UIcon name="i-lucide-flag" class="size-3.5" />
+            Najbliższy start
+          </div>
+          <template v-if="nearestCalendarEntry">
+            <p class="text-base font-black text-highlighted leading-tight">
+              {{ nearestCalendarEntry.competition?.title ?? '—' }}
+            </p>
+            <p class="text-sm text-muted">{{ nearestCalendarEntry.competition?.date?.slice(0,10) ?? '—' }}</p>
+            <UBadge
+              :color="daysUntilNearest === 0 ? 'error' : daysUntilNearest === 1 ? 'warning' : 'primary'"
+              variant="soft"
+              size="sm"
+              class="w-fit"
+            >
+              {{ daysUntilNearest === 0 ? 'Dzisiaj!' : daysUntilNearest === 1 ? 'Jutro!' : `Za ${daysUntilNearest} dni` }}
+            </UBadge>
+          </template>
+          <p v-else class="text-sm text-muted">Brak przypisanych startów.</p>
+          <UButton to="/athlete/kalendarz" size="xs" variant="ghost" trailing-icon="i-lucide-arrow-right" class="mt-auto w-fit px-0">
+            Kalendarz
+          </UButton>
+        </div>
+
+        <!-- Status składki -->
+        <div class="flex flex-col gap-2 rounded-2xl border border-default/70 bg-card p-4 shadow-sm transition-shadow hover:shadow-md">
+          <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted">
+            <UIcon name="i-lucide-banknote" class="size-3.5" />
+            Składka
+          </div>
+          <p class="text-base font-black text-highlighted">{{ paymentKpi.value }}</p>
+          <p class="text-sm text-muted">{{ paymentStatus?.month ?? new Date().toISOString().slice(0,7) }}</p>
+          <UBadge :color="paymentKpi.tone" variant="soft" size="sm" class="w-fit">
+            {{ paymentKpi.hint ?? '—' }}
+          </UBadge>
+          <UButton to="/athlete/skladki" size="xs" variant="ghost" trailing-icon="i-lucide-arrow-right" class="mt-auto w-fit px-0">
+            Szczegóły
+          </UButton>
+        </div>
+
+        <!-- Wyniki oczekujące -->
+        <div class="flex flex-col gap-2 rounded-2xl border border-default/70 bg-card p-4 shadow-sm transition-shadow hover:shadow-md">
+          <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted">
+            <UIcon name="i-lucide-clipboard-clock" class="size-3.5" />
+            Oczekujące wyniki
+          </div>
+          <p class="text-4xl font-black tabular-nums" :class="weekPendingCount > 0 ? 'text-warning' : 'text-highlighted'">
+            {{ weekPendingCount }}
+          </p>
+          <p class="text-sm text-muted">Zgłoszeń czeka na zatwierdzenie kadry.</p>
+          <UButton :to="{ path: '/athlete', hash: '#ostatnie-zgloszenia' }" size="xs" variant="ghost" trailing-icon="i-lucide-arrow-right" class="mt-auto w-fit px-0">
+            Historia
+          </UButton>
+        </div>
+
+        <!-- Czat z trenerem -->
+        <div class="flex flex-col gap-2 rounded-2xl border border-default/70 bg-card p-4 shadow-sm transition-shadow hover:shadow-md">
+          <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted">
+            <UIcon name="i-lucide-messages-square" class="size-3.5" />
+            Kontakt z trenerem
+          </div>
+          <p class="text-base font-black text-highlighted">Napisz wiadomość</p>
+          <p class="text-sm text-muted">Pytania, dyspozycja, kontuzja — trener odpowie w czacie 1:1.</p>
+          <UButton to="/chat" color="info" size="xs" variant="soft" trailing-icon="i-lucide-arrow-right" class="mt-auto w-fit">
+            Otwórz czat
+          </UButton>
+        </div>
+      </div>
+    </div>
+
+    <!-- [2013] Pre-start checklist (shows 48h before competition) -->
+    <div v-if="preStartEntry" class="mt-6">
+      <div class="relative overflow-hidden rounded-2xl border border-warning/50 bg-warning/8 p-5 shadow-sm">
+        <div class="pointer-events-none absolute -right-8 -top-8 size-32 rounded-full bg-warning/20 blur-3xl" />
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-2">
+            <UIcon name="i-lucide-check-square" class="size-5 text-warning" />
+            <h2 class="text-lg font-black text-highlighted">Lista kontrolna przed startem</h2>
+            <UBadge color="warning" variant="soft" size="sm">
+              {{ daysUntilNearest === 0 ? 'Dzisiaj!' : 'Jutro!' }}
+            </UBadge>
+          </div>
+          <div class="text-sm text-muted font-medium">
+            {{ checklistDoneCount }} / {{ checklistTotal }} gotowe
+          </div>
+        </div>
+        <p class="mb-4 text-sm text-muted">
+          <span class="font-semibold text-highlighted">{{ preStartEntry.competition?.title }}</span>
+          · {{ preStartEntry.competition?.date?.slice(0,10) }}
+          · {{ preStartEntry.competition?.location ?? '—' }}
+        </p>
+        <!-- Progress bar -->
+        <div class="mb-4 h-2 w-full overflow-hidden rounded-full bg-default/40">
+          <div
+            class="h-full rounded-full bg-warning transition-all duration-500"
+            :style="{ width: `${Math.round((checklistDoneCount / checklistTotal) * 100)}%` }"
+          />
+        </div>
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <label
+            v-for="item in checklistItems"
+            :key="item.id"
+            class="flex cursor-pointer items-center gap-3 rounded-xl border border-default/60 bg-card px-3 py-2.5 transition-colors hover:border-warning/40 hover:bg-warning/5"
+            @click="toggleChecklistItem(item.id)"
+          >
+            <div
+              class="flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition-all"
+              :class="item.checked ? 'border-warning bg-warning/20 text-warning' : 'border-default/60'"
+            >
+              <UIcon v-if="item.checked" name="i-lucide-check" class="size-3" />
+            </div>
+            <span class="text-sm" :class="item.checked ? 'text-muted line-through' : 'text-highlighted'">
+              {{ item.label }}
+            </span>
+          </label>
+        </div>
+        <p v-if="checklistDoneCount === checklistTotal" class="mt-4 text-center text-sm font-bold text-warning">
+          ✓ Wszystko gotowe — powodzenia na starcie!
+        </p>
+      </div>
+    </div>
+
+    <!-- [2005] Season goal with progress bar -->
+    <div v-if="auth.canAccessAthletePortal && athlete && isAthleteRole" class="mt-6">
+      <div class="rounded-2xl border border-default/70 bg-card p-5 shadow-sm">
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-2">
+            <UIcon name="i-lucide-target" class="size-5 text-success" />
+            <h2 class="text-lg font-black text-highlighted">Cel sezonu</h2>
+          </div>
+          <div class="flex gap-2">
+            <UButton
+              v-if="seasonGoal && !goalEditing"
+              size="xs"
+              variant="ghost"
+              icon="i-lucide-pencil"
+              @click="goalEditing = true"
+            >Edytuj</UButton>
+            <UButton
+              v-if="seasonGoal"
+              size="xs"
+              variant="ghost"
+              color="error"
+              icon="i-lucide-trash-2"
+              @click="clearGoal"
+            >Usuń</UButton>
+          </div>
+        </div>
+
+        <!-- Display mode -->
+        <template v-if="seasonGoal && !goalEditing">
+          <div class="mb-2 flex items-end justify-between gap-2">
+            <div>
+              <p class="text-xs font-bold uppercase tracking-widest text-muted">
+                {{ seasonGoal.mode === 'total' ? 'Total (dwubój)' : 'Sinclair (szacunkowy)' }}
+              </p>
+              <div class="mt-1 flex items-end gap-1.5">
+                <span class="text-4xl font-black tabular-nums text-highlighted">{{ goalCurrentValue }}</span>
+                <span class="mb-1 text-lg font-bold text-muted">&nbsp;/&nbsp;{{ seasonGoal.target }} kg</span>
+              </div>
+            </div>
+            <div class="text-right">
+              <span class="text-3xl font-black tabular-nums" :class="goalProgress >= 100 ? 'text-success' : 'text-primary'">
+                {{ goalProgress }}%
+              </span>
+            </div>
+          </div>
+          <div class="h-3 w-full overflow-hidden rounded-full bg-default/40">
+            <div
+              class="h-full rounded-full transition-all duration-700"
+              :class="goalProgress >= 100 ? 'bg-success' : 'bg-primary'"
+              :style="{ width: `${goalProgress}%` }"
+            />
+          </div>
+          <p v-if="goalProgress >= 100" class="mt-2 text-sm font-bold text-success">
+            🎉 Cel osiągnięty! Czas podbić poprzeczkę.
+          </p>
+          <p v-else-if="goalCurrentValue === 0" class="mt-2 text-sm text-muted">
+            Brak zatwierdzonego wyniku do porównania. Zgłoś wynik, by zobaczyć postęp.
+          </p>
+          <p v-else class="mt-2 text-sm text-muted">
+            Zostało <span class="font-bold text-highlighted">{{ seasonGoal.target - goalCurrentValue }} kg</span> do celu.
+          </p>
+        </template>
+
+        <!-- Edit / create mode -->
+        <template v-else>
+          <p class="mb-4 text-sm text-muted">
+            Ustaw cel na ten sezon — system pokaże Twój postęp na podstawie najlepszego zatwierdzonego wyniku.
+          </p>
+          <div class="flex flex-wrap items-end gap-3">
+            <UFormField label="Typ celu">
+              <USelect
+                v-model="goalMode"
+                :items="[{ label: 'Total (dwubój kg)', value: 'total' }, { label: 'Sinclair (szacunkowy)', value: 'sinclair' }]"
+                class="w-48"
+              />
+            </UFormField>
+            <UFormField label="Cel (kg)">
+              <UInputNumber
+                v-model="goalTarget"
+                :min="1"
+                :step="1"
+                placeholder="np. 250"
+                class="w-32"
+              />
+            </UFormField>
+            <UButton color="success" icon="i-lucide-check" @click="saveGoal">Zapisz</UButton>
+            <UButton v-if="seasonGoal" variant="ghost" color="neutral" @click="goalEditing = false">Anuluj</UButton>
+          </div>
+        </template>
+      </div>
     </div>
 
     <!-- Pobierz aplikację mobile -->

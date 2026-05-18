@@ -17,6 +17,22 @@ type ChangelogUpdate = {
 
 const updates = [
   {
+    version: 'v3.2.2-dev',
+    date: '18 Maj 2026',
+    title:
+      'Obecność QR, czat (presence + reakcje), kalendarz kompaktowy, plan ↔ dziennik',
+    features: [
+      'Obecność: stały kod QR dla kadry na `/attendance` (generowanie, druk, regeneracja); skaner w aplikacji mobilnej — natychmiastowa obecność `verified`.',
+      'Obecność: dodatkowe dni treningowe (zawody `category: training`, anulowania `extra` w harmonogramie).',
+      'Czat trener–zawodnik: status „Na żywo” (presence co 60 s), reakcje emoji 👍 ✅ 🔥 💪 — backend, WWW i mobilka; flagi `chat_online_presence`, `chat_message_reactions`.',
+      'Kalendarz klubu: tryb kompaktowy na tablecie (`calendar_tablet_compact`, od 768 px).',
+      'Trener: „Wpis do dziennika” z planów treningowych; porównanie plan vs dziennik.',
+      'Mobilka v0.9.5-dev: share wyniku jako PNG, kanały push (klub/czat), secure storage tokenu, Sinclair w isolate, SWR cache (`PersistentApiCache`), naprawa instalacji APK (`versionCode` z commitów).',
+      'Backend: `attendance_qr`, rozszerzenia `chat` (reakcje, `last_seen_at`).'
+    ],
+    type: 'release'
+  },
+  {
     version: 'v3.2.1-dev',
     date: '17 Maj 2026',
     title:
