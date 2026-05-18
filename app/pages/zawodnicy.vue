@@ -467,24 +467,17 @@ const showAthleteCompareLink = computed(() => {
 </script>
 
 <template>
-  <UContainer class="py-8 md:py-16 lg:py-20">
-    <!-- Header Section -->
-    <div class="mb-10 px-1 text-center md:mb-16">
-      <div class="flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-[0.25em] text-primary sm:gap-3 sm:text-sm sm:tracking-[0.3em]">
-        <UIcon
-          name="i-lucide-trophy"
-          class="size-5 shrink-0 sm:size-6"
-        />
-        Kadra i Ranking
-      </div>
-      <h1 class="mt-4 text-4xl font-black uppercase italic tracking-tighter text-highlighted sm:mt-6 sm:text-6xl md:text-7xl lg:text-8xl lg:tracking-tighter">
+  <PublicPageLayout padding="hero">
+    <PublicPageHeader
+      variant="centered"
+      eyebrow="Kadra i Ranking"
+      icon="i-lucide-trophy"
+      description="Poznaj naszych reprezentantów. Ranking i wykresy na kartach bazują wyłącznie na zatwierdzonych zgłoszeniach wyników (po weryfikacji przez trenera lub administrację)."
+    >
+      <template #title>
         Elita <span class="text-primary">Slavii</span>
-      </h1>
-      <p class="mx-auto mt-4 max-w-2xl px-2 text-base font-medium leading-relaxed text-muted/80 sm:mt-6 sm:text-xl">
-        Poznaj naszych reprezentantów. Ranking i wykresy na kartach bazują wyłącznie na zatwierdzonych zgłoszeniach wyników
-        (po weryfikacji przez trenera lub administrację).
-      </p>
-    </div>
+      </template>
+    </PublicPageHeader>
 
     <!-- Podium Section -->
     <div
@@ -1099,5 +1092,5 @@ const showAthleteCompareLink = computed(() => {
       description="Obecnie lista zawodników jest pusta."
       class="mb-12"
     />
-  </UContainer>
+  </PublicPageLayout>
 </template>

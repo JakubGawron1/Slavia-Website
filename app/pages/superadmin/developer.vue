@@ -278,6 +278,16 @@ async function setExperimentalFlag(id: string, value: boolean) {
 function isExperimentalLocked(id: string) {
   return experimental.isForcedOffByDeploy(id)
 }
+
+type DevSection = 'overview' | 'tools' | 'ops' | 'map'
+const devSection = ref<DevSection>('overview')
+
+const devNavItems: { id: DevSection, label: string, icon: string }[] = [
+  { id: 'overview', label: 'Przegląd', icon: 'i-lucide-gauge' },
+  { id: 'tools', label: 'Narzędzia', icon: 'i-lucide-wrench' },
+  { id: 'ops', label: 'Integracje', icon: 'i-lucide-plug' },
+  { id: 'map', label: 'Mapa tras', icon: 'i-lucide-map' }
+]
 const config = useRuntimeConfig()
 
 type FeatureAdoptionRow = {
@@ -1239,9 +1249,38 @@ function toastStorageApisAvailability() {
       </p>
     </UCard>
 
-    <!-- Sekcja 1: statystyki / smoke API — zawsze nad narzędziami pomocniczymi -->
-    <section aria-label="Statystyki i backend" class="grid grid-cols-1 gap-3 lg:grid-cols-12 lg:gap-4">
-      <UCard class="rounded-2xl border-default/60 p-4 shadow-sm lg:col-span-7">
+    <DevExperimentalFlagsPanel
+      class="mb-4"
+      :stable-defs="experimentalStableDefs"
+      :experiment-defs="experimentalVisibleDefs"
+      :resolved="experimentalResolved"
+      :kill-deploy="experimentalKillDeploy"
+      :is-locked="isExperimentalLocked"
+      @reset="resetExperimentalDefaults"
+      @toggle="(id, v) => setExperimentalFlag(id, v)"
+    />
+
+    <nav
+      class="mb-4 flex gap-1 overflow-x-auto rounded-2xl border border-default/60 bg-muted/10 p-1"
+      aria-label="Sekcje developera"
+    >
+      <UButton
+        v-for="item in devNavItems"
+        :key="item.id"
+        size="sm"
+        :variant="devSection === item.id ? 'solid' : 'ghost'"
+        :color="devSection === item.id ? 'primary' : 'neutral'"
+        :icon="item.icon"
+        class="shrink-0 touch-manipulation"
+        @click="devSection = item.id"
+      >
+        {{ item.label }}
+      </UButton>
+    </nav>
+
+  <div v-show="devSection === 'overview'" class="grid grid-cols-1 gap-3 lg:grid-cols-12 lg:gap-4">
+    <section aria-label="Statystyki i backend" class="contents">
+      <UCard class="rounded-2xl border-default/60 p-4 shadow-sm lg:col-span-12">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <p class="text-[10px] font-bold uppercase tracking-wider text-muted">
             Statystyki API
@@ -1367,134 +1406,10 @@ function toastStorageApisAvailability() {
         </div>
       </UCard>
 
-      <UCard class="rounded-2xl border-default/60 p-4 shadow-sm lg:col-span-5">
-        <div class="flex flex-wrap items-start justify-between gap-2">
-          <div class="min-w-0">
-            <p class="text-[10px] font-bold uppercase tracking-wider text-muted">
-              Eksperymentalne
-            </p>
-            <p class="mt-0.5 text-[11px] leading-snug text-muted">
-              localStorage + opcjonalny <span class="font-mono">NUXT_PUBLIC_EXPERIMENTAL_KILL_SWITCH</span>.
-            </p>
-            <UAlert
-              v-if="experimentalKillDeploy"
-              class="mt-2 text-[11px]"
-              color="warning"
-              variant="subtle"
-              title="Kill switch"
-            >
-              <span class="break-all font-mono text-[10px]">{{ experimentalKillDeploy }}</span>
-            </UAlert>
-          </div>
-          <UButton
-            v-if="experimentalStableDefs.length > 0 || experimentalVisibleDefs.length > 0"
-            size="xs"
-            variant="soft"
-            color="neutral"
-            icon="i-lucide-rotate-ccw"
-            class="shrink-0"
-            @click="resetExperimentalDefaults"
-          >
-            Reset
-          </UButton>
-        </div>
+    </section>
+  </div>
 
-        <div v-if="experimentalStableDefs.length > 0" class="mt-3">
-          <p class="text-[10px] font-bold uppercase tracking-wider text-muted">
-            Włączone w produkcji (stabilne)
-          </p>
-          <p class="mt-0.5 text-[11px] text-muted">
-            Domyślnie aktywne funkcje aplikacji; przełącznik zapisuje stan w przeglądarce jak pozostałe (kill switch deployu nadal ma pierwszeństwo).
-          </p>
-          <ul class="mt-2 divide-y divide-default/40 rounded-lg border border-default/50 bg-muted/5">
-            <li
-              v-for="def in experimentalStableDefs"
-              :key="`stable-${def.id}`"
-              class="flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
-            >
-              <div class="min-w-0 flex-1">
-                <p class="font-semibold text-highlighted">
-                  {{ def.label }}
-                </p>
-                <p class="mt-0.5 line-clamp-2 text-[11px] leading-snug text-muted">
-                  {{ def.description }}
-                </p>
-                <p class="mt-2 font-mono text-[10px] text-muted/80">
-                  {{ def.id }}
-                  <UBadge
-                    v-if="isExperimentalLocked(def.id)"
-                    class="ml-2 align-middle"
-                    color="warning"
-                    variant="subtle"
-                    size="xs"
-                  >
-                    deploy OFF
-                  </UBadge>
-                </p>
-              </div>
-              <USwitch
-                :disabled="isExperimentalLocked(def.id)"
-                :model-value="experimentalResolved[def.id] ?? def.defaultEnabled"
-                @update:model-value="setExperimentalFlag(def.id, $event)"
-              />
-            </li>
-          </ul>
-        </div>
-
-        <div
-          v-if="experimentalVisibleDefs.length === 0"
-          class="mt-3 rounded-lg border border-dashed border-default/60 bg-muted/10 px-3 py-4 text-center text-xs text-muted"
-        >
-          Brak eksperymentów (pozostałe są już stabilne) —
-          <code class="font-mono text-[10px]">experimentalFeaturesCatalog.ts</code>
-        </div>
-
-        <template v-if="experimentalVisibleDefs.length > 0">
-          <p class="mt-4 text-[10px] font-bold uppercase tracking-wider text-muted">
-            Eksperymenty (edycja)
-          </p>
-        </template>
-
-        <ul
-          v-if="experimentalVisibleDefs.length > 0"
-          class="mt-2 divide-y divide-default/50 rounded-lg border border-default/60 bg-muted/5"
-        >
-          <li
-            v-for="def in experimentalVisibleDefs"
-            :key="def.id"
-            class="flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
-          >
-              <div class="min-w-0 flex-1">
-                <p class="font-semibold text-highlighted">
-                  {{ def.label }}
-                </p>
-                <p class="mt-0.5 line-clamp-2 text-[11px] leading-snug text-muted">
-                  {{ def.description }}
-                </p>
-                <p class="mt-2 font-mono text-[10px] text-muted/80">
-                  {{ def.id }}
-                  <span class="text-muted">
-                    · domyślnie {{ def.defaultEnabled ? 'włączone' : 'wyłączone' }}
-                  </span>
-                  <UBadge
-                    v-if="isExperimentalLocked(def.id)"
-                    class="ml-2 align-middle"
-                    color="warning"
-                    variant="subtle"
-                    size="xs"
-                  >
-                    deploy OFF
-                  </UBadge>
-                </p>
-              </div>
-              <USwitch
-                :disabled="isExperimentalLocked(def.id)"
-                :model-value="experimentalResolved[def.id] ?? def.defaultEnabled"
-                @update:model-value="setExperimentalFlag(def.id, $event)"
-              />
-            </li>
-          </ul>
-        </UCard>
+  <div v-show="devSection === 'tools'" class="grid grid-cols-1 gap-3 lg:grid-cols-12 lg:gap-4">
 
       <UCard class="rounded-2xl border-default/60 p-4 shadow-sm lg:col-span-12">
         <div class="flex flex-wrap items-center justify-between gap-2">
@@ -1914,6 +1829,112 @@ function toastStorageApisAvailability() {
       </UCard>
 
       <UCard class="rounded-2xl border-default/60 p-4 shadow-sm lg:col-span-12">
+      <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
+        <div class="min-w-0">
+          <p class="text-[10px] font-bold uppercase tracking-wider text-muted">
+            Logi (localStorage)
+          </p>
+          <p class="mt-0.5 font-mono text-[10px] text-muted">
+            {{ buildMeta }}
+          </p>
+        </div>
+        <div class="flex flex-wrap gap-1">
+          <UButton size="xs" variant="soft" @click="systemLogs.demoPush('change')">
+            +zm
+          </UButton>
+          <UButton size="xs" variant="soft" @click="systemLogs.demoPush('info')">
+            +info
+          </UButton>
+          <UButton size="xs" variant="soft" color="warning" @click="systemLogs.demoPush('warn')">
+            +warn
+          </UButton>
+          <UButton size="xs" variant="soft" color="error" @click="systemLogs.demoPush('error')">
+            +err
+          </UButton>
+          <UButton size="xs" variant="outline" icon="i-lucide-download" @click="downloadLogsExport">
+            Export
+          </UButton>
+          <UButton size="xs" color="error" variant="ghost" @click="systemLogs.clear">
+            Clear
+          </UButton>
+        </div>
+      </div>
+
+      <div class="mt-3 max-h-[min(360px,48vh)] overflow-auto rounded-xl border border-default/60 bg-muted/10">
+        <div
+          v-for="entry in systemLogRows"
+          :key="entry.id"
+          class="border-b border-default/45 px-3 py-2 font-mono text-[10px] last:border-b-0"
+        >
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-muted">{{ formatLogTs(entry.ts) }}</span>
+            <UBadge size="xs" variant="subtle" :color="logLevelColor(entry.level)">
+              {{ entry.level }}
+            </UBadge>
+          </div>
+          <p class="mt-1 font-sans text-xs font-semibold text-highlighted">
+            {{ entry.title }}
+          </p>
+          <p
+            v-if="entry.detail"
+            class="mt-0.5 font-sans text-[11px] leading-relaxed text-muted"
+          >
+            {{ entry.detail }}
+          </p>
+        </div>
+        <p
+          v-if="systemLogRows.length === 0"
+          class="px-3 py-6 text-center text-xs text-muted"
+        >
+          Brak wpisów.
+        </p>
+      </div>
+      </UCard>
+
+      <UCard v-if="expDevBanPanel" class="rounded-2xl border-default/60 p-4 shadow-sm lg:col-span-5">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <p class="text-[10px] font-bold uppercase tracking-wider text-muted">
+            Banowanie kont (dev)
+          </p>
+          <UBadge size="xs" variant="subtle" color="neutral">
+            /api/admins/:id/(un)ban
+          </UBadge>
+        </div>
+        <p class="mt-1 text-[11px] leading-snug text-muted">
+          Szybka akcja do smoke testu — w panelu kont masz już przyciski „Banuj / Odbanuj”.
+        </p>
+
+        <div class="mt-3 space-y-3">
+          <UFormField label="Konto (z listy)">
+            <USelect
+              v-model="banUserSelected"
+              :items="banUserOptions"
+              value-key="value"
+              size="lg"
+              class="w-full rounded-xl"
+            />
+          </UFormField>
+          <UFormField label="user_id (UUID)">
+            <UInput v-model="banUserId" placeholder="np. 2e0b...-..." class="w-full rounded-xl" />
+          </UFormField>
+          <UFormField label="Powód (opcjonalnie)">
+            <UTextarea v-model="banReason" :rows="3" placeholder="np. Brak składek" class="w-full rounded-xl" />
+          </UFormField>
+          <div class="flex flex-wrap gap-2">
+            <UButton color="warning" class="rounded-xl font-bold" :loading="banPending" @click="devBanUser">
+              Zbanuj
+            </UButton>
+            <UButton color="success" variant="soft" class="rounded-xl font-bold" :loading="banPending" @click="devUnbanUser">
+              Odbanuj
+            </UButton>
+          </div>
+        </div>
+      </UCard>
+
+  </div>
+
+  <div v-show="devSection === 'map'" class="grid grid-cols-1 gap-3 lg:grid-cols-12 lg:gap-4">
+      <UCard class="rounded-2xl border-default/60 p-4 shadow-sm lg:col-span-12">
       <p class="text-[10px] font-bold uppercase tracking-wider text-muted">
         Mapa aplikacji
       </p>
@@ -1965,6 +1986,9 @@ function toastStorageApisAvailability() {
       </div>
       </UCard>
 
+  </div>
+
+  <div v-show="devSection === 'ops'" class="grid grid-cols-1 gap-3 lg:grid-cols-12 lg:gap-4">
       <section id="ops-integrations" class="space-y-4 lg:col-span-12">
         <div class="flex items-center gap-3 px-1">
           <UIcon name="i-lucide-plug" class="size-6 text-primary" />
@@ -2140,108 +2164,7 @@ function toastStorageApisAvailability() {
         </UCard>
       </section>
 
-      <UCard class="rounded-2xl border-default/60 p-4 shadow-sm lg:col-span-12">
-      <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
-        <div class="min-w-0">
-          <p class="text-[10px] font-bold uppercase tracking-wider text-muted">
-            Logi (localStorage)
-          </p>
-          <p class="mt-0.5 font-mono text-[10px] text-muted">
-            {{ buildMeta }}
-          </p>
-        </div>
-        <div class="flex flex-wrap gap-1">
-          <UButton size="xs" variant="soft" @click="systemLogs.demoPush('change')">
-            +zm
-          </UButton>
-          <UButton size="xs" variant="soft" @click="systemLogs.demoPush('info')">
-            +info
-          </UButton>
-          <UButton size="xs" variant="soft" color="warning" @click="systemLogs.demoPush('warn')">
-            +warn
-          </UButton>
-          <UButton size="xs" variant="soft" color="error" @click="systemLogs.demoPush('error')">
-            +err
-          </UButton>
-          <UButton size="xs" variant="outline" icon="i-lucide-download" @click="downloadLogsExport">
-            Export
-          </UButton>
-          <UButton size="xs" color="error" variant="ghost" @click="systemLogs.clear">
-            Clear
-          </UButton>
-        </div>
-      </div>
 
-      <div class="mt-3 max-h-[min(360px,48vh)] overflow-auto rounded-xl border border-default/60 bg-muted/10">
-        <div
-          v-for="entry in systemLogRows"
-          :key="entry.id"
-          class="border-b border-default/45 px-3 py-2 font-mono text-[10px] last:border-b-0"
-        >
-          <div class="flex flex-wrap items-center gap-2">
-            <span class="text-muted">{{ formatLogTs(entry.ts) }}</span>
-            <UBadge size="xs" variant="subtle" :color="logLevelColor(entry.level)">
-              {{ entry.level }}
-            </UBadge>
-          </div>
-          <p class="mt-1 font-sans text-xs font-semibold text-highlighted">
-            {{ entry.title }}
-          </p>
-          <p
-            v-if="entry.detail"
-            class="mt-0.5 font-sans text-[11px] leading-relaxed text-muted"
-          >
-            {{ entry.detail }}
-          </p>
-        </div>
-        <p
-          v-if="systemLogRows.length === 0"
-          class="px-3 py-6 text-center text-xs text-muted"
-        >
-          Brak wpisów.
-        </p>
-      </div>
-      </UCard>
-
-      <UCard v-if="expDevBanPanel" class="rounded-2xl border-default/60 p-4 shadow-sm lg:col-span-5">
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <p class="text-[10px] font-bold uppercase tracking-wider text-muted">
-            Banowanie kont (dev)
-          </p>
-          <UBadge size="xs" variant="subtle" color="neutral">
-            /api/admins/:id/(un)ban
-          </UBadge>
-        </div>
-        <p class="mt-1 text-[11px] leading-snug text-muted">
-          Szybka akcja do smoke testu — w panelu kont masz już przyciski „Banuj / Odbanuj”.
-        </p>
-
-        <div class="mt-3 space-y-3">
-          <UFormField label="Konto (z listy)">
-            <USelect
-              v-model="banUserSelected"
-              :items="banUserOptions"
-              value-key="value"
-              size="lg"
-              class="w-full rounded-xl"
-            />
-          </UFormField>
-          <UFormField label="user_id (UUID)">
-            <UInput v-model="banUserId" placeholder="np. 2e0b...-..." class="w-full rounded-xl" />
-          </UFormField>
-          <UFormField label="Powód (opcjonalnie)">
-            <UTextarea v-model="banReason" :rows="3" placeholder="np. Brak składek" class="w-full rounded-xl" />
-          </UFormField>
-          <div class="flex flex-wrap gap-2">
-            <UButton color="warning" class="rounded-xl font-bold" :loading="banPending" @click="devBanUser">
-              Zbanuj
-            </UButton>
-            <UButton color="success" variant="soft" class="rounded-xl font-bold" :loading="banPending" @click="devUnbanUser">
-              Odbanuj
-            </UButton>
-          </div>
-        </div>
-      </UCard>
-    </section>
+  </div>
   </PanelPageLayout>
 </template>

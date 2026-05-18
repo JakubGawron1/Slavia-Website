@@ -161,7 +161,9 @@ function editPostUrl(post: BlogPost) {
 <template>
   <PublicPageLayout>
     <PublicPageHeader
+      variant="hero"
       eyebrow="CKS Slavia"
+      icon="i-lucide-newspaper"
       title="Aktualności"
       description="Najnowsze informacje i relacje z zawodów naszego klubu."
     >

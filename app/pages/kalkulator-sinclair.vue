@@ -177,7 +177,9 @@ useSeoMeta({
 <template>
   <PublicPageLayout>
     <PublicPageHeader
+      variant="hero"
       eyebrow="Narzędzie"
+      icon="i-lucide-calculator"
       title="Kalkulator Sinclair"
       description="Przelicznik na okres 2025–2028 — porównywanie wyników zawodników o różnej masie ciała (dwubój: rwanie + podrzut)."
     />

@@ -116,6 +116,21 @@ svg {
   max-width: 80rem;
 }
 
+.slavia-public-page > :not([aria-hidden='true']) + * {
+  margin-top: 0;
+}
+
+/** Sekcja treści pod nagłówkiem publicznym */
+.slavia-public-section {
+  margin-top: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .slavia-public-section {
+    margin-top: 0.75rem;
+  }
+}
+
 /** Karta treści na podstronach (filtry, tabele, formularze) */
 .slavia-page-card {
   border-radius: 1rem;

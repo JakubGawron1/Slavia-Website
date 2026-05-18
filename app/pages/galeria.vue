@@ -223,7 +223,9 @@ const sortedPhotos = computed(() => {
 <template>
   <PublicPageLayout>
     <PublicPageHeader
+      variant="hero"
       eyebrow="CKS Slavia"
+      icon="i-lucide-images"
       title="Galeria zdjęć"
       description="Klub w obiektywie — podgląd dla wszystkich; zdjęcia dodaje administrator."
     >

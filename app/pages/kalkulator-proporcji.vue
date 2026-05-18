@@ -184,11 +184,11 @@ function rowAccentClass(s: string) {
 
 <template>
   <PublicPageLayout>
-    <PanelPageHeader
+    <PublicPageHeader
+      variant="hero"
       eyebrow="Narzędzie"
       title="Kalkulator „złotych proporcji”"
       icon="i-lucide-sigma"
-      variant="hero"
       description="Wpisz znane maxy (1RM) — dostaniesz sugerowane widełki i wskazówki balansu między bojami. Możesz wpisać kilka ćwiczeń naraz."
     >
       <template #badges>

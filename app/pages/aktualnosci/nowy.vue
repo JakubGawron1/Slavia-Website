@@ -23,30 +23,18 @@ async function onFormSuccess(e: { published: boolean; postId: string; title: str
 </script>
 
 <template>
-  <UContainer class="animate-page-in py-8 sm:py-12 lg:py-14">
-    <div class="mx-auto max-w-3xl">
-      <div class="mb-8 flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <p class="text-xs font-bold uppercase tracking-wider text-primary">
-            Aktualności klubu
-          </p>
-          <h1 class="mt-2 text-2xl font-bold tracking-tight text-highlighted sm:text-3xl">
-            Nowy wpis
-          </h1>
-          <p class="mt-2 text-sm text-muted">
-            Pełnoekranowy edytor — więcej miejsca na treść i podgląd formatowania.
-          </p>
-        </div>
-        <UButton
-          variant="soft"
-          color="neutral"
-          icon="i-lucide-arrow-left"
-          @click="goList"
-        >
-          Wróć do listy
-        </UButton>
-      </div>
+  <PublicPageLayout narrow>
+    <PublicPageHeader
+      variant="hero"
+      eyebrow="Aktualności klubu"
+      icon="i-lucide-pen-tool"
+      title="Nowy wpis"
+      description="Pełnoekranowy edytor — więcej miejsca na treść i podgląd formatowania."
+      back-to="/aktualnosci"
+      back-label="Wróć do listy"
+    />
 
+    <div class="slavia-public-section">
       <ClientOnly>
         <ClubBlogPostForm
           mode="create"
@@ -61,5 +49,5 @@ async function onFormSuccess(e: { published: boolean; postId: string; title: str
         </template>
       </ClientOnly>
     </div>
-  </UContainer>
+  </PublicPageLayout>
 </template>

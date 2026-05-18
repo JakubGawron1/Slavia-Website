@@ -21,6 +21,7 @@ test-results/
 .DS_Store
 .fleet
 .idea
+.scripts
 
 # Local env files
 .env

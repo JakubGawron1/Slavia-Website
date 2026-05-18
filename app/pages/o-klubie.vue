@@ -12,7 +12,9 @@ useSeoMeta({
 <template>
   <PublicPageLayout padding="hero">
     <PublicPageHeader
+      variant="hero"
       eyebrow="CKS Slavia"
+      icon="i-lucide-landmark"
       title="O klubie"
       description="Tradycja, ludzie i codzienna praca na platformie — oś czasu najważniejszych momentów w historii naszej sekcji."
     />
