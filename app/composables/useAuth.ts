@@ -13,6 +13,29 @@ const ROLE_LABELS: Record<UserRole, string> = {
 
 const ROLE_ORDER: UserRole[] = ['SuperAdmin', 'Admin', 'Trainer', 'Athlete']
 
+const KNOWN_ROLES = new Set<UserRole>(['SuperAdmin', 'Admin', 'Trainer', 'Athlete'])
+
+/** Normalizuje role z API / JWT (string lub legacy obiekt z serde). */
+export function normalizeUserRoles(raw: unknown): UserRole[] {
+  if (!Array.isArray(raw)) return []
+  const out: UserRole[] = []
+  for (const item of raw) {
+    if (typeof item === 'string') {
+      if (KNOWN_ROLES.has(item as UserRole)) out.push(item as UserRole)
+      continue
+    }
+    if (item && typeof item === 'object') {
+      const key = Object.keys(item as Record<string, unknown>)[0]
+      if (key === 'TrainerAdmin') {
+        out.push('Admin', 'Trainer')
+      } else if (key && KNOWN_ROLES.has(key as UserRole)) {
+        out.push(key as UserRole)
+      }
+    }
+  }
+  return [...new Set(out)]
+}
+
 /** Domyślna strona po logowaniu (bez `redirect` z query) — pierwsza pasująca rola wg hierarchii. */
 export function pickPostLoginPath(roleList: UserRole[]): string {
   const r = new Set(roleList)
@@ -76,7 +99,7 @@ export function useAuth() {
 
   const isLoggedIn = computed(() => !!token.value)
 
-  const roles = computed(() => user.value?.roles ?? [])
+  const roles = computed(() => normalizeUserRoles(user.value?.roles ?? []))
 
   const isSuperAdmin = computed(() => roles.value.includes('SuperAdmin'))
 
@@ -90,6 +113,9 @@ export function useAuth() {
   const isAdmin = computed(() =>
     roles.value.some(role => ['Admin', 'SuperAdmin'].includes(role))
   )
+
+  /** Blog, galeria, ogłoszenia — Admin lub SuperAdmin (role z bazy przez GET /me). */
+  const canManageClubContent = computed(() => isAdmin.value)
 
   /** Konto ma przypisaną rolę zawodnika (bez konfliktu z kadrowymi flagami). */
   const isAthlete = computed(() => roles.value.includes('Athlete'))
@@ -115,8 +141,8 @@ export function useAuth() {
       const me = await $fetch<AuthUser>(`${apiBase.value}${apiRoutes.auth.me}`, {
         headers: { Authorization: `Bearer ${token.value}` }
       })
-      user.value = me
-      return me
+      user.value = { ...me, roles: normalizeUserRoles(me.roles) }
+      return user.value
     } catch (e) {
       // Na produkcji najczęstsze przypadki to:
       // - 401/403: token jest zły / JWT_SECRET się nie zgadza / konto zbanowane → wyloguj
@@ -152,7 +178,7 @@ export function useAuth() {
     user.value = {
       id: res.user_id,
       username,
-      roles: res.roles,
+      roles: normalizeUserRoles(res.roles),
       is_banned: false,
       banned_reason: null
     }
@@ -167,13 +193,17 @@ export function useAuth() {
   }
 
   /** Używane w middleware: odśwież sesję jeśli jest token. */
-  async function ensureSession() {
+  async function ensureSession(options?: { force?: boolean }) {
     if (!token.value) {
       user.value = null
       return
     }
-    if (user.value) return
+    if (!options?.force && user.value?.roles?.length) return
     await fetchMe()
+  }
+
+  async function refreshSession() {
+    await ensureSession({ force: true })
   }
 
   return {
@@ -183,6 +213,7 @@ export function useAuth() {
     roles,
     isLoggedIn,
     isAdmin,
+    canManageClubContent,
     isTrainer,
     isSuperAdmin,
     isAthlete,
@@ -191,6 +222,7 @@ export function useAuth() {
     login,
     logout,
     fetchMe,
-    ensureSession
+    ensureSession,
+    refreshSession
   }
 }

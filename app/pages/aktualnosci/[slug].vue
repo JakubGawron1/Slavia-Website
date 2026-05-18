@@ -8,8 +8,8 @@ import { parseBlogPostId } from '~/utils/slug'
 
 const route = useRoute()
 const apiFetch = useApi()
-const auth = useAuth()
 const config = useRuntimeConfig()
+const { auth, canManage } = useClubContentAdmin()
 
 const rawSlug = String(route.params.slug || '')
 const postId = parseBlogPostId(rawSlug)
@@ -26,7 +26,6 @@ function publicBase() {
 }
 
 const base = computed(() => publicBase())
-const isAdmin = computed(() => auth.isAdmin.value || auth.isSuperAdmin.value)
 
 // SSR zawsze renderuje wersję publiczną wpisu (cache/ISR bez ryzyka per-user).
 const { data: post, pending, refresh: refreshPublic } = await useLazyFetch<BlogPost | null>(
@@ -40,7 +39,7 @@ const { data: post, pending, refresh: refreshPublic } = await useLazyFetch<BlogP
 
 async function refreshPost() {
   // Adminowe “manage” ładujemy tylko na kliencie (token w localStorage).
-  if (import.meta.client && isAdmin.value && auth.token.value) {
+  if (import.meta.client && canManage.value && auth.token.value) {
     const managed = await apiFetch<BlogPost>(`/api/posts/manage/${encodeURIComponent(String(postId))}`).catch(() => null)
     if (managed) {
       post.value = managed

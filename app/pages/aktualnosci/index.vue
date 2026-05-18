@@ -14,12 +14,10 @@ useSeoMeta({
   twitterCard: 'summary_large_image'
 })
 
-const auth = useAuth()
+const { auth, canManage } = useClubContentAdmin()
 const apiFetch = useApi()
 const toast = useToast()
 const config = useRuntimeConfig()
-
-const isAdmin = computed(() => auth.isAdmin.value || auth.isSuperAdmin.value)
 
 interface BlogPost {
   id: string
@@ -108,7 +106,7 @@ function cancelScheduledPrefetch(post: BlogPost) {
 
 async function refreshList() {
   // Adminowe “manage” ładujemy tylko na kliencie (token w localStorage).
-  if (import.meta.client && (auth.isAdmin.value || auth.isSuperAdmin.value) && auth.token.value) {
+  if (import.meta.client && canManage.value && auth.token.value) {
     const list = await apiFetch<BlogPost[]>('/api/posts/manage').catch(() => null)
     if (Array.isArray(list)) {
       posts.value = list
@@ -123,7 +121,7 @@ onMounted(() => {
 })
 
 async function deletePost(id: string) {
-  if (!isAdmin.value) {
+  if (!canManage.value) {
     toast.add({ title: 'Brak uprawnień', color: 'error' })
     return
   }
@@ -169,7 +167,7 @@ function editPostUrl(post: BlogPost) {
     >
       <template #actions>
         <UButton
-          v-if="isAdmin"
+          v-if="canManage"
           to="/aktualnosci/nowy"
           icon="i-lucide-pen-tool"
           color="primary"
@@ -262,7 +260,7 @@ function editPostUrl(post: BlogPost) {
               {{ post.title }}
             </h3>
             <UBadge
-              v-if="isAdmin && post.published === false"
+              v-if="canManage && post.published === false"
               color="warning"
               variant="subtle"
               size="xs"
@@ -289,7 +287,7 @@ function editPostUrl(post: BlogPost) {
             </UButton>
 
             <div
-              v-if="isAdmin"
+              v-if="canManage"
               class="flex flex-wrap gap-2"
             >
               <UButton

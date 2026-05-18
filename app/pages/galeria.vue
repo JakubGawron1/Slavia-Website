@@ -20,7 +20,7 @@ useSeoMeta({
   robots: 'index, follow'
 })
 
-const auth = useAuth()
+const { auth, canManage } = useClubContentAdmin()
 const apiFetch = useApi()
 const toast = useToast()
 const config = useRuntimeConfig()
@@ -28,8 +28,6 @@ const config = useRuntimeConfig()
 function gallerySrc(url: string) {
   return resolveGalleryImageUrl(url, String(config.public.cmsBaseUrl || ''))
 }
-
-const isAdmin = computed(() => auth.isAdmin.value || auth.isSuperAdmin.value)
 
 function publicBase() {
   return String(config.public.apiBase || '').replace(/\/$/, '')
@@ -49,7 +47,7 @@ const { data: photos, refresh: refreshPublic, pending } = await useLazyFetch<Gal
 
 async function refreshList() {
   // Adminowe “manage” ładujemy tylko na kliencie (token w localStorage) — nie wpływa na cache SSR.
-  if (import.meta.client && isAdmin.value && auth.token.value) {
+  if (import.meta.client && canManage.value && auth.token.value) {
     const list = await apiFetch<GalleryPhoto[]>('/api/gallery/manage').catch(() => null)
     if (Array.isArray(list)) {
       photos.value = list
@@ -149,7 +147,7 @@ async function onFileChange(e: Event) {
 }
 
 async function save() {
-  if (!isAdmin.value) return
+  if (!canManage.value) return
   const image_url = draft.image_url.trim()
   if (!image_url) {
     toast.add({ title: 'Prześlij zdjęcie', color: 'warning' })
@@ -195,7 +193,7 @@ async function save() {
 }
 
 async function remove(id: string) {
-  if (!isAdmin.value) return
+  if (!canManage.value) return
   if (!confirm('Usunąć to zdjęcie z galerii?')) return
   try {
     await apiFetch(`/api/gallery/${id}`, { method: 'DELETE' })
@@ -231,7 +229,7 @@ const sortedPhotos = computed(() => {
     >
       <template #actions>
         <UButton
-          v-if="isAdmin"
+          v-if="canManage"
           icon="i-lucide-image-plus"
           color="primary"
           class="min-h-11 w-full shrink-0 justify-center md:w-auto"
@@ -309,7 +307,7 @@ const sortedPhotos = computed(() => {
             </div>
           </button>
           <UBadge
-            v-if="isAdmin && !p.published"
+            v-if="canManage && !p.published"
             class="absolute left-2 top-2"
             color="warning"
             size="xs"
@@ -318,7 +316,7 @@ const sortedPhotos = computed(() => {
           </UBadge>
         </div>
         <figcaption
-          v-if="p.caption || isAdmin"
+          v-if="p.caption || canManage"
           class="flex flex-col gap-2 p-3"
         >
           <p
@@ -328,7 +326,7 @@ const sortedPhotos = computed(() => {
             {{ p.caption }}
           </p>
           <div
-            v-if="isAdmin"
+            v-if="canManage"
             class="flex flex-wrap gap-2"
           >
             <UButton

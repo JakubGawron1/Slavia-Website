@@ -25,14 +25,12 @@ useSeoMeta({
   robots: 'index, follow'
 })
 
-const auth = useAuth()
+const { auth, canManage } = useClubContentAdmin()
 const apiFetch = useApi()
 const toast = useToast()
 
-const isAdmin = computed(() => auth.isAdmin.value || auth.isSuperAdmin.value)
-
 async function fetchList(): Promise<Announcement[]> {
-  if (isAdmin.value && auth.token.value) {
+  if (canManage.value && auth.token.value) {
     try {
       return await apiFetch<Announcement[]>('/api/announcements/manage')
     } catch {
@@ -43,7 +41,7 @@ async function fetchList(): Promise<Announcement[]> {
 }
 
 const { data: items, refresh, pending } = await useAsyncData('club-announcements', fetchList, {
-  watch: [() => isAdmin.value, () => auth.token.value],
+  watch: [() => canManage.value, () => auth.token.value],
   default: () => [] as Announcement[]
 })
 
@@ -78,7 +76,7 @@ function openEdit(a: Announcement) {
 }
 
 async function save() {
-  if (!isAdmin.value) return
+  if (!canManage.value) return
   const title = draft.title.trim()
   const body = draft.body.trim()
   if (!title || !body) {
@@ -123,7 +121,7 @@ async function save() {
 }
 
 async function remove(id: string) {
-  if (!isAdmin.value) return
+  if (!canManage.value) return
   if (!confirm('Usunąć to ogłoszenie?')) return
   try {
     await apiFetch(`/api/announcements/${id}`, { method: 'DELETE' })
@@ -180,7 +178,7 @@ function bodyPreview(text: string, max = 100) {
     >
       <template #actions>
         <UButton
-          v-if="isAdmin"
+          v-if="canManage"
           icon="i-lucide-megaphone"
           color="primary"
           class="min-h-11 w-full shrink-0 justify-center md:w-auto"
@@ -201,7 +199,7 @@ function bodyPreview(text: string, max = 100) {
       <UBadge v-if="boardStats.pinned" color="primary" variant="subtle" size="sm">
         Przypięte: {{ boardStats.pinned }}
       </UBadge>
-      <UBadge v-if="isAdmin && boardStats.drafts" color="warning" variant="subtle" size="sm">
+      <UBadge v-if="canManage && boardStats.drafts" color="warning" variant="subtle" size="sm">
         Szkice: {{ boardStats.drafts }}
       </UBadge>
     </div>
@@ -241,7 +239,7 @@ function bodyPreview(text: string, max = 100) {
     </div>
 
     <template v-else>
-      <UCard v-if="isAdmin" class="slavia-page-card mb-8 hidden overflow-hidden md:block">
+      <UCard v-if="canManage" class="slavia-page-card mb-8 hidden overflow-hidden md:block">
         <div class="slavia-data-table overflow-x-auto">
           <table>
             <thead>
@@ -279,7 +277,7 @@ function bodyPreview(text: string, max = 100) {
         </div>
       </UCard>
 
-      <div :class="isAdmin ? 'space-y-4 md:hidden' : 'space-y-4'">
+      <div :class="canManage ? 'space-y-4 md:hidden' : 'space-y-4'">
       <UCard
         v-for="a in sortedPublic"
         :key="a.id"
@@ -298,7 +296,7 @@ function bodyPreview(text: string, max = 100) {
                 Przypięte
               </UBadge>
               <UBadge
-                v-if="isAdmin && !a.published"
+                v-if="canManage && !a.published"
                 color="warning"
                 variant="subtle"
                 size="xs"
@@ -316,7 +314,7 @@ function bodyPreview(text: string, max = 100) {
             />
           </div>
           <div
-            v-if="isAdmin"
+            v-if="canManage"
             class="flex shrink-0 flex-wrap gap-2"
           >
             <UButton
