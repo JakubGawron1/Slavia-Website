@@ -49,7 +49,12 @@ export function useApi() {
 
 export function getApiErrorMessage(e: unknown, fallback = 'Wystąpił błąd.') {
   const err = e as FetchError<{ message?: string, error?: string }>
-  return err?.data?.message || err?.data?.error || err?.message || fallback
+  const status = err?.response?.status
+  const body = err?.data?.message || err?.data?.error || err?.message || fallback
+  if (status === 409) {
+    return body.includes('już') ? body : `${body} (duplikat — odśwież widok, jeśli wpis już istnieje.)`
+  }
+  return body
 }
 
 export function getApiDetailedErrorMessage(e: unknown, fallback = 'Wystąpił błąd połączenia z backendem.') {

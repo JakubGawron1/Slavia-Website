@@ -101,13 +101,39 @@ const profileHeroBio = computed(
     || `Profil zawodnika ${athlete.value!.full_name} w CKS Slavia Ruda Śląska.`
 )
 
+const publicProfileUrl = computed(() => {
+  const base = String(requestUrlState.origin || '').replace(/\/$/, '')
+  return `${base}${route.path}`
+})
+
 useSeoMeta({
   title: `${athlete.value.full_name} — Slavia`,
   description: profileHeroBio.value.slice(0, 320),
   ogTitle: athlete.value.full_name,
   ogDescription: profileHeroBio.value.slice(0, 300),
-  ogImage: athlete.value.image_url || '/logo.png'
+  ogImage: athlete.value.image_url || '/logo.png',
+  ogType: 'profile'
 })
+
+useHead(() => ({
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'Person',
+        name: athlete.value?.full_name,
+        url: publicProfileUrl.value,
+        image: athlete.value?.image_url || undefined,
+        description: profileHeroBio.value,
+        memberOf: {
+          '@type': 'SportsOrganization',
+          name: 'CKS Slavia Ruda Śląska'
+        }
+      })
+    }
+  ]
+}))
 
 function formatDate(dateStr: string) {
   try {

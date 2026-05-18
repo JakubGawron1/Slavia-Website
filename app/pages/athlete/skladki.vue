@@ -131,6 +131,21 @@ const membershipMonthBadge = computed(() => {
   if (!paymentStatus.value) return null
   return membershipMonthBadgeFromStatus(paymentStatus.value, terms.paymentStandingOrder())
 })
+
+/** Historia auto-składek przy przelewie stałym (ideas #16). */
+const standingOrderTimeline = computed(() => {
+  if (!paymentStatus.value?.has_standing_order) {
+    return []
+  }
+  return yearRows.value
+    .filter(r => r.is_paid)
+    .map(r => ({
+      month: r.month,
+      label: monthLabelPl(r.month),
+      description: 'Auto-składka (przelew stały) — zatwierdzona wpłata w systemie'
+    }))
+    .reverse()
+})
 </script>
 
 <template>
@@ -184,6 +199,25 @@ const membershipMonthBadge = computed(() => {
         </UButton>
         <p v-if="paymentStatus" class="text-xs text-muted">Termin: {{ paymentStatus.due_date }}</p>
       </div>
+    </UCard>
+
+    <UCard v-if="standingOrderTimeline.length" class="mt-6 rounded-2xl border-primary/30 bg-primary/5">
+      <h2 class="text-lg font-black text-highlighted">
+        Przelew stały — historia
+      </h2>
+      <p class="mt-1 text-sm text-muted">
+        Miesiące z zatwierdzoną składką przy włączonym przelewie stałym.
+      </p>
+      <ul class="mt-4 space-y-2">
+        <li
+          v-for="item in standingOrderTimeline"
+          :key="item.month"
+          class="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-default/50 bg-background/60 px-3 py-2 text-sm"
+        >
+          <span class="font-semibold">{{ item.label }}</span>
+          <span class="text-muted">{{ item.description }}</span>
+        </li>
+      </ul>
     </UCard>
 
     <UCard class="mt-6 rounded-2xl border-default/70">

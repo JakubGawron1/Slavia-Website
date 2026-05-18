@@ -429,6 +429,32 @@ const showTrainingSection = computed(() => auth.isLoggedIn.value && canSeeClubTr
 /** Pierwsza trójka wewnętrznego rankingu treningowego — podium jak przy zawodach. */
 const trainingPodium = computed(() => trainingRanking.value.slice(0, 3))
 
+const exportKind = ref<'competition' | 'training'>('competition')
+
+function downloadRankingCsv() {
+  const rows = exportKind.value === 'training' && canSeeClubTrainingRanking.value
+    ? trainingRanking.value
+    : filteredRankings.value
+  const kindLabel = exportKind.value === 'training' ? 'trening' : 'zawody'
+  const header = ['Pozycja', 'Imię i nazwisko', 'Kategoria', 'Total (kg)', 'Sinclair', 'Rodzaj rankingu']
+  const lines = rows.map((r, i) => [
+    String(i + 1),
+    `"${String(r.name).replace(/"/g, '""')}"`,
+    `"${String(r.weightCategoryText || '').replace(/"/g, '""')}"`,
+    String(r.total ?? ''),
+    String(r.sinclair ?? ''),
+    kindLabel
+  ].join(';'))
+  const csv = `\uFEFF${header.join(';')}\n${lines.join('\n')}\n`
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `ranking-slavia-${kindLabel}-${new Date().toISOString().slice(0, 10)}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 const terms = useSlaviaCopy()
 const runtimePublic = useRuntimeConfig().public
 const publicFeaturesMap = usePublicFeatures()
@@ -597,6 +623,27 @@ const showAthleteCompareLink = computed(() => {
           <p class="mt-2 font-medium text-muted">
             Zestawienie Sinclair — uwzględniani są tylko zawodnicy z co najmniej jednym zatwierdzonym wynikiem.
           </p>
+          <div class="mt-3 flex flex-wrap items-center gap-2">
+            <USelect
+              v-if="canSeeClubTrainingRanking"
+              v-model="exportKind"
+              :items="[
+                { label: 'Eksport: zawody', value: 'competition' },
+                { label: 'Eksport: trening', value: 'training' }
+              ]"
+              class="w-44"
+              size="sm"
+            />
+            <UButton
+              size="sm"
+              variant="soft"
+              icon="i-lucide-download"
+              :disabled="(exportKind === 'training' ? trainingRanking : filteredRankings).length === 0"
+              @click="downloadRankingCsv"
+            >
+              CSV na zebranie
+            </UButton>
+          </div>
         </div>
         <div
           class="flex w-full flex-wrap gap-2 rounded-2xl border border-default bg-muted/30 p-1.5 md:inline-flex md:w-auto md:flex-nowrap lg:p-2"

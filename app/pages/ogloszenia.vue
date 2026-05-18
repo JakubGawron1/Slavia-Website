@@ -2,6 +2,7 @@
 import { format, parseISO } from 'date-fns'
 import { pl } from 'date-fns/locale'
 import { getApiErrorMessage } from '~/composables/useApi'
+import { renderSimpleMarkdown } from '~/utils/renderSimpleMarkdown'
 
 definePageMeta({
   middleware: 'auth'
@@ -309,9 +310,10 @@ function bodyPreview(text: string, max = 100) {
             <h2 class="text-lg font-semibold text-highlighted sm:text-xl">
               {{ a.title }}
             </h2>
-            <p class="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-muted sm:text-base">
-              {{ a.body }}
-            </p>
+            <div
+              class="prose prose-sm mt-2 max-w-none text-muted sm:prose-base"
+              v-html="renderSimpleMarkdown(a.body)"
+            />
           </div>
           <div
             v-if="isAdmin"

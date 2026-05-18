@@ -380,6 +380,9 @@ const athleteModuleGroups: { title: string, items: DashboardModuleLink[] }[] = [
       dashboardLink('Składka klubowa', 'Zgłoś płatność i status', 'i-lucide-banknote', '/athlete/skladki', 'text-primary', 'bg-primary/15'),
       dashboardLink('Kalendarz startów', 'Przypisania od kadry', 'i-lucide-calendar-heart', '/athlete/kalendarz', 'text-primary', 'bg-primary/15'),
       dashboardLink('Moja obecność', 'Zgłoś i sprawdź historię', 'i-lucide-user-check', '/attendance', 'text-primary', 'bg-primary/12'),
+      ...(useExperimentalFlag('attendance_qr_checkin').value
+        ? [dashboardLink('Skaner QR obecności', 'Check-in na sali', 'i-lucide-qr-code', '/athlete/obecnosc-qr', 'text-primary', 'bg-primary/10')]
+        : []),
       dashboardLink('Czat z trenerem', 'Wiadomości 1:1', 'i-lucide-messages-square', '/chat', 'text-info', 'bg-info/14'),
       dashboardLink('Powiadomienia', 'Alerty od kadry', 'i-lucide-bell', '/powiadomienia', 'text-amber-600', 'bg-amber-500/12')
     ]

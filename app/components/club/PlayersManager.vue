@@ -8,8 +8,11 @@ import {
   type PzpcAgeGroupId
 } from '~/data/pzpcWeightCategories'
 import type { Competition, GroupedAdminAccounts, Player, UserRole } from '~/types/models'
+import { useFormFieldScrollRestore } from '~/composables/useFormFieldScrollRestore'
+import { buildUploadFormData } from '~/utils/uploadFormData'
 
 const api = useApi()
+const formScroll = useFormFieldScrollRestore('players-manager-modal')
 const toast = useToast()
 const auth = useAuth()
 const expReverseLink = useExperimentalFlag('athlete_reverse_account_linking')
@@ -367,6 +370,7 @@ function openEdit(p: Player) {
   standingOrderInitial.value = form.has_standing_order
   athleteAccountSelected.value = p.user_id ?? ''
   modalOpen.value = true
+  nextTick(() => formScroll.restoreScroll())
 }
 
 function clickFileInput() {
@@ -378,9 +382,7 @@ async function onFileChange(e: Event) {
   if (!input.files?.length) return
 
   const file = input.files[0] as File
-  const formData = new FormData()
-  formData.append('file', file)
-  formData.append('purpose', 'athletes')
+  const formData = buildUploadFormData(file, 'athletes')
 
   uploadLoading.value = true
   try {

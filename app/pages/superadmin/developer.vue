@@ -279,6 +279,30 @@ function isExperimentalLocked(id: string) {
   return experimental.isForcedOffByDeploy(id)
 }
 const config = useRuntimeConfig()
+
+type FeatureAdoptionRow = {
+  module_key: string
+  label: string
+  unique_users_30d: number
+  events_30d: number
+}
+
+const featureAdoptionRows = ref<FeatureAdoptionRow[]>([])
+const featureAdoptionLoading = ref(false)
+const cmsBaseConfigured = computed(() => Boolean(String(config.public.cmsBaseUrl || '').trim()))
+
+async function refreshFeatureAdoption() {
+  featureAdoptionLoading.value = true
+  try {
+    featureAdoptionRows.value = await apiFetch<FeatureAdoptionRow[]>(apiRoutes.system.featureAdoption)
+  } catch (e) {
+    featureAdoptionRows.value = []
+    toast.add({ title: 'Adopcja modułów', description: getApiErrorMessage(e), color: 'warning' })
+  } finally {
+    featureAdoptionLoading.value = false
+  }
+}
+
 const { enabled, permission, supported, requestPermission, setEnabled, notify } = useBrowserNotifications()
 const userAgentDisplay = ref('')
 const systemLogs = useDevSuperadminLogs()
@@ -417,6 +441,7 @@ onMounted(() => {
     applyMobilePreviewDom(mobilePreviewOn.value, mobilePreviewWidth.value)
   }
   void refreshBanUsersCatalog()
+  void refreshFeatureAdoption()
   void $fetch<{ active_provider: 'leapcell' | 'render', updated_at?: string | null }>('/api/system/backend-provider', {
     headers: auth.token.value ? { Authorization: `Bearer ${auth.token.value}` } : undefined
   })
@@ -1909,6 +1934,89 @@ function toastStorageApisAvailability() {
         </div>
       </div>
       </UCard>
+
+      <section id="ops-integrations" class="space-y-4 lg:col-span-12">
+        <div class="flex items-center gap-3 px-1">
+          <UIcon name="i-lucide-plug" class="size-6 text-primary" />
+          <h2 class="text-xl font-black uppercase italic tracking-tight text-highlighted">
+            Integracje i jakość danych
+          </h2>
+        </div>
+        <UCard class="rounded-2xl border-default/60 p-4 shadow-sm space-y-4">
+          <div>
+            <p class="text-[10px] font-bold uppercase tracking-wider text-muted">QR check-in (WWW)</p>
+            <p class="mt-1 text-sm text-muted">
+              Flaga <code>attendance_qr_checkin</code> — skaner zawodnika: <NuxtLink to="/athlete/obecnosc-qr" class="text-primary underline">/athlete/obecnosc-qr</NuxtLink>,
+              kadra: <NuxtLink to="/attendance" class="text-primary underline">/attendance</NuxtLink>.
+            </p>
+          </div>
+          <div>
+            <p class="text-[10px] font-bold uppercase tracking-wider text-muted">Upload Cloudinary</p>
+            <p class="mt-1 text-sm text-muted">
+              Multipart: pole <code>file</code> (+ opcjonalnie <code>purpose</code>: avatar | athletes | gallery | blog).
+              Limit body na backendzie: 45 MB. Klient nie ustawia <code>Content-Type</code> dla FormData.
+            </p>
+          </div>
+          <div>
+            <p class="text-[10px] font-bold uppercase tracking-wider text-muted">Duplikaty (409)</p>
+            <ul class="mt-1 list-disc ps-4 text-sm text-muted space-y-1">
+              <li>Składki: ten sam miesiąc Pending / Approved</li>
+              <li>Wyniki: Pending z tą samą datą i totalem (zawodnik)</li>
+              <li>Obecności: ten sam dzień (zawodnik / QR już verified)</li>
+            </ul>
+          </div>
+          <div>
+            <p class="text-[10px] font-bold uppercase tracking-wider text-muted">Slavia-cms (GitHub)</p>
+            <p class="mt-1 text-sm text-muted">
+              <code>NUXT_PUBLIC_CMS_BASE_URL</code>:
+              <span class="font-mono">{{ config.public.cmsBaseUrl || '— nie ustawiono —' }}</span>
+              <UBadge class="ml-2" size="xs" :color="cmsBaseConfigured ? 'success' : 'warning'" variant="subtle">
+                {{ cmsBaseConfigured ? 'skonfigurowane' : 'brak' }}
+              </UBadge>
+            </p>
+            <ul class="mt-2 list-disc ps-4 text-xs text-muted space-y-1">
+              <li><code>GITHUB_TOKEN</code> (PAT) — scope <code>repo</code> do prywatnego <code>JakubGawron1/Slavia-cms</code></li>
+              <li>Struktura repo: <code>gallery/</code>, <code>media/</code> — ścieżki względne w DB galerii</li>
+              <li>Deploy key / GitHub App — alternatywa dla CI uploadu bez PAT w runtime frontendu</li>
+            </ul>
+          </div>
+          <div>
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <p class="text-[10px] font-bold uppercase tracking-wider text-muted">Feature adoption (30 dni)</p>
+              <UButton size="xs" variant="soft" icon="i-lucide-refresh-cw" :loading="featureAdoptionLoading" @click="refreshFeatureAdoption">
+                Odśwież
+              </UButton>
+            </div>
+            <div class="mt-2 max-h-48 overflow-auto rounded-xl border border-default/50">
+              <table class="w-full text-xs">
+                <thead class="bg-muted/20">
+                  <tr>
+                    <th class="px-2 py-1 text-left">Moduł</th>
+                    <th class="px-2 py-1 text-right">Użytk.</th>
+                    <th class="px-2 py-1 text-right">Zdarz.</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="row in featureAdoptionRows.slice(0, 20)" :key="row.module_key" class="border-t border-default/40">
+                    <td class="px-2 py-1">{{ row.label }}</td>
+                    <td class="px-2 py-1 text-right font-mono">{{ row.unique_users_30d }}</td>
+                    <td class="px-2 py-1 text-right font-mono">{{ row.events_30d }}</td>
+                  </tr>
+                  <tr v-if="!featureAdoptionRows.length">
+                    <td colspan="3" class="px-2 py-4 text-center text-muted">Brak danych audytu (30 dni).</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div>
+            <p class="text-[10px] font-bold uppercase tracking-wider text-muted">Sentry / monitoring (ideas #200)</p>
+            <p class="mt-1 text-xs text-muted">
+              Produkcyjnie: <code>NUXT_PUBLIC_SENTRY_DSN</code>, <code>SENTRY_AUTH_TOKEN</code> w CI — integracja SDK opcjonalna w kolejnej iteracji.
+            </p>
+          </div>
+        </UCard>
+      </section>
 
       <section id="perf-audit" class="space-y-4">
         <div class="flex items-center gap-3 px-1">

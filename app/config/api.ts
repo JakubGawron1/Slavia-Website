@@ -116,6 +116,7 @@ export const apiRoutes = {
     ping: '/api/system/ping',
     backendProvider: '/api/system/backend-provider',
     auditLogs: '/api/system/audit-logs',
+    featureAdoption: '/api/system/feature-adoption',
     metrics: '/api/system/metrics',
     eventFeed: '/api/system/event-feed',
     workerCronRuns: '/api/system/worker-cron-runs',

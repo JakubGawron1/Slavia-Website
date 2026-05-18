@@ -2,6 +2,7 @@
 import { getApiErrorMessage } from '~/composables/useApi'
 import { stripHtmlTags } from '~/utils/html'
 import { sanitizeRichHtml } from '~/utils/sanitizeHtml'
+import { buildUploadFormData } from '~/utils/uploadFormData'
 
 const props = withDefaults(
   defineProps<{
@@ -75,9 +76,7 @@ async function onFileChange(e: Event) {
     return
   }
 
-  const formData = new FormData()
-  formData.append('file', file)
-  formData.append('purpose', 'blog')
+  const formData = buildUploadFormData(file, 'blog')
   uploadLoading.value = true
   try {
     const res = await apiFetch<{ url: string }>('/api/upload', {

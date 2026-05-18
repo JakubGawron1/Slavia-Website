@@ -97,7 +97,7 @@ export const EXPERIMENTAL_FEATURES: ExperimentalFeatureDefinition[] = [
     id: 'attendance_qr_checkin',
     label: 'Obecność: kod QR + skaner zawodnika',
     description:
-      'Stały kod QR dla kadry (druk) oraz skaner w aplikacji mobilnej — natychmiastowa, zatwierdzona obecność.',
+      'Stały kod QR dla kadry (druk), skaner w aplikacji mobilnej oraz /athlete/obecnosc-qr na WWW — natychmiastowa, zatwierdzona obecność.',
     defaultEnabled: true
   },
   {

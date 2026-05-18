@@ -67,6 +67,11 @@ const paymentsPendingCount = computed(
   () => (paymentsOverview.value || []).filter((r: { has_approved?: boolean }) => !r.has_approved).length
 )
 
+/** Skrót: kto bez wpłaty za bieżący miesiąc (ideas #19). */
+const unpaidThisMonth = computed(() =>
+  (paymentsOverview.value || []).filter(r => !r.has_approved).slice(0, 12)
+)
+
 const { data: recentAttendance } = await useAsyncData(
   'trainer-kpi-attendance-recent',
   () => {
@@ -391,6 +396,28 @@ async function rejectPayment(id: string) {
           <UButton size="sm" variant="soft" icon="i-lucide-refresh-ccw" @click="refreshPendingPayments()">Odśwież</UButton>
         </template>
       </DashboardUrgentList>
+
+      <UCard v-if="unpaidThisMonth.length" class="rounded-2xl border-warning/40 bg-warning/5">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <h3 class="font-bold text-highlighted">
+            Bez wpłaty za {{ currentMonthStr }}
+          </h3>
+          <UButton size="xs" variant="soft" to="/trainer/skladki">
+            Składki
+          </UButton>
+        </div>
+        <ul class="mt-3 space-y-1 text-sm">
+          <li v-for="row in unpaidThisMonth" :key="row.athlete_id" class="text-muted">
+            {{ row.full_name }}
+            <UBadge v-if="row.has_pending" size="xs" color="warning" variant="subtle" class="ml-1">
+              Pending
+            </UBadge>
+          </li>
+        </ul>
+        <p v-if="paymentsPendingCount > unpaidThisMonth.length" class="mt-2 text-xs text-muted">
+          + {{ paymentsPendingCount - unpaidThisMonth.length }} więcej — pełna lista w składkach.
+        </p>
+      </UCard>
     </div>
 
     <div class="slavia-panel-section space-y-8">

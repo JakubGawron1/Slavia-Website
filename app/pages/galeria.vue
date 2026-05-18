@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { getApiErrorMessage } from '~/composables/useApi'
+import { buildUploadFormData } from '~/utils/uploadFormData'
+import { resolveGalleryImageUrl } from '~/utils/cmsAssets'
 
 interface GalleryPhoto {
   id: string
@@ -22,6 +24,10 @@ const auth = useAuth()
 const apiFetch = useApi()
 const toast = useToast()
 const config = useRuntimeConfig()
+
+function gallerySrc(url: string) {
+  return resolveGalleryImageUrl(url, String(config.public.cmsBaseUrl || ''))
+}
 
 const isAdmin = computed(() => auth.isAdmin.value || auth.isSuperAdmin.value)
 
@@ -125,9 +131,7 @@ async function onFileChange(e: Event) {
     draft.media_type = 'video'
   }
 
-  const formData = new FormData()
-  formData.append('file', file)
-  formData.append('purpose', 'gallery')
+  const formData = buildUploadFormData(file, 'gallery')
   uploadLoading.value = true
   try {
     const res = await apiFetch<{ url: string }>('/api/upload', {
@@ -276,7 +280,7 @@ const sortedPhotos = computed(() => {
         <div class="relative">
           <img
             v-if="p.media_type === 'image'"
-            :src="p.image_url"
+            :src="gallerySrc(p.image_url)"
             :alt="p.caption || 'Zdjęcie klubu'"
             class="w-full cursor-zoom-in object-cover"
             loading="lazy"
@@ -289,8 +293,8 @@ const sortedPhotos = computed(() => {
             @click="openMediaPreview(p)"
           >
             <video
-              :src="p.image_url"
-              :poster="videoPoster(p.image_url)"
+              :src="gallerySrc(p.image_url)"
+              :poster="videoPoster(gallerySrc(p.image_url))"
               class="w-full object-cover"
               preload="metadata"
               muted
@@ -442,13 +446,13 @@ const sortedPhotos = computed(() => {
         <div class="p-3 sm:p-4">
           <img
             v-if="mediaPreviewItem?.media_type === 'image'"
-            :src="mediaPreviewItem.image_url"
+            :src="gallerySrc(mediaPreviewItem.image_url)"
             :alt="mediaPreviewItem.caption || 'Podgląd zdjęcia'"
             class="max-h-[75vh] w-full rounded-lg object-contain"
           >
           <video
             v-else-if="mediaPreviewItem"
-            :src="mediaPreviewItem.image_url"
+            :src="gallerySrc(mediaPreviewItem.image_url)"
             :poster="videoPoster(mediaPreviewItem.image_url)"
             controls
             class="max-h-[75vh] w-full rounded-lg bg-black object-contain"
