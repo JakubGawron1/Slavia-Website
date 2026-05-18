@@ -2,6 +2,7 @@
 import { getApiErrorMessage } from '~/composables/useApi'
 import { stripHtmlTags } from '~/utils/html'
 import { sanitizeRichHtml } from '~/utils/sanitizeHtml'
+import { resolveCmsMediaUrl } from '~/utils/cmsAssets'
 import { buildUploadFormData } from '~/utils/uploadFormData'
 
 const props = withDefaults(
@@ -32,10 +33,15 @@ const emit = defineEmits<{
 
 const apiFetch = useApi()
 const toast = useToast()
+const config = useRuntimeConfig()
 
 const title = ref(props.initialTitle)
 const content = ref(props.initialContent || '<p></p>')
 const image_url = ref(props.initialImageUrl || '')
+
+const imagePreviewSrc = computed(() =>
+  resolveCmsMediaUrl(image_url.value, String(config.public.cmsBaseUrl || ''))
+)
 const submitting = ref(false)
 const uploadLoading = ref(false)
 const fileInputRef = ref<HTMLInputElement | null>(null)
@@ -247,8 +253,8 @@ function closePreview() {
       </template>
       <div class="space-y-4 p-4 sm:p-6">
         <img
-          v-if="image_url.trim()"
-          :src="image_url.trim()"
+          v-if="imagePreviewSrc"
+          :src="imagePreviewSrc"
           alt=""
           class="max-h-72 w-full rounded-xl object-cover ring-1 ring-default/40"
         >

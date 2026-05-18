@@ -291,6 +291,36 @@ const featureAdoptionRows = ref<FeatureAdoptionRow[]>([])
 const featureAdoptionLoading = ref(false)
 const cmsBaseConfigured = computed(() => Boolean(String(config.public.cmsBaseUrl || '').trim()))
 
+type CmsStatusDto = {
+  repo: string
+  branch: string
+  media_root: string
+  token_configured: boolean
+  upload_ready: boolean
+  public_base_url_hint: string
+  last_upload_at?: string | null
+  last_upload_path?: string | null
+}
+
+const cmsStatus = ref<CmsStatusDto | null>(null)
+const cmsStatusLoading = ref(false)
+
+async function refreshCmsStatus() {
+  cmsStatusLoading.value = true
+  try {
+    cmsStatus.value = await apiFetch<CmsStatusDto>(apiRoutes.system.cmsStatus)
+  } catch (e) {
+    cmsStatus.value = null
+    toast.add({ title: 'Status CMS', description: getApiErrorMessage(e), color: 'warning' })
+  } finally {
+    cmsStatusLoading.value = false
+  }
+}
+
+onMounted(() => {
+  void refreshCmsStatus()
+})
+
 async function refreshFeatureAdoption() {
   featureAdoptionLoading.value = true
   try {
@@ -1966,18 +1996,56 @@ function toastStorageApisAvailability() {
             </ul>
           </div>
           <div>
-            <p class="text-[10px] font-bold uppercase tracking-wider text-muted">Slavia-cms (GitHub)</p>
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <p class="text-[10px] font-bold uppercase tracking-wider text-muted">Slavia-cms (GitHub)</p>
+              <UButton
+                size="xs"
+                variant="soft"
+                icon="i-lucide-refresh-cw"
+                :loading="cmsStatusLoading"
+                @click="refreshCmsStatus"
+              >
+                Odśwież
+              </UButton>
+            </div>
             <p class="mt-1 text-sm text-muted">
               <code>NUXT_PUBLIC_CMS_BASE_URL</code>:
               <span class="font-mono">{{ config.public.cmsBaseUrl || '— nie ustawiono —' }}</span>
               <UBadge class="ml-2" size="xs" :color="cmsBaseConfigured ? 'success' : 'warning'" variant="subtle">
-                {{ cmsBaseConfigured ? 'skonfigurowane' : 'brak' }}
+                {{ cmsBaseConfigured ? 'odczyt OK' : 'brak bazy URL' }}
               </UBadge>
             </p>
+            <div
+              v-if="cmsStatus"
+              class="mt-2 space-y-1 rounded-xl border border-default/50 bg-muted/10 p-3 text-xs text-muted"
+            >
+              <p>
+                Backend: repo <span class="font-mono">{{ cmsStatus.repo }}</span> · gałąź
+                <span class="font-mono">{{ cmsStatus.branch }}</span> · root
+                <span class="font-mono">{{ cmsStatus.media_root }}/</span>
+              </p>
+              <p class="flex flex-wrap items-center gap-2">
+                <span>PAT (<code>GITHUB_TOKEN</code>):</span>
+                <UBadge size="xs" :color="cmsStatus.token_configured ? 'success' : 'error'" variant="subtle">
+                  {{ cmsStatus.token_configured ? 'ustawiony' : 'brak' }}
+                </UBadge>
+                <span>Upload CMS:</span>
+                <UBadge size="xs" :color="cmsStatus.upload_ready ? 'success' : 'warning'" variant="subtle">
+                  {{ cmsStatus.upload_ready ? 'gotowy' : 'niedostępny' }}
+                </UBadge>
+              </p>
+              <p v-if="cmsStatus.last_upload_at">
+                Ostatni upload: {{ cmsStatus.last_upload_at }}
+                <span v-if="cmsStatus.last_upload_path" class="font-mono"> · {{ cmsStatus.last_upload_path }}</span>
+              </p>
+              <p v-else class="italic">
+                Brak zapisu ostatniego uploadu (jeszcze nie wgrywano przez CMS).
+              </p>
+            </div>
             <ul class="mt-2 list-disc ps-4 text-xs text-muted space-y-1">
-              <li><code>GITHUB_TOKEN</code> (PAT) — scope <code>repo</code> do prywatnego <code>JakubGawron1/Slavia-cms</code></li>
-              <li>Struktura repo: <code>gallery/</code>, <code>media/</code> — ścieżki względne w DB galerii</li>
-              <li>Deploy key / GitHub App — alternatywa dla CI uploadu bez PAT w runtime frontendu</li>
+              <li><code>GITHUB_TOKEN</code> (PAT) — scope <code>repo</code> tylko na backendzie (Render/Leapcell)</li>
+              <li>Struktura repo: <code>media/gallery/</code>, <code>media/blog/</code>, <code>media/announcements/</code></li>
+              <li>Awatary i zdjęcia zawodników — nadal Cloudinary (<code>purpose=avatar|athletes</code>)</li>
             </ul>
           </div>
           <div>

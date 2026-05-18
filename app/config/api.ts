@@ -117,6 +117,7 @@ export const apiRoutes = {
     backendProvider: '/api/system/backend-provider',
     auditLogs: '/api/system/audit-logs',
     featureAdoption: '/api/system/feature-adoption',
+    cmsStatus: '/api/system/cms-status',
     metrics: '/api/system/metrics',
     eventFeed: '/api/system/event-feed',
     workerCronRuns: '/api/system/worker-cron-runs',

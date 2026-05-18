@@ -3,6 +3,7 @@ import { format, parseISO } from 'date-fns'
 import { pl } from 'date-fns/locale'
 import { stripHtmlTags } from '~/utils/html'
 import { sanitizeRichHtml } from '~/utils/sanitizeHtml'
+import { resolveCmsMediaUrl } from '~/utils/cmsAssets'
 import { blogEditPath, blogPostPath, slugify } from '~/utils/slug'
 
 useSeoMeta({
@@ -31,6 +32,10 @@ interface BlogPost {
 
 function publicBase() {
   return String(config.public.apiBase || '').replace(/\/$/, '')
+}
+
+function postImageSrc(url?: string) {
+  return resolveCmsMediaUrl(url || '', String(config.public.cmsBaseUrl || ''))
 }
 
 const base = computed(() => publicBase())
@@ -228,7 +233,7 @@ function editPostUrl(post: BlogPost) {
         <div class="relative mb-4 flex h-44 items-center justify-center overflow-hidden rounded-lg bg-neutral-800 sm:h-48">
           <img
             v-if="post.image_url"
-            :src="post.image_url"
+            :src="postImageSrc(post.image_url)"
             class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
           >
           <div

@@ -3,6 +3,7 @@ import { format, parseISO } from 'date-fns'
 import { pl } from 'date-fns/locale'
 import { isProbablyRichHtml, stripHtmlTags } from '~/utils/html'
 import { sanitizeRichHtml } from '~/utils/sanitizeHtml'
+import { resolveCmsMediaUrl } from '~/utils/cmsAssets'
 import { parseBlogPostId } from '~/utils/slug'
 
 const route = useRoute()
@@ -67,7 +68,17 @@ const seoDesc = computed(() =>
     ? `${plainExcerpt.value}…`
     : (post.value?.title || 'Aktualności klubu CKS Slavia.')
 )
-const seoOgImage = computed(() => post.value?.image_url || '/logo.png')
+const seoOgImage = computed(() => {
+  const raw = post.value?.image_url
+  if (!raw) {
+    return '/logo.png'
+  }
+  return resolveCmsMediaUrl(raw, String(config.public.cmsBaseUrl || ''))
+})
+
+function postImageSrc(url?: string) {
+  return resolveCmsMediaUrl(url || '', String(config.public.cmsBaseUrl || ''))
+}
 
 useSeoMeta({
   title: seoTitle,
@@ -138,7 +149,7 @@ function formatDate(dateStr: string) {
         <div class="mb-12 w-full overflow-hidden rounded-2xl shadow-inner ring-1 ring-default/40">
           <img
             v-if="post.image_url"
-            :src="post.image_url"
+            :src="postImageSrc(post.image_url)"
             :alt="`Zdjęcie wpisu ${post.title}`"
             class="h-64 w-full object-cover md:h-96"
           >

@@ -5,6 +5,7 @@ import type { Athlete } from '~/types/models'
 import { sinclairTotal, type SinclairGender } from '~/utils/sinclair'
 import { effectiveBodyweightKgForSinclair } from '~/utils/sinclairAthlete'
 import { athleteProfilePath, blogPostPath } from '~/utils/slug'
+import { resolveCmsMediaUrl } from '~/utils/cmsAssets'
 import { stripHtmlTags } from '~/utils/html'
 
 useSeoMeta({
@@ -30,6 +31,10 @@ interface BlogPost {
 
 function publicBase() {
   return String(config.public.apiBase || '').replace(/\/$/, '')
+}
+
+function postImageSrc(url?: string) {
+  return resolveCmsMediaUrl(url || '', String(config.public.cmsBaseUrl || ''))
 }
 
 /** Strona główna jest publiczna — bez tokenu, dlatego używamy `useLazyFetch` (cache + prefetch) zamiast `useApi`. */
@@ -701,7 +706,7 @@ const trainingDays = [
             <div class="aspect-16/10 w-full overflow-hidden bg-muted/30">
               <img
                 v-if="p.image_url"
-                :src="p.image_url"
+                :src="postImageSrc(p.image_url)"
                 :alt="p.title"
                 class="size-full object-cover transition-transform duration-500 group-hover:scale-105"
                 loading="lazy"

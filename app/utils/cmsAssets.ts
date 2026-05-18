@@ -22,9 +22,9 @@ export function isCmsAssetUrl(url: string): boolean {
 }
 
 /**
- * Dla wpisów galerii: jeśli `image_url` to ścieżka względna (`gallery/...`), dołącz bazę CMS.
+ * Galeria, blog, ogłoszenia: ścieżka względna z API (`media/gallery/...`) → pełny URL z bazy CMS.
  */
-export function resolveGalleryImageUrl(imageUrl: string, cmsBase?: string): string {
+export function resolveCmsMediaUrl(imageUrl: string, cmsBase?: string): string {
   const raw = (imageUrl || '').trim()
   if (!raw) {
     return ''
@@ -34,3 +34,6 @@ export function resolveGalleryImageUrl(imageUrl: string, cmsBase?: string): stri
   }
   return cmsAssetUrl(raw, cmsBase)
 }
+
+/** @deprecated Użyj `resolveCmsMediaUrl` — alias dla galerii. */
+export const resolveGalleryImageUrl = resolveCmsMediaUrl
