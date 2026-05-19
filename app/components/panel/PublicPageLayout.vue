@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import { isGlassThemePreset } from '~/composables/useSlaviaAppearance'
+
+const { preset } = useSlaviaAppearance()
+
 const props = withDefaults(
   defineProps<{
     padding?: 'default' | 'compact' | 'hero'
@@ -16,12 +20,13 @@ const props = withDefaults(
 )
 
 const containerClass = computed(() => {
-  const c: string[] = ['slavia-public-page', 'relative']
+  const c: string[] = ['slavia-public-page', 'relative', 'mx-auto', 'w-full', 'min-w-0']
   if (props.narrow) c.push('max-w-3xl')
   if (props.padding === 'default') c.push('py-8 sm:py-12 lg:py-14')
   else if (props.padding === 'compact') c.push('py-6 sm:py-10')
   else if (props.padding === 'hero') c.push('py-10 md:py-16 lg:py-20')
   if (props.animate) c.push('animate-page-in')
+  if (isGlassThemePreset(preset.value)) c.push('slavia-glass-layout')
   return c
 })
 </script>

@@ -310,51 +310,35 @@ async function save() {
 
 <template>
   <div class="relative min-h-svh overflow-x-clip pb-28 sm:pb-10 md:pb-14">
-    <div
-      aria-hidden="true"
-      class="pointer-events-none absolute inset-x-0 top-0 z-0 h-[min(42vh,26rem)] bg-linear-to-b from-primary/9 via-muted/35 to-transparent dark:from-primary/6 dark:via-muted/20"
-    />
-
-    <UContainer class="relative z-1 mx-auto max-w-xl px-4 py-8 sm:px-6 sm:py-10 md:max-w-5xl md:py-12 lg:max-w-6xl xl:max-w-[1180px]">
-      <!-- Desktop: nagłówek -->
-      <div class="mb-8 hidden rounded-2xl border border-default/40 bg-card/80 px-6 py-5 shadow-sm ring-1 ring-default/25 backdrop-blur-sm md:flex md:items-start md:justify-between md:gap-6 lg:mb-10">
-        <div class="min-w-0">
-          <p class="text-[11px] font-bold uppercase tracking-[0.22em] text-primary">
-            Konto Slavia
-          </p>
-          <h1 class="mt-1.5 text-2xl font-bold tracking-tight text-highlighted lg:text-3xl">
-            Ustawienia konta
-          </h1>
-          <p class="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
-            Profil, instalacja PWA i aplikacji Android, motyw klubu, hasło oraz 2FA. Login zmienia administrator.
-          </p>
-        </div>
-        <div class="flex shrink-0 flex-wrap items-center justify-end gap-2">
+    <PanelPageLayout>
+      <PanelPageHeader
+        eyebrow="Konto Slavia"
+        title="Ustawienia konta"
+        icon="i-lucide-user-cog"
+        description="Profil, instalacja PWA i aplikacji Android, motyw klubu, hasło oraz 2FA. Login zmienia administrator."
+        class="hidden md:block"
+      >
+        <template #actions>
           <UButton color="neutral" variant="outline" size="sm" icon="i-lucide-rotate-ccw" @click="resetForm">
             Przywróć
           </UButton>
           <UButton :loading="saving" color="primary" size="sm" icon="i-lucide-save" class="font-semibold shadow-sm" @click="save">
             Zapisz
           </UButton>
-        </div>
-      </div>
+        </template>
+      </PanelPageHeader>
 
-      <!-- Mobile: nagłówek -->
-      <div class="mb-6 md:hidden">
-        <p class="text-[10px] font-bold uppercase tracking-[0.28em] text-primary">
-          Konto
-        </p>
-        <h1 class="mt-1 text-xl font-bold tracking-tight text-highlighted">
-          Ustawienia
-        </h1>
-        <p class="mt-2 text-sm leading-relaxed text-muted">
-          Profil, PWA na ekranie głównym, APK Android i bezpieczeństwo konta.
-        </p>
-      </div>
+      <PanelPageHeader
+        eyebrow="Konto"
+        title="Ustawienia"
+        icon="i-lucide-user-cog"
+        description="Profil, PWA na ekranie głównym, APK Android i bezpieczeństwo konta."
+        class="md:hidden"
+      />
 
       <!-- Mobile: pas profilu -->
       <div class="mb-6 flex flex-col gap-4 md:hidden">
-        <div class="flex min-w-0 items-center gap-4 rounded-2xl border border-default/45 bg-card p-4 shadow-sm ring-1 ring-default/25">
+        <div class="slavia-section-card flex min-w-0 items-center gap-4 p-4">
           <UAvatar
             :src="profileAvatarSrc && !avatarBroken ? profileAvatarSrc : undefined"
             :alt="auth.user.value?.username"
@@ -398,7 +382,7 @@ async function save() {
 
       <div class="md:grid md:grid-cols-12 md:items-start md:gap-8 lg:gap-10 xl:gap-12">
         <aside class="relative mb-0 hidden md:col-span-5 lg:col-span-4 md:block lg:sticky lg:top-[calc(4.75rem+env(safe-area-inset-top))] lg:max-w-sm lg:self-start">
-          <div class="space-y-5 rounded-2xl border border-default/45 bg-card/95 p-6 shadow-sm ring-1 ring-default/25 backdrop-blur-sm">
+          <div class="slavia-section-card space-y-5 p-6">
             <div class="flex flex-col items-center text-center">
               <UAvatar
                 :src="profileAvatarSrc && !avatarBroken ? profileAvatarSrc : undefined"
@@ -463,7 +447,7 @@ async function save() {
           <div class="flex flex-col gap-8 md:gap-10">
             <div id="profil" class="scroll-mt-28">
               <p class="mb-5 px-1 text-[10px] font-black uppercase tracking-[0.2em] text-primary">Profil</p>
-            <section class="rounded-2xl border border-default/50 bg-card p-6 shadow-sm ring-1 ring-default/20 sm:p-7">
+            <section class="slavia-section-card p-6 sm:p-7">
               <div class="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <h2 class="text-base font-bold text-highlighted">
@@ -508,7 +492,7 @@ async function save() {
               </div>
             </section>
 
-            <section v-if="auth.isAthlete.value" class="rounded-2xl border border-default/50 bg-card p-6 shadow-sm ring-1 ring-default/20 sm:p-7">
+            <section v-if="auth.isAthlete.value" class="slavia-section-card p-6 sm:p-7">
               <h2 class="text-base font-bold text-highlighted">
                 Dane zawodnika
               </h2>
@@ -539,7 +523,7 @@ async function save() {
 
             <div id="wyglad" class="scroll-mt-28 space-y-5 md:space-y-6">
               <p class="px-1 text-[10px] font-black uppercase tracking-[0.2em] text-primary">Wygląd</p>
-            <section class="rounded-2xl border border-default/50 bg-card p-6 shadow-sm ring-1 ring-default/20 sm:p-7">
+            <section class="slavia-section-card p-6 sm:p-7">
               <h2 class="text-base font-bold text-highlighted">
                 Motyw i tryb ekranu
               </h2>
@@ -596,7 +580,18 @@ async function save() {
                       "
                       @click="setPreset(p.id)"
                     >
-                      <span class="font-semibold text-highlighted">{{ p.label }}</span>
+                      <span class="flex flex-wrap items-center gap-2">
+                        <span class="font-semibold text-highlighted">{{ p.label }}</span>
+                        <UBadge
+                          v-if="'experimental' in p && p.experimental"
+                          color="warning"
+                          variant="subtle"
+                          size="xs"
+                          class="shrink-0 font-bold uppercase tracking-wide"
+                        >
+                          Beta
+                        </UBadge>
+                      </span>
                       <span class="mt-1 block text-xs leading-snug text-muted">{{ p.description }}</span>
                     </button>
                   </div>
@@ -614,7 +609,7 @@ async function save() {
 
             <section
               v-if="mobileDownloadHref"
-              class="rounded-2xl border border-default/50 bg-card p-6 shadow-sm ring-1 ring-default/20 sm:p-7"
+              class="slavia-section-card p-6 sm:p-7"
             >
               <div class="flex flex-wrap items-start justify-between gap-3">
                 <div>
@@ -721,7 +716,7 @@ async function save() {
 
             <div id="konto" class="scroll-mt-28 space-y-5 md:space-y-6">
               <p class="px-1 text-[10px] font-black uppercase tracking-[0.2em] text-primary">Konto</p>
-            <section class="rounded-2xl border border-default/50 bg-card p-6 shadow-sm ring-1 ring-default/20 sm:p-7">
+            <section class="slavia-section-card p-6 sm:p-7">
               <h2 class="text-base font-bold text-highlighted">
                 Hasło
               </h2>
@@ -754,7 +749,7 @@ async function save() {
 
             <div id="bezpieczenstwo" class="scroll-mt-28 space-y-5 md:space-y-6">
               <p class="px-1 text-[10px] font-black uppercase tracking-[0.2em] text-primary">Bezpieczeństwo</p>
-            <section class="rounded-2xl border border-default/50 bg-card p-6 shadow-sm ring-1 ring-default/20 sm:p-7">
+            <section class="slavia-section-card p-6 sm:p-7">
               <h2 class="text-base font-bold text-highlighted">
                 Uwierzytelnianie dwuskładnikowe
               </h2>
@@ -818,7 +813,7 @@ async function save() {
               </div>
             </section>
 
-            <section class="rounded-2xl border border-error/50 bg-error/5 p-6 shadow-sm ring-1 ring-error/20 sm:p-7">
+            <section class="slavia-section-card border-error/50 bg-error/5 p-6 ring-1 ring-error/20 sm:p-7">
               <h2 class="text-base font-bold text-highlighted">
                 Bezpieczeństwo sesji
               </h2>
@@ -839,7 +834,7 @@ async function save() {
               </div>
             </section>
 
-            <section class="rounded-2xl border border-default/50 bg-card p-6 shadow-sm ring-1 ring-default/20 sm:p-7">
+            <section class="slavia-section-card p-6 sm:p-7">
               <h2 class="text-base font-bold text-highlighted">
                 Przypomnienie o składce
               </h2>
@@ -857,7 +852,7 @@ async function save() {
           </div>
         </div>
       </div>
-    </UContainer>
+    </PanelPageLayout>
 
     <div class="fixed inset-x-0 bottom-0 z-50 flex border-t border-default/50 bg-elevated/95 pb-[max(0.85rem,env(safe-area-inset-bottom))] pt-3 shadow-[0_-8px_28px_-12px_rgb(0_0_0/0.35)] backdrop-blur-md supports-backdrop-filter:bg-elevated/90 sm:hidden">
       <div class="mx-auto flex w-full max-w-xl gap-2.5 px-4">

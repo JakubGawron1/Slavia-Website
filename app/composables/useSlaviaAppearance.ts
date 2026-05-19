@@ -50,10 +50,20 @@ export const SLAVIA_THEME_PRESETS = [
     id: 'blackgym',
     label: 'Black gym',
     description: 'Czarna sala jako kolor przewodni — kontrast i spokój jak wieczorny trening.'
+  },
+  {
+    id: 'glass',
+    label: 'Glassmorphism',
+    description: 'Przezroczyste karty, rozmycie i delikatne obramowania — eksperymentalny układ wizualny.',
+    experimental: true
   }
 ] as const
 
 export type SlaviaThemePreset = (typeof SLAVIA_THEME_PRESETS)[number]['id']
+
+export function isGlassThemePreset(id: string | null | undefined): boolean {
+  return id === 'glass'
+}
 
 /** Klucze localStorage lustra motywu (per konto) — panel developera, diagnostyka. */
 export function slaviaAppearanceStorageKeys(uid: string | number) {
@@ -113,6 +123,11 @@ export function useSlaviaAppearance() {
       return
     }
     document.documentElement.setAttribute('data-slavia-preset', p)
+    if (isGlassThemePreset(p)) {
+      document.documentElement.setAttribute('data-slavia-glass-layout', 'true')
+    } else {
+      document.documentElement.removeAttribute('data-slavia-glass-layout')
+    }
   }
 
   async function persistToAccount(partial: {
@@ -252,12 +267,15 @@ export function useSlaviaAppearance() {
     () => hydrate()
   )
 
+  const isGlassLayout = computed(() => isGlassThemePreset(preset.value))
+
   return {
     preset,
     presets: SLAVIA_THEME_PRESETS,
     setPreset,
     hydrate,
     colorMode,
-    applyPresetDom
+    applyPresetDom,
+    isGlassLayout
   }
 }
