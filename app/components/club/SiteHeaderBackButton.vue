@@ -11,7 +11,7 @@ const { visible, target, goBack } = useSlaviaNavBack()
     variant="ghost"
     size="lg"
     square
-    class="shrink-0 rounded-xl touch-manipulation"
+    class="shrink-0 rounded-xl text-highlighted touch-manipulation"
     :aria-label="target.label"
   />
   <UButton
@@ -21,7 +21,7 @@ const { visible, target, goBack } = useSlaviaNavBack()
     variant="ghost"
     size="lg"
     square
-    class="shrink-0 rounded-xl touch-manipulation"
+    class="shrink-0 rounded-xl text-highlighted touch-manipulation"
     :aria-label="target.label"
     @click="goBack"
   />

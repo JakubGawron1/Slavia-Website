@@ -16,7 +16,7 @@ withDefaults(
 
 <template>
   <div
-    class="slavia-empty-state slavia-public-empty"
+    class="slavia-empty-state slavia-public-empty flex w-full flex-col items-center justify-center text-center"
     :class="compact ? 'slavia-public-empty--compact' : 'slavia-public-empty--default'"
   >
     <div
@@ -41,7 +41,7 @@ withDefaults(
       </p>
       <div
         v-if="$slots.default"
-        class="slavia-empty-state__actions flex flex-col flex-wrap items-center justify-center gap-3"
+        class="slavia-empty-state__actions flex w-full flex-col flex-wrap items-center justify-center gap-2 sm:flex-row sm:gap-3"
       >
         <slot />
       </div>

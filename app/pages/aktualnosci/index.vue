@@ -167,11 +167,11 @@ function editPostUrl(post: BlogPost) {
     >
       <template #actions>
         <UButton
-          v-show="canManage"
+          v-if="canManage"
           to="/aktualnosci/nowy"
           icon="i-lucide-pen-tool"
           color="primary"
-          class="min-h-11 w-full shrink-0 justify-center md:w-auto"
+          class="min-h-11 shrink-0 justify-center"
         >
           Dodaj wpis
         </UButton>
@@ -210,12 +210,12 @@ function editPostUrl(post: BlogPost) {
       description="Zaglądaj tu wkrótce po relacje z zawodów, komunikaty i życie sekcji na sali."
     >
       <UButton
-        v-show="canManage"
+        v-if="canManage"
         to="/aktualnosci/nowy"
         icon="i-lucide-pen-tool"
         color="primary"
         size="lg"
-        class="min-h-11 font-semibold"
+        class="min-h-11 w-auto shrink-0 font-semibold"
       >
         Dodaj pierwszy wpis
       </UButton>

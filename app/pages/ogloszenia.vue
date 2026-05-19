@@ -178,33 +178,32 @@ function bodyPreview(text: string, max = 100) {
       title="Tablica ogłoszeń"
       description="Komunikaty organizacyjne i ważne daty — widoczne dla wszystkich; edycja wyłącznie dla administratorów."
     >
+      <template
+        v-if="!pending && sortedPublic.length"
+        #badges
+      >
+        <UBadge color="neutral" variant="subtle" size="sm">
+          Łącznie: {{ boardStats.total }}
+        </UBadge>
+        <UBadge v-if="boardStats.pinned" color="primary" variant="subtle" size="sm">
+          Przypięte: {{ boardStats.pinned }}
+        </UBadge>
+        <UBadge v-if="canManage && boardStats.drafts" color="warning" variant="subtle" size="sm">
+          Szkice: {{ boardStats.drafts }}
+        </UBadge>
+      </template>
       <template #actions>
         <UButton
-          v-show="canManage"
+          v-if="canManage"
           icon="i-lucide-megaphone"
           color="primary"
-          class="min-h-11 w-full shrink-0 justify-center md:w-auto"
+          class="min-h-11 shrink-0 justify-center"
           @click="openCreate"
         >
           Dodaj ogłoszenie
         </UButton>
       </template>
     </PublicPageHeader>
-
-    <div
-      v-if="!pending && sortedPublic.length"
-      class="mb-6 flex flex-wrap gap-2"
-    >
-      <UBadge color="neutral" variant="subtle" size="sm">
-        Łącznie: {{ boardStats.total }}
-      </UBadge>
-      <UBadge v-if="boardStats.pinned" color="primary" variant="subtle" size="sm">
-        Przypięte: {{ boardStats.pinned }}
-      </UBadge>
-      <UBadge v-if="canManage && boardStats.drafts" color="warning" variant="subtle" size="sm">
-        Szkice: {{ boardStats.drafts }}
-      </UBadge>
-    </div>
 
     <div
       v-if="pending"
@@ -237,11 +236,11 @@ function bodyPreview(text: string, max = 100) {
       description="Gdy pojawią się komunikaty organizacyjne, zobaczysz je tutaj na pierwszym planie."
     >
       <UButton
-        v-show="canManage"
+        v-if="canManage"
         icon="i-lucide-megaphone"
         color="primary"
         size="lg"
-        class="min-h-11 font-semibold"
+        class="min-h-11 w-auto shrink-0 font-semibold"
         @click="openCreate"
       >
         Dodaj pierwsze ogłoszenie

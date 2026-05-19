@@ -233,10 +233,10 @@ const sortedPhotos = computed(() => {
     >
       <template #actions>
         <UButton
-          v-show="canManage"
+          v-if="canManage"
           icon="i-lucide-image-plus"
           color="primary"
-          class="min-h-11 w-full shrink-0 justify-center md:w-auto"
+          class="min-h-11 shrink-0 justify-center"
           @click="openCreate"
         >
           Dodaj zdjęcie
@@ -272,11 +272,11 @@ const sortedPhotos = computed(() => {
       description="Tu pojawią się zdjęcia i filmy z treningów, zawodów i życia klubu."
     >
       <UButton
-        v-show="canManage"
+        v-if="canManage"
         icon="i-lucide-image-plus"
         color="primary"
         size="lg"
-        class="min-h-11 font-semibold"
+        class="min-h-11 w-auto shrink-0 font-semibold"
         @click="openCreate"
       >
         Dodaj pierwsze zdjęcie

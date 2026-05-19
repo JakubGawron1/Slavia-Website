@@ -15,6 +15,33 @@ export type SlaviaBackOverride = {
 
 const DEFAULT_BACK_LABEL = 'Wróć'
 
+/**
+ * Trasy główne — bez przycisku wstecz w nagłówku (link do rodzica).
+ * `/galeria` celowo pominięta: po wejściu z innej strony klubu pokazujemy „historia” (Vue Router).
+ */
+const TOP_LEVEL_PATHS = new Set([
+  '/',
+  '/aktualnosci',
+  '/zawodnicy',
+  '/kalendarz',
+  '/kontakt',
+  '/ogloszenia',
+  '/logowanie',
+  '/o-klubie',
+  '/kalkulator-sinclair',
+  '/kalkulator-proporcji',
+  '/admin',
+  '/trainer',
+  '/athlete',
+  '/superadmin',
+  '/profil',
+  '/dziennik',
+  '/powiadomienia',
+  '/chat',
+  '/attendance',
+  '/banned'
+])
+
 const pageBackOverride = ref<SlaviaBackOverride | null>(null)
 const canUseHistoryBack = ref(false)
 
@@ -25,7 +52,7 @@ function normalizePath(path: string): string {
 
 function inferParentPath(path: string): string | null {
   const normalized = normalizePath(path)
-  if (normalized === '/') return null
+  if (TOP_LEVEL_PATHS.has(normalized)) return null
 
   if (normalized.startsWith('/athlete/')) return '/zawodnicy'
   if (normalized.startsWith('/klub/')) return '/zawodnicy'
@@ -33,14 +60,14 @@ function inferParentPath(path: string): string | null {
   if (normalized.startsWith('/aktualnosci/')) return '/aktualnosci'
 
   const segments = normalized.split('/').filter(Boolean)
-  if (segments.length <= 1) return '/'
+  if (segments.length <= 1) return null
 
   return `/${segments.slice(0, -1).join('/')}`
 }
 
 function resolveBackFromRoute(route: ReturnType<typeof useRoute>): SlaviaBackTarget | null {
   const path = normalizePath(route.path)
-  if (path === '/') return null
+  if (TOP_LEVEL_PATHS.has(path)) return null
 
   const meta = route.meta
   if (meta.hideBack) return null
@@ -69,11 +96,7 @@ function resolveBackFromRoute(route: ReturnType<typeof useRoute>): SlaviaBackTar
     }
   }
 
-  return {
-    mode: 'link',
-    to: '/',
-    label: DEFAULT_BACK_LABEL
-  }
+  return null
 }
 
 function resolveBackTarget(
@@ -91,13 +114,7 @@ function resolveBackTarget(
       }
     }
     if (override.mode === 'history') {
-      if (!import.meta.client || !canUseHistoryBack.value) {
-        return {
-          mode: 'link',
-          to: '/',
-          label: override.label ?? DEFAULT_BACK_LABEL
-        }
-      }
+      if (!import.meta.client || !canUseHistoryBack.value) return null
       return {
         mode: 'history',
         label: override.label ?? DEFAULT_BACK_LABEL
@@ -113,7 +130,9 @@ function syncHistoryBackAvailability() {
     canUseHistoryBack.value = false
     return
   }
-  canUseHistoryBack.value = window.history.length > 1
+  const state = window.history.state as { back?: string | null } | null
+  const hasRouterBack = Boolean(state && 'back' in state && state.back != null)
+  canUseHistoryBack.value = hasRouterBack || window.history.length > 1
 }
 
 export function setSlaviaPageBack(config: SlaviaBackOverride | null) {

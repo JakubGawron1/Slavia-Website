@@ -30,7 +30,7 @@ useSlaviaPageBack(pageBackConfig)
 
 const rootClass = computed(() => {
   if (props.variant === 'hero') {
-    return 'slavia-glass relative mb-8 overflow-hidden rounded-3xl border border-default/50 bg-linear-to-br from-primary/12 via-card/95 to-card p-6 shadow-md ring-1 ring-primary/15 sm:mb-10 sm:p-8 lg:p-10'
+    return 'slavia-glass relative mb-8 overflow-x-clip rounded-3xl border border-default/50 bg-linear-to-br from-primary/12 via-card/95 to-card p-6 shadow-md ring-1 ring-primary/15 sm:mb-10 sm:p-8 lg:p-10'
   }
   if (props.variant === 'centered') {
     return 'mb-10 px-1 text-center md:mb-14'
@@ -74,8 +74,14 @@ const descriptionClass = computed(() => {
     />
 
     <div
-      class="relative"
-      :class="variant === 'centered' ? '' : 'flex flex-col gap-4 md:flex-row md:items-end md:justify-between'"
+      class="relative min-w-0"
+      :class="
+        variant === 'centered'
+          ? ''
+          : variant === 'hero'
+            ? 'flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between'
+            : 'flex flex-col gap-4 md:flex-row md:items-end md:justify-between'
+      "
     >
       <div
         class="min-w-0"
@@ -117,6 +123,7 @@ const descriptionClass = computed(() => {
       <span
         v-if="icon && variant !== 'centered'"
         class="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary/14 text-primary shadow-sm ring-1 ring-primary/25 dark:bg-primary/18"
+        :class="variant === 'hero' ? 'self-start' : ''"
       >
         <UIcon :name="icon" class="size-5" />
       </span>
@@ -124,7 +131,7 @@ const descriptionClass = computed(() => {
 
     <div
       v-if="$slots.actions"
-      class="relative mt-4 flex w-full flex-wrap gap-2 border-t border-default/40 pt-4"
+      class="relative z-[1] mt-4 flex w-full min-w-0 flex-wrap items-center gap-2 border-t border-default/40 pt-4"
       :class="variant === 'centered' ? 'justify-center' : 'justify-center sm:justify-end'"
     >
       <slot name="actions" />
