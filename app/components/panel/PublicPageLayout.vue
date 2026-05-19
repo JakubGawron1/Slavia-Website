@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { isGlassThemePreset } from '~/composables/useSlaviaAppearance'
+import { isGlassThemePreset, isSportTechThemePreset } from '~/composables/useSlaviaAppearance'
 
 const { preset } = useSlaviaAppearance()
 
@@ -27,6 +27,7 @@ const containerClass = computed(() => {
   else if (props.padding === 'hero') c.push('py-10 md:py-16 lg:py-20')
   if (props.animate) c.push('animate-page-in')
   if (isGlassThemePreset(preset.value)) c.push('slavia-glass-layout')
+  if (isSportTechThemePreset(preset.value)) c.push('slavia-sport-tech-layout')
   return c
 })
 </script>

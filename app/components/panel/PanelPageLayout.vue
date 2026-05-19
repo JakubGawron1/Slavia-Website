@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const { isGlassLayout } = useSlaviaAppearance()
+const { isGlassLayout, isSportTechLayout } = useSlaviaAppearance()
 
 const props = withDefaults(
   defineProps<{
@@ -26,6 +26,7 @@ const containerClass = computed(() => {
   else if (props.padding === 'compact') c.push('py-6 sm:py-8 md:py-10')
   if (props.animate) c.push('animate-page-in')
   if (isGlassLayout.value) c.push('slavia-glass-layout')
+  if (isSportTechLayout.value) c.push('slavia-sport-tech-layout')
   return c
 })
 </script>

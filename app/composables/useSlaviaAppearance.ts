@@ -56,6 +56,12 @@ export const SLAVIA_THEME_PRESETS = [
     label: 'Glassmorphism',
     description: 'Przezroczyste karty, rozmycie i delikatne obramowania — eksperymentalny układ wizualny.',
     experimental: true
+  },
+  {
+    id: 'sport-tech',
+    label: 'Sport-Tech (Arena)',
+    description: 'Futurystyczna arena — ciemny grafit z neonowym cyjanem; jasny wariant jak podświetlona trybuna.',
+    experimental: true
   }
 ] as const
 
@@ -63,6 +69,10 @@ export type SlaviaThemePreset = (typeof SLAVIA_THEME_PRESETS)[number]['id']
 
 export function isGlassThemePreset(id: string | null | undefined): boolean {
   return id === 'glass'
+}
+
+export function isSportTechThemePreset(id: string | null | undefined): boolean {
+  return id === 'sport-tech'
 }
 
 /** Klucze localStorage lustra motywu (per konto) — panel developera, diagnostyka. */
@@ -127,6 +137,11 @@ export function useSlaviaAppearance() {
       document.documentElement.setAttribute('data-slavia-glass-layout', 'true')
     } else {
       document.documentElement.removeAttribute('data-slavia-glass-layout')
+    }
+    if (isSportTechThemePreset(p)) {
+      document.documentElement.setAttribute('data-slavia-sport-tech-layout', 'true')
+    } else {
+      document.documentElement.removeAttribute('data-slavia-sport-tech-layout')
     }
   }
 
@@ -268,6 +283,7 @@ export function useSlaviaAppearance() {
   )
 
   const isGlassLayout = computed(() => isGlassThemePreset(preset.value))
+  const isSportTechLayout = computed(() => isSportTechThemePreset(preset.value))
 
   return {
     preset,
@@ -276,6 +292,7 @@ export function useSlaviaAppearance() {
     hydrate,
     colorMode,
     applyPresetDom,
-    isGlassLayout
+    isGlassLayout,
+    isSportTechLayout
   }
 }

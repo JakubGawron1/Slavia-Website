@@ -558,6 +558,7 @@ html[data-slavia-preset='blackgym'] { --slavia-shimmer-accent: #22c55e; }
 html[data-slavia-preset='pink'] { --slavia-shimmer-accent: #ec4899; }
 html[data-slavia-preset='dark'] { --slavia-shimmer-accent: #60a5fa; }
 html[data-slavia-preset='glass'] { --slavia-shimmer-accent: #a78bfa; }
+html[data-slavia-preset='sport-tech'] { --slavia-shimmer-accent: #22d3ee; }
 
 @media (prefers-reduced-motion: reduce) {
   .animate-page-in {
@@ -1413,6 +1414,160 @@ html[data-slavia-preset='glass'] .slavia-glass-layout [aria-hidden='true'] .bg-p
 
 html[data-slavia-preset='glass'] .slavia-glass-layout [aria-hidden='true'] .bg-primary\/6 {
   opacity: 0.7;
+}
+
+/**
+ * Preset eksperymentalny „sport-tech” — futurystyczna arena / sport-tech.
+ * Scoped wyłącznie pod `html[data-slavia-preset='sport-tech']`.
+ */
+html[data-slavia-preset='sport-tech'] {
+  --slavia-tech-radius: 0.625rem;
+  --slavia-tech-border: color-mix(in oklab, var(--ui-primary) 38%, var(--ui-border));
+  --slavia-tech-glow: 0 0 24px -8px color-mix(in oklab, var(--ui-primary) 32%, transparent);
+  --slavia-tech-grid: color-mix(in oklab, var(--ui-primary) 7%, transparent);
+}
+
+html[data-slavia-preset='sport-tech']:not(.dark),
+html.light[data-slavia-preset='sport-tech'] {
+  --ui-bg: #f2f5f9;
+  --ui-bg-muted: #e6ebf2;
+  --ui-bg-elevated: #fafbfd;
+  --ui-bg-accented: #dce6f4;
+  --ui-border: color-mix(in oklab, #2563eb 18%, #c5d0e0);
+  --ui-border-muted: color-mix(in oklab, #3b82f6 10%, #d8e0ec);
+  --ui-border-accented: color-mix(in oklab, #2563eb 42%, #93c5fd);
+  --ui-text-dimmed: #64748b;
+  --ui-text-muted: #475569;
+  --ui-text-toned: #334155;
+  --ui-text: #1e293b;
+  --ui-text-highlighted: #0f172a;
+  --color-green-400: #38bdf8;
+  --color-green-500: #2563eb;
+  --color-green-600: #1d4ed8;
+}
+
+html.light[data-slavia-preset='sport-tech'] body,
+html[data-slavia-preset='sport-tech']:not(.dark) body {
+  background-color: #eef2f7;
+  background-image:
+    linear-gradient(90deg, var(--slavia-tech-grid) 1px, transparent 1px),
+    linear-gradient(var(--slavia-tech-grid) 1px, transparent 1px),
+    radial-gradient(ellipse 80% 45% at 50% -12%, color-mix(in oklab, #2563eb 14%, transparent), transparent 58%),
+    radial-gradient(ellipse 55% 35% at 100% 20%, color-mix(in oklab, #f97316 10%, transparent), transparent 52%),
+    linear-gradient(180deg, #f7f9fc 0%, #eef2f7 55%, #e8edf4 100%);
+  background-size: 48px 48px, 48px 48px, auto, auto, auto;
+  background-attachment: fixed;
+}
+
+html.dark[data-slavia-preset='sport-tech'] {
+  --ui-bg: #050810;
+  --ui-bg-muted: #0a101c;
+  --ui-bg-elevated: #0d1422;
+  --ui-bg-accented: color-mix(in oklab, #0e7490 22%, #0a101c);
+  --ui-border: color-mix(in oklab, #22d3ee 28%, #1a2538);
+  --ui-border-muted: color-mix(in oklab, #14b8a6 16%, #121a2a);
+  --ui-border-accented: color-mix(in oklab, #22d3ee 48%, #155e75);
+  --ui-text-dimmed: #64748b;
+  --ui-text-muted: #94a3b8;
+  --ui-text-toned: #cbd5e1;
+  --ui-text: #e2e8f0;
+  --ui-text-highlighted: #f8fafc;
+  --slavia-tech-border: color-mix(in oklab, #22d3ee 42%, #1e293b);
+  --slavia-tech-glow:
+    0 0 28px -10px color-mix(in oklab, #22d3ee 38%, transparent),
+    inset 0 1px 0 color-mix(in oklab, #22d3ee 12%, transparent);
+  --color-green-400: #67e8f9;
+  --color-green-500: #22d3ee;
+  --color-green-600: #06b6d4;
+}
+
+html.dark[data-slavia-preset='sport-tech'] body {
+  background-color: #050810;
+  background-image:
+    linear-gradient(90deg, var(--slavia-tech-grid) 1px, transparent 1px),
+    linear-gradient(var(--slavia-tech-grid) 1px, transparent 1px),
+    radial-gradient(ellipse 75% 50% at 50% -8%, color-mix(in oklab, #22d3ee 18%, transparent), transparent 55%),
+    radial-gradient(ellipse 50% 40% at 0% 60%, color-mix(in oklab, #14b8a6 12%, transparent), transparent 50%),
+    linear-gradient(175deg, #050810 0%, #080c14 45%, #0a101c 100%);
+  background-size: 40px 40px, 40px 40px, auto, auto, auto;
+  background-attachment: fixed;
+}
+
+html[data-slavia-preset='sport-tech'] .slavia-page-card,
+html[data-slavia-preset='sport-tech'] .slavia-section-card {
+  border-radius: var(--slavia-tech-radius);
+  border-color: var(--slavia-tech-border);
+  background: linear-gradient(
+    168deg,
+    color-mix(in oklab, var(--ui-bg-elevated) 94%, var(--ui-primary) 3%),
+    color-mix(in oklab, var(--ui-bg-elevated) 88%, transparent)
+  );
+  box-shadow: var(--slavia-shadow-xs), var(--slavia-tech-glow);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+html.dark[data-slavia-preset='sport-tech'] .slavia-page-card,
+html.dark[data-slavia-preset='sport-tech'] .slavia-section-card {
+  box-shadow:
+    var(--slavia-shadow-xs),
+    var(--slavia-shadow-sm),
+    var(--slavia-tech-glow);
+}
+
+html[data-slavia-preset='sport-tech'] .slavia-page-card:hover,
+html[data-slavia-preset='sport-tech'] .slavia-section-card:hover {
+  border-color: color-mix(in oklab, var(--ui-primary) 55%, var(--ui-border));
+}
+
+html[data-slavia-preset='sport-tech'] header.sticky {
+  border-color: var(--slavia-tech-border);
+  background: color-mix(in oklab, var(--ui-bg) 88%, transparent);
+  box-shadow: var(--slavia-tech-glow);
+}
+
+html[data-slavia-preset='sport-tech'] .slavia-section-header__eyebrow,
+html[data-slavia-preset='sport-tech'] .slavia-panel-section-title {
+  letter-spacing: 0.16em;
+  text-shadow: 0 0 20px color-mix(in oklab, var(--ui-primary) 22%, transparent);
+}
+
+html[data-slavia-preset='sport-tech'] .slavia-section-header__title::after,
+html[data-slavia-preset='sport-tech'] .slavia-panel-section-title::after {
+  content: '';
+  display: block;
+  width: 2.5rem;
+  height: 2px;
+  margin-top: 0.35rem;
+  border-radius: 1px;
+  background: linear-gradient(
+    90deg,
+    var(--ui-primary),
+    color-mix(in oklab, var(--ui-primary) 20%, transparent)
+  );
+  box-shadow: 0 0 12px color-mix(in oklab, var(--ui-primary) 35%, transparent);
+}
+
+html[data-slavia-preset='sport-tech'] .slavia-sport-tech-layout [aria-hidden='true'] .bg-primary\/14,
+html[data-slavia-preset='sport-tech'] .slavia-sport-tech-layout [aria-hidden='true'] .bg-primary\/10 {
+  opacity: 0.75;
+  filter: blur(48px);
+}
+
+html[data-slavia-preset='sport-tech'] .slavia-sport-tech-layout [aria-hidden='true'] .via-primary\/30 {
+  --tw-gradient-via: color-mix(in oklab, var(--ui-primary) 45%, transparent);
+}
+
+html[data-slavia-preset='sport-tech']:not(.dark) {
+  --color-green-400: #38bdf8;
+  --color-green-500: #2563eb;
+  --color-green-600: #1d4ed8;
+}
+
+html.dark[data-slavia-preset='sport-tech'] {
+  --color-green-400: #67e8f9;
+  --color-green-500: #22d3ee;
+  --color-green-600: #06b6d4;
 }
 
 /**
