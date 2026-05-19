@@ -142,9 +142,13 @@ const scaleLegend = [
             {{ r.note }}
           </p>
         </UCard>
-        <p v-if="(logs || []).length === 0" class="rounded-xl border border-dashed border-default/70 px-4 py-10 text-center text-sm text-muted">
-          Jeszcze nie ma wpisów — zapisz pierwszy check-in powyżej.
-        </p>
+        <PublicEmptyState
+          v-if="(logs || []).length === 0"
+          compact
+          icon="i-lucide-heart-pulse"
+          title="Brak wpisów regeneracji"
+          description="Zapisz pierwszy check-in w formularzu powyżej."
+        />
       </div>
     </section>
   </PanelPageLayout>

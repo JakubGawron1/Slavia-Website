@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const { isGlassLayout, isSportTechLayout } = useSlaviaAppearance()
+const { isGlassLayout, isSportTechLayout, isNeonBrutalismLayout } = useSlaviaAppearance()
 
 const props = withDefaults(
   defineProps<{
@@ -27,6 +27,7 @@ const containerClass = computed(() => {
   if (props.animate) c.push('animate-page-in')
   if (isGlassLayout.value) c.push('slavia-glass-layout')
   if (isSportTechLayout.value) c.push('slavia-sport-tech-layout')
+  if (isNeonBrutalismLayout.value) c.push('slavia-neon-brutalism-layout')
   return c
 })
 </script>

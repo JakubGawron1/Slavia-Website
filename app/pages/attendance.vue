@@ -440,18 +440,14 @@ onMounted(() => {
         <UIcon name="i-lucide-loader-2" class="size-9 animate-spin text-warning" />
       </div>
 
-      <div
+      <PublicEmptyState
         v-else-if="!pendingQueue.length"
-        class="relative mt-5 rounded-2xl border border-dashed border-default/60 bg-muted/5 px-4 py-10 text-center"
-      >
-        <UIcon name="i-lucide-sparkles" class="mx-auto size-11 text-success/80" />
-        <p class="mt-3 font-bold text-highlighted">
-          Brak oczekujących zgłoszeń
-        </p>
-        <p class="mt-1 text-sm text-muted">
-          Gdy zawodnik zgłosi obecność, pojawi się tutaj do jednego kliknięcia.
-        </p>
-      </div>
+        compact
+        icon="i-lucide-sparkles"
+        title="Brak oczekujących zgłoszeń"
+        description="Gdy zawodnik zgłosi obecność, pojawi się tutaj do jednego kliknięcia."
+        class="relative mt-5"
+      />
 
       <ul v-else class="relative mt-5 space-y-2.5">
         <li

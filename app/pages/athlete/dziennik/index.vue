@@ -133,19 +133,16 @@ async function removeEntry(e: TrainingLogEntry) {
         Historia wpisów
       </h2>
 
-      <div
+      <PublicEmptyState
         v-if="entries.length === 0"
-        class="rounded-xl border border-dashed border-default py-14 text-center text-muted"
+        icon="i-lucide-book-open"
+        title="Brak wpisów w dzienniku"
+        description="Dodaj pierwszą jednostkę lub poczekaj na notatkę od trenera."
       >
-        Nie ma jeszcze wpisów —
-        <NuxtLink
-          :to="redagujBase"
-          class="font-medium text-primary underline underline-offset-2"
-        >
-          dodaj pierwszą jednostkę
-        </NuxtLink>
-        lub poczekaj na notatkę od trenera.
-      </div>
+        <UButton :to="redagujBase" color="primary" icon="i-lucide-plus">
+          Dodaj pierwszą jednostkę
+        </UButton>
+      </PublicEmptyState>
 
       <div
         v-else

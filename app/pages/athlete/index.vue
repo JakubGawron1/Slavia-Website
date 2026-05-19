@@ -1500,12 +1500,13 @@ function toggleChecklistItem(id: string) {
             </tbody>
           </table>
         </UCard>
-        <div
+        <PublicEmptyState
           v-else
-          class="rounded-2xl border border-dashed border-default/70 bg-muted/20 px-6 py-12 text-center text-sm text-muted"
-        >
-          Nie masz jeszcze zgłoszonych wyników — po wysłaniu wpisu pojawią się tutaj ze statusem weryfikacji.
-        </div>
+          compact
+          icon="i-lucide-trophy"
+          title="Brak zgłoszonych wyników"
+          description="Po wysłaniu wpisu pojawi się tutaj ze statusem weryfikacji przez kadrę."
+        />
       </section>
 
       </div>

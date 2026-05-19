@@ -23,7 +23,7 @@ withDefaults(
       class="pointer-events-none absolute -right-16 -top-16 size-48 rounded-full bg-primary/8 blur-3xl"
       aria-hidden="true"
     />
-    <div class="slavia-empty-state__body">
+    <div class="slavia-empty-state__body text-center">
       <div
         class="slavia-empty-state__icon"
         :class="compact ? '!size-14' : 'sm:!size-[4.5rem]'"

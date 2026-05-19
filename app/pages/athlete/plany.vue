@@ -181,10 +181,12 @@ watch(selectedPlanId, () => {
       <div v-else class="grid gap-8 lg:grid-cols-12">
         <!-- Main List -->
         <div class="lg:col-span-12 space-y-6">
-          <div v-if="plans.length === 0" class="flex flex-col items-center justify-center py-24 bg-card/40 rounded-4xl border-2 border-dashed border-default animate-page-in">
-            <UIcon name="i-lucide-calendar-x" class="size-16 text-muted/20 mb-4" />
-            <p class="text-muted font-bold">Obecnie nie masz przypisanych żadnych planów treningowych.</p>
-          </div>
+          <PublicEmptyState
+            v-if="plans.length === 0"
+            icon="i-lucide-calendar-x"
+            title="Brak planów treningowych"
+            description="Obecnie nie masz przypisanych planów — trener doda je w panelu kadry."
+          />
 
           <div
             v-for="(p, idx) in plans"

@@ -387,10 +387,12 @@ function diaryEntryForPlanHref(plan: TrainingPlan) {
     </div>
 
     <div v-else class="space-y-4">
-      <div v-if="selectedAthleteId === NO_ATHLETE" class="flex flex-col items-center justify-center py-24 bg-default/5 rounded-[2.5rem] border-2 border-dashed border-default">
-        <UIcon name="i-lucide-users" class="size-16 text-muted/20 mb-4" />
-        <p class="text-muted font-bold">Wybierz zawodnika z listy powyżej, aby zarządzać planami.</p>
-      </div>
+      <PublicEmptyState
+        v-if="selectedAthleteId === NO_ATHLETE"
+        icon="i-lucide-users"
+        title="Wybierz zawodnika"
+        description="Wskaż profil z listy powyżej, aby zarządzać planami treningowymi."
+      />
 
       <template v-else>
         <div v-for="p in plans" :key="p.id" class="group relative bg-card hover:bg-card/80 border border-default hover:border-primary/30 p-6 rounded-3xl transition-all shadow-sm hover:shadow-xl hover:shadow-primary/5">
@@ -464,11 +466,16 @@ function diaryEntryForPlanHref(plan: TrainingPlan) {
           </div>
         </div>
 
-        <div v-if="plans.length === 0" class="flex flex-col items-center justify-center py-20 text-muted/50 gap-3 border-2 border-dashed border-default rounded-[2.5rem]">
-          <UIcon name="i-lucide-calendar-x" class="size-12" />
-          <p class="font-bold uppercase tracking-widest text-xs">Brak planów treningowych</p>
-          <UButton variant="link" color="primary" @click="showAddModal = true">Utwórz pierwszy plan</UButton>
-        </div>
+        <PublicEmptyState
+          v-if="plans.length === 0"
+          icon="i-lucide-calendar-x"
+          title="Brak planów treningowych"
+          description="Utwórz pierwszy plan dla wybranego zawodnika."
+        >
+          <UButton color="primary" icon="i-lucide-plus" @click="showAddModal = true">
+            Utwórz pierwszy plan
+          </UButton>
+        </PublicEmptyState>
       </template>
     </div>
   </PanelPageLayout>

@@ -110,12 +110,12 @@ function formatDate(d: string) {
       />
     </div>
 
-    <div
+    <PublicEmptyState
       v-else-if="!(messages && messages.length)"
-      class="rounded-2xl border border-dashed border-default px-6 py-14 text-center text-muted"
-    >
-      Brak wiadomości.
-    </div>
+      icon="i-lucide-mail"
+      title="Brak wiadomości"
+      description="Gdy ktoś wyśle formularz kontaktowy na stronie klubu, wiadomość pojawi się tutaj."
+    />
 
     <div
       v-else

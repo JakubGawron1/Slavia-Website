@@ -55,7 +55,7 @@ const selectedName = computed(() => {
       description="Podgląd check-inów zawodników (sen, skale subiektywne, notatki). Dane pochodzą z ich wpisów — możesz reagować planem treningowym lub rozmową."
     />
 
-    <UCard class="mb-10 border-default/70 shadow-sm ring-1 ring-default/40">
+    <UCard class="slavia-page-card mb-10">
       <UFormField label="Zawodnik" description="Lista aktywnych profili dostępnych dla kadry">
         <USelect
           v-model="selectedAthleteId"
@@ -102,17 +102,20 @@ const selectedName = computed(() => {
             {{ r.note }}
           </p>
         </UCard>
-        <template v-if="selectedAthleteId === NO_ATHLETE">
-          <p class="rounded-xl border border-dashed border-default/70 px-4 py-10 text-center text-sm text-muted">
-            Wybierz zawodnika, aby wczytać historię check-inów.
-          </p>
-        </template>
-        <p
+        <PublicEmptyState
+          v-if="selectedAthleteId === NO_ATHLETE"
+          compact
+          icon="i-lucide-user-round-search"
+          title="Wybierz zawodnika"
+          description="Wskaż profil z listy powyżej, aby wczytać historię check-inów regeneracji."
+        />
+        <PublicEmptyState
           v-else-if="logs.length === 0"
-          class="rounded-xl border border-dashed border-default/70 px-4 py-10 text-center text-sm text-muted"
-        >
-          Brak wpisów regeneracji dla tego zawodnika.
-        </p>
+          compact
+          icon="i-lucide-heart-pulse"
+          title="Brak wpisów regeneracji"
+          description="Zawodnik jeszcze nie zapisał check-inu w swoim panelu."
+        />
       </div>
     </section>
   </PanelPageLayout>

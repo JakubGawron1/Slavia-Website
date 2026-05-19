@@ -84,7 +84,13 @@ onMounted(() => {
           </div>
         </div>
       </UCard>
-      <p v-if="items.length === 0" class="text-sm text-muted">Brak powiadomień.</p>
+      <PublicEmptyState
+        v-if="items.length === 0"
+        compact
+        icon="i-lucide-bell-off"
+        title="Brak powiadomień"
+        description="Gdy pojawią się alerty od systemu lub kadry, zobaczysz je tutaj."
+      />
     </div>
   </PanelPageLayout>
 </template>

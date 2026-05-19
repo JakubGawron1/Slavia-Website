@@ -125,7 +125,7 @@ const descriptionClass = computed(() => {
     <div
       v-if="$slots.actions"
       class="relative mt-4 flex w-full flex-wrap gap-2 border-t border-default/40 pt-4"
-      :class="variant === 'centered' ? 'justify-center' : 'sm:justify-end'"
+      :class="variant === 'centered' ? 'justify-center' : 'justify-center sm:justify-end'"
     >
       <slot name="actions" />
     </div>

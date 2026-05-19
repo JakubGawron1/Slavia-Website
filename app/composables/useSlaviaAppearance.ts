@@ -62,6 +62,12 @@ export const SLAVIA_THEME_PRESETS = [
     label: 'Sport-Tech (Arena)',
     description: 'Futurystyczna arena — ciemny grafit z neonowym cyjanem; jasny wariant jak podświetlona trybuna.',
     experimental: true
+  },
+  {
+    id: 'neon-brutalism',
+    label: 'Neon Brutalism · Sport-Tech',
+    description: 'Brutalizm z grubymi obrysami i twardymi cieniami — neon magenta/cyjan/lime na węglu; jasny wariant odwrócony.',
+    experimental: true
   }
 ] as const
 
@@ -73,6 +79,10 @@ export function isGlassThemePreset(id: string | null | undefined): boolean {
 
 export function isSportTechThemePreset(id: string | null | undefined): boolean {
   return id === 'sport-tech'
+}
+
+export function isNeonBrutalismThemePreset(id: string | null | undefined): boolean {
+  return id === 'neon-brutalism'
 }
 
 /** Klucze localStorage lustra motywu (per konto) — panel developera, diagnostyka. */
@@ -142,6 +152,11 @@ export function useSlaviaAppearance() {
       document.documentElement.setAttribute('data-slavia-sport-tech-layout', 'true')
     } else {
       document.documentElement.removeAttribute('data-slavia-sport-tech-layout')
+    }
+    if (isNeonBrutalismThemePreset(p)) {
+      document.documentElement.setAttribute('data-slavia-neon-brutalism-layout', 'true')
+    } else {
+      document.documentElement.removeAttribute('data-slavia-neon-brutalism-layout')
     }
   }
 
@@ -284,6 +299,7 @@ export function useSlaviaAppearance() {
 
   const isGlassLayout = computed(() => isGlassThemePreset(preset.value))
   const isSportTechLayout = computed(() => isSportTechThemePreset(preset.value))
+  const isNeonBrutalismLayout = computed(() => isNeonBrutalismThemePreset(preset.value))
 
   return {
     preset,
@@ -293,6 +309,7 @@ export function useSlaviaAppearance() {
     colorMode,
     applyPresetDom,
     isGlassLayout,
-    isSportTechLayout
+    isSportTechLayout,
+    isNeonBrutalismLayout
   }
 }

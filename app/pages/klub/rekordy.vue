@@ -157,13 +157,16 @@ function genderLabel(g: string) {
       </UCard>
     </div>
 
-    <UAlert
+    <PublicEmptyState
       v-if="!recordBoard.length"
       class="mt-8"
-      color="neutral"
-      variant="subtle"
+      icon="i-lucide-trophy"
       title="Brak rekordów"
       description="Gdy zawodnicy uzupełnią wyniki w profilach, tablica wypełni się automatycznie."
-    />
+    >
+      <UButton to="/zawodnicy" variant="soft" color="primary" icon="i-lucide-users">
+        Przejdź do kadry
+      </UButton>
+    </PublicEmptyState>
   </PublicPageLayout>
 </template>

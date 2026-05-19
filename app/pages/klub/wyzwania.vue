@@ -133,51 +133,69 @@ function athleteHref(row: LeaderboardRow) {
       description="Sprawdź połączenie lub popraw format miesiąca."
     />
 
-    <div
+    <PublicEmptyState
       v-else-if="rows.length === 0"
-      class="rounded-2xl border border-dashed border-default py-16 text-center text-muted"
-    >
-      Brak wpisów w dzienniku w tym miesiącu.
-    </div>
+      icon="i-lucide-flame"
+      title="Brak wpisów w tym miesiącu"
+      description="Ranking wypełni się, gdy zawodnicy zapiszą jednostki w dzienniku treningowym."
+    />
 
-    <div v-else class="overflow-hidden rounded-2xl border border-default/60">
-      <table class="w-full text-left text-sm">
-        <thead class="bg-muted/30 text-[11px] font-bold uppercase tracking-wider text-muted">
-          <tr>
-            <th class="px-4 py-3">
-              #
-            </th>
-            <th class="px-4 py-3">
-              Zawodnik
-            </th>
-            <th class="px-4 py-3 text-right">
-              Jednostki (wpisy)
-            </th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-default/50">
-          <tr
-            v-for="(row, idx) in rows"
-            :key="row.athlete_id"
-            class="bg-background/80 hover:bg-primary/5"
-          >
-            <td class="px-4 py-3 font-mono font-bold text-primary">
-              {{ idx + 1 }}
-            </td>
-            <td class="px-4 py-3 font-semibold text-highlighted">
-              <NuxtLink
-                :to="athleteHref(row)"
-                class="hover:text-primary hover:underline"
+    <template v-else>
+      <div class="slavia-page-card hidden overflow-hidden md:block">
+        <div class="slavia-data-table overflow-x-auto p-2 sm:p-4">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Zawodnik</th>
+                <th class="text-right">
+                  Jednostki (wpisy)
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="(row, idx) in rows"
+                :key="row.athlete_id"
               >
-                {{ row.full_name }}
-              </NuxtLink>
-            </td>
-            <td class="px-4 py-3 text-right font-mono tabular-nums">
-              {{ row.session_count }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+                <td class="font-mono font-bold text-primary">
+                  {{ idx + 1 }}
+                </td>
+                <td class="font-semibold text-highlighted">
+                  <NuxtLink
+                    :to="athleteHref(row)"
+                    class="hover:text-primary hover:underline"
+                  >
+                    {{ row.full_name }}
+                  </NuxtLink>
+                </td>
+                <td class="text-right font-mono tabular-nums">
+                  {{ row.session_count }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="grid gap-3 md:hidden">
+        <UCard
+          v-for="(row, idx) in rows"
+          :key="`m-${row.athlete_id}`"
+          class="slavia-page-card"
+        >
+          <div class="flex items-center justify-between gap-3">
+            <span class="font-mono text-lg font-black text-primary">#{{ idx + 1 }}</span>
+            <span class="font-mono text-sm tabular-nums text-muted">{{ row.session_count }} wpisów</span>
+          </div>
+          <NuxtLink
+            :to="athleteHref(row)"
+            class="mt-2 block text-base font-bold text-highlighted hover:text-primary"
+          >
+            {{ row.full_name }}
+          </NuxtLink>
+        </UCard>
+      </div>
+    </template>
   </PublicPageLayout>
 </template>
