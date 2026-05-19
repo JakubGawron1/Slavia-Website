@@ -270,6 +270,18 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
+  /**
+   * `components/panel/Public*.vue` — bez prefiksu `Panel` w nazwie (np. `PublicPageLayout`, nie `PanelPublicPageLayout`).
+   * Pliki `Panel*.vue` w tym samym katalogu nadal rejestrują się jako `PanelPageLayout` itd.
+   */
+  components: [
+    '~/components',
+    {
+      path: '~/components/panel',
+      pathPrefix: false
+    }
+  ],
+
   runtimeConfig: {
     blobReadWriteToken: process.env.BLOB_READ_WRITE_TOKEN || '',
     githubApiToken: process.env.GITHUB_TOKEN || process.env.GITHUB_API_TOKEN || '',
