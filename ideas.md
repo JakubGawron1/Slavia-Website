@@ -34,7 +34,7 @@ Zbiór propozycji po przeglądzie kodu (`Slavia-frontend`, typy tras z `api.ts`,
 16. **Historia „przelewu stałego” w UI** — oś czasu: „auto-składka za 2026-04” z odnośnikiem lub opisem spójnym z `membership_payments`, widoczna dla zawodnika i zsynchronizowana z panelem trenera.
 17. **Nadpłata / saldo** — przejrzysty widżet „przeniesione na kolejny miesiąc” przy obecnym flow zatwierdzania wpłat (jeśli logika lub notatki to obsługują — spięcie z UX).
 18. **Powiadomienie przed „10.”** — spójność między `/profil` (lokalnie) a e-mailem / push (jeśli kiedykolwiek dodany centralny dispatcher).
-19. **Panel trenera: skrót „kto bez wpłaty za bieżący miesiąc”** — jedna lista filtrowana z `/api/payments/overview` lub statusów (minimalny widok na dashboard lub składkach).
+19. ~~**Panel trenera: skrót „kto bez wpłaty za bieżący miesiąc”** — jedna lista filtrowana z `/api/payments/overview` lub statusów (minimalny widok na dashboard lub składkach).~~ *(wdrożone: karta na dashboardzie trenera + link do składek.)*
 
 ---
 

@@ -17,6 +17,21 @@ type ChangelogUpdate = {
 
 const updates = [
   {
+    version: 'v3.2.4-dev',
+    date: '19 Maj 2026',
+    title: 'UI publiczne, panele, QR i analiza sztangi',
+    features: [
+      'Layouty publiczne i panelowe: większy odstęp pod nagłówkiem strony; kalkulatory wyśrodkowane (max-w-5xl).',
+      'Kontakt: układ dwukolumnowy (info + formularz); kalendarz i wyzwania — czytelniejsze marginesy.',
+      'Ogłoszenia: przycisk „Dodaj ogłoszenie” zawsze widoczny dla kadry (desktop i mobile).',
+      'Strona główna: sekcja historii klubu pod podium zawodników; logowanie z animacjami.',
+      'Odznaki: modal gratulacji tylko przy nowym poziomie (`slavia-achievements-seen-{userId}`).',
+      'Skaner QR (WWW): ramka kadrowania; analiza sztangi — lepsza synchronizacja klatek na osi czasu.',
+      'Dashboardy: KPI → skróty modułów → listy oczekujących; przejścia stron (pageTransition).'
+    ],
+    type: 'release'
+  },
+  {
     version: 'v3.2.3-dev',
     date: '18 Maj 2026',
     title:
