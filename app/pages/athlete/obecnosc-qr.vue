@@ -143,10 +143,26 @@ onBeforeUnmount(() => {
 
     <template v-else>
       <UCard class="overflow-hidden rounded-2xl border-default/70">
-        <div
-          :id="SCANNER_ID"
-          class="relative min-h-[280px] bg-black sm:min-h-[320px]"
-        />
+        <div class="relative min-h-[280px] bg-black sm:min-h-[320px]">
+          <div
+            :id="SCANNER_ID"
+            class="absolute inset-0"
+          />
+          <div
+            class="pointer-events-none absolute inset-0 z-10 flex items-center justify-center p-6"
+            aria-hidden="true"
+          >
+            <div class="relative size-[min(72vw,16rem)] max-h-[min(72vw,16rem)] rounded-2xl border-2 border-primary/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.45)]">
+              <span class="absolute -left-0.5 -top-0.5 size-8 rounded-tl-lg border-l-4 border-t-4 border-primary" />
+              <span class="absolute -right-0.5 -top-0.5 size-8 rounded-tr-lg border-r-4 border-t-4 border-primary" />
+              <span class="absolute -bottom-0.5 -left-0.5 size-8 rounded-bl-lg border-b-4 border-l-4 border-primary" />
+              <span class="absolute -bottom-0.5 -right-0.5 size-8 rounded-br-lg border-b-4 border-r-4 border-primary" />
+            </div>
+          </div>
+          <p class="pointer-events-none absolute inset-x-0 bottom-3 z-10 text-center text-xs font-medium text-white/90 drop-shadow-md">
+            Umieść kod QR w ramce
+          </p>
+        </div>
         <div class="flex flex-wrap gap-2 border-t border-default/50 p-3">
           <UButton
             v-if="!scanActive"

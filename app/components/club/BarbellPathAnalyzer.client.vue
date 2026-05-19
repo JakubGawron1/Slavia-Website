@@ -493,7 +493,7 @@ async function seekToTime(v: HTMLVideoElement, timeSec: number, timeoutMs: numbe
   }
   const target = Math.min(Math.max(0, timeSec), Math.max(0, duration - 1 / 30))
   if (Math.abs(v.currentTime - target) < 0.04) {
-    await yieldToBrowser()
+    await waitForVideoFrame(v)
     return
   }
 
@@ -523,6 +523,21 @@ async function seekToTime(v: HTMLVideoElement, timeSec: number, timeoutMs: numbe
       cleanup()
       reject(err instanceof Error ? err : new Error(String(err)))
     }
+  })
+  await waitForVideoFrame(v)
+}
+
+/** Po seeku — poczekaj na zdekodowaną klatkę (timeline + MoveNet). */
+async function waitForVideoFrame(v: HTMLVideoElement): Promise<void> {
+  await yieldToBrowser()
+  if (typeof v.requestVideoFrameCallback === 'function') {
+    await new Promise<void>((resolve) => {
+      v.requestVideoFrameCallback(() => resolve())
+    })
+    return
+  }
+  await new Promise<void>((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
   })
 }
 
@@ -644,16 +659,17 @@ async function analyzeVideo() {
 
     for (let i = 0; i <= steps; i++) {
       if (runId !== analysisRunId) return
-      const t = (i / steps) * duration
-      await seekToTime(v, Math.min(t, Math.max(0, duration - 1 / 30)), 15_000)
+      const targetT = (i / steps) * duration
+      await seekToTime(v, Math.min(targetT, Math.max(0, duration - 1 / 30)), 15_000)
       if (runId !== analysisRunId) return
 
+      const sampleTime = Number.isFinite(v.currentTime) ? v.currentTime : targetT
       const poses = await det.estimatePoses(v, { maxPoses: 1, flipHorizontal: false })
       const pose = poses[0]
       if (pose) {
         const s = extractSample(pose, vw, vh)
         if (s) {
-          raw.push({ ...s, t })
+          raw.push({ ...s, t: sampleTime })
         }
       }
       frameProgress.value = { current: i + 1, total: steps + 1 }

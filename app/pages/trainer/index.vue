@@ -355,6 +355,16 @@ async function rejectPayment(id: string) {
       </template>
     </UAlert>
 
+    <div class="slavia-panel-section space-y-2">
+      <PanelModuleGrid
+        v-for="g in moduleGroups"
+        :key="g.title"
+        :title="g.title"
+        :items="g.items"
+        :tone-from-bg="toneFromBg"
+      />
+    </div>
+
     <div class="mt-10 grid gap-4 lg:grid-cols-2">
       <DashboardUrgentList
         title="Wyniki do zatwierdzenia"
@@ -417,16 +427,6 @@ async function rejectPayment(id: string) {
           + {{ paymentsPendingCount - unpaidThisMonth.length }} więcej — pełna lista w składkach.
         </p>
       </UCard>
-    </div>
-
-    <div class="slavia-panel-section space-y-2">
-      <PanelModuleGrid
-        v-for="g in moduleGroups"
-        :key="g.title"
-        :title="g.title"
-        :items="g.items"
-        :tone-from-bg="toneFromBg"
-      />
     </div>
 
   </PanelPageLayout>

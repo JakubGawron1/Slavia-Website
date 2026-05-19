@@ -1090,6 +1090,16 @@ function toggleChecklistItem(id: string) {
       </div>
     </div>
 
+    <div v-if="auth.canAccessAthletePortal && athlete" class="mt-10 mb-6 space-y-2">
+      <PanelModuleGrid
+        v-for="g in athleteModuleGroups"
+        :key="g.title"
+        :title="g.title"
+        :items="g.items"
+        :tone-from-bg="toneFromIconBg"
+      />
+    </div>
+
     <!-- Osiągnięcia (Badges) -->
     <div v-if="auth.canAccessAthletePortal && athlete" class="mt-8">
       <div class="mb-4 flex items-center justify-between gap-3">
@@ -1101,16 +1111,6 @@ function toggleChecklistItem(id: string) {
         </UBadge>
       </div>
       <AthleteBadges :athlete="athlete" :present-count="attendanceSummary?.present_count || 0" />
-    </div>
-
-    <div v-if="auth.canAccessAthletePortal && athlete" class="mt-10 mb-10 space-y-2">
-      <PanelModuleGrid
-        v-for="g in athleteModuleGroups"
-        :key="g.title"
-        :title="g.title"
-        :items="g.items"
-        :tone-from-bg="toneFromIconBg"
-      />
     </div>
 
     <!-- Licznik startów (statystyki PB są wyżej w hero — bez duplikatu kart) -->

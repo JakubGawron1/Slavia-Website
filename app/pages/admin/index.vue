@@ -273,6 +273,16 @@ const lowerDashboards = computed(() => {
       </div>
     </div>
 
+    <div class="slavia-panel-section space-y-2">
+      <PanelModuleGrid
+        v-for="g in moduleGroups"
+        :key="g.title"
+        :title="g.title"
+        :items="g.items"
+        :tone-from-bg="toneFromBg"
+      />
+    </div>
+
     <!-- SuperAdmin Banner -->
     <div
       v-if="isSuperAdmin"
@@ -367,16 +377,6 @@ const lowerDashboards = computed(() => {
           <UButton size="sm" variant="soft" icon="i-lucide-refresh-ccw" @click="refreshPending()">Odśwież</UButton>
         </template>
       </DashboardUrgentList>
-    </div>
-
-    <div class="slavia-panel-section space-y-2">
-      <PanelModuleGrid
-        v-for="g in moduleGroups"
-        :key="g.title"
-        :title="g.title"
-        :items="g.items"
-        :tone-from-bg="toneFromBg"
-      />
     </div>
 
   </PanelPageLayout>

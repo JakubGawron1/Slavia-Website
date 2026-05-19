@@ -7,6 +7,8 @@ const props = defineProps<{
   presentCount?: number
 }>()
 
+const auth = useAuth()
+
 interface Badge {
   id: string
   label: string
@@ -132,8 +134,32 @@ function saveStoredLevels(levels: Record<string, number>) {
   try { localStorage.setItem(BADGE_LS_KEY, JSON.stringify(levels)) } catch { /* ignore */ }
 }
 
+function achievementsSeenKey(userId: string) {
+  return `slavia-achievements-seen-${userId}`
+}
+
+function hasSeenAchievementsIntro(userId: string): boolean {
+  if (!import.meta.client) return true
+  try {
+    return localStorage.getItem(achievementsSeenKey(userId)) === '1'
+  } catch {
+    return true
+  }
+}
+
+function markAchievementsIntroSeen(userId: string) {
+  if (!import.meta.client) return
+  try {
+    localStorage.setItem(achievementsSeenKey(userId), '1')
+  } catch { /* ignore */ }
+}
+
 function checkForNewBadges() {
+  const userId = auth.user.value?.id
+  if (!userId) return
+
   const stored = loadStoredLevels()
+  const hadPriorSnapshot = Object.keys(stored).length > 0
   const current: Record<string, number> = {}
   let firstNew: { label: string; level: number; icon: string } | null = null
 
@@ -141,24 +167,40 @@ function checkForNewBadges() {
     const lvl = getLevel(badge)
     current[badge.id] = lvl
     const prev = stored[badge.id] ?? 0
-    if (lvl > prev && lvl > 0 && !firstNew) {
+    if (hadPriorSnapshot && lvl > prev && lvl > 0 && !firstNew) {
       firstNew = { label: badge.label, level: lvl, icon: badge.icon }
     }
   }
 
   saveStoredLevels(current)
 
+  if (!hadPriorSnapshot) {
+    markAchievementsIntroSeen(userId)
+    return
+  }
+
   if (firstNew) {
     celebrationBadge.value = firstNew
     celebrationOpen.value = true
     confettiActive.value = true
     setTimeout(() => { confettiActive.value = false }, 3500)
+    return
+  }
+
+  if (!hasSeenAchievementsIntro(userId)) {
+    markAchievementsIntroSeen(userId)
   }
 }
 
 onMounted(() => {
-  // Small delay to allow athlete data to settle from SSR hydration
   setTimeout(checkForNewBadges, 600)
+})
+
+watch(celebrationOpen, (open) => {
+  if (!open) {
+    const userId = auth.user.value?.id
+    if (userId) markAchievementsIntroSeen(userId)
+  }
 })
 
 async function shareBadge() {
