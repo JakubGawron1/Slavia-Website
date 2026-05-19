@@ -56,7 +56,7 @@ useSeoMeta({
       back-label="Wróć do listy i rankingu"
     />
 
-    <div class="slavia-public-section">
+    <div class="slavia-content-well slavia-public-section">
       <UCard class="mb-8 rounded-2xl border-default/70 shadow-sm ring-1 ring-default/40">
         <div class="max-h-80 space-y-1 overflow-y-auto p-3 sm:p-4">
           <div v-if="pending" class="text-sm text-muted">

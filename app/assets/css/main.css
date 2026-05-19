@@ -110,6 +110,7 @@ svg {
 /** Odstęp treści pod sticky `ClubSiteHeader` (publiczne layouty + panele). */
 .slavia-below-site-header {
   scroll-margin-top: calc(var(--ui-header-height, 4rem) + 0.75rem);
+  padding-top: max(0.75rem, env(safe-area-inset-top, 0px));
 }
 
 @media (max-width: 639px) {
@@ -145,6 +146,8 @@ svg {
   width: 100%;
   max-width: min(var(--slavia-content-max), 100%);
   margin-inline: auto;
+  padding-inline: var(--slavia-page-gutter);
+  box-sizing: border-box;
 }
 
 .slavia-panel-section {
@@ -213,6 +216,18 @@ svg {
   width: 100%;
   max-width: min(var(--slavia-content-well), 100%);
   margin-inline: auto;
+  box-sizing: border-box;
+}
+
+/** Studnia wewnątrz strony publicznej — gutter z `.slavia-public-page`, bez podwójnego paddingu */
+.slavia-public-page > .slavia-content-well {
+  padding-inline: 0;
+}
+
+/** Studnia poza `.slavia-public-page` (np. fragment panelu) — własny gutter */
+.slavia-panel-page .slavia-content-well,
+.slavia-content-well--gutter {
+  padding-inline: var(--slavia-page-gutter);
 }
 
 /** Sekcja pełnej szerokości wewnątrz UContainer (np. pasek KPI na profilu zawodnika) */

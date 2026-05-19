@@ -20,7 +20,7 @@ useSeoMeta({
   robots: 'index, follow'
 })
 
-const { auth, canManage, sessionReady } = useClubContentAdmin()
+const { auth, canManage, showManageActions, sessionReady } = useClubContentAdmin()
 const apiFetch = useApi()
 const toast = useToast()
 const config = useRuntimeConfig()
@@ -233,10 +233,11 @@ const sortedPhotos = computed(() => {
     >
       <template #actions>
         <UButton
-          v-if="canManage && sortedPhotos.length > 0"
+          v-if="showManageActions"
           icon="i-lucide-image-plus"
           color="primary"
-          class="min-h-11 shrink-0 justify-center"
+          size="lg"
+          class="min-h-11 w-full shrink-0 justify-center font-semibold sm:w-auto"
           @click="openCreate"
         >
           Dodaj zdjęcie
@@ -273,7 +274,7 @@ const sortedPhotos = computed(() => {
       description="Tu pojawią się zdjęcia i filmy z treningów, zawodów i życia klubu."
     >
       <UButton
-        v-if="canManage"
+        v-if="showManageActions"
         icon="i-lucide-image-plus"
         color="primary"
         size="lg"
@@ -295,7 +296,22 @@ const sortedPhotos = computed(() => {
     </PublicEmptyState>
 
     <div
-      v-else
+      v-if="showManageActions && sortedPhotos.length > 0"
+      class="mb-6 flex flex-wrap items-center justify-center gap-2 sm:justify-end"
+    >
+      <UButton
+        icon="i-lucide-image-plus"
+        color="primary"
+        size="lg"
+        class="min-h-11 w-full shrink-0 justify-center font-semibold sm:w-auto"
+        @click="openCreate"
+      >
+        Dodaj zdjęcie
+      </UButton>
+    </div>
+
+    <div
+      v-if="sortedPhotos.length > 0"
       class="columns-1 gap-5 sm:columns-2 sm:gap-6 lg:columns-3"
     >
       <figure

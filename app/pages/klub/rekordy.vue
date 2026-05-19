@@ -105,7 +105,7 @@ function genderLabel(g: string) {
       description="W tej wersji ranking opiera się na PB z profilu. Pełny filtr po dacie zawodów pojawi się po rozszerzeniu API wyników."
     />
 
-    <div class="slavia-public-section grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div class="slavia-content-well slavia-public-section grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <UCard
         v-for="row in recordBoard"
         :key="`${row.gender}-${row.weightCategory}`"

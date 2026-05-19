@@ -21,7 +21,7 @@ useSeoMeta({
   robots: 'index, follow'
 })
 
-const { auth, canManage, sessionReady } = useClubContentAdmin()
+const { auth, canManage, showManageActions, sessionReady } = useClubContentAdmin()
 const apiFetch = useApi()
 const toast = useToast()
 
@@ -190,7 +190,7 @@ function bodyPreview(text: string, max = 100) {
       </template>
       <template #actions>
         <UButton
-          v-if="canManage"
+          v-if="showManageActions"
           icon="i-lucide-megaphone"
           color="primary"
           size="lg"
@@ -234,7 +234,7 @@ function bodyPreview(text: string, max = 100) {
       description="Gdy pojawią się komunikaty organizacyjne, zobaczysz je tutaj na pierwszym planie."
     >
       <UButton
-        v-if="canManage"
+        v-if="showManageActions"
         icon="i-lucide-megaphone"
         color="primary"
         size="lg"
@@ -256,6 +256,21 @@ function bodyPreview(text: string, max = 100) {
     </PublicEmptyState>
 
     <template v-else>
+      <div
+        v-if="showManageActions"
+        class="mb-6 flex flex-wrap items-center justify-center gap-2 sm:justify-end"
+      >
+        <UButton
+          icon="i-lucide-megaphone"
+          color="primary"
+          size="lg"
+          class="min-h-11 w-full shrink-0 justify-center font-semibold sm:w-auto"
+          @click="openCreate"
+        >
+          Dodaj ogłoszenie
+        </UButton>
+      </div>
+
       <div
         v-if="canManage"
         class="slavia-page-card mb-8 hidden overflow-hidden md:block"

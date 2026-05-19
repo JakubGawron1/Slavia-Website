@@ -8,6 +8,13 @@ export function useClubContentAdmin() {
 
   const canManage = computed(() => auth.canManageClubContent.value)
 
+  /** Przyciski CMS widoczne od razu po zalogowaniu (zanim GET /me odświeży role). */
+  const showManageActions = computed(() => {
+    if (canManage.value) return true
+    if (!import.meta.client) return false
+    return Boolean(auth.token.value) && !sessionReady.value
+  })
+
   async function hydrateSession() {
     if (!import.meta.client) return
     if (auth.token.value) {
@@ -42,6 +49,7 @@ export function useClubContentAdmin() {
   return {
     auth,
     canManage,
+    showManageActions,
     sessionReady,
     hydrateSession
   }

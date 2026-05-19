@@ -28,7 +28,15 @@ const props = withDefaults(
 )
 
 const containerClass = computed(() => {
-  const c: string[] = ['slavia-public-page', 'slavia-below-site-header', 'relative', 'mx-auto', 'w-full', 'min-w-0']
+  const c: string[] = [
+    'slavia-public-page',
+    'slavia-below-site-header',
+    'relative',
+    'mx-auto',
+    'w-full',
+    'min-w-0',
+    'max-w-[min(var(--slavia-content-max),100%)]'
+  ]
   if (props.narrow) c.push('max-w-3xl')
   else if (props.centered) c.push('max-w-5xl')
   if (props.padding === 'default') c.push('pt-10 pb-8 sm:pt-14 sm:pb-12 lg:pt-16 lg:pb-14')

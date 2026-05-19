@@ -14,7 +14,7 @@ useSeoMeta({
   twitterCard: 'summary_large_image'
 })
 
-const { auth, canManage, sessionReady } = useClubContentAdmin()
+const { auth, canManage, showManageActions, sessionReady } = useClubContentAdmin()
 const apiFetch = useApi()
 const toast = useToast()
 const config = useRuntimeConfig()
@@ -167,11 +167,12 @@ function editPostUrl(post: BlogPost) {
     >
       <template #actions>
         <UButton
-          v-if="canManage && posts && posts.length > 0"
+          v-if="showManageActions"
           to="/aktualnosci/nowy"
           icon="i-lucide-pen-tool"
           color="primary"
-          class="min-h-11 shrink-0 justify-center"
+          size="lg"
+          class="min-h-11 w-full shrink-0 justify-center font-semibold sm:w-auto"
         >
           Dodaj wpis
         </UButton>
@@ -211,7 +212,7 @@ function editPostUrl(post: BlogPost) {
       description="Zaglądaj tu wkrótce po relacje z zawodów, komunikaty i życie sekcji na sali."
     >
       <UButton
-        v-if="canManage"
+        v-if="showManageActions"
         to="/aktualnosci/nowy"
         icon="i-lucide-pen-tool"
         color="primary"
@@ -233,7 +234,22 @@ function editPostUrl(post: BlogPost) {
     </PublicEmptyState>
 
     <div
-      v-else
+      v-if="showManageActions && posts && posts.length > 0"
+      class="mb-6 flex flex-wrap items-center justify-center gap-2 sm:justify-end"
+    >
+      <UButton
+        to="/aktualnosci/nowy"
+        icon="i-lucide-pen-tool"
+        color="primary"
+        size="lg"
+        class="min-h-11 w-full shrink-0 justify-center font-semibold sm:w-auto"
+      >
+        Dodaj wpis
+      </UButton>
+    </div>
+
+    <div
+      v-if="posts && posts.length > 0"
       class="grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3 xl:gap-10"
     >
       <article
