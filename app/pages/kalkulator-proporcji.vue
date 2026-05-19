@@ -210,7 +210,8 @@ function rowAccentClass(s: string) {
       </template>
     </PublicPageHeader>
 
-      <div class="grid gap-8 lg:grid-cols-5">
+    <div class="slavia-content-well mx-auto flex w-full max-w-5xl flex-col gap-8">
+      <div class="grid w-full gap-8 lg:grid-cols-5">
         <UCard class="rounded-3xl border-default/70 shadow-sm ring-1 ring-default/40 lg:col-span-2">
           <template #header>
             <div class="flex items-start justify-between gap-3">
@@ -467,6 +468,7 @@ function rowAccentClass(s: string) {
           </div>
         </UCard>
       </div>
+    </div>
   </PublicPageLayout>
 </template>
 

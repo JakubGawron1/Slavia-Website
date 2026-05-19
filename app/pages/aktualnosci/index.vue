@@ -167,7 +167,7 @@ function editPostUrl(post: BlogPost) {
     >
       <template #actions>
         <UButton
-          v-if="canManage"
+          v-if="canManage && posts && posts.length > 0"
           to="/aktualnosci/nowy"
           icon="i-lucide-pen-tool"
           color="primary"
@@ -178,6 +178,7 @@ function editPostUrl(post: BlogPost) {
       </template>
     </PublicPageHeader>
 
+    <div class="slavia-content-well slavia-public-section">
     <div
       v-if="pending"
       class="py-10"
@@ -328,6 +329,7 @@ function editPostUrl(post: BlogPost) {
           </div>
         </div>
       </article>
+    </div>
     </div>
   </PublicPageLayout>
 </template>

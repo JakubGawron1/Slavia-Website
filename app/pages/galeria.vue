@@ -233,7 +233,7 @@ const sortedPhotos = computed(() => {
     >
       <template #actions>
         <UButton
-          v-if="canManage"
+          v-if="canManage && sortedPhotos.length > 0"
           icon="i-lucide-image-plus"
           color="primary"
           class="min-h-11 shrink-0 justify-center"
@@ -244,6 +244,7 @@ const sortedPhotos = computed(() => {
       </template>
     </PublicPageHeader>
 
+    <div class="slavia-content-well slavia-public-section">
     <div
       v-if="pending"
       class="py-14"
@@ -395,6 +396,7 @@ const sortedPhotos = computed(() => {
           </div>
         </figcaption>
       </figure>
+    </div>
     </div>
 
     <UModal

@@ -603,7 +603,7 @@ const showAthleteCompareLink = computed(() => {
     </div>
 
     <!-- Ranking Table Section -->
-    <div class="mb-32">
+    <div class="slavia-content-well mb-32">
       <div class="mb-8 flex flex-col justify-between gap-6 sm:mb-12 md:flex-row md:items-end lg:mb-14">
         <div class="min-w-0">
           <h2 class="flex items-center gap-3 text-2xl font-black uppercase italic tracking-tight text-highlighted sm:gap-4 sm:text-3xl lg:text-4xl">

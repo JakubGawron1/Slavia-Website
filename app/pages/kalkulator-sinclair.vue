@@ -175,7 +175,7 @@ useSeoMeta({
 </script>
 
 <template>
-  <PublicPageLayout narrow>
+  <PublicPageLayout>
     <PublicPageHeader
       variant="hero"
       eyebrow="Narzędzie"
@@ -184,6 +184,7 @@ useSeoMeta({
       description="Przelicznik na okres 2025–2028 — porównywanie wyników zawodników o różnej masie ciała (dwubój: rwanie + podrzut)."
     />
 
+    <div class="slavia-content-well mx-auto flex w-full max-w-5xl flex-col gap-8">
     <UAlert
       v-if="profileWarning"
       color="warning"
@@ -194,7 +195,7 @@ useSeoMeta({
       :actions="[{ label: 'Przejdź do profilu', to: '/profil', color: 'warning' }]"
     />
 
-      <div class="grid max-w-5xl gap-8 lg:grid-cols-5">
+      <div class="grid w-full gap-8 lg:grid-cols-5">
         <UCard class="border-default/80 shadow-sm lg:col-span-2">
           <template #header>
             <h2 class="text-lg font-semibold text-highlighted">
@@ -336,7 +337,7 @@ useSeoMeta({
       </div>
 
       <!-- Scenariusze (Porównywarka) -->
-      <div v-if="scenarios.length > 0" class="mx-auto mt-12 max-w-5xl">
+      <div v-if="scenarios.length > 0" class="mt-12 w-full">
         <div class="mb-5 flex items-center justify-between">
           <h2 class="text-xl font-black uppercase italic tracking-tight text-highlighted">
             Twoje Scenariusze
@@ -395,5 +396,6 @@ useSeoMeta({
       title="Informacja"
       description="Przelicznik jest liczony jak na podnoszenieciezarow.pl (okres 2025–2028): mężczyźni b = 201 kg, kobiety b = 164 kg; stała A dopasowana do ich tabeli. Ewentualne różnice w ostatnich miejscach wynikają z zaokrągleń po stronie serwisu referencyjnego."
     />
+    </div>
   </PublicPageLayout>
 </template>

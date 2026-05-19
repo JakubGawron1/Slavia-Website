@@ -197,6 +197,8 @@ svg {
   width: 100%;
   max-width: min(var(--slavia-content-max), 100%);
   margin-inline: auto;
+  padding-inline: var(--slavia-page-gutter);
+  box-sizing: border-box;
 }
 
 /**
@@ -343,6 +345,11 @@ html.dark .slavia-page-card {
   );
 }
 
+/** Otoczka pustego stanu — pełna szerokość, wyśrodkowana studnia max-w-lg */
+.slavia-public-empty-shell {
+  width: 100%;
+}
+
 /** Publiczny pusty stan (PublicEmptyState) */
 .slavia-public-empty {
   position: relative;
@@ -375,7 +382,7 @@ html.dark .slavia-page-card {
 .slavia-empty-state__body {
   position: relative;
   width: 100%;
-  max-width: 28rem;
+  max-width: min(32rem, 100%);
   margin-inline: auto;
   text-align: center;
 }
@@ -460,12 +467,15 @@ html.dark .slavia-page-card {
   flex: 0 0 auto;
   width: auto;
   max-width: 100%;
+  align-self: center;
+  margin-inline: auto;
 }
 
 .slavia-public-empty .slavia-empty-state__actions :is(button, a) {
   width: auto;
   max-width: 100%;
   justify-content: center;
+  margin-inline: auto;
 }
 
 .slavia-empty-state__hint {
