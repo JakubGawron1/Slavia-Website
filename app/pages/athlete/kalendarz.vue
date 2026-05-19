@@ -287,7 +287,8 @@ function onAgendaSelect(day: Date, ev: { key: string }) {
       </template>
     </PanelPageHeader>
 
-    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+    <div class="slavia-content-well flex flex-col gap-6 sm:gap-8">
+    <div class="flex flex-wrap items-center justify-between gap-4">
       <div class="flex items-center gap-2 bg-muted/20 p-1.5 rounded-xl border border-default">
         <UButton
           icon="i-lucide-chevron-left"
@@ -406,7 +407,7 @@ function onAgendaSelect(day: Date, ev: { key: string }) {
       />
     </div>
 
-    <div class="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-3 p-5 rounded-2xl bg-muted/10 border border-default">
+    <div class="grid grid-cols-2 gap-3 rounded-2xl border border-default bg-muted/10 p-5 sm:grid-cols-4">
       <div class="flex items-center gap-3">
         <div class="w-3 h-7 rounded-full bg-blue-500/40 border border-blue-500/50 shrink-0" />
         <div>
@@ -451,6 +452,7 @@ function onAgendaSelect(day: Date, ev: { key: string }) {
           </p>
         </div>
       </div>
+    </div>
     </div>
 
     <UModal

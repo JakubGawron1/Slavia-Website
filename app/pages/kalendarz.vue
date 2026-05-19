@@ -589,7 +589,8 @@ function handleDayClick(day: Date) {
       description="Harmonogram treningów i startów klubowych."
     />
 
-    <div class="slavia-toolbar mb-6 flex flex-col gap-4 sm:mb-8 lg:mb-10">
+    <div class="slavia-content-well flex flex-col gap-6 sm:gap-8">
+    <div class="slavia-toolbar flex flex-col gap-4">
       <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
       <div class="flex w-full items-center justify-center gap-1 rounded-xl border border-default/60 bg-card/80 p-1 shadow-sm md:w-auto">
         <UButton
@@ -764,7 +765,7 @@ function handleDayClick(day: Date) {
     </div>
 
     <!-- Legenda -->
-    <div class="slavia-page-card mt-6 grid grid-cols-1 gap-4 p-4 sm:mt-8 sm:grid-cols-2 sm:gap-4 sm:p-5 lg:grid-cols-4">
+    <div class="slavia-page-card grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 sm:gap-4 sm:p-5 lg:grid-cols-4">
       <div class="flex items-center gap-3">
         <div class="w-3 h-7 rounded-full bg-blue-500/40 border border-blue-500/50 shrink-0" />
         <div>
@@ -820,6 +821,7 @@ function handleDayClick(day: Date) {
           </p>
         </div>
       </div>
+    </div>
     </div>
 
     <!-- Modal -->

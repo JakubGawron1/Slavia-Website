@@ -527,6 +527,7 @@ onMounted(() => {
       </div>
     </UCard>
 
+    <div class="slavia-content-well">
     <UCard class="slavia-page-card overflow-hidden">
       <div class="mb-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div class="min-w-0 flex-1">
@@ -731,6 +732,7 @@ onMounted(() => {
         </ul>
       </div>
     </UCard>
+    </div>
 
     <UModal
       v-model:open="attendanceModalOpen"
