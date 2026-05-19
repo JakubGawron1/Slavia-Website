@@ -8,7 +8,7 @@ const props = withDefaults(
     badgeColor?: 'primary' | 'success' | 'warning' | 'error' | 'neutral' | 'info'
     tone?: 'default' | 'danger' | 'accent'
   }>(),
-  { badgeColor: 'neutral', tone: 'default' }
+  { badgeColor: 'neutral', tone: 'default', description: undefined, icon: undefined, badge: undefined }
 )
 const sectionClass = computed(() => {
   if (props.tone === 'danger') return 'rounded-2xl border border-error/45 bg-error/5 p-6 shadow-sm ring-1 ring-error/20 sm:p-7'

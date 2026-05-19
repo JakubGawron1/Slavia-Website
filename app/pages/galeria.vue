@@ -194,10 +194,14 @@ async function save() {
 
 async function remove(id: string) {
   if (!canManage.value) return
-  if (!confirm('Usunąć to zdjęcie z galerii?')) return
+  if (!confirm('Usunąć to zdjęcie z galerii? Plik zostanie też usunięty z repozytorium Slavia-cms (GitHub), jeśli jest skonfigurowany.')) return
   try {
     await apiFetch(`/api/gallery/${id}`, { method: 'DELETE' })
-    toast.add({ title: 'Usunięto', color: 'success' })
+    toast.add({ title: 'Usunięto z galerii i CMS', color: 'success' })
+    if (mediaPreviewItem.value?.id === id) {
+      mediaPreviewOpen.value = false
+      mediaPreviewItem.value = null
+    }
     await refreshList()
   } catch (e) {
     console.error('[gallery] delete failed', e)
@@ -295,7 +299,7 @@ const sortedPhotos = computed(() => {
       <figure
         v-for="p in sortedPhotos"
         :key="p.id"
-        class="mb-4 break-inside-avoid overflow-hidden rounded-2xl border border-default bg-card shadow-sm"
+        class="mb-4 break-inside-avoid overflow-hidden rounded-2xl border border-default bg-card shadow-sm group"
       >
         <div class="relative">
           <img
@@ -334,6 +338,27 @@ const sortedPhotos = computed(() => {
           >
             Szkic
           </UBadge>
+          <div
+            v-if="canManage"
+            class="absolute right-2 top-2 flex gap-1 opacity-100 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100"
+          >
+            <UButton
+              size="xs"
+              color="neutral"
+              variant="solid"
+              icon="i-lucide-pencil"
+              aria-label="Edytuj"
+              @click.stop="openEdit(p)"
+            />
+            <UButton
+              size="xs"
+              color="error"
+              variant="solid"
+              icon="i-lucide-trash-2"
+              aria-label="Usuń"
+              @click.stop="remove(p.id)"
+            />
+          </div>
         </div>
         <figcaption
           v-if="p.caption || canManage"
@@ -478,6 +503,26 @@ const sortedPhotos = computed(() => {
             class="max-h-[75vh] w-full rounded-lg bg-black object-contain"
             autoplay
           />
+          <div
+            v-if="canManage && mediaPreviewItem"
+            class="mt-4 flex flex-wrap justify-end gap-2 border-t border-default pt-4"
+          >
+            <UButton
+              variant="soft"
+              icon="i-lucide-pencil"
+              @click="openEdit(mediaPreviewItem); mediaPreviewOpen = false"
+            >
+              Edytuj
+            </UButton>
+            <UButton
+              color="error"
+              variant="soft"
+              icon="i-lucide-trash-2"
+              @click="remove(mediaPreviewItem.id)"
+            >
+              Usuń z galerii
+            </UButton>
+          </div>
         </div>
       </template>
     </UModal>

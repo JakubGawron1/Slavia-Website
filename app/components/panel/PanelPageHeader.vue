@@ -14,7 +14,11 @@ const props = withDefaults(
   }>(),
   {
     tone: 'default',
-    variant: 'page'
+    variant: 'page',
+    area: undefined,
+    eyebrow: undefined,
+    description: undefined,
+    icon: undefined
   }
 )
 

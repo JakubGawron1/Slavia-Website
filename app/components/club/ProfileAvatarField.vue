@@ -19,7 +19,9 @@ const props = withDefaults(
     label: 'Zdjęcie profilowe',
     hint: 'JPG, PNG lub WebP — maks. ok. 10 MB. Po wgraniu zapisz formularz, jeśli edytujesz inne konto.',
     showUrlField: true,
-    disabled: false
+    disabled: false,
+    avatarAlt: undefined,
+    initials: undefined
   }
 )
 
