@@ -377,6 +377,7 @@ html.dark .slavia-page-card {
   width: 100%;
   max-width: 28rem;
   margin-inline: auto;
+  text-align: center;
 }
 
 .slavia-empty-state__icon {
@@ -442,6 +443,7 @@ html.dark .slavia-page-card {
 .slavia-empty-state__actions {
   display: flex;
   flex-direction: column;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
@@ -451,6 +453,11 @@ html.dark .slavia-page-card {
 
 .slavia-empty-state__actions > * {
   align-self: center;
+  margin-inline: auto;
+}
+
+.slavia-empty-state__actions :is(button, a) {
+  justify-content: center;
 }
 
 .slavia-empty-state__hint {

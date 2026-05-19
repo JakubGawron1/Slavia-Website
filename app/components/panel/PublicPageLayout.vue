@@ -1,5 +1,10 @@
 <script setup lang="ts">
-import { isGlassThemePreset, isSportTechThemePreset } from '~/composables/useSlaviaAppearance'
+/** Public pages: center empty states and hero blocks; keep tables, forms, and prose start-aligned in children. */
+import {
+  isGlassThemePreset,
+  isNeonBrutalismThemePreset,
+  isSportTechThemePreset
+} from '~/composables/useSlaviaAppearance'
 
 const { preset } = useSlaviaAppearance()
 
@@ -29,6 +34,7 @@ const containerClass = computed(() => {
   if (props.animate) c.push('animate-page-in')
   if (isGlassThemePreset(preset.value)) c.push('slavia-glass-layout')
   if (isSportTechThemePreset(preset.value)) c.push('slavia-sport-tech-layout')
+  if (isNeonBrutalismThemePreset(preset.value)) c.push('slavia-neon-brutalism-layout')
   return c
 })
 </script>
