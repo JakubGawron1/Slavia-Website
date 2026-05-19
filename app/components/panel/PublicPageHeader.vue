@@ -20,6 +20,14 @@ const props = withDefaults(
   }
 )
 
+const pageBackConfig = computed(() =>
+  props.backTo
+    ? { to: props.backTo, label: props.backLabel }
+    : undefined
+)
+
+useSlaviaPageBack(pageBackConfig)
+
 const rootClass = computed(() => {
   if (props.variant === 'hero') {
     return 'slavia-glass relative mb-8 overflow-hidden rounded-3xl border border-default/50 bg-linear-to-br from-primary/12 via-card/95 to-card p-6 shadow-md ring-1 ring-primary/15 sm:mb-10 sm:p-8 lg:p-10'
@@ -64,15 +72,6 @@ const descriptionClass = computed(() => {
       class="pointer-events-none absolute -right-20 -top-24 size-72 rounded-full bg-primary/22 blur-3xl dark:bg-primary/28"
       aria-hidden="true"
     />
-
-    <NuxtLink
-      v-if="backTo"
-      :to="backTo"
-      class="relative mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
-    >
-      <UIcon name="i-lucide-arrow-left" class="size-4" />
-      {{ backLabel }}
-    </NuxtLink>
 
     <div
       class="relative"

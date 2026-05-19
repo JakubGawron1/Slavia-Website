@@ -22,7 +22,8 @@ const navPreReleaseBadge = computed(() => {
     <div
       class="mx-auto flex w-full max-w-[1440px] items-center gap-2 px-3 py-2.5 sm:gap-3 sm:px-5 lg:min-h-[3.75rem] lg:gap-5 lg:px-8 lg:py-0"
     >
-      <div class="flex shrink-0 items-center gap-2 sm:gap-3">
+      <div class="flex shrink-0 items-center gap-1.5 sm:gap-3">
+        <ClubSiteHeaderBackButton />
         <div class="flex min-w-0 items-center gap-2">
           <ClubBrand />
           <UBadge

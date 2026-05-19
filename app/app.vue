@@ -118,23 +118,6 @@ async function logout() {
   await navigateTo('/')
 }
 
-async function goBack() {
-  if (!import.meta.client) return
-  if (window.history.length > 1) {
-    window.history.back()
-    return
-  }
-  await navigateTo('/')
-}
-
-/** Pływający „wstecz”: tylko gdy jest sensowny wpis w historii (np. `/` po deep linku z jednym wpisem — bez przycisku). */
-const showFloatingBack = ref(false)
-
-function syncFloatingBackVisibility() {
-  if (!import.meta.client) return
-  showFloatingBack.value = window.history.length > 1
-}
-
 const { items: notifications, refresh: refreshNotifications } = useNotifications()
 const unreadCount = computed(() => (notifications.value || []).filter(n => !n.is_read).length)
 
@@ -152,18 +135,10 @@ const faviconUrl = computed(() => {
 })
 
 onMounted(() => {
-  syncFloatingBackVisibility()
   if (auth.isLoggedIn.value) {
     void refreshNotifications()
   }
 })
-
-watch(
-  () => route.fullPath,
-  () => {
-    nextTick(() => syncFloatingBackVisibility())
-  }
-)
 
 useHead({
   meta: [
@@ -282,18 +257,6 @@ useHead({
           </div>
         </template>
       </ClubSiteHeader>
-
-      <UButton
-        v-if="showFloatingBack"
-        icon="i-lucide-arrow-left"
-        color="neutral"
-        variant="ghost"
-        size="lg"
-        square
-        class="fixed z-70 rounded-full border border-default/70 bg-background/92 text-highlighted shadow-lg shadow-black/10 backdrop-blur-md ring-2 ring-primary/22 transition-colors hover:bg-primary/12 hover:text-primary hover:ring-primary/45 touch-manipulation left-[max(0.75rem,env(safe-area-inset-left))] top-[calc(env(safe-area-inset-top,0)+5.15rem)] sm:left-[max(1rem,env(safe-area-inset-left))] sm:top-[calc(env(safe-area-inset-top,0)+5.35rem)] lg:top-[calc(env(safe-area-inset-top,0)+5rem)] dark:shadow-black/25"
-        aria-label="Wstecz"
-        @click="goBack"
-      />
 
       <UMain
         id="main-content"

@@ -3,6 +3,11 @@ import { apiRoutes } from '~/config/api'
 import type { Athlete } from '~/types/models'
 import { athleteProfilePath } from '~/utils/slug'
 
+definePageMeta({
+  backTo: '/zawodnicy',
+  backLabel: 'Wróć do kadry'
+})
+
 useSeoMeta({
   title: 'Rekordy klubu — Hall of Fame',
   description: 'Najlepsze wyniki zawodników CKS Slavia w podziale na kategorie wagowe i płeć.',

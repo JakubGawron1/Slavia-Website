@@ -11,6 +11,11 @@ const apiFetch = useApi()
 const config = useRuntimeConfig()
 const { auth, canManage } = useClubContentAdmin()
 
+definePageMeta({
+  backTo: '/aktualnosci',
+  backLabel: 'Wróć do aktualności'
+})
+
 const rawSlug = String(route.params.slug || '')
 const postId = parseBlogPostId(rawSlug)
 
@@ -110,14 +115,6 @@ function formatDate(dateStr: string) {
         </span>
       </template>
     </PublicPageHeader>
-    <NuxtLink
-      v-else
-      to="/aktualnosci"
-      class="mb-8 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
-    >
-      <UIcon name="i-lucide-arrow-left" class="size-4" />
-      Wróć do aktualności
-    </NuxtLink>
 
     <article class="slavia-public-section">
 

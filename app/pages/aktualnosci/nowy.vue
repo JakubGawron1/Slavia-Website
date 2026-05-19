@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { blogEditPath, blogPostPath, slugify } from '~/utils/slug'
 
-definePageMeta({ middleware: 'admin' })
+definePageMeta({
+  middleware: 'admin',
+  backTo: '/aktualnosci',
+  backLabel: 'Wróć do listy'
+})
 
 useSeoMeta({
   title: 'Nowy wpis — Aktualności Slavia',

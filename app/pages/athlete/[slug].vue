@@ -15,6 +15,11 @@ const auth = useAuth()
 const toast = useToast()
 const requestUrlState = useRequestURL()
 
+definePageMeta({
+  backTo: '/zawodnicy',
+  backLabel: 'Lista zawodników'
+})
+
 /** Udostępniany „lekki” widok profilu — bez sekcji treningowych (np. `?share=1`). */
 const shareLite = computed(() => {
   const q = route.query.share
@@ -528,20 +533,12 @@ function printAthleteResume() {
       />
 
       <UContainer class="relative pt-8 pb-10 sm:pt-10 sm:pb-14 lg:pt-14 lg:pb-20">
-        <div class="mb-6 flex flex-wrap items-center gap-2 text-xs">
-          <UButton
-            to="/zawodnicy"
-            variant="ghost"
-            color="neutral"
-            size="xs"
-            icon="i-lucide-arrow-left"
-            class="-ml-2"
-          >
-            Lista zawodników
-          </UButton>
-          <span class="text-muted/60">/</span>
-          <span class="font-semibold text-muted">Profil</span>
-        </div>
+        <PublicPageHeader
+          back-to="/zawodnicy"
+          back-label="Lista zawodników"
+          eyebrow="Profil zawodnika"
+          class="!mb-6 !flex-col !items-start !gap-2 md:!mb-8"
+        />
 
         <div class="grid gap-8 lg:grid-cols-[minmax(0,18rem)_1fr] lg:gap-12">
           <!-- AVATAR / FOTO -->
@@ -832,11 +829,11 @@ function printAthleteResume() {
       </UContainer>
     </section>
 
-    <UContainer class="py-10 sm:py-14 lg:py-16">
+    <PublicPageLayout padding="compact" :ambient="false">
       <div class="space-y-12 lg:space-y-16">
         <!-- ========== BIO PULL-QUOTE ========== -->
         <section v-if="athlete!.public_bio?.trim()" class="relative">
-          <div class="relative mx-auto max-w-4xl rounded-3xl border border-primary/25 bg-linear-to-br from-primary/8 via-background to-background p-6 sm:p-10 shadow-sm">
+          <div class="slavia-page-card relative mx-auto max-w-4xl p-6 sm:p-10">
             <UIcon
               name="i-lucide-quote"
               class="absolute -top-4 left-6 size-10 rounded-full bg-primary p-2 text-white shadow-md"
@@ -859,7 +856,7 @@ function printAthleteResume() {
             </h2>
           </header>
           <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div class="rounded-2xl border border-default/60 bg-background/80 p-5 transition hover:border-primary/30 hover:shadow-sm">
+            <div class="slavia-page-card slavia-page-card--flat p-5 transition hover:border-primary/30">
               <p class="text-[10px] font-bold uppercase tracking-wide text-muted">
                 Liczba startów
               </p>
@@ -870,7 +867,7 @@ function printAthleteResume() {
                 Zatwierdzone starty z zawodów (bez treningów salowych).
               </p>
             </div>
-            <div class="rounded-2xl border border-default/60 bg-background/80 p-5 transition hover:border-primary/30 hover:shadow-sm">
+            <div class="slavia-page-card slavia-page-card--flat p-5 transition hover:border-primary/30">
               <p class="text-[10px] font-bold uppercase tracking-wide text-muted">
                 Średni total
               </p>
@@ -881,7 +878,7 @@ function printAthleteResume() {
                 Średnia z zatwierdzonych startów.
               </p>
             </div>
-            <div class="rounded-2xl border border-success/30 bg-linear-to-br from-success/12 to-success/6 p-5 transition hover:shadow-sm">
+            <div class="slavia-page-card slavia-page-card--flat border-success/30 bg-linear-to-br from-success/12 to-success/6 p-5">
               <p class="text-[10px] font-bold uppercase tracking-wide text-success dark:text-success">
                 Najlepszy total
               </p>
@@ -892,7 +889,7 @@ function printAthleteResume() {
                 Maksimum z historii startów.
               </p>
             </div>
-            <div class="rounded-2xl border border-default/60 bg-background/80 p-5 transition hover:border-primary/30 hover:shadow-sm">
+            <div class="slavia-page-card slavia-page-card--flat p-5 transition hover:border-primary/30">
               <p class="text-[10px] font-bold uppercase tracking-wide text-muted">
                 Ostatni start
               </p>
@@ -933,7 +930,7 @@ function printAthleteResume() {
               Najedź punkt — szczegóły startu.
             </p>
           </header>
-          <div class="rounded-3xl border border-default/60 bg-linear-to-br from-primary/5 to-background p-5 sm:p-7 shadow-sm">
+          <div class="slavia-page-card p-5 sm:p-7">
             <AthleteProgressChart :series="progressSeries" :height="260" />
           </div>
         </section>
@@ -966,7 +963,7 @@ function printAthleteResume() {
             </div>
           </header>
 
-          <div class="rounded-3xl border border-default/60 bg-background p-5 sm:p-7 shadow-sm">
+          <div class="slavia-page-card p-5 sm:p-7">
             <AthleteCombinedChart :series="combinedSeries" :height="260" />
             <p class="mt-3 text-right text-[11px] text-muted">
               Linia ciągła = zawody, przerywana = trening.
@@ -1094,7 +1091,7 @@ function printAthleteResume() {
             :class="canViewAthleteTraining ? 'lg:grid-cols-2' : ''"
           >
             <!-- ZAWODY -->
-            <div class="min-h-0 min-w-0 rounded-3xl border border-default/60 bg-background/95 p-5 sm:p-6 shadow-sm">
+            <div class="slavia-page-card min-h-0 min-w-0 p-5 sm:p-6">
               <div class="mb-4 flex items-center justify-between gap-4">
                 <div>
                   <p class="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-primary">
@@ -1147,11 +1144,13 @@ function printAthleteResume() {
                     </div>
                   </div>
                 </li>
-                <li
-                  v-if="approvedResults.length === 0"
-                  class="rounded-xl border border-dashed border-default/60 p-5 text-center text-sm text-muted"
-                >
-                  Brak zatwierdzonych wyników z zawodów.
+                <li v-if="approvedResults.length === 0" class="list-none pl-0">
+                  <PublicEmptyState
+                    compact
+                    icon="i-lucide-medal"
+                    title="Brak zatwierdzonych wyników"
+                    description="Wyniki z zawodów pojawią się po weryfikacji przez trenera lub administrację."
+                  />
                 </li>
               </ol>
               </div>
@@ -1166,7 +1165,7 @@ function printAthleteResume() {
             <!-- TRENING (auth only) — tabela ostatnich wpisów (tylko ten zawodnik) -->
             <div
               v-if="canViewAthleteTraining"
-              class="min-h-0 min-w-0 rounded-3xl border border-default/60 bg-background/95 p-5 shadow-sm sm:p-6"
+              class="slavia-page-card min-h-0 min-w-0 p-5 sm:p-6"
             >
               <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                 <div>
@@ -1183,12 +1182,13 @@ function printAthleteResume() {
                 </span>
               </div>
 
-              <div
+              <PublicEmptyState
                 v-if="approvedTrainingSorted.length === 0"
-                class="rounded-xl border border-dashed border-info/30 bg-info/5 px-4 py-10 text-center text-sm text-muted"
-              >
-                Brak zatwierdzonych wyników treningowych.
-              </div>
+                compact
+                icon="i-lucide-dumbbell"
+                title="Brak wpisów treningowych"
+                description="Zatwierdzone wyniki z sali pojawią się tutaj po weryfikacji."
+              />
 
               <div
                 v-else
@@ -1246,7 +1246,7 @@ function printAthleteResume() {
         </section>
 
         <!-- ========== FOOTER NAVIGATION ========== -->
-        <section class="rounded-3xl border border-default/60 bg-linear-to-br from-primary/5 via-background to-background p-6 sm:p-8 text-center">
+        <section class="slavia-page-card p-6 text-center sm:p-8">
           <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">
             Nawigacja
           </p>
@@ -1277,6 +1277,6 @@ function printAthleteResume() {
           </div>
         </section>
       </div>
-    </UContainer>
+    </PublicPageLayout>
   </div>
 </template>

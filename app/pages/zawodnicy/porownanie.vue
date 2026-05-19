@@ -2,6 +2,11 @@
 import { athleteProfilePath } from '~/utils/slug'
 import type { Athlete as AthleteModel } from '~/types/models'
 
+definePageMeta({
+  backTo: '/zawodnicy',
+  backLabel: 'Wróć do listy i rankingu'
+})
+
 const config = useRuntimeConfig()
 const base = computed(() => String(config.public.apiBase || '').replace(/\/$/, ''))
 

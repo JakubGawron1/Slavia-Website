@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { BLOG_POST_UUID_RE, blogPostPath, parseBlogPostId, slugify } from '~/utils/slug'
 
-definePageMeta({ middleware: 'admin' })
+definePageMeta({
+  middleware: 'admin',
+  backTo: '/aktualnosci',
+  backLabel: 'Wróć do listy'
+})
 
 const route = useRoute()
 const apiFetch = useApi()
@@ -86,43 +90,32 @@ async function onFormSuccess(e: { published: boolean; postId: string; title: str
 </script>
 
 <template>
-  <UContainer
+  <PublicPageLayout
     v-if="post"
-    class="animate-page-in py-8 sm:py-12 lg:py-14"
+    narrow
   >
-    <div class="mx-auto max-w-3xl">
-      <div class="mb-8 flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <p class="text-xs font-bold uppercase tracking-wider text-primary">
-            Edycja wpisu
-          </p>
-          <h1 class="mt-2 text-2xl font-bold tracking-tight text-highlighted sm:text-3xl">
-            {{ post.title }}
-          </h1>
-          <p class="mt-2 text-sm text-muted">
-            Zmiany są sanityzowane (DOMPurify) tak jak przy tworzeniu wpisu.
-          </p>
-        </div>
-        <div class="flex flex-wrap gap-2">
-          <UButton
-            variant="outline"
-            color="neutral"
-            icon="i-lucide-external-link"
-            @click="goPost"
-          >
-            Podgląd publikacji
-          </UButton>
-          <UButton
-            variant="soft"
-            color="neutral"
-            icon="i-lucide-arrow-left"
-            @click="goList"
-          >
-            Lista wpisów
-          </UButton>
-        </div>
-      </div>
+    <PublicPageHeader
+      variant="hero"
+      eyebrow="Edycja wpisu"
+      icon="i-lucide-pencil-line"
+      :title="post.title"
+      description="Zmiany są sanityzowane (DOMPurify) tak jak przy tworzeniu wpisu."
+      back-to="/aktualnosci"
+      back-label="Wróć do listy"
+    >
+      <template #actions>
+        <UButton
+          variant="outline"
+          color="neutral"
+          icon="i-lucide-external-link"
+          @click="goPost"
+        >
+          Podgląd publikacji
+        </UButton>
+      </template>
+    </PublicPageHeader>
 
+    <div class="slavia-public-section">
       <ClientOnly>
         <ClubBlogPostForm
           mode="edit"
@@ -136,11 +129,14 @@ async function onFormSuccess(e: { published: boolean; postId: string; title: str
           @cancel="goList"
         />
         <template #fallback>
-          <div class="rounded-xl border border-default p-10 text-center text-muted">
-            Ładowanie edytora…
+          <div class="slavia-page-card flex flex-col items-center gap-3 px-6 py-14 text-center text-muted">
+            <UIcon name="i-lucide-loader-circle" class="size-8 animate-spin text-primary/60" />
+            <p class="font-medium text-highlighted">
+              Ładowanie edytora…
+            </p>
           </div>
         </template>
       </ClientOnly>
     </div>
-  </UContainer>
+  </PublicPageLayout>
 </template>
