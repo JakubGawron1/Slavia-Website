@@ -328,11 +328,12 @@ function bodyPreview(text: string, max = 100) {
             <h2 class="text-lg font-semibold text-highlighted sm:text-xl">
               {{ a.title }}
             </h2>
-            <!-- eslint-disable-next-line vue/no-v-html — renderSimpleMarkdown (DOMPurify) -->
+            <!-- eslint-disable vue/no-v-html — renderSimpleMarkdown (DOMPurify) -->
             <div
               class="prose prose-sm mt-2 max-w-none text-muted sm:prose-base"
               v-html="renderSimpleMarkdown(a.body)"
             />
+            <!-- eslint-enable vue/no-v-html -->
           </div>
           <div
             v-if="canManage"
