@@ -15,31 +15,6 @@ export type SlaviaBackOverride = {
 
 const DEFAULT_BACK_LABEL = 'Wróć'
 
-/** Trasy główne — bez przycisku wstecz w nagłówku. */
-const TOP_LEVEL_PATHS = new Set([
-  '/',
-  '/aktualnosci',
-  '/galeria',
-  '/zawodnicy',
-  '/kalendarz',
-  '/kontakt',
-  '/ogloszenia',
-  '/logowanie',
-  '/o-klubie',
-  '/kalkulator-sinclair',
-  '/kalkulator-proporcji',
-  '/admin',
-  '/trainer',
-  '/athlete',
-  '/superadmin',
-  '/profil',
-  '/dziennik',
-  '/powiadomienia',
-  '/chat',
-  '/attendance',
-  '/banned'
-])
-
 const pageBackOverride = ref<SlaviaBackOverride | null>(null)
 const canUseHistoryBack = ref(false)
 
@@ -50,7 +25,7 @@ function normalizePath(path: string): string {
 
 function inferParentPath(path: string): string | null {
   const normalized = normalizePath(path)
-  if (TOP_LEVEL_PATHS.has(normalized)) return null
+  if (normalized === '/') return null
 
   if (normalized.startsWith('/athlete/')) return '/zawodnicy'
   if (normalized.startsWith('/klub/')) return '/zawodnicy'
@@ -58,14 +33,14 @@ function inferParentPath(path: string): string | null {
   if (normalized.startsWith('/aktualnosci/')) return '/aktualnosci'
 
   const segments = normalized.split('/').filter(Boolean)
-  if (segments.length <= 1) return null
+  if (segments.length <= 1) return '/'
 
   return `/${segments.slice(0, -1).join('/')}`
 }
 
 function resolveBackFromRoute(route: ReturnType<typeof useRoute>): SlaviaBackTarget | null {
   const path = normalizePath(route.path)
-  if (TOP_LEVEL_PATHS.has(path)) return null
+  if (path === '/') return null
 
   const meta = route.meta
   if (meta.hideBack) return null
@@ -94,7 +69,11 @@ function resolveBackFromRoute(route: ReturnType<typeof useRoute>): SlaviaBackTar
     }
   }
 
-  return null
+  return {
+    mode: 'link',
+    to: '/',
+    label: DEFAULT_BACK_LABEL
+  }
 }
 
 function resolveBackTarget(
@@ -112,7 +91,13 @@ function resolveBackTarget(
       }
     }
     if (override.mode === 'history') {
-      if (!import.meta.client || !canUseHistoryBack.value) return null
+      if (!import.meta.client || !canUseHistoryBack.value) {
+        return {
+          mode: 'link',
+          to: '/',
+          label: override.label ?? DEFAULT_BACK_LABEL
+        }
+      }
       return {
         mode: 'history',
         label: override.label ?? DEFAULT_BACK_LABEL
