@@ -17,6 +17,17 @@ type ChangelogUpdate = {
 
 const updates = [
   {
+    version: 'v3.2.5-dev',
+    date: '19 Maj 2026',
+    title: 'Publiczne CMS, komponenty Public* i scroll-to-top',
+    features: [
+      'Strony publiczne: przyciski Dodaj dla kadry także przy niepustych listach i podczas hydracji sesji; mocniejsze marginesy na trasach publicznych i panelowych.',
+      'Nuxt: rejestracja komponentów Public* z katalogu panel/ bez prefiksu Panel — naprawa ostrzeżeń Vue na /zawodnicy i innych trasach.',
+      'Scroll-to-top na layoutach publicznych; aktualności — kopiuj link / udostępnij i meta OG; strona błędu ze skrótami do sekcji klubu.'
+    ],
+    type: 'bugfix'
+  },
+  {
     version: 'v3.2.4-dev',
     date: '19 Maj 2026',
     title: 'UI publiczne, panele, QR i analiza sztangi',
