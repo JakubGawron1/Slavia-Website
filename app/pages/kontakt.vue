@@ -3,12 +3,17 @@ import { getApiErrorMessage } from '~/composables/useApi'
 
 useSeoMeta({
   title: 'Kontakt — Slavia Ruda Śląska',
-  description: 'Napisz do klubu — formularz wiadomości. Odpowiadamy po konsultacji z administracją.',
+  description:
+    'Skontaktuj się z CKS Slavia Ruda Śląska — zapisy na treningi podnoszenia ciężarów, pytania o klub i współpracę. Odpowiadamy na wiadomości z formularza.',
+  ogTitle: 'Kontakt — CKS Slavia',
+  ogDescription: 'Napisz do klubu podnoszenia ciężarów z Rudy Śląskiej — treningi, zapisy i współpraca.',
   robots: 'index, follow'
 })
 
 const config = useRuntimeConfig()
 const toast = useToast()
+
+const mapsUrl = 'https://maps.app.goo.gl/zqGy466nizCv45c57'
 
 const apiRoot = computed(() => String(config.public.apiBase || '').replace(/\/$/, ''))
 
@@ -65,17 +70,87 @@ async function submit() {
 </script>
 
 <template>
-  <PublicPageLayout narrow>
+  <PublicPageLayout
+    narrow
+    padding="hero"
+  >
     <PublicPageHeader
+      variant="hero"
       eyebrow="CKS Slavia"
+      icon="i-lucide-mail"
       title="Kontakt"
-      description="Masz pytanie o treningi, zapisy lub współpracę? Zostaw wiadomość — administratorzy klubu zobaczą ją w panelu."
+      description="Cieszymy się, że chcesz napisać do nas. Niezależnie od tego, czy myślisz o pierwszych treningach na platformie, zapisach do kadry czy współpracy — zostaw wiadomość w formularzu poniżej, a administracja klubu odezwie się, gdy tylko będzie to możliwe."
     />
+
+    <div
+      class="slavia-page-card mx-auto mb-8 max-w-xl border border-default/60 bg-card/80 px-5 py-6 shadow-sm sm:px-7 sm:py-7"
+    >
+      <p class="text-sm leading-relaxed text-muted sm:text-base">
+        CKS Slavia to sekcja podnoszenia ciężarów z Rudy Śląskiej — trenujemy młodzież i dorosłych, od bezpiecznej nauki techniki po starty w zawodach. Jeśli nie wiesz, od czego zacząć, napisz kilka słów o sobie i swoich planach — chętnie podpowiemy, jak wyglądają zapisy i pierwsze spotkanie na sali.
+      </p>
+      <ul class="mt-5 space-y-3 text-sm text-muted">
+        <li class="flex gap-3">
+          <UIcon
+            name="i-lucide-map-pin"
+            class="mt-0.5 size-4 shrink-0 text-primary"
+            aria-hidden="true"
+          />
+          <span>
+            Siedziba:
+            <a
+              :href="mapsUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="font-medium text-highlighted underline-offset-2 hover:text-primary hover:underline"
+            >
+              ul. Konopnickiej 13, 41-700 Ruda Śląska
+            </a>
+          </span>
+        </li>
+        <li class="flex gap-3">
+          <UIcon
+            name="i-lucide-calendar-clock"
+            class="mt-0.5 size-4 shrink-0 text-primary"
+            aria-hidden="true"
+          />
+          <span>
+            Treningi klubowe: poniedziałek, środa i piątek, <span class="font-medium text-highlighted">15:00–18:00</span>
+            — szczegóły organizacyjne i wydarzenia są też w
+            <NuxtLink
+              to="/kalendarz"
+              class="font-medium text-primary underline-offset-2 hover:underline"
+            >
+              kalendarzu
+            </NuxtLink>.
+          </span>
+        </li>
+        <li class="flex gap-3">
+          <UIcon
+            name="i-lucide-message-square-text"
+            class="mt-0.5 size-4 shrink-0 text-primary"
+            aria-hidden="true"
+          />
+          <span>
+            Najszybciej dotrzesz do nas przez formularz poniżej — podaj e-mail, a w razie potrzeby numer telefonu do oddzwonienia.
+          </span>
+        </li>
+      </ul>
+    </div>
 
     <div class="mx-auto max-w-xl">
       <UCard class="slavia-page-card mt-2">
+        <template #header>
+          <div class="px-1 pt-1">
+            <h2 class="text-lg font-bold text-highlighted">
+              Wyślij wiadomość
+            </h2>
+            <p class="mt-1 text-sm text-muted">
+              Pola oznaczone jako wymagane muszą być uzupełnione. Treść trafia do skrzynki administracji klubu.
+            </p>
+          </div>
+        </template>
         <form
-          class="flex flex-col gap-4 p-4 sm:p-6"
+          class="flex flex-col gap-4 px-4 pb-4 sm:px-6 sm:pb-6"
           @submit.prevent="submit"
         >
           <UFormField
@@ -116,6 +191,7 @@ async function submit() {
           >
             <UTextarea
               v-model="form.message"
+              placeholder="Np. wiek, doświadczenie sportowe, pytanie o zapisy lub współpracę…"
               class="min-h-32 w-full"
               autoresize
             />
@@ -133,7 +209,7 @@ async function submit() {
       </UCard>
 
       <p class="mt-6 text-center text-xs text-muted">
-        Administracja może przeglądać i oznaczać wiadomości w panelu administratora.
+        Wiadomości przegląda administracja klubu w panelu — zwykle odpowiadamy w ciągu kilku dni roboczych.
       </p>
     </div>
   </PublicPageLayout>
