@@ -1,10 +1,11 @@
 <script setup lang="ts">
 const props = defineProps<{
   /**
-   * drawer — szuflada na węższych ekranach (trigger widoczny gdy rodzic nie ukrywa komponentu)
-   * desktop-inline — jeden rząd: linki klubu + dropdown „Panel”
+   * drawer — szuflada na węższych ekranach
+   * links — wyśrodkowane linki klubu (środek belki, przewijanie poziome gdy brakuje miejsca)
+   * tools — dropdowny Kalkulatory + Panel (prawa strona belki)
    */
-  mode: 'drawer' | 'desktop-inline'
+  mode: 'drawer' | 'links' | 'tools'
 }>()
 
 const auth = useAuth()
@@ -158,64 +159,63 @@ const dropdownUi = {
 </script>
 
 <template>
-  <div
-    v-if="props.mode === 'desktop-inline'"
-    class="flex min-w-0 flex-1 items-center gap-2 xl:gap-3"
+  <nav
+    v-if="props.mode === 'links'"
+    class="slavia-header-nav flex min-h-10 w-full min-w-0 flex-nowrap items-center justify-center gap-0 overflow-x-auto overflow-y-visible overscroll-x-contain py-0.5"
+    aria-label="Strony klubu"
   >
-    <nav
-      class="flex min-h-10 min-w-0 flex-1 flex-nowrap items-center gap-0.5 overflow-x-auto overflow-y-visible overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] py-0.5 [&::-webkit-scrollbar]:hidden"
-      aria-label="Strony klubu"
+    <NuxtLink
+      v-for="link in items.main"
+      :key="'nav-' + link.to"
+      :to="link.to"
+      class="slavia-nav-link inline-flex shrink-0 whitespace-nowrap px-2 py-1.5 text-[12.5px] font-medium text-muted lg:px-2.5 lg:py-2 lg:text-[13px] xl:px-3 xl:text-sm"
     >
-      <NuxtLink
-        v-for="link in items.main"
-        :key="'nav-' + link.to"
-        :to="link.to"
-        class="slavia-nav-link inline-flex shrink-0 whitespace-nowrap px-2.5 py-2 text-[13px] font-medium text-muted xl:px-3.5 xl:py-2.5 xl:text-sm"
-      >
-        {{ link.label }}
-      </NuxtLink>
-    </nav>
+      {{ link.label }}
+    </NuxtLink>
+  </nav>
 
-    <div class="flex shrink-0 items-center gap-1.5 xl:gap-2">
-      <UDropdownMenu
-        :modal="false"
-        :items="calculatorDropdownItems"
-        :content="{ align: 'end', collisionPadding: 16 }"
-        :ui="dropdownUi"
+  <div
+    v-else-if="props.mode === 'tools'"
+    class="flex shrink-0 items-center gap-0.5 xl:gap-1"
+  >
+    <UDropdownMenu
+      :modal="false"
+      :items="calculatorDropdownItems"
+      :content="{ align: 'end', collisionPadding: 16 }"
+      :ui="dropdownUi"
+    >
+      <UButton
+        color="neutral"
+        variant="ghost"
+        size="sm"
+        icon="i-lucide-calculator"
+        trailing-icon="i-lucide-chevron-down"
+        class="h-9 shrink-0 gap-1 rounded-lg px-2 text-xs font-semibold tracking-wide transition-colors hover:bg-muted/35 hover:text-highlighted 2xl:gap-1.5 2xl:px-2.5 2xl:text-[13px]"
+        aria-label="Kalkulatory"
       >
-        <UButton
-          color="neutral"
-          variant="ghost"
-          size="sm"
-          icon="i-lucide-calculator"
-          trailing-icon="i-lucide-chevron-down"
-          class="h-9 shrink-0 gap-1.5 rounded-xl px-2.5 text-xs font-bold uppercase tracking-wide transition-colors hover:bg-muted/40 hover:text-highlighted xl:h-10 xl:px-3 xl:text-[13px]"
-          aria-label="Kalkulatory"
-        >
-          <span class="hidden xl:inline">Kalkulatory</span>
-        </UButton>
-      </UDropdownMenu>
+        <span class="hidden 2xl:inline">Kalkulatory</span>
+      </UButton>
+    </UDropdownMenu>
 
-      <UDropdownMenu
-        v-if="items.panelSections.length > 0"
-        :modal="false"
-        :items="panelDropdownItems"
-        :content="{ align: 'end', collisionPadding: 16 }"
-        :ui="{ ...dropdownUi, content: `${dropdownUi.content} min-w-[14rem]` }"
+    <UDropdownMenu
+      v-if="items.panelSections.length > 0"
+      :modal="false"
+      :items="panelDropdownItems"
+      :content="{ align: 'end', collisionPadding: 16 }"
+      :ui="{ ...dropdownUi, content: `${dropdownUi.content} min-w-[14rem]` }"
+    >
+      <UButton
+        color="neutral"
+        variant="outline"
+        size="sm"
+        icon="i-lucide-layout-grid"
+        trailing-icon="i-lucide-chevron-down"
+        class="h-9 shrink-0 gap-1 rounded-lg border-default/50 px-2 text-xs font-semibold tracking-wide shadow-none transition-colors hover:bg-muted/35 hover:text-highlighted 2xl:gap-1.5 2xl:px-2.5 2xl:text-[13px]"
+        aria-label="Panel"
       >
-        <UButton
-          color="neutral"
-          variant="outline"
-          size="sm"
-          icon="i-lucide-layout-grid"
-          trailing-icon="i-lucide-chevron-down"
-          class="h-9 shrink-0 gap-1.5 rounded-xl border-default/55 px-2.5 text-xs font-bold uppercase tracking-wide shadow-sm transition-colors hover:bg-muted/40 hover:text-highlighted xl:h-10 xl:px-3.5 xl:text-[13px]"
-          aria-label="Panel"
-        >
-          <span class="hidden xl:inline">Panel</span>
-        </UButton>
-      </UDropdownMenu>
-    </div>
+        <span class="hidden 2xl:inline">Panel</span>
+      </UButton>
+    </UDropdownMenu>
   </div>
 
   <div

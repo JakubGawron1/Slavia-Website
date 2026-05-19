@@ -9,9 +9,9 @@ const { visible, target, goBack } = useSlaviaNavBack()
     icon="i-lucide-arrow-left"
     color="neutral"
     variant="ghost"
-    size="lg"
+    size="md"
     square
-    class="shrink-0 rounded-xl text-highlighted touch-manipulation"
+    class="size-9 shrink-0 rounded-lg text-highlighted touch-manipulation sm:size-10"
     :aria-label="target.label"
   />
   <UButton
@@ -19,9 +19,9 @@ const { visible, target, goBack } = useSlaviaNavBack()
     icon="i-lucide-arrow-left"
     color="neutral"
     variant="ghost"
-    size="lg"
+    size="md"
     square
-    class="shrink-0 rounded-xl text-highlighted touch-manipulation"
+    class="size-9 shrink-0 rounded-lg text-highlighted touch-manipulation sm:size-10"
     :aria-label="target.label"
     @click="goBack"
   />

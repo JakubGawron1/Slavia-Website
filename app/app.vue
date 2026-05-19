@@ -191,7 +191,7 @@ useHead({
     <div class="transition-opacity duration-300 ease-out min-w-0 opacity-100">
       <ClubSiteHeader>
         <template #actions>
-          <div class="flex shrink-0 items-center gap-1.5 sm:gap-3">
+          <div class="flex shrink-0 items-center gap-1 sm:gap-1.5 lg:gap-2">
             <ClubGlobalSearch />
             <template v-if="auth.isLoggedIn.value">
               <ClubNotificationBell v-if="clubNotificationBellOn" />
@@ -207,10 +207,10 @@ useHead({
                   class="ring-1 ring-primary/30"
                 />
               </NuxtLink>
-              <div class="hidden items-center gap-3 sm:flex sm:gap-4">
+              <div class="hidden items-center gap-2 sm:flex lg:gap-2.5">
                 <NuxtLink
                   :to="dashboardLink"
-                  class="group flex max-w-44 items-center gap-2 rounded-full bg-primary/8 px-3 py-1.5 shadow-sm transition-all duration-200 hover:bg-primary/14 hover:shadow-md ring-1 ring-primary/25 lg:max-w-56 lg:px-4"
+                  class="group hidden max-w-40 items-center gap-2 rounded-full bg-primary/8 px-2.5 py-1.5 shadow-sm ring-1 ring-primary/25 transition-all duration-200 hover:bg-primary/14 xl:flex xl:max-w-48"
                 >
                   <UAvatar
                     :src="navAvatarSrc"

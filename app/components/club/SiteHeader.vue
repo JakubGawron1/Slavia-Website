@@ -18,20 +18,18 @@ const navPreReleaseBadge = computed(() => {
   <header
     class="sticky top-0 z-50 border-b border-default/45 bg-background/88 shadow-sm backdrop-blur-xl supports-backdrop-filter:bg-background/72 dark:border-default/35 dark:bg-background/82 dark:shadow-md dark:shadow-black/20"
   >
-    <!-- Jedna belka: marka | nawigacja (desktop) | akcje. Bez drugiego rzędu i bez poziomego paska pod spodem na mobile. -->
-    <div
-      class="mx-auto flex w-full max-w-[1440px] items-center gap-2 px-3 py-2.5 sm:gap-3 sm:px-5 lg:min-h-[3.75rem] lg:gap-5 lg:px-8 lg:py-0"
-    >
-      <div class="flex shrink-0 items-center gap-1.5 sm:gap-3">
+    <!-- Belka: wstecz + marka | linki (środek, przewijane) | narzędzia + akcje. Bez overflow-hidden — clip na html/body wystarczy. -->
+    <div class="mx-auto flex w-full max-w-[1440px] items-center gap-1.5 px-3 py-2 sm:gap-2 sm:px-4 sm:py-2.5 lg:min-h-[3.75rem] lg:gap-2.5 lg:px-6 lg:py-0 xl:gap-3 xl:px-8">
+      <div class="flex shrink-0 items-center gap-1 sm:gap-1.5">
         <ClubSiteHeaderBackButton />
-        <div class="flex min-w-0 items-center gap-2">
+        <div class="flex min-w-0 items-center gap-1.5 sm:gap-2">
           <ClubBrand />
           <UBadge
             v-if="navPreReleaseBadge"
             :color="navPreReleaseBadge.color"
             variant="subtle"
             size="sm"
-            class="shrink-0 font-bold uppercase tracking-wide"
+            class="hidden shrink-0 font-bold uppercase tracking-wide sm:inline-flex"
             :title="navPreReleaseBadge.title"
           >
             <span class="sr-only">{{ navPreReleaseBadge.title }} </span>
@@ -44,11 +42,15 @@ const navPreReleaseBadge = computed(() => {
         />
       </div>
 
-      <div class="hidden min-w-0 flex-1 lg:flex lg:items-center">
-        <ClubSiteNav mode="desktop-inline" />
+      <div class="hidden min-w-0 flex-1 lg:block lg:px-1">
+        <ClubSiteNav mode="links" />
       </div>
 
-      <div class="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
+      <div class="ml-auto flex shrink-0 items-center gap-0.5 sm:gap-1 lg:gap-1.5">
+        <ClubSiteNav
+          mode="tools"
+          class="hidden lg:flex"
+        />
         <slot name="actions" />
       </div>
     </div>
