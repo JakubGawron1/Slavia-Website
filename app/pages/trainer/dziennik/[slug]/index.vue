@@ -104,20 +104,14 @@ async function removeEntry(e: TrainingLogEntry) {
 </script>
 
 <template>
-  <UContainer class="animate-page-in py-8 md:py-14 lg:py-16">
-    <div class="mb-8 flex flex-wrap items-start justify-between gap-4">
-      <div>
-        <p class="text-xs font-bold uppercase tracking-wider text-primary">
-          Dziennik treningów
-        </p>
-        <h1 class="mt-2 text-3xl font-bold tracking-tight text-highlighted">
-          {{ athleteName }}
-        </h1>
-        <p class="mt-2 text-sm text-muted">
-          Zawodnik widzi te wpisy u siebie i może dopisywać własne jednostki.
-        </p>
-      </div>
-      <div class="flex flex-wrap gap-2">
+  <PanelPageLayout>
+    <PanelPageHeader
+      area="trainer"
+      :title="athleteName"
+      description="Zawodnik widzi te wpisy u siebie i może dopisywać własne jednostki."
+      icon="i-lucide-book-open"
+    >
+      <template #actions>
         <UButton
           :to="redagujBase"
           color="primary"
@@ -141,9 +135,10 @@ async function removeEntry(e: TrainingLogEntry) {
         >
           Panel trenera
         </UButton>
-      </div>
-    </div>
+      </template>
+    </PanelPageHeader>
 
+    <div class="slavia-content-well">
     <div class="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
       <UCard class="bg-primary/5 border-primary/20">
         <div class="flex items-center gap-3">
@@ -292,5 +287,6 @@ async function removeEntry(e: TrainingLogEntry) {
       </UCard>
     </div>
     </template>
-  </UContainer>
+    </div>
+  </PanelPageLayout>
 </template>

@@ -63,135 +63,106 @@ async function submit() {
 </script>
 
 <template>
-  <div class="relative flex min-h-dvh items-center justify-center overflow-hidden bg-linear-to-br from-background via-background to-primary/5 px-4 py-10 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))]">
-    <!-- Dekoracyjne tło z animowanymi elementami -->
-    <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-      <div class="absolute -top-24 -left-24 h-96 w-96 rounded-full bg-primary/10 blur-3xl" />
-      <div
-        class="absolute -bottom-24 -right-24 h-96 w-96 rounded-full bg-primary/5 blur-3xl"
-      />
-
-      <!-- Pływające ikony -->
-      <div
-        class="absolute top-1/4 left-1/10 text-primary/10"
-      >
-        <UIcon
-          name="i-lucide-dumbbell"
-          class="size-20 rotate-12"
-        />
-      </div>
-      <div
-        class="absolute bottom-1/4 right-1/10 text-primary/10"
-      >
-        <UIcon
-          name="i-lucide-trophy"
-          class="size-24 -rotate-12"
-        />
-      </div>
-      <div class="absolute top-3/4 left-1/4 text-primary/5">
-        <UIcon
-          name="i-lucide-award"
-          class="size-32"
-        />
-      </div>
-
-      <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5" />
-    </div>
-
-    <div class="relative z-10 w-full max-w-lg transition-all duration-700 transform translate-y-0 opacity-100 scale-100">
-      <div class="mb-10 text-center">
-        <NuxtLink
-          to="/"
-          class="inline-block transition-all duration-500 hover:scale-110 hover:rotate-3"
-        >
-          <div class="relative">
-            <div class="absolute -inset-4 bg-primary/20 blur-xl rounded-full" />
+  <div
+    class="slavia-auth-shell"
+  >
+    <PublicPageLayout
+      narrow
+      padding="compact"
+      class="!py-0"
+    >
+      <div class="mx-auto w-full max-w-md">
+        <div class="mb-8 text-center">
+          <NuxtLink
+            to="/"
+            class="inline-block transition-transform duration-300 hover:scale-105"
+          >
             <img
               src="/logo.png"
               alt="Slavia Logo"
-              class="relative mx-auto h-24 w-auto drop-shadow-2xl"
+              class="mx-auto h-20 w-auto drop-shadow-lg sm:h-24"
             >
-          </div>
-        </NuxtLink>
-        <h1 class="mt-8 text-4xl font-black tracking-tighter text-highlighted sm:text-5xl uppercase italic">
-          Panel <span class="text-primary">Klubowy</span>
-        </h1>
-        <p class="mt-4 text-lg font-medium text-muted/80">
-          Zaloguj się, aby zarządzać swoimi wynikami.
-        </p>
-      </div>
+          </NuxtLink>
+        </div>
 
-      <UCard
-        class="border-primary/20 bg-background/40 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)] backdrop-blur-2xl ring-1 ring-white/10"
-        :ui="{ body: 'p-8 sm:p-12', header: 'border-b border-white/5', footer: 'border-t border-white/5 bg-white/5' }"
-      >
-        <form
-          class="space-y-8"
-          @submit.prevent="submit"
+        <PublicPageHeader
+          variant="centered"
+          eyebrow="Panel klubowy"
+          icon="i-lucide-lock-keyhole"
+          class="!mb-6 md:!mb-8"
         >
-          <UFormField
-            label="Nazwa użytkownika"
-            required
-          >
-            <UInput
-              v-model="username"
-              autocomplete="username"
-              placeholder="Login"
-              size="xl"
-              icon="i-lucide-user"
-              class="w-full"
-              :ui="{ base: 'bg-white/5 border-white/10 focus:ring-primary/50' }"
-            />
-          </UFormField>
+          <template #title>
+            Zaloguj się do <span class="text-primary">Slavii</span>
+          </template>
+          <template #description>
+            Zarządzaj wynikami, treningami i profilem zawodnika w jednym miejscu.
+          </template>
+        </PublicPageHeader>
 
-          <UFormField
-            label="Hasło"
-            required
+        <div class="slavia-glass slavia-page-card overflow-hidden rounded-3xl p-6 shadow-md sm:p-8">
+          <form
+            class="space-y-6"
+            @submit.prevent="submit"
           >
-            <UInput
-              v-model="password"
-              type="password"
-              autocomplete="current-password"
-              placeholder="••••••••"
-              size="xl"
-              icon="i-lucide-lock"
-              class="w-full"
-              :ui="{ base: 'bg-white/5 border-white/10 focus:ring-primary/50' }"
-            />
-          </UFormField>
+            <UFormField
+              label="Nazwa użytkownika"
+              required
+            >
+              <UInput
+                v-model="username"
+                autocomplete="username"
+                placeholder="Login"
+                size="lg"
+                icon="i-lucide-user"
+                class="w-full"
+              />
+            </UFormField>
 
-          <UFormField
-            v-if="totpStep"
-            label="Kod 2FA (authenticator)"
-            required
-          >
-            <UInput
-              v-model="totpCode"
-              inputmode="numeric"
-              autocomplete="one-time-code"
-              placeholder="000000"
-              maxlength="8"
-              size="xl"
-              icon="i-lucide-shield"
-              class="w-full"
-              :ui="{ base: 'bg-white/5 border-white/10 focus:ring-primary/50' }"
-            />
-          </UFormField>
+            <UFormField
+              label="Hasło"
+              required
+            >
+              <UInput
+                v-model="password"
+                type="password"
+                autocomplete="current-password"
+                placeholder="••••••••"
+                size="lg"
+                icon="i-lucide-lock"
+                class="w-full"
+              />
+            </UFormField>
 
-          <UButton
-            type="submit"
-            block
-            size="xl"
-            :loading="loading"
-            class="mt-6 font-black uppercase italic tracking-wider transition-all hover:tracking-[0.15em] hover:shadow-[0_0_20px_rgba(var(--color-primary-500),0.4)]"
-          >
-            Wejdź do systemu
-          </UButton>
-        </form>
+            <UFormField
+              v-if="totpStep"
+              label="Kod 2FA (authenticator)"
+              required
+            >
+              <UInput
+                v-model="totpCode"
+                inputmode="numeric"
+                autocomplete="one-time-code"
+                placeholder="000000"
+                maxlength="8"
+                size="lg"
+                icon="i-lucide-shield"
+                class="w-full"
+              />
+            </UFormField>
 
-        <template #footer>
-          <div class="space-y-2 py-2 text-center">
-            <p class="text-xs text-muted">
+            <UButton
+              type="submit"
+              block
+              size="lg"
+              :loading="loading"
+              class="mt-2 font-bold"
+            >
+              Wejdź do systemu
+            </UButton>
+          </form>
+
+          <div class="mt-6 space-y-2 border-t border-default/40 pt-6 text-center">
+            <p class="text-xs leading-relaxed text-muted">
               Opcjonalne logowanie dwuskładnikowe (2FA) włączysz po zalogowaniu w
               <NuxtLink
                 to="/profil"
@@ -199,26 +170,26 @@ async function submit() {
               >ustawieniach konta</NuxtLink>
               — domyślnie jest wyłączone.
             </p>
-            <p class="text-sm text-muted font-medium">
+            <p class="text-sm font-medium text-muted">
               Problemy z dostępem?
-              <span class="text-primary font-bold">Zgłoś to trenerowi.</span>
+              <span class="font-bold text-primary">Zgłoś to trenerowi.</span>
             </p>
           </div>
-        </template>
-      </UCard>
+        </div>
 
-      <div class="mt-10 text-center">
-        <NuxtLink
-          to="/"
-          class="group inline-flex items-center gap-3 text-sm font-bold uppercase tracking-widest text-muted transition-all hover:text-primary"
-        >
-          <UIcon
-            name="i-lucide-arrow-left"
-            class="size-4 transition-transform group-hover:-translate-x-2"
-          />
-          Strona główna
-        </NuxtLink>
+        <div class="mt-8 text-center">
+          <NuxtLink
+            to="/"
+            class="group inline-flex items-center gap-2 text-sm font-semibold text-muted transition-colors hover:text-primary"
+          >
+            <UIcon
+              name="i-lucide-arrow-left"
+              class="size-4 transition-transform group-hover:-translate-x-1"
+            />
+            Strona główna
+          </NuxtLink>
+        </div>
       </div>
-    </div>
+    </PublicPageLayout>
   </div>
 </template>

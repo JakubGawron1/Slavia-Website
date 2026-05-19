@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Athlete, CompetitionResult } from '~/types/models'
+import DashboardKpiCard from '~/components/dashboard/DashboardKpiCard.vue'
 
 definePageMeta({ middleware: 'auth' })
 
@@ -43,6 +44,10 @@ const stats = computed(() => {
   }
 })
 
+const athleteLabel = computed(
+  () => bundle.value?.athlete?.full_name || auth.user.value?.username || 'Zawodniku'
+)
+
 useSeoMeta({
   title: `Slavia Wrapped ${year}`,
   robots: 'noindex, nofollow'
@@ -50,49 +55,80 @@ useSeoMeta({
 </script>
 
 <template>
-  <UContainer class="py-10 sm:py-14">
-    <div class="mx-auto max-w-2xl text-center">
-      <p class="text-xs font-bold uppercase tracking-widest text-primary">
-        Podsumowanie roku
-      </p>
-      <h1 class="mt-2 text-3xl font-black text-highlighted sm:text-4xl">
-        Slavia Wrapped {{ year }}
-      </h1>
-      <p class="mt-2 text-sm text-muted">
-        {{ bundle?.athlete?.full_name || auth.user.value?.username || 'Zawodniku' }} — Twoja sezonowa statystyka.
-      </p>
-    </div>
+  <PanelPageLayout>
+    <PanelPageHeader
+      area="athlete"
+      variant="hero"
+      :title="`Slavia Wrapped ${year}`"
+      icon="i-lucide-sparkles"
+    >
+      <template #description>
+        {{ athleteLabel }} — podsumowanie sezonu {{ year }} (wyniki zatwierdzone).
+      </template>
+    </PanelPageHeader>
 
-    <div v-if="!auth.isAthlete.value" class="mt-8 rounded-2xl border border-warning/30 bg-warning/10 p-6 text-sm">
-      Widok dla konta z rolą Zawodnik.
-    </div>
+    <UAlert
+      v-if="!auth.isAthlete.value"
+      icon="i-lucide-info"
+      color="warning"
+      variant="subtle"
+      title="Widok dla zawodnika"
+      description="Pełne statystyki Wrapped są dostępne na koncie z rolą Zawodnik."
+      class="rounded-2xl"
+    />
 
-    <div v-else class="mt-10 grid gap-4 sm:grid-cols-2">
-      <UCard class="text-center">
-        <p class="text-[10px] font-bold uppercase text-muted">Starty (zatwierdzone)</p>
-        <p class="text-3xl font-black text-primary">{{ stats.starts }}</p>
-      </UCard>
-      <UCard class="text-center">
-        <p class="text-[10px] font-bold uppercase text-muted">Łączny tonaż</p>
-        <p class="text-3xl font-black text-success">{{ stats.tonnage }} kg</p>
-      </UCard>
-      <UCard class="text-center">
-        <p class="text-[10px] font-bold uppercase text-muted">Najlepszy total</p>
-        <p class="text-3xl font-black text-warning">{{ stats.bestTotal }} kg</p>
-      </UCard>
-      <UCard class="text-center">
-        <p class="text-[10px] font-bold uppercase text-muted">Kamienie milowe</p>
-        <p class="text-3xl font-black text-info">{{ stats.prCount }}</p>
-      </UCard>
-    </div>
+    <PanelPageSection
+      v-else
+      title="Twoje liczby"
+      description="Starty, tonaż i najlepszy total w bieżącym roku kalendarzowym."
+      icon="i-lucide-trophy"
+    >
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <DashboardKpiCard
+          label="Starty (zatwierdzone)"
+          :value="stats.starts"
+          icon="i-lucide-flag"
+          tone="primary"
+        />
+        <DashboardKpiCard
+          label="Łączny tonaż"
+          :value="`${stats.tonnage} kg`"
+          icon="i-lucide-weight"
+          tone="success"
+        />
+        <DashboardKpiCard
+          label="Najlepszy total"
+          :value="stats.bestTotal ? `${stats.bestTotal} kg` : '—'"
+          icon="i-lucide-medal"
+          tone="warning"
+        />
+        <DashboardKpiCard
+          label="Kamienie milowe"
+          :value="stats.prCount"
+          icon="i-lucide-star"
+          tone="info"
+          hint="Wyniki na poziomie najlepszego totalu"
+        />
+      </div>
+    </PanelPageSection>
 
-    <div class="mt-8 flex justify-center gap-3">
-      <UButton to="/athlete" variant="soft" color="primary">
+    <div class="mt-8 flex flex-wrap justify-center gap-3">
+      <UButton
+        to="/athlete"
+        variant="soft"
+        color="primary"
+        icon="i-lucide-layout-dashboard"
+      >
         Wróć do panelu
       </UButton>
-      <UButton to="/athlete/timeline" variant="outline" color="neutral">
+      <UButton
+        to="/athlete/timeline"
+        variant="outline"
+        color="neutral"
+        icon="i-lucide-git-branch"
+      >
         Oś czasu
       </UButton>
     </div>
-  </UContainer>
+  </PanelPageLayout>
 </template>

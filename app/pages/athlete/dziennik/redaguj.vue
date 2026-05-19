@@ -224,14 +224,14 @@ useSeoMeta({
 </script>
 
 <template>
-  <div class="slavia-diary-compose flex min-h-[100dvh] flex-col bg-background">
-    <header class="sticky top-0 z-50 border-b border-default/70 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/85">
-      <div class="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
+  <div class="slavia-diary-compose flex flex-col bg-background">
+    <header class="slavia-diary-compose__header sticky top-0 z-50 border-b border-default/60">
+      <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
         <div class="min-w-0">
-          <p class="text-[11px] font-bold uppercase tracking-wider text-primary">
+          <p class="text-[11px] font-black uppercase tracking-[0.2em] text-primary">
             Twój dziennik · {{ athleteName }}
           </p>
-          <h1 class="truncate text-lg font-bold text-highlighted">
+          <h1 class="slavia-display truncate text-lg font-black text-highlighted sm:text-xl">
             {{ pageTitle }}
           </h1>
         </div>
@@ -277,7 +277,7 @@ useSeoMeta({
       </div>
     </header>
 
-    <main class="flex-1 overflow-y-auto px-4 py-6 sm:px-6">
+    <main class="slavia-diary-compose__main flex-1 overflow-y-auto px-4 py-6 sm:px-6">
       <div
         v-if="loading"
         class="flex justify-center py-16 text-muted"
@@ -307,7 +307,7 @@ useSeoMeta({
           <div class="lg:col-span-8 space-y-6">
             <UCard
               v-if="previewOpen"
-              class="overflow-hidden rounded-2xl ring-1 ring-primary/15"
+              class="slavia-section-card overflow-hidden rounded-2xl ring-1 ring-primary/15"
             >
               <template #header>
                 <div class="flex flex-wrap items-start justify-between gap-3">
@@ -341,7 +341,7 @@ useSeoMeta({
             </UCard>
 
             <template v-else>
-              <div class="grid gap-5 sm:grid-cols-2">
+              <div class="slavia-section-card grid gap-5 p-4 sm:grid-cols-2 sm:p-5">
                 <UFormField
                   label="Data jednostki"
                   required
@@ -380,10 +380,14 @@ useSeoMeta({
           <!-- Sidebar Column (Training Plan) -->
           <div class="lg:col-span-4">
             <div class="sticky top-6 space-y-6">
-              <UCard class="rounded-3xl border-primary/20 bg-primary/5">
-                <div class="flex items-center gap-3 mb-4">
-                  <UIcon name="i-lucide-clipboard-list" class="size-6 text-primary" />
-                  <h3 class="font-black text-highlighted uppercase tracking-tight">Twój plan na dziś</h3>
+              <UCard class="slavia-section-card rounded-2xl border-primary/25 bg-linear-to-br from-primary/8 via-card to-card ring-1 ring-primary/15">
+                <div class="mb-4 flex items-center gap-3">
+                  <span class="flex size-10 items-center justify-center rounded-xl bg-primary/12 text-primary ring-1 ring-primary/20">
+                    <UIcon name="i-lucide-clipboard-list" class="size-5" />
+                  </span>
+                  <h3 class="slavia-display text-sm font-black uppercase tracking-tight text-highlighted">
+                    Twój plan na dziś
+                  </h3>
                 </div>
 
                 <div v-if="loadingPlan" class="flex justify-center py-6">

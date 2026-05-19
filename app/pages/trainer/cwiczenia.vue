@@ -66,9 +66,9 @@ async function deleteExercise(id: string) {
 const filteredExercises = computed(() => {
   const q = searchQuery.value.toLowerCase().trim()
   if (!q) return exercises.value
-  return exercises.value.filter(e => 
-    e.name.toLowerCase().includes(q) || 
-    (e.category && e.category.toLowerCase().includes(q))
+  return exercises.value.filter(e =>
+    e.name.toLowerCase().includes(q)
+    || (e.category && e.category.toLowerCase().includes(q))
   )
 })
 
@@ -81,194 +81,231 @@ onMounted(() => loadExercises())
 </script>
 
 <template>
-  <div class="min-h-screen pb-20">
-    <!-- Premium Header -->
-    <div class="relative overflow-hidden bg-background pt-12 pb-16 lg:pt-20 lg:pb-24">
-      <div class="absolute inset-0 z-0 opacity-10 pointer-events-none">
-        <div class="absolute -top-24 -left-24 size-96 rounded-full bg-primary/30 blur-3xl" />
-        <div class="absolute top-1/2 -right-24 size-80 rounded-full bg-blue-500/20 blur-3xl" />
-      </div>
-
-      <UContainer class="relative z-10">
-        <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
-          <div class="max-w-2xl animate-page-in">
-            <p class="text-xs font-bold uppercase tracking-widest text-primary mb-3">Zarządzanie wiedzą</p>
-            <h1 class="text-4xl lg:text-5xl font-black tracking-tight text-highlighted leading-tight">
-              Słownik <span class="text-primary italic">Ćwiczeń</span>
-            </h1>
-            <p class="mt-4 text-lg text-muted leading-relaxed">
-              Twoja własna baza wiedzy technicznej. Standardowe ćwiczenia, które możesz błyskawicznie wybierać podczas tworzenia planów treningowych.
-            </p>
-          </div>
-          
-          <div class="flex items-center gap-3 animate-page-in [animation-delay:100ms]">
-            <UButton 
-              size="xl" 
-              icon="i-lucide-plus" 
-              class="rounded-full shadow-lg shadow-primary/20 hover:scale-105 transition-transform"
-              @click="showAddModal = true"
-            >
-              Dodaj ćwiczenie
-            </UButton>
-          </div>
-        </div>
-
-        <!-- Toolbar -->
-        <div class="mt-12 flex flex-col gap-6 animate-page-in [animation-delay:200ms]">
-          <div class="relative w-full max-w-3xl">
-            <UInput 
-              v-model="searchQuery" 
-              icon="i-lucide-search" 
-              size="xl" 
-              placeholder="Szukaj ćwiczenia lub kategorii..." 
-              class="w-full bg-card/50 backdrop-blur-sm shadow-inner"
-              variant="outline"
-            />
-          </div>
-          
-          <div class="flex flex-wrap gap-2">
-            <p class="w-full text-[10px] font-black text-muted uppercase tracking-widest mb-1">Filtruj po kategorii:</p>
-            <UButton 
-              size="sm"
-              variant="soft"
-              :color="searchQuery === '' ? 'primary' : 'neutral'"
-              class="rounded-full px-4"
-              @click="searchQuery = ''"
-            >
-              Wszystkie
-            </UButton>
-            <UButton 
-              v-for="cat in categories" 
-              :key="cat"
-              size="sm"
-              :variant="searchQuery === cat ? 'solid' : 'soft'"
-              :color="searchQuery === cat ? 'primary' : 'neutral'"
-              class="whitespace-nowrap rounded-full px-4 transition-all"
-              @click="searchQuery = cat"
-            >
-              {{ cat }}
-            </UButton>
-          </div>
-        </div>
-      </UContainer>
-    </div>
-
-    <UContainer class="mt-8">
-      <!-- Loading State -->
-      <div v-if="loading" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <div v-for="n in 6" :key="n" class="h-48 rounded-3xl bg-card animate-pulse" />
-      </div>
-
-      <!-- Empty State -->
-      <div v-else-if="filteredExercises.length === 0" class="flex flex-col items-center justify-center py-20 animate-page-in">
-        <div class="p-6 rounded-full bg-primary/5 mb-6">
-          <UIcon name="i-lucide-library" class="size-16 text-primary/40" />
-        </div>
-        <h3 class="text-xl font-bold text-highlighted">Nie znaleziono ćwiczeń</h3>
-        <p class="mt-2 text-muted max-w-sm text-center">Dodaj swoje pierwsze ćwiczenie do bazy lub zmień kryteria wyszukiwania.</p>
-        <UButton v-if="!searchQuery" variant="soft" color="primary" class="mt-6" @click="showAddModal = true">Dodaj pierwsze ćwiczenie</UButton>
-        <UButton v-else variant="ghost" color="neutral" class="mt-2" @click="searchQuery = ''">Wyczyść wyszukiwanie</UButton>
-      </div>
-
-      <!-- Grid -->
-      <div v-else class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 animate-page-in [animation-delay:300ms]">
-        <div 
-          v-for="e in filteredExercises" 
-          :key="e.id" 
-          class="group relative flex flex-col justify-between rounded-3xl border border-default bg-card p-6 transition-all duration-300 hover:border-primary/40 hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-1"
+  <PanelPageLayout>
+    <PanelPageHeader
+      area="trainer"
+      title="Słownik ćwiczeń"
+      icon="i-lucide-library"
+      description="Twoja baza wiedzy technicznej — standardowe ćwiczenia do szybkiego wyboru w planach treningowych."
+    >
+      <template #actions>
+        <UButton
+          icon="i-lucide-plus"
+          color="primary"
+          @click="showAddModal = true"
         >
-          <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-            <UButton 
-              icon="i-lucide-trash-2" 
-              variant="ghost" 
-              color="error" 
-              size="xs" 
-              @click="deleteExercise(e.id)"
-            />
-          </div>
+          Dodaj ćwiczenie
+        </UButton>
+      </template>
+    </PanelPageHeader>
+
+    <PanelPageSection
+      title="Wyszukiwanie"
+      icon="i-lucide-search"
+    >
+      <div class="slavia-page-card space-y-4 p-4 sm:p-5">
+        <UInput
+          v-model="searchQuery"
+          icon="i-lucide-search"
+          size="lg"
+          placeholder="Szukaj ćwiczenia lub kategorii…"
+          class="w-full max-w-3xl"
+        />
+        <div v-if="categories.length" class="flex flex-wrap gap-2">
+          <p class="w-full text-[10px] font-black uppercase tracking-widest text-muted">
+            Kategoria
+          </p>
+          <UButton
+            size="sm"
+            variant="soft"
+            :color="searchQuery === '' ? 'primary' : 'neutral'"
+            class="rounded-full px-4"
+            @click="searchQuery = ''"
+          >
+            Wszystkie
+          </UButton>
+          <UButton
+            v-for="cat in categories"
+            :key="cat"
+            size="sm"
+            :variant="searchQuery === cat ? 'solid' : 'soft'"
+            :color="searchQuery === cat ? 'primary' : 'neutral'"
+            class="rounded-full px-4"
+            @click="searchQuery = cat"
+          >
+            {{ cat }}
+          </UButton>
+        </div>
+      </div>
+    </PanelPageSection>
+
+    <PanelPageSection title="Baza ćwiczeń" icon="i-lucide-dumbbell">
+      <div
+        v-if="loading"
+        class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+      >
+        <div
+          v-for="n in 6"
+          :key="n"
+          class="h-44 animate-pulse rounded-2xl bg-muted/25"
+        />
+      </div>
+
+      <PublicEmptyState
+        v-else-if="filteredExercises.length === 0"
+        icon="i-lucide-library"
+        title="Nie znaleziono ćwiczeń"
+        description="Dodaj pierwsze ćwiczenie do słownika lub zmień kryteria wyszukiwania."
+        compact
+      >
+        <UButton
+          v-if="!searchQuery"
+          color="primary"
+          variant="soft"
+          icon="i-lucide-plus"
+          @click="showAddModal = true"
+        >
+          Dodaj pierwsze ćwiczenie
+        </UButton>
+        <UButton
+          v-else
+          variant="ghost"
+          color="neutral"
+          @click="searchQuery = ''"
+        >
+          Wyczyść wyszukiwanie
+        </UButton>
+      </PublicEmptyState>
+
+      <div
+        v-else
+        class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+      >
+        <article
+          v-for="e in filteredExercises"
+          :key="e.id"
+          class="slavia-section-card group relative flex flex-col justify-between p-5 transition-all hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-md"
+        >
+          <UButton
+            icon="i-lucide-trash-2"
+            variant="ghost"
+            color="error"
+            size="xs"
+            class="absolute top-3 right-3 opacity-0 transition-opacity group-hover:opacity-100"
+            aria-label="Usuń ćwiczenie"
+            @click="deleteExercise(e.id)"
+          />
 
           <div>
-            <div class="flex items-center gap-2 mb-4">
-              <span v-if="e.category" class="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-wider">
-                {{ e.category }}
-              </span>
-              <span v-else class="px-2.5 py-0.5 rounded-full bg-muted text-muted text-[10px] font-black uppercase tracking-wider">
-                Ogólne
-              </span>
-            </div>
+            <UBadge
+              v-if="e.category"
+              variant="soft"
+              color="primary"
+              size="xs"
+              class="mb-3 uppercase tracking-wider"
+            >
+              {{ e.category }}
+            </UBadge>
+            <UBadge
+              v-else
+              variant="soft"
+              color="neutral"
+              size="xs"
+              class="mb-3 uppercase tracking-wider"
+            >
+              Ogólne
+            </UBadge>
 
-            <h3 class="text-xl font-black text-highlighted group-hover:text-primary transition-colors">{{ e.name }}</h3>
-            
-            <p v-if="e.description" class="mt-3 text-sm text-muted line-clamp-3 leading-relaxed">
+            <h3 class="text-lg font-black text-highlighted transition-colors group-hover:text-primary">
+              {{ e.name }}
+            </h3>
+
+            <p
+              v-if="e.description"
+              class="mt-2 line-clamp-3 text-sm leading-relaxed text-muted"
+            >
               {{ e.description }}
             </p>
           </div>
 
-          <div class="mt-6 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <UButton 
-                v-if="e.video_url" 
-                :to="e.video_url" 
-                target="_blank"
-                size="xs" 
-                icon="i-lucide-play-circle" 
-                variant="soft" 
-                color="primary"
-                class="rounded-full"
-              >
-                Wideo
-              </UButton>
-            </div>
-            <div class="text-[10px] text-muted font-medium">
-              Dodano {{ new Date(e.created_at).toLocaleDateString() }}
-            </div>
+          <div class="mt-5 flex items-center justify-between gap-2">
+            <UButton
+              v-if="e.video_url"
+              :to="e.video_url"
+              target="_blank"
+              size="xs"
+              icon="i-lucide-play-circle"
+              variant="soft"
+              color="primary"
+            >
+              Wideo
+            </UButton>
+            <span class="ml-auto text-[10px] font-medium text-muted">
+              {{ new Date(e.created_at).toLocaleDateString('pl-PL') }}
+            </span>
           </div>
-        </div>
+        </article>
       </div>
-    </UContainer>
+    </PanelPageSection>
 
-    <!-- Modal (Correct for Nuxt UI v4) -->
-    <UModal 
-      v-model:open="showAddModal" 
+    <UModal
+      v-model:open="showAddModal"
       title="Dodaj nowe ćwiczenie"
-      :ui="{ content: 'rounded-[2rem] sm:max-w-2xl' }"
+      :ui="{ content: 'rounded-2xl sm:max-w-2xl' }"
     >
       <template #body>
         <div class="space-y-5 py-2">
-          <div class="mb-2">
-            <p class="text-sm text-muted">Uzupełnij dane techniczne dla nowego wpisu w słowniku.</p>
-          </div>
+          <p class="text-sm text-muted">
+            Uzupełnij dane techniczne dla nowego wpisu w słowniku.
+          </p>
 
           <UFormField label="Nazwa ćwiczenia" help="Pełna nazwa techniczna">
-            <UInput v-model="form.name" placeholder="np. Rwanie olimpijskie" size="xl" icon="i-lucide-dumbbell" class="font-bold" />
+            <UInput
+              v-model="form.name"
+              placeholder="np. Rwanie olimpijskie"
+              size="lg"
+              icon="i-lucide-dumbbell"
+            />
           </UFormField>
-          
+
           <UFormField label="Kategoria" help="Pomaga w filtrowaniu listy">
-            <UInput v-model="form.category" placeholder="np. Dwubój, Akcesoria, Core" size="lg" icon="i-lucide-tag" />
+            <UInput
+              v-model="form.category"
+              placeholder="np. Dwubój, Akcesoria, Core"
+              size="lg"
+              icon="i-lucide-tag"
+            />
           </UFormField>
 
           <UFormField label="Opis i wskazówki">
-            <UTextarea v-model="form.description" placeholder="Skoncentruj się na fazie pierwszej..." size="lg" :rows="4" />
+            <UTextarea
+              v-model="form.description"
+              placeholder="Skoncentruj się na fazie pierwszej…"
+              size="lg"
+              :rows="4"
+            />
           </UFormField>
 
-          <UFormField label="Link do filmu" help="Link do YouTube, Vimeo lub Instagrama">
-            <UInput v-model="form.video_url" placeholder="https://youtube.com/..." size="lg" icon="i-lucide-video" />
+          <UFormField label="Link do filmu" help="YouTube, Vimeo lub Instagram">
+            <UInput
+              v-model="form.video_url"
+              placeholder="https://youtube.com/…"
+              size="lg"
+              icon="i-lucide-video"
+            />
           </UFormField>
 
-          <div class="mt-8 flex flex-col sm:flex-row gap-3 pt-6 border-t border-default/50">
-            <UButton 
-              class="flex-1 justify-center rounded-2xl py-4 font-black" 
-              size="xl" 
-              color="primary" 
+          <div class="flex flex-col gap-3 border-t border-default/50 pt-6 sm:flex-row">
+            <UButton
+              class="flex-1 justify-center"
+              color="primary"
               @click="addExercise"
             >
               Zapisz w słowniku
             </UButton>
-            <UButton 
-              variant="soft" 
-              color="neutral" 
-              class="rounded-2xl py-4 px-8 font-bold" 
-              size="xl" 
+            <UButton
+              variant="soft"
+              color="neutral"
               @click="showAddModal = false"
             >
               Anuluj
@@ -277,15 +314,5 @@ onMounted(() => loadExercises())
         </div>
       </template>
     </UModal>
-  </div>
+  </PanelPageLayout>
 </template>
-
-<style scoped>
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-</style>

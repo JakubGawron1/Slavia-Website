@@ -161,29 +161,17 @@ watch(selectedPlanId, () => {
 </script>
 
 <template>
-  <div class="min-h-screen pb-24">
-    <!-- Header Area -->
-    <div class="relative overflow-hidden bg-background pt-12 pb-16 lg:pt-20 lg:pb-24">
-      <div class="absolute inset-0 z-0 opacity-10 pointer-events-none">
-        <div class="absolute -top-24 -left-24 size-96 rounded-full bg-primary/30 blur-3xl" />
-        <div class="absolute top-1/2 -right-24 size-80 rounded-full bg-blue-500/20 blur-3xl" />
-      </div>
-
-      <UContainer class="relative z-10">
-        <div class="max-w-2xl animate-page-in">
-          <p class="text-xs font-bold uppercase tracking-widest text-primary mb-3">Panel Zawodnika</p>
-          <h1 class="text-4xl lg:text-5xl font-black tracking-tight text-highlighted leading-tight">
-            Moje <span class="text-primary italic">Plany</span>
-          </h1>
-          <p class="mt-4 text-lg text-muted leading-relaxed">
-            Tutaj znajdziesz wszystkie wytyczne od swojego trenera. Realizuj treningi, zaznaczaj postępy i dbaj o formę.
-          </p>
-        </div>
-      </UContainer>
-    </div>
-
+  <div>
     <PanelPageLayout padding="compact">
-      <!-- Loading State -->
+    <PanelPageHeader
+      area="athlete"
+      variant="hero"
+      title="Moje plany"
+      icon="i-lucide-clipboard-list"
+      description="Wytyczne od trenera — realizuj treningi, zaznaczaj postępy i dbaj o formę."
+    />
+
+    <!-- Loading State -->
       <div v-if="pending && plans.length === 0" class="flex flex-col items-center justify-center py-20 gap-4">
         <UIcon name="i-lucide-loader-2" class="size-12 animate-spin text-primary/40" />
         <p class="text-sm font-bold text-muted uppercase tracking-widest">Wczytywanie planów...</p>
@@ -360,7 +348,7 @@ watch(selectedPlanId, () => {
     </PanelPageLayout>
 
     <!-- Plan Details Modal (Nuxt UI v4) -->
-    <UModal 
+    <UModal
       :open="!!selectedPlanId" 
       :title="selectedPlan?.title || 'Szczegóły planu'"
       :ui="{ 

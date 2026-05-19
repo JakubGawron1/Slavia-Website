@@ -5,7 +5,7 @@ const { preset } = useSlaviaAppearance()
 
 const props = withDefaults(
   defineProps<{
-    padding?: 'default' | 'compact' | 'hero'
+    padding?: 'default' | 'compact' | 'hero' | 'flush'
     animate?: boolean
     narrow?: boolean
     /** Delikatne tło / poświata jak na kalkulatorach i w galerii */
@@ -25,6 +25,7 @@ const containerClass = computed(() => {
   if (props.padding === 'default') c.push('py-8 sm:py-12 lg:py-14')
   else if (props.padding === 'compact') c.push('py-6 sm:py-10')
   else if (props.padding === 'hero') c.push('py-10 md:py-16 lg:py-20')
+  else if (props.padding === 'flush') c.push('py-0')
   if (props.animate) c.push('animate-page-in')
   if (isGlassThemePreset(preset.value)) c.push('slavia-glass-layout')
   if (isSportTechThemePreset(preset.value)) c.push('slavia-sport-tech-layout')

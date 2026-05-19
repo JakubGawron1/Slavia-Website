@@ -175,8 +175,8 @@ useSeoMeta({
 </script>
 
 <template>
-  <PanelPageLayout narrow>
-    <PanelPageHeader
+  <PublicPageLayout narrow>
+    <PublicPageHeader
       variant="hero"
       eyebrow="Narzędzie"
       icon="i-lucide-calculator"
@@ -395,5 +395,5 @@ useSeoMeta({
       title="Informacja"
       description="Przelicznik jest liczony jak na podnoszenieciezarow.pl (okres 2025–2028): mężczyźni b = 201 kg, kobiety b = 164 kg; stała A dopasowana do ich tabeli. Ewentualne różnice w ostatnich miejscach wynikają z zaokrągleń po stronie serwisu referencyjnego."
     />
-  </PanelPageLayout>
+  </PublicPageLayout>
 </template>

@@ -160,14 +160,14 @@ useSeoMeta({
 </script>
 
 <template>
-  <div class="slavia-diary-compose flex min-h-[100dvh] flex-col bg-background">
-    <header class="sticky top-0 z-50 border-b border-default/70 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/85">
-      <div class="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
+  <div class="slavia-diary-compose flex flex-col bg-background">
+    <header class="slavia-diary-compose__header sticky top-0 z-50 border-b border-default/60">
+      <div class="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
         <div class="min-w-0">
-          <p class="text-[11px] font-bold uppercase tracking-wider text-primary">
+          <p class="text-[11px] font-black uppercase tracking-[0.2em] text-primary">
             Dziennik · {{ athleteName }}
           </p>
-          <h1 class="truncate text-lg font-bold text-highlighted">
+          <h1 class="slavia-display truncate text-lg font-black text-highlighted sm:text-xl">
             {{ pageTitle }}
           </h1>
         </div>
@@ -213,7 +213,7 @@ useSeoMeta({
       </div>
     </header>
 
-    <main class="flex-1 overflow-y-auto px-4 py-6 sm:px-6">
+    <main class="slavia-diary-compose__main flex-1 overflow-y-auto px-4 py-6 sm:px-6">
       <div
         v-if="loading"
         class="flex justify-center py-16 text-muted"
@@ -229,7 +229,7 @@ useSeoMeta({
       >
         <UCard
           v-if="previewOpen"
-          class="overflow-hidden rounded-2xl ring-1 ring-primary/15"
+          class="slavia-section-card overflow-hidden rounded-2xl ring-1 ring-primary/15"
         >
           <template #header>
             <div class="flex flex-wrap items-start justify-between gap-3">
@@ -263,7 +263,7 @@ useSeoMeta({
         </UCard>
 
         <template v-else>
-          <div class="grid gap-5 sm:grid-cols-2">
+          <div class="slavia-section-card grid gap-5 p-4 sm:grid-cols-2 sm:p-5">
             <UFormField
               label="Data jednostki"
               required

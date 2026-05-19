@@ -289,47 +289,25 @@ const trainingDays = [
 </script>
 
 <template>
-  <div class="animate-page-in relative min-w-0 overflow-x-clip">
-    <!-- Dekoracyjne plamy światła w tle -->
-    <div
-      class="pointer-events-none absolute -left-32 top-12 size-[420px] rounded-full bg-primary/10 blur-3xl dark:bg-primary/20"
-      aria-hidden="true"
-    />
-    <div
-      class="pointer-events-none absolute -right-24 top-[36vh] size-[340px] rounded-full bg-amber-400/8 blur-3xl dark:bg-amber-400/15"
-      aria-hidden="true"
-    />
-    <div
-      class="pointer-events-none absolute left-1/2 top-[88vh] hidden size-[280px] -translate-x-1/2 rounded-full bg-info/12 blur-3xl opacity-70 dark:bg-info/18 lg:block"
-      aria-hidden="true"
-    />
-
-    <!-- HERO -->
-    <section class="relative pb-12 pt-16 sm:pt-20 lg:pt-24 lg:pb-16">
-      <UContainer>
-        <div class="mx-auto flex max-w-5xl flex-col items-center text-center">
-          <div class="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.22em] text-primary backdrop-blur">
-            <span class="relative flex size-2">
-              <span class="absolute inline-flex size-full animate-ping rounded-full bg-primary/70 opacity-75" />
-              <span class="relative inline-flex size-2 rounded-full bg-primary" />
-            </span>
-            CKS Slavia Ruda Śląska
-          </div>
-
-          <h1 class="text-balance text-4xl font-black uppercase italic leading-[0.95] tracking-tight text-highlighted sm:text-5xl md:text-6xl lg:text-7xl">
-            Sztanga, drużyna,
-            <span class="bg-linear-to-r from-primary via-amber-500 to-primary bg-clip-text text-transparent">
-              Slavia.
-            </span>
-          </h1>
-
-          <p class="mt-6 max-w-3xl text-pretty text-base leading-relaxed text-muted sm:text-lg lg:text-xl">
-            Klub podnoszenia ciężarów z tradycją i pasją. Trenujemy młodzież i dorosłych — od pierwszych kroków
-            na platformie po starty w zawodach ogólnopolskich. Zapraszamy do
-            <strong class="text-highlighted">Rudy Śląskiej</strong>.
-          </p>
-
-          <div class="mt-8 flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-center lg:gap-4">
+  <PublicPageLayout padding="hero">
+    <PublicPageHeader
+      variant="centered"
+      eyebrow="CKS Slavia Ruda Śląska"
+      icon="i-lucide-dumbbell"
+    >
+      <template #title>
+        Sztanga, drużyna,
+        <span class="bg-linear-to-r from-primary via-amber-500 to-primary bg-clip-text text-transparent">
+          Slavia.
+        </span>
+      </template>
+      <template #description>
+        Klub podnoszenia ciężarów z tradycją i pasją. Trenujemy młodzież i dorosłych — od pierwszych kroków
+        na platformie po starty w zawodach ogólnopolskich. Zapraszamy do
+        <strong class="text-highlighted">Rudy Śląskiej</strong>.
+      </template>
+      <template #actions>
+        <div class="mt-8 flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-center lg:gap-4">
             <UButton
               to="/zawodnicy"
               prefetch
@@ -378,70 +356,68 @@ const trainingDays = [
             >
               {{ mobileDownloadLabel }}
             </UButton>
-          </div>
         </div>
+      </template>
+    </PublicPageHeader>
 
-        <!-- Pasek statystyk klubu -->
-        <div class="mt-14 grid gap-3 rounded-3xl border border-default/60 bg-elevated/75 p-5 shadow-sm ring-1 ring-default/30 backdrop-blur-sm dark:bg-card/95 sm:p-6 lg:mt-20 lg:grid-cols-4">
-          <div class="flex flex-col items-start gap-1 rounded-2xl bg-primary/5 p-5 ring-1 ring-primary/15 lg:items-center lg:text-center">
-            <div class="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-primary">
-              <UIcon name="i-lucide-users" class="size-4" />
-              Aktywni zawodnicy
-            </div>
-            <p class="font-mono text-3xl font-black text-highlighted tabular-nums sm:text-4xl">
-              {{ stats.activeCount }}
-            </p>
-            <p class="text-xs text-muted">
-              w tym {{ stats.womenCount }} K · {{ stats.menCount }} M
-            </p>
-          </div>
-
-          <div class="flex flex-col items-start gap-1 rounded-2xl bg-amber-500/5 p-5 ring-1 ring-amber-500/15 lg:items-center lg:text-center">
-            <div class="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-amber-600 dark:text-amber-400">
-              <UIcon name="i-lucide-trophy" class="size-4" />
-              Najlepszy Sinclair
-            </div>
-            <p class="font-mono text-3xl font-black text-highlighted tabular-nums sm:text-4xl">
-              {{ stats.bestSinclair > 0 ? stats.bestSinclair.toFixed(1) : '—' }}
-            </p>
-            <p class="text-xs text-muted">
-              w klubie (2025–2028)
-            </p>
-          </div>
-
-          <div class="flex flex-col items-start gap-1 rounded-2xl bg-info/6 p-5 ring-1 ring-info/20 lg:items-center lg:text-center">
-            <div class="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-info">
-              <UIcon name="i-lucide-dumbbell" class="size-4" />
-              Najwyższa suma
-            </div>
-            <p class="font-mono text-3xl font-black text-highlighted tabular-nums sm:text-4xl">
-              {{ stats.heaviestTotal > 0 ? `${stats.heaviestTotal} kg` : '—' }}
-            </p>
-            <p class="text-xs text-muted">
-              klubowy rekord PB
-            </p>
-          </div>
-
-          <div class="flex flex-col items-start gap-1 rounded-2xl bg-success/6 p-5 ring-1 ring-success/20 lg:items-center lg:text-center">
-            <div class="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-success">
-              <UIcon name="i-lucide-calendar-days" class="size-4" />
-              Treningi
-            </div>
-            <p class="font-mono text-3xl font-black text-highlighted tabular-nums sm:text-4xl">
-              3×
-            </p>
-            <p class="text-xs text-muted">
-              w tygodniu, Pon–Śr–Pt
-            </p>
-          </div>
+    <!-- Pasek statystyk klubu -->
+    <div class="slavia-page-card mt-14 grid gap-3 p-5 sm:p-6 lg:mt-20 lg:grid-cols-4">
+      <div class="flex flex-col items-start gap-1 rounded-2xl bg-primary/5 p-5 ring-1 ring-primary/15 lg:items-center lg:text-center">
+        <div class="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-primary">
+          <UIcon name="i-lucide-users" class="size-4" />
+          Aktywni zawodnicy
         </div>
-      </UContainer>
-    </section>
+        <p class="font-mono text-3xl font-black text-highlighted tabular-nums sm:text-4xl">
+          {{ stats.activeCount }}
+        </p>
+        <p class="text-xs text-muted">
+          w tym {{ stats.womenCount }} K · {{ stats.menCount }} M
+        </p>
+      </div>
+
+      <div class="flex flex-col items-start gap-1 rounded-2xl bg-amber-500/5 p-5 ring-1 ring-amber-500/15 lg:items-center lg:text-center">
+        <div class="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-amber-600 dark:text-amber-400">
+          <UIcon name="i-lucide-trophy" class="size-4" />
+          Najlepszy Sinclair
+        </div>
+        <p class="font-mono text-3xl font-black text-highlighted tabular-nums sm:text-4xl">
+          {{ stats.bestSinclair > 0 ? stats.bestSinclair.toFixed(1) : '—' }}
+        </p>
+        <p class="text-xs text-muted">
+          w klubie (2025–2028)
+        </p>
+      </div>
+
+      <div class="flex flex-col items-start gap-1 rounded-2xl bg-info/6 p-5 ring-1 ring-info/20 lg:items-center lg:text-center">
+        <div class="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-info">
+          <UIcon name="i-lucide-dumbbell" class="size-4" />
+          Najwyższa suma
+        </div>
+        <p class="font-mono text-3xl font-black text-highlighted tabular-nums sm:text-4xl">
+          {{ stats.heaviestTotal > 0 ? `${stats.heaviestTotal} kg` : '—' }}
+        </p>
+        <p class="text-xs text-muted">
+          klubowy rekord PB
+        </p>
+      </div>
+
+      <div class="flex flex-col items-start gap-1 rounded-2xl bg-success/6 p-5 ring-1 ring-success/20 lg:items-center lg:text-center">
+        <div class="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-success">
+          <UIcon name="i-lucide-calendar-days" class="size-4" />
+          Treningi
+        </div>
+        <p class="font-mono text-3xl font-black text-highlighted tabular-nums sm:text-4xl">
+          3×
+        </p>
+        <p class="text-xs text-muted">
+          w tygodniu, Pon–Śr–Pt
+        </p>
+      </div>
+    </div>
 
     <!-- TRZY FILARY -->
-    <section class="relative py-12 lg:py-20">
-      <UContainer>
-        <div class="mx-auto mb-10 max-w-3xl text-center lg:mb-14">
+    <section class="slavia-section-y">
+<div class="mx-auto mb-10 max-w-3xl text-center lg:mb-14">
           <p class="mb-3 text-[11px] font-black uppercase tracking-[0.25em] text-primary">
             Kim jesteśmy
           </p>
@@ -455,7 +431,7 @@ const trainingDays = [
         </div>
 
         <div class="grid gap-5 md:grid-cols-3">
-          <div class="group relative overflow-hidden rounded-3xl border border-default/60 bg-linear-to-br from-card via-card to-primary/5 p-6 shadow-sm ring-1 ring-default/30 transition-all hover:-translate-y-1 hover:shadow-xl hover:ring-primary/30 lg:p-8">
+          <div class="slavia-page-card group relative overflow-hidden bg-linear-to-br from-card via-card to-primary/5 p-6 transition-all hover:-translate-y-1 hover:shadow-xl hover:ring-primary/30 lg:p-8">
             <div class="pointer-events-none absolute -right-10 -top-10 size-40 rounded-full bg-primary/8 blur-2xl transition-all group-hover:bg-primary/15" />
             <div class="relative">
               <div class="mb-5 inline-flex size-12 items-center justify-center rounded-2xl bg-primary/12 text-primary ring-1 ring-primary/25">
@@ -471,7 +447,7 @@ const trainingDays = [
             </div>
           </div>
 
-          <div class="group relative overflow-hidden rounded-3xl border border-default/60 bg-linear-to-br from-card via-card to-amber-500/5 p-6 shadow-sm ring-1 ring-default/30 transition-all hover:-translate-y-1 hover:shadow-xl hover:ring-amber-500/30 lg:p-8">
+          <div class="slavia-page-card group relative overflow-hidden bg-linear-to-br from-card via-card to-amber-500/5 p-6 transition-all hover:-translate-y-1 hover:shadow-xl hover:ring-amber-500/30 lg:p-8">
             <div class="pointer-events-none absolute -right-10 -top-10 size-40 rounded-full bg-amber-500/10 blur-2xl transition-all group-hover:bg-amber-500/20" />
             <div class="relative">
               <div class="mb-5 inline-flex size-12 items-center justify-center rounded-2xl bg-amber-500/12 text-amber-600 ring-1 ring-amber-500/30 dark:text-amber-400">
@@ -487,7 +463,7 @@ const trainingDays = [
             </div>
           </div>
 
-          <div class="group relative overflow-hidden rounded-3xl border border-default/60 bg-linear-to-br from-card via-card to-success/5 p-6 shadow-sm ring-1 ring-default/30 transition-all hover:-translate-y-1 hover:shadow-xl hover:ring-success/30 lg:p-8">
+          <div class="slavia-page-card group relative overflow-hidden bg-linear-to-br from-card via-card to-success/5 p-6 transition-all hover:-translate-y-1 hover:shadow-xl hover:ring-success/30 lg:p-8">
             <div class="pointer-events-none absolute -right-10 -top-10 size-40 rounded-full bg-success/12 blur-2xl transition-all group-hover:bg-success/22" />
             <div class="relative">
               <div class="mb-5 inline-flex size-12 items-center justify-center rounded-2xl bg-success/12 text-success ring-1 ring-success/30">
@@ -503,13 +479,11 @@ const trainingDays = [
             </div>
           </div>
         </div>
-      </UContainer>
-    </section>
+</section>
 
     <!-- HISTORIA KLUBU -->
-    <section class="relative py-12 lg:py-20">
-      <UContainer>
-        <ClubHistoryTimeline
+    <section class="slavia-section-y">
+<ClubHistoryTimeline
           :limit="4"
           compact
           heading-id="home-club-history-heading"
@@ -526,16 +500,14 @@ const trainingDays = [
             Pełna historia klubu
           </UButton>
         </div>
-      </UContainer>
-    </section>
+</section>
 
     <!-- MISTRZOWIE KLUBU - top 3 Sinclair -->
     <section
       v-if="champions.length > 0"
       class="relative py-12 lg:py-20"
     >
-      <UContainer>
-        <div class="mx-auto mb-10 max-w-3xl text-center lg:mb-14">
+<div class="mx-auto mb-10 max-w-3xl text-center lg:mb-14">
           <p class="mb-3 text-[11px] font-black uppercase tracking-[0.25em] text-amber-600 dark:text-amber-400">
             Mistrzowie klubu
           </p>
@@ -552,7 +524,7 @@ const trainingDays = [
             v-for="p in champions"
             :key="`pod-${p.id}`"
             :to="athleteProfilePath(p.full_name, p.id)"
-            class="group relative overflow-hidden rounded-3xl border border-default/60 bg-linear-to-b from-card to-card/80 p-5 text-center shadow-sm ring-1 ring-default/30 transition-all hover:-translate-y-1 hover:shadow-xl"
+            class="slavia-page-card group relative overflow-hidden bg-linear-to-b from-card to-card/80 p-5 text-center transition-all hover:-translate-y-1 hover:shadow-xl"
             :class="{
               'order-1 sm:order-2 sm:scale-105 sm:border-amber-500/40 sm:ring-amber-500/30 sm:shadow-lg': p === champions[0],
               'order-2 sm:order-1 sm:border-slate-400/30 sm:ring-slate-400/20': p === champions[1],
@@ -614,13 +586,11 @@ const trainingDays = [
             Pełny ranking i lista zawodników
           </UButton>
         </div>
-      </UContainer>
-    </section>
+</section>
 
     <!-- GRUPY TRENINGOWE -->
-    <section class="relative py-12 lg:py-20">
-      <UContainer>
-        <div class="mx-auto mb-10 max-w-3xl text-center lg:mb-14">
+    <section class="slavia-section-y">
+<div class="mx-auto mb-10 max-w-3xl text-center lg:mb-14">
           <p class="mb-3 text-[11px] font-black uppercase tracking-[0.25em] text-primary">
             Co Cię czeka na sali
           </p>
@@ -637,7 +607,7 @@ const trainingDays = [
           <div
             v-for="g in groups"
             :key="g.id"
-            class="group relative overflow-hidden rounded-3xl border bg-linear-to-br p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl lg:p-8"
+            class="slavia-page-card group relative overflow-hidden border bg-linear-to-br p-6 transition-all hover:-translate-y-1 hover:shadow-xl lg:p-8"
             :class="g.accent"
           >
             <div class="flex items-start justify-between gap-3">
@@ -666,16 +636,14 @@ const trainingDays = [
             </ul>
           </div>
         </div>
-      </UContainer>
-    </section>
+</section>
 
     <!-- AKTUALNOŚCI -->
     <section
       v-if="latestPosts.length > 0"
       class="relative py-12 lg:py-20"
     >
-      <UContainer>
-        <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between lg:mb-12">
+<div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between lg:mb-12">
           <div class="min-w-0">
             <p class="mb-3 text-[11px] font-black uppercase tracking-[0.25em] text-primary">
               Z życia klubu
@@ -701,7 +669,7 @@ const trainingDays = [
             v-for="p in latestPosts"
             :key="p.id"
             :to="blogPostPath(p.title, p.id)"
-            class="group flex flex-col overflow-hidden rounded-3xl border border-default/60 bg-card shadow-sm ring-1 ring-default/30 transition-all hover:-translate-y-1 hover:shadow-xl hover:ring-primary/30"
+            class="slavia-page-card group flex flex-col overflow-hidden transition-all hover:-translate-y-1 hover:shadow-xl hover:ring-primary/30"
           >
             <div class="aspect-16/10 w-full overflow-hidden bg-muted/30">
               <img
@@ -735,13 +703,11 @@ const trainingDays = [
             </div>
           </NuxtLink>
         </div>
-      </UContainer>
-    </section>
+</section>
 
     <!-- NARZĘDZIA KLUBU -->
-    <section class="relative py-12 lg:py-20">
-      <UContainer>
-        <div class="mx-auto mb-10 max-w-3xl text-center lg:mb-14">
+    <section class="slavia-section-y">
+<div class="mx-auto mb-10 max-w-3xl text-center lg:mb-14">
           <p class="mb-3 text-[11px] font-black uppercase tracking-[0.25em] text-primary">
             Narzędzia
           </p>
@@ -758,7 +724,7 @@ const trainingDays = [
             v-for="t in tools"
             :key="t.to"
             :to="t.to"
-            class="group relative flex items-start gap-4 rounded-2xl border border-default/60 bg-card p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg"
+            class="slavia-page-card group relative flex items-start gap-4 p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg"
           >
             <span class="inline-flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20 transition-colors group-hover:bg-primary/20">
               <UIcon :name="t.icon" class="size-6" />
@@ -777,13 +743,11 @@ const trainingDays = [
             />
           </NuxtLink>
         </div>
-      </UContainer>
-    </section>
+</section>
 
     <!-- LOKALIZACJA + KONTAKT -->
-    <section class="relative py-12 lg:py-20">
-      <UContainer>
-        <div class="mx-auto mb-10 max-w-3xl text-center lg:mb-14">
+    <section class="slavia-section-y">
+<div class="mx-auto mb-10 max-w-3xl text-center lg:mb-14">
           <p class="mb-3 text-[11px] font-black uppercase tracking-[0.25em] text-primary">
             Gdzie nas znaleźć
           </p>
@@ -794,7 +758,7 @@ const trainingDays = [
 
         <div class="grid gap-5 lg:grid-cols-5">
           <div class="lg:col-span-3">
-            <div class="overflow-hidden rounded-3xl border border-default/60 shadow-sm ring-1 ring-default/30">
+            <div class="slavia-page-card overflow-hidden">
               <iframe
                 title="Mapa — CKS Slavia, ul. Konopnickiej 13, Ruda Śląska"
                 src="https://www.openstreetmap.org/export/embed.html?bbox=18.845%2C50.308%2C18.865%2C50.323&amp;layer=mapnik&amp;marker=50.3156487%2C18.8550812"
@@ -806,7 +770,7 @@ const trainingDays = [
           </div>
 
           <div class="space-y-4 lg:col-span-2">
-            <div class="rounded-3xl border border-default/60 bg-card p-6 shadow-sm ring-1 ring-default/30">
+            <div class="slavia-page-card p-6">
               <div class="flex items-start gap-3">
                 <span class="inline-flex size-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20">
                   <UIcon name="i-lucide-map-pin" class="size-5" />
@@ -824,7 +788,7 @@ const trainingDays = [
               </div>
             </div>
 
-            <div class="rounded-3xl border border-default/60 bg-card p-6 shadow-sm ring-1 ring-default/30">
+            <div class="slavia-page-card p-6">
               <div class="flex items-start gap-3">
                 <span class="inline-flex size-10 shrink-0 items-center justify-center rounded-2xl bg-amber-500/12 text-amber-600 ring-1 ring-amber-500/25 dark:text-amber-400">
                   <UIcon name="i-lucide-clock" class="size-5" />
@@ -857,13 +821,11 @@ const trainingDays = [
             </UButton>
           </div>
         </div>
-      </UContainer>
-    </section>
+</section>
 
     <!-- FAQ -->
-    <section class="relative py-12 lg:py-20">
-      <UContainer>
-        <div class="mx-auto max-w-3xl">
+    <section class="slavia-section-y">
+<div class="mx-auto max-w-3xl">
           <div class="mb-10 text-center lg:mb-14">
             <p class="mb-3 text-[11px] font-black uppercase tracking-[0.25em] text-primary">
               Najczęstsze pytania
@@ -876,19 +838,17 @@ const trainingDays = [
           <UAccordion
             :items="faq.map(f => ({ label: f.q, content: f.a }))"
             :ui="{
-              item: 'rounded-2xl border border-default/60 bg-card mb-3 overflow-hidden ring-1 ring-default/20',
+              item: 'slavia-page-card mb-3 overflow-hidden',
               trigger: 'px-5 py-4 text-base font-bold text-highlighted hover:bg-muted/20',
               content: 'px-5 pb-5 text-sm leading-relaxed text-muted'
             }"
           />
         </div>
-      </UContainer>
-    </section>
+</section>
 
     <!-- CTA - DOŁĄCZ DO NAS -->
-    <section class="relative pb-20 pt-12 lg:pb-28 lg:pt-16">
-      <UContainer>
-        <div class="relative overflow-hidden rounded-3xl border border-primary/30 bg-linear-to-br from-primary/15 via-card to-amber-500/10 p-8 shadow-xl ring-1 ring-primary/20 sm:p-12 lg:p-16">
+    <section class="slavia-section-y pb-8 lg:pb-12">
+<div class="slavia-glass slavia-page-card relative overflow-hidden bg-linear-to-br from-primary/15 via-card to-amber-500/10 p-8 sm:p-12 lg:p-16">
           <div class="pointer-events-none absolute -right-16 -top-16 size-72 rounded-full bg-primary/20 blur-3xl" />
           <div class="pointer-events-none absolute -bottom-20 -left-12 size-72 rounded-full bg-amber-500/15 blur-3xl" />
 
@@ -923,7 +883,6 @@ const trainingDays = [
             </div>
           </div>
         </div>
-      </UContainer>
-    </section>
-  </div>
+</section>
+  </PublicPageLayout>
 </template>

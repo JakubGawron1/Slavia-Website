@@ -511,7 +511,7 @@ function printAthleteResume() {
 </script>
 
 <template>
-  <div class="bg-background">
+  <PublicPageLayout padding="flush" :ambient="false">
     <!-- ========== HERO MAGAZINE ========== -->
     <section class="relative overflow-hidden border-b border-default/60">
       <div
@@ -532,7 +532,7 @@ function printAthleteResume() {
         style="background-image: radial-gradient(ellipse at top left, rgb(34 197 94 / 0.12), transparent 55%), radial-gradient(ellipse at bottom right, rgb(14 165 233 / 0.08), transparent 55%);"
       />
 
-      <UContainer class="relative pt-8 pb-10 sm:pt-10 sm:pb-14 lg:pt-14 lg:pb-20">
+      <div class="relative pt-8 pb-10 sm:pt-10 sm:pb-14 lg:pt-14 lg:pb-20">
         <PublicPageHeader
           back-to="/zawodnicy"
           back-label="Lista zawodników"
@@ -699,12 +699,12 @@ function printAthleteResume() {
             </div>
           </div>
         </div>
-      </UContainer>
+      </div>
     </section>
 
     <!-- ========== KPI STRIP (zawody / publiczne) ========== -->
-    <section class="border-b border-default/60 bg-muted/5">
-      <UContainer class="py-0">
+    <section class="slavia-page-bleed border-b border-default/60 bg-muted/5">
+      <div class="py-0">
         <p
           v-if="approvedResults.length > 0"
           class="border-b border-default/40 bg-muted/30 px-5 py-2 text-center text-[10px] font-bold uppercase tracking-[0.2em] text-primary/90 sm:px-6"
@@ -765,15 +765,15 @@ function printAthleteResume() {
             </p>
           </div>
         </div>
-      </UContainer>
+      </div>
     </section>
 
     <!-- ========== KPI TRENING (tylko zalogowani) — ta sama siatka co zawody, inna etykieta ========== -->
     <section
       v-if="canViewAthleteTraining && trainingStripKpi && !shareLite"
-      class="border-b border-default/60 bg-muted/5"
+      class="slavia-page-bleed border-b border-default/60 bg-muted/5"
     >
-      <UContainer class="py-0">
+      <div class="py-0">
         <p class="border-b border-default/40 bg-muted/30 px-5 py-2.5 text-center sm:px-6">
           <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-primary/90">Trening (sala)</span>
           <span class="mx-2 hidden text-default/35 sm:inline">·</span>
@@ -826,11 +826,10 @@ function printAthleteResume() {
             </p>
           </div>
         </div>
-      </UContainer>
+      </div>
     </section>
 
-    <PublicPageLayout padding="compact" :ambient="false">
-      <div class="space-y-12 lg:space-y-16">
+    <div class="space-y-12 py-8 sm:py-10 lg:space-y-16 lg:py-12">
         <!-- ========== BIO PULL-QUOTE ========== -->
         <section v-if="athlete!.public_bio?.trim()" class="relative">
           <div class="slavia-page-card relative mx-auto max-w-4xl p-6 sm:p-10">
@@ -1277,6 +1276,5 @@ function printAthleteResume() {
           </div>
         </section>
       </div>
-    </PublicPageLayout>
-  </div>
+  </PublicPageLayout>
 </template>
