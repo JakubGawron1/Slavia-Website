@@ -98,80 +98,122 @@ function reloadPage() {
 
     <div class="relative z-1 flex flex-1 flex-col items-center justify-center px-5 py-14">
       <div class="mb-10 max-w-lg">
-      <div class="slavia-deco-barbell mb-8 inline-flex items-center justify-center rounded-full bg-muted/20 px-6 py-4 ring-1 ring-default/60">
-        <UIcon
-          name="i-lucide-dumbbell"
-          class="slavia-deco-plate text-primary size-10 sm:size-12"
-        />
-      </div>
+        <div class="slavia-deco-barbell mb-8 inline-flex items-center justify-center rounded-full bg-muted/20 px-6 py-4 ring-1 ring-default/60">
+          <UIcon
+            name="i-lucide-dumbbell"
+            class="slavia-deco-plate text-primary size-10 sm:size-12"
+          />
+        </div>
 
-      <p class="text-xs font-bold uppercase tracking-[0.28em] text-primary">
-        CKS Slavia — ciężary pod kontrolą (prawie zawsze)
-      </p>
-
-      <h1 class="mt-4 text-5xl font-black tracking-tight text-highlighted sm:text-6xl">
-        <span class="text-muted/40">{{ error?.statusCode ?? '?' }}</span>
-      </h1>
-
-      <p class="mt-3 text-lg font-semibold text-highlighted sm:text-xl">
-        {{ statusLabel }}
-      </p>
-
-      <p class="mt-6 text-base leading-relaxed text-muted sm:text-lg">
-        {{ quip }}
-      </p>
-
-      <div
-        v-if="error?.statusMessage || error?.message"
-        class="mt-8 rounded-2xl border border-default/70 bg-muted/15 px-5 py-4 text-left text-sm text-muted ring-1 ring-default/40 dark:bg-muted/10"
-      >
-        <p class="text-[11px] font-bold uppercase tracking-wider text-muted">
-          Szczegóły techniczne
+        <p class="text-xs font-bold uppercase tracking-[0.28em] text-primary">
+          CKS Slavia — ciężary pod kontrolą (prawie zawsze)
         </p>
-        <p class="mt-2 font-mono text-xs leading-relaxed text-highlighted">
-          {{ error.statusMessage || error.message }}
+
+        <h1 class="mt-4 text-5xl font-black tracking-tight text-highlighted sm:text-6xl">
+          <span class="text-muted/40">{{ error?.statusCode ?? '?' }}</span>
+        </h1>
+
+        <p class="mt-3 text-lg font-semibold text-highlighted sm:text-xl">
+          {{ statusLabel }}
         </p>
-        <p
-          v-if="errorPageUrl"
-          class="mt-2 truncate font-mono text-[11px] text-muted"
+
+        <p class="mt-6 text-base leading-relaxed text-muted sm:text-lg">
+          {{ quip }}
+        </p>
+
+        <div
+          v-if="error?.statusMessage || error?.message"
+          class="mt-8 rounded-2xl border border-default/70 bg-muted/15 px-5 py-4 text-left text-sm text-muted ring-1 ring-default/40 dark:bg-muted/10"
         >
-          {{ errorPageUrl }}
-        </p>
-      </div>
+          <p class="text-[11px] font-bold uppercase tracking-wider text-muted">
+            Szczegóły techniczne
+          </p>
+          <p class="mt-2 font-mono text-xs leading-relaxed text-highlighted">
+            {{ error.statusMessage || error.message }}
+          </p>
+          <p
+            v-if="errorPageUrl"
+            class="mt-2 truncate font-mono text-[11px] text-muted"
+          >
+            {{ errorPageUrl }}
+          </p>
+        </div>
       </div>
 
-      <div class="flex max-w-md flex-col gap-3 sm:flex-row sm:justify-center">
-      <UButton
-        size="xl"
-        icon="i-lucide-home"
-        class="font-bold"
-        @click="handleHome"
-      >
-        Wróć na stronę główną
-      </UButton>
-      <UButton
-        size="xl"
-        variant="outline"
-        color="neutral"
-        icon="i-lucide-refresh-ccw"
-        class="font-bold"
-        @click="reloadPage"
-      >
-        Odśwież stronę
-      </UButton>
+      <p class="mt-2 text-sm font-semibold text-muted">
+        Może szukasz:
+      </p>
+      <div class="mt-3 flex flex-wrap justify-center gap-2">
+        <UButton
+          to="/aktualnosci"
+          variant="soft"
+          color="neutral"
+          size="sm"
+          icon="i-lucide-newspaper"
+        >
+          Aktualności
+        </UButton>
+        <UButton
+          to="/zawodnicy"
+          variant="soft"
+          color="neutral"
+          size="sm"
+          icon="i-lucide-users"
+        >
+          Zawodnicy
+        </UButton>
+        <UButton
+          to="/galeria"
+          variant="soft"
+          color="neutral"
+          size="sm"
+          icon="i-lucide-images"
+        >
+          Galeria
+        </UButton>
+        <UButton
+          to="/kontakt"
+          variant="soft"
+          color="neutral"
+          size="sm"
+          icon="i-lucide-mail"
+        >
+          Kontakt
+        </UButton>
+      </div>
+
+      <div class="mt-8 flex max-w-md flex-col gap-3 sm:flex-row sm:justify-center">
+        <UButton
+          size="xl"
+          icon="i-lucide-home"
+          class="font-bold"
+          @click="handleHome"
+        >
+          Wróć na stronę główną
+        </UButton>
+        <UButton
+          size="xl"
+          variant="outline"
+          color="neutral"
+          icon="i-lucide-refresh-ccw"
+          class="font-bold"
+          @click="reloadPage"
+        >
+          Odśwież stronę
+        </UButton>
       </div>
 
       <div class="mt-16 flex items-center gap-3 text-muted/40">
-      <UIcon
-        name="i-lucide-dumbbell"
-        class="size-8"
-      />
-      <div class="h-px w-24 rounded-full bg-current" />
-      <UIcon
-        name="i-lucide-dumbbell"
-        class="size-8"
-      />
-    </div>
+        <UIcon
+          name="i-lucide-dumbbell"
+          class="size-8"
+        />
+        <div class="h-px w-24 rounded-full bg-current" />
+        <UIcon
+          name="i-lucide-dumbbell"
+          class="size-8"
+        />
+      </div>
     </div>
 
     <ClubSiteFooter />

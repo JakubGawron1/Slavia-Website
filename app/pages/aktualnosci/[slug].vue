@@ -9,6 +9,8 @@ import { parseBlogPostId } from '~/utils/slug'
 const route = useRoute()
 const apiFetch = useApi()
 const config = useRuntimeConfig()
+const toast = useToast()
+const requestUrlState = useRequestURL()
 const { auth, canManage } = useClubContentAdmin()
 
 definePageMeta({
@@ -87,8 +89,45 @@ function postImageSrc(url?: string) {
 useSeoMeta({
   title: seoTitle,
   description: seoDesc,
-  ogImage: seoOgImage
+  ogTitle: seoTitle,
+  ogDescription: seoDesc,
+  ogImage: seoOgImage,
+  ogType: 'article',
+  twitterCard: 'summary_large_image'
 })
+
+const postShareUrl = computed(() => `${requestUrlState.origin}${route.fullPath}`)
+
+const canNativeShare = computed(
+  () => import.meta.client && typeof navigator !== 'undefined' && typeof navigator.share === 'function'
+)
+
+async function copyPostLink() {
+  if (!import.meta.client) return
+  try {
+    await navigator.clipboard.writeText(postShareUrl.value)
+    toast.add({
+      title: 'Skopiowano link do wpisu',
+      color: 'success'
+    })
+  } catch {
+    toast.add({ title: 'Nie udało się skopiować linku', color: 'warning' })
+  }
+}
+
+async function sharePost() {
+  if (!post.value || !canNativeShare.value) return
+  try {
+    await navigator.share({
+      title: post.value.title,
+      text: plainExcerpt.value || post.value.title,
+      url: postShareUrl.value
+    })
+  } catch (err) {
+    if (err instanceof DOMException && err.name === 'AbortError') return
+    await copyPostLink()
+  }
+}
 
 function formatDate(dateStr: string) {
   try {
@@ -113,6 +152,29 @@ function formatDate(dateStr: string) {
           <UIcon name="i-lucide-calendar" class="size-4" />
           Opublikowano {{ formatDate(post.created_at) }}
         </span>
+      </template>
+      <template #actions>
+        <UButton
+          variant="outline"
+          color="neutral"
+          size="md"
+          icon="i-lucide-link"
+          class="min-h-10 font-semibold"
+          @click="copyPostLink"
+        >
+          Kopiuj link
+        </UButton>
+        <UButton
+          v-if="canNativeShare"
+          variant="soft"
+          color="primary"
+          size="md"
+          icon="i-lucide-share-2"
+          class="min-h-10 font-semibold"
+          @click="sharePost"
+        >
+          Udostępnij
+        </UButton>
       </template>
     </PublicPageHeader>
 
