@@ -43,7 +43,12 @@ const pendingLoading = ref(false)
 const bulkVerifying = ref(false)
 const verifyingId = ref<string | null>(null)
 const monthRef = ref(new Date())
-const calendarView = ref<'grid' | 'agenda'>('grid')
+const {
+  viewMode: calendarViewMode,
+  effectiveView: calendarEffectiveView,
+  showViewToggle: showCalendarViewToggle,
+  setViewMode: setCalendarViewMode
+} = useCalendarViewMode('attendance')
 const attendanceModalOpen = ref(false)
 const selectedTrainingDay = ref<Date | null>(null)
 
@@ -546,26 +551,11 @@ onMounted(() => {
         </UFormField>
 
         <div class="flex flex-wrap gap-2">
-          <div class="flex gap-1 rounded-xl border border-default/60 bg-muted/10 p-1">
-            <UButton
-              size="sm"
-              :variant="calendarView === 'grid' ? 'solid' : 'ghost'"
-              color="neutral"
-              icon="i-lucide-grid-3x3"
-              @click="calendarView = 'grid'"
-            >
-              Siatka
-            </UButton>
-            <UButton
-              size="sm"
-              :variant="calendarView === 'agenda' ? 'solid' : 'ghost'"
-              color="neutral"
-              icon="i-lucide-list"
-              @click="calendarView = 'agenda'"
-            >
-              Agenda
-            </UButton>
-          </div>
+          <CalendarViewModeToggle
+            v-if="showCalendarViewToggle"
+            :model-value="calendarViewMode"
+            @update:model-value="setCalendarViewMode"
+          />
           <UButton size="sm" variant="ghost" icon="i-lucide-chevron-left" @click="prevMonth" />
           <UButton size="sm" variant="ghost" icon="i-lucide-calendar-days" @click="goToToday">Dzisiaj</UButton>
           <UButton size="sm" variant="ghost" icon="i-lucide-chevron-right" @click="nextMonth" />
@@ -595,7 +585,8 @@ onMounted(() => {
         </div>
       </div>
 
-      <template v-if="calendarView === 'grid'">
+      <template v-if="calendarEffectiveView === 'grid'">
+        <div class="max-sm:hidden">
         <div class="grid grid-cols-7 overflow-hidden rounded-2xl border border-default/60 text-center text-[10px] font-black uppercase tracking-wide text-muted">
           <div v-for="w in weekDays" :key="w" class="border-r border-default/40 bg-muted/20 py-2.5 last:border-r-0">
             {{ w }}
@@ -654,9 +645,10 @@ onMounted(() => {
             </div>
           </button>
         </div>
+        </div>
       </template>
 
-      <template v-else>
+      <template v-else-if="calendarEffectiveView === 'agenda'">
         <div class="space-y-2">
           <button
             v-for="day in daysInMonth.filter(d => isTrainingDay(d))"

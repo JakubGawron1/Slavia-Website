@@ -24,8 +24,9 @@ const defaultToneFromBg = (bg?: string): 'primary' | 'success' | 'warning' | 'er
   <PanelPageSection :title="title" :description="description">
     <div class="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <DashboardModuleCard
-        v-for="link in items"
+        v-for="(link, index) in items"
         :key="String(link.to)"
+        v-slavia-reveal="{ variant: 'fade-up', delay: index * 70 }"
         :title="link.title"
         :description="link.description"
         :icon="link.icon"

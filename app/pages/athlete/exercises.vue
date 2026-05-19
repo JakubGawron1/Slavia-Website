@@ -148,6 +148,15 @@ useSeoMeta({
     />
 
     <div v-else class="space-y-6">
+      <UAlert
+        color="primary"
+        variant="subtle"
+        icon="i-lucide-dumbbell"
+        title="Kalkulator Max PR (1RM)"
+        description="Szacuj rekord z ciężaru i liczby powtórzeń — publiczne narzędzie, bez logowania."
+        :actions="[{ label: 'Otwórz kalkulator', to: '/kalkulator-max-pr', color: 'primary' }]"
+      />
+
       <UCard>
         <h2 class="mb-3 text-lg font-semibold text-highlighted">Zgłoś wynik do weryfikacji</h2>
         <div class="grid gap-3 sm:grid-cols-4">

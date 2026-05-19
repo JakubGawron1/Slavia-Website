@@ -37,6 +37,12 @@ function publicBase() {
 }
 
 const canManageEvents = computed(() => auth.isTrainer.value || auth.isSuperAdmin.value)
+const {
+  viewMode: calendarViewMode,
+  effectiveView: calendarEffectiveView,
+  showViewToggle: showCalendarViewToggle,
+  setViewMode: setCalendarViewMode
+} = useCalendarViewMode('club')
 const calendarCompactOn = useExperimentalFlag('calendar_tablet_compact')
 const viewportWidth = ref(1280)
 const isCompactTablet = computed(
@@ -589,10 +595,11 @@ function handleDayClick(day: Date) {
       description="Harmonogram treningów i startów klubowych."
     />
 
-    <div class="slavia-content-well mx-auto flex w-full max-w-6xl flex-col gap-8 sm:gap-10">
+    <div class="slavia-content-well mx-auto flex w-full max-w-7xl flex-col gap-8 sm:gap-10">
     <div class="slavia-toolbar flex flex-col gap-4">
       <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-      <div class="flex w-full items-center justify-center gap-1 rounded-xl border border-default/60 bg-card/80 p-1 shadow-sm md:w-auto">
+      <div class="flex flex-wrap items-center justify-center gap-2 md:justify-start">
+        <div class="flex w-full items-center justify-center gap-1 rounded-xl border border-default/60 bg-card/80 p-1 shadow-sm sm:w-auto">
         <UButton
           icon="i-lucide-chevron-left"
           variant="ghost"
@@ -612,6 +619,12 @@ function handleDayClick(day: Date) {
           variant="ghost"
           color="neutral"
           @click="nextMonth"
+        />
+        </div>
+        <CalendarViewModeToggle
+          v-if="showCalendarViewToggle"
+          :model-value="calendarViewMode"
+          @update:model-value="setCalendarViewMode"
         />
       </div>
 
@@ -673,71 +686,96 @@ function handleDayClick(day: Date) {
       </div>
     </div>
 
-    <!-- Calendar Grid (desktop) -->
-    <div class="slavia-calendar-grid hidden overflow-hidden rounded-2xl border border-default/60 bg-card/90 shadow-sm ring-1 ring-default/30 sm:block">
+    <!-- Calendar Grid (desktop, gdy wybrano Kalendarz) -->
+    <div
+      class="slavia-calendar-grid hidden max-sm:hidden overflow-hidden rounded-2xl border border-default/60 bg-card/90 shadow-sm ring-1 ring-default/30"
+      :class="calendarEffectiveView === 'grid' ? 'sm:block' : ''"
+    >
       <!-- Header -->
       <div class="grid grid-cols-7 border-b border-default/50 bg-muted/15">
         <div
           v-for="day in weekDays"
           :key="day"
-          class="py-2.5 text-center text-[10px] font-bold uppercase tracking-[0.14em] text-muted sm:py-3.5 sm:text-[11px]"
+          class="py-3 text-center text-[10px] font-bold uppercase tracking-[0.14em] text-muted sm:py-3.5 sm:text-xs"
         >
           {{ day }}
         </div>
       </div>
 
       <!-- Days -->
-      <div class="grid grid-cols-7">
+      <div class="slavia-calendar-days grid grid-cols-7">
         <div
           v-for="day in days"
           :key="day.toString()"
-          class="group relative border-b border-r border-default/45 bg-background transition-colors last:border-r-0 hover:bg-muted/20"
+          class="slavia-calendar-day group relative flex flex-col border-b border-r border-default/45 bg-background transition-colors last:border-r-0 hover:bg-muted/20"
           :class="[
-            isCompactTablet ? 'min-h-[72px] p-1 sm:min-h-[88px]' : 'min-h-[92px] p-1.5 sm:min-h-[120px] sm:p-2 md:min-h-[132px]',
+            isCompactTablet
+              ? 'min-h-[100px] p-1.5 sm:min-h-[120px]'
+              : 'min-h-[124px] p-2 sm:min-h-[156px] sm:p-2.5 md:min-h-[176px] lg:min-h-[192px]',
             !isSameMonth(day, monthStart) ? 'bg-muted/8 opacity-45' : '',
             isToday(day) ? 'bg-primary/[0.04] ring-1 ring-inset ring-primary/20' : ''
           ]"
           @click="handleDayClick(day)"
         >
-          <div class="flex justify-between items-start mb-2">
+          <div class="mb-1.5 flex shrink-0 items-start justify-between gap-1 sm:mb-2">
             <span
-              class="flex size-7 items-center justify-center rounded-full text-sm font-bold tabular-nums"
+              class="flex size-7 items-center justify-center rounded-full text-sm font-bold tabular-nums sm:size-8 sm:text-base"
               :class="isToday(day) ? 'bg-primary/15 font-black text-primary ring-1 ring-primary/30' : 'text-muted'"
             >
               {{ format(day, 'd') }}
             </span>
-            <UButton
-              v-if="canManageEvents && isSameMonth(day, monthStart)"
-              icon="i-lucide-plus"
-              variant="ghost"
-              size="xs"
-              class="opacity-0 group-hover:opacity-100 transition-opacity"
-              @click.stop="openModal(day)"
-            />
+            <div class="flex items-center gap-1">
+              <UBadge
+                v-if="getEventsForDay(day).length > 0 && isSameMonth(day, monthStart)"
+                color="neutral"
+                variant="subtle"
+                size="xs"
+                class="font-bold tabular-nums"
+              >
+                {{ getEventsForDay(day).length }}
+              </UBadge>
+              <UButton
+                v-if="canManageEvents && isSameMonth(day, monthStart)"
+                icon="i-lucide-plus"
+                variant="ghost"
+                size="xs"
+                class="opacity-0 transition-opacity group-hover:opacity-100"
+                @click.stop="openModal(day)"
+              />
+            </div>
           </div>
 
           <div
-            class="scrollbar-hide space-y-1 overflow-y-auto"
-            :class="isCompactTablet ? 'max-h-[56px]' : 'max-h-[76px] sm:max-h-[100px]'"
+            class="scrollbar-hide min-h-0 flex-1 space-y-1.5 overflow-y-auto pr-0.5"
+            :class="
+              isCompactTablet
+                ? 'max-h-[76px] sm:max-h-[92px]'
+                : 'max-h-[92px] sm:max-h-[120px] md:max-h-[140px] lg:max-h-[156px]'
+            "
           >
             <div
               v-for="event in getEventsForDay(day)"
               :key="event.id"
-              class="slavia-calendar-event text-[10px] rounded-md border px-1.5 py-1 font-medium leading-snug cursor-pointer transition-colors hover:opacity-95"
+              class="slavia-calendar-event cursor-pointer rounded-lg border px-2 py-1.5 text-xs font-medium leading-snug transition-colors hover:opacity-95"
               :class="getEventClasses(event)"
               @click.stop="openModal(undefined, event)"
             >
-              <div class="flex items-center justify-between gap-1">
-                <span class="truncate">{{ event.title }}</span>
+              <div class="flex items-start justify-between gap-1.5">
+                <span class="line-clamp-2 min-w-0 flex-1 leading-tight">{{ event.title }}</span>
                 <UIcon
                   :name="getEventIcon(event)"
-                  class="size-2.5 shrink-0 opacity-80"
+                  class="mt-0.5 size-3 shrink-0 opacity-80"
                 />
               </div>
-              <span class="truncate text-[9px] opacity-75">{{ event.time || event.location }}</span>
+              <span
+                v-if="event.time || event.location"
+                class="mt-0.5 block truncate text-[10px] opacity-80"
+              >
+                {{ event.time || event.location }}
+              </span>
               <span
                 v-if="event.status && event.status !== 'scheduled'"
-                class="mt-0.5 text-[9px] font-semibold uppercase tracking-wide opacity-90"
+                class="mt-0.5 block text-[10px] font-semibold uppercase tracking-wide opacity-90"
               >
                 {{
                   event.status === 'cancelled'
@@ -753,8 +791,11 @@ function handleDayClick(day: Date) {
       </div>
     </div>
 
-    <!-- Agenda (mobile) -->
-    <div class="mt-4 sm:hidden">
+    <!-- Agenda (mobile zawsze; desktop gdy wybrano Agenda) -->
+    <div
+      class="mt-4 block max-sm:block"
+      :class="calendarEffectiveView === 'agenda' ? 'sm:block' : 'sm:hidden'"
+    >
       <CalendarMonthAgenda
         :rows="monthAgendaRows"
         :can-add-on-day="canManageEvents"
@@ -1035,5 +1076,19 @@ function handleDayClick(day: Date) {
 
 .slavia-calendar-grid .slavia-calendar-event {
   backdrop-filter: blur(4px);
+}
+
+.slavia-calendar-days {
+  grid-auto-rows: 1fr;
+}
+
+.slavia-calendar-day {
+  min-width: 0;
+}
+
+@media (min-width: 1024px) {
+  .slavia-calendar-grid .slavia-calendar-event {
+    font-size: 0.8125rem;
+  }
 }
 </style>

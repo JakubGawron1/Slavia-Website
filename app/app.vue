@@ -164,6 +164,7 @@ useHead({
 
 <template>
   <UApp>
+    <SlaviaAthleticsBackdrop />
     <Transition name="slavia-app-boot">
       <div
         v-if="isAppLoading"
@@ -188,7 +189,7 @@ useHead({
     <ClubWelcomeOnboarding />
     <DevViewportPreview v-if="devViewportIframePreviewOn" />
     <!-- Bez overflow-x na tym wrapperze: html/body już mają clip — podwójny clip ucinał obramowania / końcówki belki nawigacji (np. „Aktualności”). -->
-    <div class="transition-opacity duration-300 ease-out min-w-0 opacity-100">
+    <div class="relative z-1 transition-opacity duration-300 ease-out min-w-0 opacity-100">
       <ClubSiteHeader>
         <template #actions>
           <div class="flex shrink-0 items-center gap-1 sm:gap-1.5 lg:gap-2">

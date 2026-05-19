@@ -1,12 +1,6 @@
 <script setup lang="ts">
 /** Public pages: center empty states and hero blocks; keep tables, forms, and prose start-aligned in children. */
-import {
-  isGlassThemePreset,
-  isNeonBrutalismThemePreset,
-  isSportTechThemePreset
-} from '~/composables/useSlaviaAppearance'
-
-const { preset } = useSlaviaAppearance()
+const { presetLayoutClass } = useSlaviaAppearance()
 
 const props = withDefaults(
   defineProps<{
@@ -41,12 +35,11 @@ const containerClass = computed(() => {
   else if (props.centered) c.push('max-w-5xl')
   if (props.padding === 'default') c.push('pt-10 pb-8 sm:pt-14 sm:pb-12 lg:pt-16 lg:pb-14')
   else if (props.padding === 'compact') c.push('pt-8 pb-6 sm:pt-12 sm:pb-10')
-  else if (props.padding === 'hero') c.push('pt-10 pb-10 md:pt-16 md:pb-16 lg:pt-20 lg:pb-20')
+  else if (props.padding === 'hero') c.push('pt-8 pb-6 sm:pt-10 sm:pb-8 lg:pt-12 lg:pb-10')
   else if (props.padding === 'flush') c.push('pt-4 pb-0 sm:pt-6')
   if (props.animate) c.push('animate-page-in')
-  if (isGlassThemePreset(preset.value)) c.push('slavia-glass-layout')
-  if (isSportTechThemePreset(preset.value)) c.push('slavia-sport-tech-layout')
-  if (isNeonBrutalismThemePreset(preset.value)) c.push('slavia-neon-brutalism-layout')
+  const layoutClass = presetLayoutClass.value
+  if (layoutClass) c.push(layoutClass)
   return c
 })
 </script>

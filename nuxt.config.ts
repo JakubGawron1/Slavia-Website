@@ -148,6 +148,7 @@ export default defineNuxtConfig({
         '/logowanie',
         '/kalkulator-proporcji',
         '/kalkulator-sinclair',
+        '/kalkulator-max-pr',
         '/klub/wyzwania',
         '/o-klubie'
       ],
@@ -183,6 +184,7 @@ export default defineNuxtConfig({
     '/banned': { prerender: true },
     '/kalkulator-proporcji': { prerender: true },
     '/kalkulator-sinclair': { prerender: true },
+    '/kalkulator-max-pr': { prerender: true },
 
     '/ogloszenia': { ...panelNoStore },
 

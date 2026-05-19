@@ -70,6 +70,28 @@ const { data: allCompetitions } = await useLazyFetch<Competition[]>(
 const filterOnlyMine = ref(true)
 const filterCategory = ref('all')
 
+const {
+  viewMode: calendarViewMode,
+  effectiveView: calendarEffectiveView,
+  showViewToggle: showCalendarViewToggle,
+  setViewMode: setCalendarViewMode
+} = useCalendarViewMode('athlete')
+
+const calendarCompactOn = useExperimentalFlag('calendar_tablet_compact')
+const viewportWidth = ref(1280)
+const isCompactTablet = computed(
+  () => calendarCompactOn.value && viewportWidth.value >= 768
+)
+onMounted(() => {
+  if (!import.meta.client) return
+  const sync = () => {
+    viewportWidth.value = window.innerWidth
+  }
+  sync()
+  window.addEventListener('resize', sync)
+  onUnmounted(() => window.removeEventListener('resize', sync))
+})
+
 const categories = [
   { value: 'all', label: 'Wszystkie' },
   { value: 'championship', label: 'Mistrzostwa' },
@@ -289,26 +311,33 @@ function onAgendaSelect(day: Date, ev: { key: string }) {
 
     <div class="slavia-content-well flex flex-col gap-6 sm:gap-8">
     <div class="flex flex-wrap items-center justify-between gap-4">
-      <div class="flex items-center gap-2 bg-muted/20 p-1.5 rounded-xl border border-default">
-        <UButton
-          icon="i-lucide-chevron-left"
-          variant="ghost"
-          color="neutral"
-          @click="prevMonth"
-        />
-        <UButton
-          variant="ghost"
-          color="neutral"
-          class="min-w-[160px] font-bold text-highlighted"
-          @click="goToToday"
-        >
-          {{ format(currentDate, 'MMMM yyyy', { locale: pl }) }}
-        </UButton>
-        <UButton
-          icon="i-lucide-chevron-right"
-          variant="ghost"
-          color="neutral"
-          @click="nextMonth"
+      <div class="flex flex-wrap items-center gap-2">
+        <div class="flex items-center gap-2 rounded-xl border border-default bg-muted/20 p-1.5">
+          <UButton
+            icon="i-lucide-chevron-left"
+            variant="ghost"
+            color="neutral"
+            @click="prevMonth"
+          />
+          <UButton
+            variant="ghost"
+            color="neutral"
+            class="min-w-[160px] font-bold text-highlighted"
+            @click="goToToday"
+          >
+            {{ format(currentDate, 'MMMM yyyy', { locale: pl }) }}
+          </UButton>
+          <UButton
+            icon="i-lucide-chevron-right"
+            variant="ghost"
+            color="neutral"
+            @click="nextMonth"
+          />
+        </div>
+        <CalendarViewModeToggle
+          v-if="showCalendarViewToggle"
+          :model-value="calendarViewMode"
+          @update:model-value="setCalendarViewMode"
         />
       </div>
 
@@ -336,54 +365,81 @@ function onAgendaSelect(day: Date, ev: { key: string }) {
       </div>
     </div>
 
-    <div class="hidden sm:block border border-default rounded-2xl overflow-hidden bg-card shadow-2xl">
-      <div class="grid grid-cols-7 border-b border-default bg-muted/30">
+    <div
+      class="slavia-calendar-grid hidden max-sm:hidden overflow-hidden rounded-2xl border border-default/60 bg-card/90 shadow-sm ring-1 ring-default/30"
+      :class="calendarEffectiveView === 'grid' ? 'sm:block' : ''"
+    >
+      <div class="grid grid-cols-7 border-b border-default/50 bg-muted/15">
         <div
           v-for="d in weekDays"
           :key="d"
-          class="py-4 text-center text-xs font-black uppercase tracking-widest text-muted"
+          class="py-3 text-center text-[10px] font-bold uppercase tracking-[0.14em] text-muted sm:py-3.5 sm:text-xs"
         >
           {{ d }}
         </div>
       </div>
-      <div class="grid grid-cols-7">
+      <div class="slavia-calendar-days grid grid-cols-7">
         <div
           v-for="day in days"
           :key="day.toString()"
-          class="min-h-[140px] border-r border-b border-default last:border-r-0 p-2 transition-colors hover:bg-primary/5"
+          class="slavia-calendar-day group relative flex flex-col border-b border-r border-default/45 bg-background transition-colors last:border-r-0 hover:bg-muted/20"
           :class="[
-            !isSameMonth(day, monthStart) ? 'bg-muted/10 opacity-30' : '',
-            isToday(day) ? 'bg-primary/5' : ''
+            isCompactTablet
+              ? 'min-h-[100px] p-1.5 sm:min-h-[120px]'
+              : 'min-h-[124px] p-2 sm:min-h-[156px] sm:p-2.5 md:min-h-[176px] lg:min-h-[192px]',
+            !isSameMonth(day, monthStart) ? 'bg-muted/8 opacity-45' : '',
+            isToday(day) ? 'bg-primary/[0.04] ring-1 ring-inset ring-primary/20' : ''
           ]"
         >
-          <div class="flex justify-between items-start mb-2">
+          <div class="mb-1.5 flex shrink-0 items-start justify-between gap-1 sm:mb-2">
             <span
-              class="text-sm font-bold w-7 h-7 flex items-center justify-center rounded-full"
-              :class="isToday(day) ? 'bg-primary text-white shadow-lg' : 'text-muted'"
+              class="flex size-7 items-center justify-center rounded-full text-sm font-bold tabular-nums sm:size-8 sm:text-base"
+              :class="isToday(day) ? 'bg-primary/15 font-black text-primary ring-1 ring-primary/30' : 'text-muted'"
             >
               {{ format(day, 'd') }}
             </span>
+            <UBadge
+              v-if="getEventsForDay(day).length > 0 && isSameMonth(day, monthStart)"
+              color="neutral"
+              variant="subtle"
+              size="xs"
+              class="font-bold tabular-nums"
+            >
+              {{ getEventsForDay(day).length }}
+            </UBadge>
           </div>
-          <div class="space-y-1 overflow-y-auto max-h-[100px] scrollbar-hide">
+          <div
+            class="scrollbar-hide min-h-0 flex-1 space-y-1.5 overflow-y-auto pr-0.5"
+            :class="
+              isCompactTablet
+                ? 'max-h-[76px] sm:max-h-[92px]'
+                : 'max-h-[92px] sm:max-h-[120px] md:max-h-[140px] lg:max-h-[156px]'
+            "
+          >
             <button
               v-for="ev in getEventsForDay(day)"
               :key="String(ev.id) + String(ev.type)"
               type="button"
-              class="w-full text-left text-[10px] p-1.5 rounded-lg border flex flex-col leading-tight cursor-pointer transition-all hover:brightness-110"
+              class="slavia-calendar-event w-full cursor-pointer rounded-lg border px-2 py-1.5 text-left text-xs font-medium leading-snug transition-colors hover:opacity-95"
               :class="getEventClasses(ev)"
               @click="openDetail(day, ev)"
             >
-              <div class="flex items-center justify-between gap-1">
-                <span class="truncate font-semibold">{{ ev.title }}</span>
+              <div class="flex items-start justify-between gap-1.5">
+                <span class="line-clamp-2 min-w-0 flex-1 leading-tight font-semibold">{{ ev.title }}</span>
                 <UIcon
                   :name="getEventIcon(ev)"
-                  class="size-2.5 shrink-0 opacity-80"
+                  class="mt-0.5 size-3 shrink-0 opacity-80"
                 />
               </div>
-              <span class="opacity-60">{{ ev.time || ev.location }}</span>
+              <span
+                v-if="ev.time || ev.location"
+                class="mt-0.5 block truncate text-[10px] opacity-80"
+              >
+                {{ ev.time || ev.location }}
+              </span>
               <span
                 v-if="ev.status && ev.status !== 'scheduled'"
-                class="text-[10px] uppercase tracking-[0.15em] font-semibold mt-1"
+                class="mt-0.5 block text-[10px] font-semibold uppercase tracking-wide opacity-90"
               >
                 {{
                   ev.status === 'cancelled'
@@ -399,7 +455,10 @@ function onAgendaSelect(day: Date, ev: { key: string }) {
       </div>
     </div>
 
-    <div class="mt-4 sm:hidden">
+    <div
+      class="mt-4 block max-sm:block"
+      :class="calendarEffectiveView === 'agenda' ? 'sm:block' : 'sm:hidden'"
+    >
       <CalendarMonthAgenda
         :rows="monthAgendaRows"
         empty-description="Zmień miesiąc lub filtry kategorii."
@@ -576,3 +635,35 @@ function onAgendaSelect(day: Date, ev: { key: string }) {
     </UModal>
   </PanelPageLayout>
 </template>
+
+<style scoped>
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.slavia-calendar-event :deep(svg) {
+  flex-shrink: 0;
+}
+
+.slavia-calendar-grid .slavia-calendar-event {
+  backdrop-filter: blur(4px);
+}
+
+.slavia-calendar-days {
+  grid-auto-rows: 1fr;
+}
+
+.slavia-calendar-day {
+  min-width: 0;
+}
+
+@media (min-width: 1024px) {
+  .slavia-calendar-grid .slavia-calendar-event {
+    font-size: 0.8125rem;
+  }
+}
+</style>

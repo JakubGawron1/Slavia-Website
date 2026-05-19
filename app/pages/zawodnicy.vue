@@ -467,9 +467,10 @@ const showAthleteCompareLink = computed(() => {
 </script>
 
 <template>
-  <PublicPageLayout padding="hero">
+  <PublicPageLayout padding="compact">
     <PublicPageHeader
       variant="centered"
+      compact
       eyebrow="Kadra i Ranking"
       icon="i-lucide-trophy"
       description="Poznaj naszych reprezentantów. Ranking i wykresy na kartach bazują wyłącznie na zatwierdzonych zgłoszeniach wyników (po weryfikacji przez trenera lub administrację)."
@@ -482,10 +483,10 @@ const showAthleteCompareLink = computed(() => {
     <!-- Podium Section -->
     <div
       v-if="podium.length > 0"
-      class="relative mb-16 pt-8 sm:mb-24 sm:pt-12"
+      class="slavia-zawodnicy-podium relative mb-16 mt-6 sm:mb-20 sm:mt-8 md:mt-10"
     >
-      <div class="absolute inset-0 -z-10 bg-linear-to-b from-primary/5 to-transparent blur-3xl opacity-50" />
-      <div class="mx-auto grid max-w-4xl grid-cols-1 items-end gap-8 px-2 sm:gap-10 sm:px-4 md:grid-cols-3">
+      <div class="pointer-events-none absolute inset-0 -z-10 bg-linear-to-b from-primary/5 to-transparent blur-3xl opacity-50" />
+      <div class="mx-auto grid max-w-4xl grid-cols-1 items-end gap-8 px-2 sm:gap-10 sm:px-4 md:grid-cols-3 md:pt-2">
         <!-- 2nd Place -->
         <NuxtLink
           v-if="podium[1]"
@@ -526,14 +527,14 @@ const showAthleteCompareLink = computed(() => {
         <NuxtLink
           v-if="podium[0]"
           :to="athleteProfilePath(podium[0].name, podium[0].id)"
-          class="order-1 md:order-2 group -mt-6 md:-mt-16 block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-3xl"
+          class="order-1 md:order-2 group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-3xl"
         >
           <div class="flex flex-col items-center">
-            <div class="relative mb-6">
-              <div class="absolute -top-12 left-1/2 -translate-x-1/2 text-yellow-500 animate-pulse">
+            <div class="relative mb-6 pt-9 md:pt-10">
+              <div class="absolute top-0 left-1/2 -translate-x-1/2 text-yellow-500 animate-pulse">
                 <UIcon
                   name="i-lucide-crown"
-                  class="size-14 drop-shadow-[0_0_10px_rgba(234,179,8,0.5)]"
+                  class="size-11 drop-shadow-[0_0_10px_rgba(234,179,8,0.5)] md:size-12"
                 />
               </div>
               <img
@@ -734,6 +735,7 @@ const showAthleteCompareLink = computed(() => {
 
       <div
         v-if="filteredRankings.length > 0"
+        v-slavia-reveal="'scale'"
         class="slavia-page-card overflow-hidden"
       >
         <div class="slavia-data-table overflow-x-auto">

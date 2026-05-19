@@ -228,6 +228,12 @@ const tools: ClubTool[] = [
     icon: 'i-lucide-sliders-horizontal'
   },
   {
+    to: '/kalkulator-max-pr',
+    label: 'Kalkulator Max PR',
+    description: 'Szacuj 1RM z ciężaru i powtórzeń — przysiad, wycisk, martwy i inne ćwiczenia.',
+    icon: 'i-lucide-dumbbell'
+  },
+  {
     to: '/aktualnosci',
     label: 'Aktualności klubu',
     description: 'Relacje z zawodów, nowinki organizacyjne i życie sekcji.',

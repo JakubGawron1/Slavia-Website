@@ -15,7 +15,7 @@ useSeoMeta({
 const auth = useAuth()
 const apiFetch = useApi()
 const toast = useToast()
-const { preset, presets, setPreset, colorMode } = useSlaviaAppearance()
+const { preset, standardPresets, experimentalPresets, setPreset, colorMode } = useSlaviaAppearance()
 const {
   mobileRelease,
   mobileDownloadHref,
@@ -567,9 +567,14 @@ async function save() {
                 </UFormField>
 
                 <UFormField label="Motyw kolorystyczny" :ui="{ label: 'text-xs font-semibold uppercase tracking-wide text-muted' }">
-                  <div class="grid max-h-[min(52vh,28rem)] grid-cols-1 gap-2.5 overflow-y-auto pr-1 sm:max-h-none sm:grid-cols-2 lg:grid-cols-3 sm:gap-3">
+                  <div class="max-h-[min(58vh,32rem)] space-y-5 overflow-y-auto pr-1 sm:max-h-none">
+                    <div>
+                      <p class="mb-2.5 px-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-muted">
+                        Klasyczne
+                      </p>
+                      <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3 sm:gap-3">
                     <button
-                      v-for="p in presets"
+                      v-for="p in standardPresets"
                       :key="p.id"
                       type="button"
                       class="rounded-xl border px-4 py-3.5 text-left text-sm outline-none ring-offset-2 ring-offset-card transition-all focus-visible:ring-2 focus-visible:ring-primary"
@@ -580,10 +585,34 @@ async function save() {
                       "
                       @click="setPreset(p.id)"
                     >
+                      <span class="font-semibold text-highlighted">{{ p.label }}</span>
+                      <span class="mt-1 block text-xs leading-snug text-muted">{{ p.description }}</span>
+                    </button>
+                      </div>
+                    </div>
+                    <div>
+                      <p class="mb-2.5 flex flex-wrap items-center gap-2 px-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-muted">
+                        Eksperymentalne
+                      <UBadge color="warning" variant="subtle" size="xs" class="font-bold tracking-wide">
+                        Beta
+                      </UBadge>
+                      </p>
+                      <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3 sm:gap-3">
+                        <button
+                          v-for="p in experimentalPresets"
+                      :key="'exp-' + p.id"
+                      type="button"
+                      class="rounded-xl border px-4 py-3.5 text-left text-sm outline-none ring-offset-2 ring-offset-card transition-all focus-visible:ring-2 focus-visible:ring-primary"
+                      :class="
+                        preset === p.id
+                          ? 'border-warning/45 bg-warning/8 text-highlighted shadow-inner ring-1 ring-warning/25'
+                          : 'border-default/55 bg-muted/10 text-muted hover:border-warning/30 hover:bg-warning/5 hover:text-highlighted'
+                      "
+                      @click="setPreset(p.id)"
+                    >
                       <span class="flex flex-wrap items-center gap-2">
                         <span class="font-semibold text-highlighted">{{ p.label }}</span>
                         <UBadge
-                          v-if="'experimental' in p && p.experimental"
                           color="warning"
                           variant="subtle"
                           size="xs"
@@ -594,6 +623,8 @@ async function save() {
                       </span>
                       <span class="mt-1 block text-xs leading-snug text-muted">{{ p.description }}</span>
                     </button>
+                      </div>
+                    </div>
                   </div>
                 </UFormField>
               </div>

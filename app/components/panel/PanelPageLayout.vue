@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const { isGlassLayout, isSportTechLayout, isNeonBrutalismLayout } = useSlaviaAppearance()
+const { presetLayoutClass } = useSlaviaAppearance()
 
 const props = withDefaults(
   defineProps<{
@@ -25,9 +25,8 @@ const containerClass = computed(() => {
   if (props.padding === 'default') c.push('pt-10 pb-8 md:pt-14 md:pb-12 lg:pt-16 lg:pb-14')
   else if (props.padding === 'compact') c.push('pt-8 pb-6 sm:pt-10 sm:pb-8 md:pt-12 md:pb-10')
   if (props.animate) c.push('animate-page-in')
-  if (isGlassLayout.value) c.push('slavia-glass-layout')
-  if (isSportTechLayout.value) c.push('slavia-sport-tech-layout')
-  if (isNeonBrutalismLayout.value) c.push('slavia-neon-brutalism-layout')
+  const layoutClass = presetLayoutClass.value
+  if (layoutClass) c.push(layoutClass)
   return c
 })
 </script>

@@ -1,0 +1,597 @@
+/**
+ * Rozszerzenia presetów — dopracowanie klasycznych motywów + eksperymentalne układy.
+ * Inspiracje: transmisje IWF, Hookgrip, nowoczesne aplikacje fitness, industrial gym branding.
+ */
+
+/* --- Wspólne dopracowanie kart (klasyczne presety) --- */
+html[data-slavia-preset='slavia'] .slavia-page-card,
+html[data-slavia-preset='iron'] .slavia-page-card,
+html[data-slavia-preset='arena'] .slavia-page-card,
+html[data-slavia-preset='platform'] .slavia-page-card,
+html[data-slavia-preset='midnight'] .slavia-page-card,
+html[data-slavia-preset='ruby'] .slavia-page-card,
+html[data-slavia-preset='neon'] .slavia-page-card,
+html[data-slavia-preset='blackgym'] .slavia-page-card,
+html[data-slavia-preset='pink'] .slavia-page-card,
+html[data-slavia-preset='dark'] .slavia-page-card {
+  background: linear-gradient(
+    168deg,
+    color-mix(in oklab, var(--ui-bg-elevated) 97%, var(--ui-primary) 3%),
+    color-mix(in oklab, var(--ui-bg-muted, var(--ui-bg-elevated)) 90%, var(--ui-bg) 10%)
+  );
+}
+
+html.dark[data-slavia-preset='iron'] .slavia-public-hero,
+html.dark[data-slavia-preset='arena'] .slavia-public-hero,
+html.dark[data-slavia-preset='platform'] .slavia-public-hero {
+  box-shadow:
+    var(--slavia-shadow-xs),
+    var(--slavia-shadow-sm),
+    0 0 48px -24px color-mix(in oklab, var(--ui-primary) 22%, transparent),
+    inset 0 1px 0 var(--slavia-surface-sheen);
+}
+
+/* --- Iron — jaśniejsza stal, refleks racku --- */
+html[data-slavia-preset='iron']:not(.dark),
+html.light[data-slavia-preset='iron'] {
+  --ui-border: #c5d4e8;
+  --ui-border-accented: color-mix(in oklab, #2563eb 38%, #93c5fd);
+}
+
+html[data-slavia-preset='iron']:not(.dark) body,
+html.light[data-slavia-preset='iron'] body {
+  background-image:
+    radial-gradient(ellipse 95% 60% at 12% -12%, rgba(59, 130, 246, 0.14), transparent 50%),
+    radial-gradient(ellipse 60% 45% at 88% 8%, rgba(148, 163, 184, 0.16), transparent 48%),
+    radial-gradient(ellipse 50% 40% at 50% 100%, rgba(100, 116, 139, 0.1), transparent 46%),
+    linear-gradient(168deg, #f4f7fc 0%, #e8edf5 48%, #dce4ef 100%);
+}
+
+/* --- Arena — reflektor nad platformą --- */
+html[data-slavia-preset='arena']:not(.dark) body,
+html.light[data-slavia-preset='arena'] body {
+  background-image:
+    radial-gradient(ellipse 100% 65% at 50% -18%, rgba(251, 191, 36, 0.16), transparent 52%),
+    radial-gradient(ellipse 55% 42% at 100% 30%, rgba(234, 88, 12, 0.1), transparent 48%),
+    linear-gradient(172deg, #fffaf5 0%, #f8f0e8 45%, #efe4d8 100%);
+  background-attachment: fixed;
+}
+
+html.dark[data-slavia-preset='arena'] body {
+  background-image:
+    radial-gradient(ellipse 90% 55% at 50% -12%, rgba(251, 191, 36, 0.14), transparent 48%),
+    radial-gradient(ellipse 55% 42% at 8% 75%, rgba(234, 88, 12, 0.1), transparent 44%),
+    linear-gradient(172deg, #0f0c0a 0%, #1a1410 50%, #221812 100%);
+}
+
+/* --- Platform — skupienie, czysta platforma --- */
+html[data-slavia-preset='platform']:not(.dark) body,
+html.light[data-slavia-preset='platform'] body {
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(16, 185, 129, 0.1), transparent 52%),
+    radial-gradient(ellipse 45% 35% at 50% 100%, rgba(15, 23, 42, 0.06), transparent 48%),
+    linear-gradient(180deg, #f8faf9 0%, #eef2f1 55%, #e4eae8 100%);
+  background-attachment: fixed;
+}
+
+/* --- Pink / Dark athlete — miększe przejścia --- */
+html[data-slavia-preset='pink']:not(.dark) body,
+html.light[data-slavia-preset='pink'] body {
+  background-image:
+    radial-gradient(ellipse 100% 60% at 50% -15%, rgba(236, 72, 153, 0.14), transparent 52%),
+    radial-gradient(ellipse 55% 40% at 100% 80%, rgba(244, 114, 182, 0.1), transparent 48%),
+    linear-gradient(172deg, #fff8fc 0%, #fce7f3 48%, #f5d0e6 100%);
+  background-attachment: fixed;
+}
+
+html.dark[data-slavia-preset='dark'] body {
+  background-image:
+    radial-gradient(ellipse 90% 55% at 50% -12%, rgba(59, 130, 246, 0.12), transparent 50%),
+    radial-gradient(ellipse 50% 38% at 100% 70%, rgba(37, 99, 235, 0.08), transparent 46%),
+    linear-gradient(168deg, #050a14 0%, #0a1224 50%, #0f172a 100%);
+  background-attachment: fixed;
+}
+
+/* --- Ruby / Neon / Midnight — głębsze tła --- */
+html[data-slavia-preset='ruby']:not(.dark) body,
+html.light[data-slavia-preset='ruby'] body {
+  background-image:
+    radial-gradient(ellipse 95% 58% at 50% -16%, rgba(239, 68, 68, 0.13), transparent 52%),
+    radial-gradient(ellipse 50% 38% at 0% 90%, rgba(248, 113, 113, 0.08), transparent 46%),
+    linear-gradient(172deg, #fffcfb 0%, #fdeeed 44%, #f5e6e4 100%);
+  background-attachment: fixed;
+}
+
+html.dark[data-slavia-preset='neon'] body {
+  background-image:
+    radial-gradient(ellipse 85% 52% at 20% -8%, rgba(168, 85, 247, 0.14), transparent 52%),
+    radial-gradient(ellipse 70% 48% at 90% 15%, rgba(34, 211, 238, 0.1), transparent 50%),
+    linear-gradient(175deg, #0c0618 0%, #120a1f 48%, #160e24 100%);
+  background-attachment: fixed;
+}
+
+html[data-slavia-preset='midnight']:not(.dark) body,
+html.light[data-slavia-preset='midnight'] body {
+  background-image:
+    radial-gradient(ellipse 100% 58% at 50% -16%, rgba(99, 102, 241, 0.16), transparent 52%),
+    radial-gradient(ellipse 50% 40% at 100% 85%, rgba(129, 140, 248, 0.1), transparent 48%),
+    linear-gradient(172deg, #f6f7ff 0%, #e9ebfa 48%, #dfe2f4 100%);
+  background-attachment: fixed;
+}
+
+/* =============================================================================
+ * EKSPERYMENTALNE: Podium (IWF / transmisja zawodów)
+ * ============================================================================= */
+html[data-slavia-preset='podium'] {
+  --slavia-podium-gold: #d4af37;
+  --slavia-podium-gold-soft: #e8c96a;
+  --slavia-podium-navy: #0b1f3d;
+}
+
+html[data-slavia-preset='podium']:not(.dark),
+html.light[data-slavia-preset='podium'] {
+  --ui-bg: #f8f6f1;
+  --ui-bg-muted: #f0ebe3;
+  --ui-bg-elevated: #fffdf9;
+  --ui-bg-accented: #ebe4d6;
+  --ui-border: color-mix(in oklab, var(--slavia-podium-gold) 22%, #d4cfc4);
+  --ui-border-muted: #e8e2d8;
+  --ui-border-accented: color-mix(in oklab, var(--slavia-podium-gold) 45%, #a89870);
+  --ui-text-dimmed: #8a8478;
+  --ui-text-muted: #5c564c;
+  --ui-text-toned: #3d3830;
+  --ui-text: #1f1c16;
+  --ui-text-highlighted: var(--slavia-podium-navy);
+  --color-green-400: var(--slavia-podium-gold-soft);
+  --color-green-500: var(--slavia-podium-gold);
+  --color-green-600: #b8941f;
+}
+
+html.light[data-slavia-preset='podium'] body,
+html[data-slavia-preset='podium']:not(.dark) body {
+  background-color: #f5f1ea;
+  background-image:
+    radial-gradient(ellipse 90% 55% at 50% -10%, color-mix(in oklab, var(--slavia-podium-gold) 22%, transparent), transparent 54%),
+    radial-gradient(ellipse 50% 40% at 0% 60%, color-mix(in oklab, var(--slavia-podium-navy) 6%, transparent), transparent 50%),
+    linear-gradient(175deg, #fffefb 0%, #f5f0e8 45%, #ebe5da 100%);
+  background-attachment: fixed;
+}
+
+html.dark[data-slavia-preset='podium'] {
+  --ui-bg: #0a1628;
+  --ui-bg-muted: #0f1f38;
+  --ui-bg-elevated: #132744;
+  --ui-bg-accented: #1a3354;
+  --ui-border: color-mix(in oklab, var(--slavia-podium-gold) 32%, #243a5c);
+  --ui-border-muted: #1a2d4a;
+  --ui-border-accented: color-mix(in oklab, var(--slavia-podium-gold) 48%, #3d4f6a);
+  --ui-text-dimmed: #8fa3c4;
+  --ui-text-muted: #b8c9e4;
+  --ui-text-toned: #d4e0f5;
+  --ui-text: #eef3fc;
+  --ui-text-highlighted: #ffffff;
+  --color-green-400: var(--slavia-podium-gold-soft);
+  --color-green-500: var(--slavia-podium-gold);
+  --color-green-600: #c9a227;
+}
+
+html.dark[data-slavia-preset='podium'] body {
+  background-color: #080f1c;
+  background-image:
+    radial-gradient(ellipse 85% 52% at 50% -8%, color-mix(in oklab, var(--slavia-podium-gold) 18%, transparent), transparent 52%),
+    radial-gradient(ellipse 60% 45% at 50% 110%, color-mix(in oklab, #1e40af 12%, transparent), transparent 48%),
+    linear-gradient(168deg, #060d18 0%, #0a1628 42%, #0f1f38 100%);
+  background-attachment: fixed;
+}
+
+html[data-slavia-preset='podium'] .slavia-page-card,
+html[data-slavia-preset='podium'] .slavia-public-hero,
+html[data-slavia-preset='podium'] .slavia-section-card {
+  border-color: color-mix(in oklab, var(--slavia-podium-gold) 28%, var(--ui-border));
+  box-shadow:
+    var(--slavia-shadow-xs),
+    var(--slavia-shadow-sm),
+    0 0 32px -18px color-mix(in oklab, var(--slavia-podium-gold) 25%, transparent);
+}
+
+html[data-slavia-preset='podium'] .slavia-section-header__eyebrow,
+html[data-slavia-preset='podium'] .slavia-panel-section-title {
+  color: color-mix(in oklab, var(--slavia-podium-gold) 88%, var(--ui-text-highlighted));
+  letter-spacing: 0.14em;
+}
+
+html[data-slavia-preset='podium'] .slavia-podium-layout [aria-hidden='true'] .bg-primary\/14 {
+  background-color: color-mix(in oklab, var(--slavia-podium-gold) 18%, transparent) !important;
+  opacity: 0.9;
+}
+
+html[data-slavia-preset='podium'] .slavia-podium-layout [aria-hidden='true'] .via-primary\/30 {
+  --tw-gradient-via: color-mix(in oklab, var(--slavia-podium-gold) 35%, transparent);
+}
+
+/* =============================================================================
+ * EKSPERYMENTALNE: Chalk Studio (minimal, kreda i beton)
+ * ============================================================================= */
+html[data-slavia-preset='chalk'] {
+  --slavia-chalk-dust: #f3f1ed;
+  --slavia-chalk-ink: #2a2826;
+}
+
+html[data-slavia-preset='chalk']:not(.dark),
+html.light[data-slavia-preset='chalk'] {
+  --ui-bg: var(--slavia-chalk-dust);
+  --ui-bg-muted: #ebe8e3;
+  --ui-bg-elevated: #faf9f7;
+  --ui-bg-accented: #e2ded8;
+  --ui-border: #d4cfc7;
+  --ui-border-muted: #e8e4de;
+  --ui-border-accented: #a8a29e;
+  --ui-text-dimmed: #a39e97;
+  --ui-text-muted: #6b6560;
+  --ui-text-toned: #4a4541;
+  --ui-text: var(--slavia-chalk-ink);
+  --ui-text-highlighted: #141312;
+  --color-green-400: #78716c;
+  --color-green-500: #57534e;
+  --color-green-600: #44403c;
+}
+
+html.light[data-slavia-preset='chalk'] body,
+html[data-slavia-preset='chalk']:not(.dark) body {
+  background-color: #ebe8e3;
+  background-image:
+    radial-gradient(ellipse 120% 80% at 50% -20%, rgb(255 255 255 / 0.9), transparent 55%),
+    repeating-linear-gradient(
+      -12deg,
+      transparent,
+      transparent 2px,
+      rgb(0 0 0 / 0.012) 2px,
+      rgb(0 0 0 / 0.012) 3px
+    ),
+    linear-gradient(180deg, #faf9f7 0%, #f0ede8 55%, #e6e2db 100%);
+  background-attachment: fixed;
+}
+
+html.dark[data-slavia-preset='chalk'] {
+  --ui-bg: #141312;
+  --ui-bg-muted: #1c1a18;
+  --ui-bg-elevated: #242220;
+  --ui-bg-accented: #2e2b28;
+  --ui-border: #3d3a36;
+  --ui-border-muted: #2a2826;
+  --ui-border-accented: #57534e;
+  --ui-text-dimmed: #a8a29e;
+  --ui-text-muted: #d6d3d1;
+  --ui-text-toned: #e7e5e4;
+  --ui-text: #f5f5f4;
+  --ui-text-highlighted: #ffffff;
+  --color-green-400: #d6d3d1;
+  --color-green-500: #e7e5e4;
+  --color-green-600: #fafaf9;
+}
+
+html.dark[data-slavia-preset='chalk'] body {
+  background-color: #121110;
+  background-image:
+    radial-gradient(ellipse 90% 50% at 50% -10%, rgb(255 255 255 / 0.04), transparent 52%),
+    repeating-linear-gradient(
+      -12deg,
+      transparent,
+      transparent 3px,
+      rgb(255 255 255 / 0.015) 3px,
+      rgb(255 255 255 / 0.015) 4px
+    ),
+    linear-gradient(175deg, #10100f 0%, #1a1917 50%, #141312 100%);
+  background-attachment: fixed;
+}
+
+html[data-slavia-preset='chalk'] .slavia-page-card,
+html[data-slavia-preset='chalk'] .slavia-public-hero,
+html[data-slavia-preset='chalk'] .slavia-section-card {
+  border-radius: 0.875rem;
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.65) inset, var(--slavia-shadow-xs);
+  backdrop-filter: blur(6px);
+}
+
+html.dark[data-slavia-preset='chalk'] .slavia-page-card,
+html.dark[data-slavia-preset='chalk'] .slavia-public-hero,
+html.dark[data-slavia-preset='chalk'] .slavia-section-card {
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.05) inset, var(--slavia-shadow-sm);
+}
+
+html[data-slavia-preset='chalk'] .slavia-chalk-layout [aria-hidden='true'] .bg-primary\/14,
+html[data-slavia-preset='chalk'] .slavia-chalk-layout [aria-hidden='true'] .bg-primary\/10 {
+  opacity: 0.35;
+  filter: blur(56px);
+}
+
+/* =============================================================================
+ * EKSPERYMENTALNE: Aurora Lift (premium fitness app)
+ * ============================================================================= */
+@keyframes slavia-aurora-drift {
+  0%,
+  100% {
+    background-position:
+      0% 0%,
+      100% 0%,
+      50% 100%,
+      0 0;
+  }
+  50% {
+    background-position:
+      8% 4%,
+      92% 6%,
+      48% 96%,
+      0 0;
+  }
+}
+
+html[data-slavia-preset='aurora'] {
+  --slavia-aurora-violet: #8b5cf6;
+  --slavia-aurora-teal: #2dd4bf;
+  --slavia-aurora-rose: #f472b6;
+}
+
+html[data-slavia-preset='aurora']:not(.dark),
+html.light[data-slavia-preset='aurora'] {
+  --ui-bg: #f6f4ff;
+  --ui-bg-muted: #ede9fe;
+  --ui-bg-elevated: #faf8ff;
+  --ui-bg-accented: #e0e7ff;
+  --ui-border: color-mix(in oklab, var(--slavia-aurora-violet) 18%, #d8d4f0);
+  --ui-border-muted: #ebe8f8;
+  --ui-border-accented: color-mix(in oklab, var(--slavia-aurora-teal) 35%, #a5b4fc);
+  --ui-text-dimmed: #9490b0;
+  --ui-text-muted: #6b6588;
+  --ui-text-toned: #4f4a6a;
+  --ui-text: #2e2a42;
+  --ui-text-highlighted: #16132a;
+  --color-green-400: #a78bfa;
+  --color-green-500: var(--slavia-aurora-violet);
+  --color-green-600: #7c3aed;
+}
+
+html.light[data-slavia-preset='aurora'] body,
+html[data-slavia-preset='aurora']:not(.dark) body {
+  background-color: #ede9fe;
+  background-image:
+    radial-gradient(ellipse 80% 55% at 15% -5%, color-mix(in oklab, var(--slavia-aurora-violet) 28%, transparent), transparent 55%),
+    radial-gradient(ellipse 70% 50% at 88% 5%, color-mix(in oklab, var(--slavia-aurora-teal) 22%, transparent), transparent 52%),
+    radial-gradient(ellipse 60% 45% at 50% 100%, color-mix(in oklab, var(--slavia-aurora-rose) 14%, transparent), transparent 50%),
+    linear-gradient(168deg, #faf8ff 0%, #f0ecff 45%, #e8e4fa 100%);
+  background-size: auto, auto, auto, auto;
+  background-attachment: fixed;
+  animation: slavia-aurora-drift 28s ease-in-out infinite;
+}
+
+html.dark[data-slavia-preset='aurora'] {
+  --ui-bg: #0c0a14;
+  --ui-bg-muted: #14101f;
+  --ui-bg-elevated: #1a1528;
+  --ui-bg-accented: #221c36;
+  --ui-border: color-mix(in oklab, var(--slavia-aurora-violet) 32%, #2a2540);
+  --ui-border-muted: #1e1a2e;
+  --ui-border-accented: color-mix(in oklab, var(--slavia-aurora-teal) 42%, #3730a3);
+  --ui-text-dimmed: #9490b8;
+  --ui-text-muted: #c4c0e0;
+  --ui-text-toned: #ddd9f0;
+  --ui-text: #f0eef8;
+  --ui-text-highlighted: #ffffff;
+  --color-green-400: #c4b5fd;
+  --color-green-500: #a78bfa;
+  --color-green-600: #8b5cf6;
+}
+
+html.dark[data-slavia-preset='aurora'] body {
+  background-color: #0a0812;
+  background-image:
+    radial-gradient(ellipse 85% 52% at 12% -8%, color-mix(in oklab, var(--slavia-aurora-violet) 32%, transparent), transparent 54%),
+    radial-gradient(ellipse 75% 48% at 90% 10%, color-mix(in oklab, var(--slavia-aurora-teal) 24%, transparent), transparent 52%),
+    radial-gradient(ellipse 55% 40% at 48% 102%, color-mix(in oklab, var(--slavia-aurora-rose) 16%, transparent), transparent 48%),
+    linear-gradient(168deg, #0a0812 0%, #120e1e 48%, #0e0c16 100%);
+  background-attachment: fixed;
+  animation: slavia-aurora-drift 32s ease-in-out infinite;
+}
+
+html[data-slavia-preset='aurora'] .slavia-page-card,
+html[data-slavia-preset='aurora'] .slavia-public-hero,
+html[data-slavia-preset='aurora'] .slavia-section-card {
+  border-color: color-mix(in oklab, var(--slavia-aurora-violet) 24%, var(--ui-border));
+  background: linear-gradient(
+    155deg,
+    color-mix(in oklab, var(--ui-bg-elevated) 88%, var(--slavia-aurora-violet) 4%),
+    color-mix(in oklab, var(--ui-bg-elevated) 72%, transparent)
+  );
+  backdrop-filter: blur(14px) saturate(1.12);
+  box-shadow:
+    var(--slavia-shadow-sm),
+    0 0 40px -16px color-mix(in oklab, var(--slavia-aurora-violet) 22%, transparent);
+}
+
+html[data-slavia-preset='aurora'] .slavia-aurora-layout [aria-hidden='true'] .bg-primary\/14 {
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--slavia-aurora-violet) 35%, transparent),
+    color-mix(in oklab, var(--slavia-aurora-teal) 28%, transparent)
+  ) !important;
+  opacity: 0.75;
+  filter: blur(52px);
+}
+
+/* =============================================================================
+ * EKSPERYMENTALNE: Forge (żar, stal, industrial gym)
+ * ============================================================================= */
+html[data-slavia-preset='forge'] {
+  --slavia-forge-ember: #f97316;
+  --slavia-forge-copper: #ea580c;
+  --slavia-forge-steel: #64748b;
+}
+
+html[data-slavia-preset='forge']:not(.dark),
+html.light[data-slavia-preset='forge'] {
+  --ui-bg: #f6f4f2;
+  --ui-bg-muted: #ebe6e1;
+  --ui-bg-elevated: #faf8f6;
+  --ui-bg-accented: #e4ddd6;
+  --ui-border: color-mix(in oklab, var(--slavia-forge-ember) 16%, #d6d0c8);
+  --ui-border-muted: #ebe6e0;
+  --ui-border-accented: color-mix(in oklab, var(--slavia-forge-copper) 38%, #c4b8ae);
+  --ui-text-dimmed: #9a9188;
+  --ui-text-muted: #6b635c;
+  --ui-text-toned: #4a433c;
+  --ui-text: #2c2620;
+  --ui-text-highlighted: #14100c;
+  --color-green-400: #fb923c;
+  --color-green-500: var(--slavia-forge-ember);
+  --color-green-600: var(--slavia-forge-copper);
+}
+
+html.light[data-slavia-preset='forge'] body,
+html[data-slavia-preset='forge']:not(.dark) body {
+  background-color: #ebe6e1;
+  background-image:
+    radial-gradient(ellipse 90% 55% at 50% -12%, color-mix(in oklab, var(--slavia-forge-ember) 16%, transparent), transparent 54%),
+    radial-gradient(ellipse 55% 40% at 100% 50%, color-mix(in oklab, var(--slavia-forge-steel) 12%, transparent), transparent 48%),
+    linear-gradient(175deg, #faf8f6 0%, #f0ebe6 48%, #e6dfd8 100%);
+  background-attachment: fixed;
+}
+
+html.dark[data-slavia-preset='forge'] {
+  --ui-bg: #12100e;
+  --ui-bg-muted: #1a1714;
+  --ui-bg-elevated: #221e1a;
+  --ui-bg-accented: #2e2822;
+  --ui-border: color-mix(in oklab, var(--slavia-forge-ember) 28%, #3d3832);
+  --ui-border-muted: #2a2622;
+  --ui-border-accented: color-mix(in oklab, var(--slavia-forge-ember) 45%, #5c4a3a);
+  --ui-text-dimmed: #a39a90;
+  --ui-text-muted: #d4ccc4;
+  --ui-text-toned: #e8e2dc;
+  --ui-text: #f5f2ef;
+  --ui-text-highlighted: #ffffff;
+  --color-green-400: #fdba74;
+  --color-green-500: var(--slavia-forge-ember);
+  --color-green-600: #ea580c;
+}
+
+html.dark[data-slavia-preset='forge'] body {
+  background-color: #0e0c0a;
+  background-image:
+    radial-gradient(ellipse 85% 50% at 50% -8%, color-mix(in oklab, var(--slavia-forge-ember) 22%, transparent), transparent 52%),
+    radial-gradient(ellipse 50% 38% at 0% 80%, color-mix(in oklab, var(--slavia-forge-copper) 12%, transparent), transparent 46%),
+    radial-gradient(ellipse 45% 35% at 100% 30%, color-mix(in oklab, var(--slavia-forge-steel) 8%, transparent), transparent 44%),
+    linear-gradient(168deg, #0a0908 0%, #141210 45%, #1a1714 100%);
+  background-attachment: fixed;
+}
+
+html[data-slavia-preset='forge'] .slavia-page-card,
+html[data-slavia-preset='forge'] .slavia-public-hero,
+html[data-slavia-preset='forge'] .slavia-section-card {
+  border-color: color-mix(in oklab, var(--slavia-forge-ember) 30%, var(--ui-border));
+  box-shadow:
+    var(--slavia-shadow-xs),
+    0 0 36px -14px color-mix(in oklab, var(--slavia-forge-ember) 28%, transparent),
+    inset 0 1px 0 color-mix(in oklab, #fff 8%, transparent);
+}
+
+html[data-slavia-preset='forge'] .slavia-section-header__eyebrow,
+html[data-slavia-preset='forge'] .slavia-panel-section-title {
+  color: color-mix(in oklab, var(--slavia-forge-ember) 85%, var(--ui-text-highlighted));
+}
+
+html[data-slavia-preset='forge'] .slavia-forge-layout [aria-hidden='true'] .bg-primary\/14,
+html[data-slavia-preset='forge'] .slavia-forge-layout [aria-hidden='true'] .bg-primary\/10 {
+  background-color: color-mix(in oklab, var(--slavia-forge-ember) 22%, transparent) !important;
+  opacity: 0.8;
+  filter: blur(48px);
+}
+
+/* =============================================================================
+ * EKSPERYMENTALNE: Velvet Club (luksusowa sala — ciemne aksamit + różowe złoto)
+ * ============================================================================= */
+html[data-slavia-preset='velvet'] {
+  --slavia-velvet-plum: #4a1942;
+  --slavia-velvet-rose-gold: #e8b4a0;
+  --slavia-velvet-wine: #2d0f1f;
+}
+
+html[data-slavia-preset='velvet']:not(.dark),
+html.light[data-slavia-preset='velvet'] {
+  --ui-bg: #faf6f5;
+  --ui-bg-muted: #f3ebe8;
+  --ui-bg-elevated: #fff9f8;
+  --ui-bg-accented: #ebddd8;
+  --ui-border: color-mix(in oklab, var(--slavia-velvet-rose-gold) 28%, #e0d4cf);
+  --ui-border-muted: #f0e8e4;
+  --ui-border-accented: color-mix(in oklab, var(--slavia-velvet-plum) 22%, #d4b8b0);
+  --ui-text-dimmed: #a89490;
+  --ui-text-muted: #7a6560;
+  --ui-text-toned: #5c4844;
+  --ui-text: #3d2e2a;
+  --ui-text-highlighted: var(--slavia-velvet-wine);
+  --color-green-400: #f0c4b4;
+  --color-green-500: #d4897a;
+  --color-green-600: #9d4e5c;
+}
+
+html.light[data-slavia-preset='velvet'] body,
+html[data-slavia-preset='velvet']:not(.dark) body {
+  background-color: #f3ebe8;
+  background-image:
+    radial-gradient(ellipse 95% 60% at 50% -15%, color-mix(in oklab, var(--slavia-velvet-rose-gold) 24%, transparent), transparent 54%),
+    radial-gradient(ellipse 50% 42% at 0% 70%, color-mix(in oklab, var(--slavia-velvet-plum) 8%, transparent), transparent 48%),
+    linear-gradient(172deg, #fffaf9 0%, #f8f0ed 46%, #efe4e0 100%);
+  background-attachment: fixed;
+}
+
+html.dark[data-slavia-preset='velvet'] {
+  --ui-bg: var(--slavia-velvet-wine);
+  --ui-bg-muted: #3d1528;
+  --ui-bg-elevated: #4a1942;
+  --ui-bg-accented: #5c2450;
+  --ui-border: color-mix(in oklab, var(--slavia-velvet-rose-gold) 28%, #4a2a3a);
+  --ui-border-muted: #3a1828;
+  --ui-border-accented: color-mix(in oklab, var(--slavia-velvet-rose-gold) 42%, #6b3a52);
+  --ui-text-dimmed: #c4a8a0;
+  --ui-text-muted: #e0c8c0;
+  --ui-text-toned: #f0ddd6;
+  --ui-text: #faf0ec;
+  --ui-text-highlighted: #ffffff;
+  --color-green-400: var(--slavia-velvet-rose-gold);
+  --color-green-500: #e8b4a0;
+  --color-green-600: #d4897a;
+}
+
+html.dark[data-slavia-preset='velvet'] body {
+  background-color: #1a0812;
+  background-image:
+    radial-gradient(ellipse 90% 55% at 50% -10%, color-mix(in oklab, var(--slavia-velvet-rose-gold) 16%, transparent), transparent 52%),
+    radial-gradient(ellipse 60% 45% at 100% 40%, color-mix(in oklab, var(--slavia-velvet-plum) 22%, transparent), transparent 48%),
+    linear-gradient(168deg, #140610 0%, var(--slavia-velvet-wine) 42%, #2d0f1f 100%);
+  background-attachment: fixed;
+}
+
+html[data-slavia-preset='velvet'] .slavia-page-card,
+html[data-slavia-preset='velvet'] .slavia-public-hero,
+html[data-slavia-preset='velvet'] .slavia-section-card {
+  border-color: color-mix(in oklab, var(--slavia-velvet-rose-gold) 26%, var(--ui-border));
+  background: linear-gradient(
+    160deg,
+    color-mix(in oklab, var(--ui-bg-elevated) 92%, var(--slavia-velvet-rose-gold) 5%),
+    color-mix(in oklab, var(--ui-bg-muted) 85%, transparent)
+  );
+  box-shadow:
+    var(--slavia-shadow-sm),
+    0 0 48px -20px color-mix(in oklab, var(--slavia-velvet-plum) 35%, transparent);
+}
+
+html[data-slavia-preset='velvet'] .slavia-velvet-layout [aria-hidden='true'] .bg-primary\/14 {
+  background-color: color-mix(in oklab, var(--slavia-velvet-rose-gold) 20%, transparent) !important;
+  opacity: 0.85;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-slavia-preset='aurora'] body {
+    animation: none !important;
+  }
+}

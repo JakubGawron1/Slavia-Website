@@ -41,7 +41,8 @@ type PanelSection = {
  *  głównego paska i zawsze mieścić się w jednym wierszu, niezależnie od szerokości ekranu. */
 const calculatorLinks: ManagementLink[] = [
   { label: 'Kalkulator Sinclair', to: '/kalkulator-sinclair', icon: 'i-lucide-calculator' },
-  { label: 'Kalkulator proporcji', to: '/kalkulator-proporcji', icon: 'i-lucide-sliders-horizontal' }
+  { label: 'Kalkulator proporcji', to: '/kalkulator-proporcji', icon: 'i-lucide-sliders-horizontal' },
+  { label: 'Kalkulator Max PR', to: '/kalkulator-max-pr', icon: 'i-lucide-dumbbell' }
 ]
 
 const items = computed(() => {
@@ -143,7 +144,7 @@ const panelDropdownItems = computed(() =>
   ])
 )
 
-/** Dropdown „Kalkulatory” — Sinclair + Proporcje, dostępny dla wszystkich (publiczny). */
+/** Dropdown „Kalkulatory” — Sinclair, proporcje, Max PR; dostępny dla wszystkich (publiczny). */
 const calculatorDropdownItems = [
   calculatorLinks.map(link => ({
     label: link.label,

@@ -14,7 +14,7 @@ export const SLAVIA_THEME_PRESETS = [
   {
     id: 'slavia',
     label: 'Slavia — sala klubu',
-    description: 'Ciemne bordo z akcentem łososiowym — domyślny klubowy; jasny wariant ciepły i premium.'
+    description: 'Ciepłe bordo i łososiowy akcent — charakter klubu; jasny wariant jak podświetlona sala.'
   },
   {
     id: 'iron',
@@ -54,19 +54,49 @@ export const SLAVIA_THEME_PRESETS = [
   {
     id: 'glass',
     label: 'Glassmorphism',
-    description: 'Przezroczyste karty, rozmycie i delikatne obramowania — eksperymentalny układ wizualny.',
+    description: 'Szkło, rozmycie i miękkie poświaty — jak nowoczesna aplikacja fitness premium.',
     experimental: true
   },
   {
     id: 'sport-tech',
     label: 'Sport-Tech (Arena)',
-    description: 'Futurystyczna arena — ciemny grafit z neonowym cyjanem; jasny wariant jak podświetlona trybuna.',
+    description: 'Siatka areny, neon cyjan i grafit — klimat transmisji sport-tech.',
     experimental: true
   },
   {
     id: 'neon-brutalism',
-    label: 'Neon Brutalism · Sport-Tech',
-    description: 'Brutalizm z grubymi obrysami i twardymi cieniami — neon magenta/cyjan/lime na węglu; jasny wariant odwrócony.',
+    label: 'Neon Brutalism',
+    description: 'Twarde obrysy, offset shadow i neony — energia miejskiej siłowni.',
+    experimental: true
+  },
+  {
+    id: 'podium',
+    label: 'Podium · IWF',
+    description: 'Granat, złoto i reflektor nad platformą — jak transmisja zawodów międzynarodowych.',
+    experimental: true
+  },
+  {
+    id: 'chalk',
+    label: 'Chalk Studio',
+    description: 'Kreda, beton i spokojny minimalizm — estetyka Hookgrip / studio siłowe.',
+    experimental: true
+  },
+  {
+    id: 'aurora',
+    label: 'Aurora Lift',
+    description: 'Fioletowo-morska poświata i płynne tło — nowoczesna aplikacja treningowa.',
+    experimental: true
+  },
+  {
+    id: 'forge',
+    label: 'Forge · Industrial',
+    description: 'Żar, stal i miedziany akcent — industrial gym / Rogue vibe.',
+    experimental: true
+  },
+  {
+    id: 'velvet',
+    label: 'Velvet Club',
+    description: 'Aksamitne bordo, różowe złoto — luksusowa, wieczorna sala klubu.',
     experimental: true
   }
 ] as const
@@ -83,6 +113,39 @@ export function isSportTechThemePreset(id: string | null | undefined): boolean {
 
 export function isNeonBrutalismThemePreset(id: string | null | undefined): boolean {
   return id === 'neon-brutalism'
+}
+
+export function isPodiumThemePreset(id: string | null | undefined): boolean {
+  return id === 'podium'
+}
+
+export function isChalkThemePreset(id: string | null | undefined): boolean {
+  return id === 'chalk'
+}
+
+export function isAuroraThemePreset(id: string | null | undefined): boolean {
+  return id === 'aurora'
+}
+
+export function isForgeThemePreset(id: string | null | undefined): boolean {
+  return id === 'forge'
+}
+
+export function isVelvetThemePreset(id: string | null | undefined): boolean {
+  return id === 'velvet'
+}
+
+/** Presety z dedykowaną stylizacją poświaty layoutu (PublicPageLayout). */
+export function slaviaPresetLayoutClass(id: SlaviaThemePreset): string | null {
+  if (isGlassThemePreset(id)) return 'slavia-glass-layout'
+  if (isSportTechThemePreset(id)) return 'slavia-sport-tech-layout'
+  if (isNeonBrutalismThemePreset(id)) return 'slavia-neon-brutalism-layout'
+  if (isPodiumThemePreset(id)) return 'slavia-podium-layout'
+  if (isChalkThemePreset(id)) return 'slavia-chalk-layout'
+  if (isAuroraThemePreset(id)) return 'slavia-aurora-layout'
+  if (isForgeThemePreset(id)) return 'slavia-forge-layout'
+  if (isVelvetThemePreset(id)) return 'slavia-velvet-layout'
+  return null
 }
 
 /** Klucze localStorage lustra motywu (per konto) — panel developera, diagnostyka. */
@@ -143,20 +206,19 @@ export function useSlaviaAppearance() {
       return
     }
     document.documentElement.setAttribute('data-slavia-preset', p)
-    if (isGlassThemePreset(p)) {
-      document.documentElement.setAttribute('data-slavia-glass-layout', 'true')
-    } else {
-      document.documentElement.removeAttribute('data-slavia-glass-layout')
-    }
-    if (isSportTechThemePreset(p)) {
-      document.documentElement.setAttribute('data-slavia-sport-tech-layout', 'true')
-    } else {
-      document.documentElement.removeAttribute('data-slavia-sport-tech-layout')
-    }
-    if (isNeonBrutalismThemePreset(p)) {
-      document.documentElement.setAttribute('data-slavia-neon-brutalism-layout', 'true')
-    } else {
-      document.documentElement.removeAttribute('data-slavia-neon-brutalism-layout')
+    const layoutFlags: Array<[boolean, string]> = [
+      [isGlassThemePreset(p), 'data-slavia-glass-layout'],
+      [isSportTechThemePreset(p), 'data-slavia-sport-tech-layout'],
+      [isNeonBrutalismThemePreset(p), 'data-slavia-neon-brutalism-layout'],
+      [isPodiumThemePreset(p), 'data-slavia-podium-layout'],
+      [isChalkThemePreset(p), 'data-slavia-chalk-layout'],
+      [isAuroraThemePreset(p), 'data-slavia-aurora-layout'],
+      [isForgeThemePreset(p), 'data-slavia-forge-layout'],
+      [isVelvetThemePreset(p), 'data-slavia-velvet-layout']
+    ]
+    for (const [on, attr] of layoutFlags) {
+      if (on) document.documentElement.setAttribute(attr, 'true')
+      else document.documentElement.removeAttribute(attr)
     }
   }
 
@@ -300,16 +362,38 @@ export function useSlaviaAppearance() {
   const isGlassLayout = computed(() => isGlassThemePreset(preset.value))
   const isSportTechLayout = computed(() => isSportTechThemePreset(preset.value))
   const isNeonBrutalismLayout = computed(() => isNeonBrutalismThemePreset(preset.value))
+  const isPodiumLayout = computed(() => isPodiumThemePreset(preset.value))
+  const isChalkLayout = computed(() => isChalkThemePreset(preset.value))
+  const isAuroraLayout = computed(() => isAuroraThemePreset(preset.value))
+  const isForgeLayout = computed(() => isForgeThemePreset(preset.value))
+  const isVelvetLayout = computed(() => isVelvetThemePreset(preset.value))
+
+  const presetLayoutClass = computed(() => slaviaPresetLayoutClass(preset.value))
+
+  const standardPresets = computed(() =>
+    SLAVIA_THEME_PRESETS.filter(p => !('experimental' in p && p.experimental))
+  )
+  const experimentalPresets = computed(() =>
+    SLAVIA_THEME_PRESETS.filter(p => 'experimental' in p && p.experimental)
+  )
 
   return {
     preset,
     presets: SLAVIA_THEME_PRESETS,
+    standardPresets,
+    experimentalPresets,
     setPreset,
     hydrate,
     colorMode,
     applyPresetDom,
+    presetLayoutClass,
     isGlassLayout,
     isSportTechLayout,
-    isNeonBrutalismLayout
+    isNeonBrutalismLayout,
+    isPodiumLayout,
+    isChalkLayout,
+    isAuroraLayout,
+    isForgeLayout,
+    isVelvetLayout
   }
 }
