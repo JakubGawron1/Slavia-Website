@@ -107,6 +107,11 @@ svg {
   max-width: 100%;
 }
 
+/** Odstęp treści pod sticky `ClubSiteHeader` (publiczne layouty + panele). */
+.slavia-below-site-header {
+  scroll-margin-top: calc(var(--ui-header-height, 4rem) + 0.75rem);
+}
+
 @media (max-width: 639px) {
   html {
     -webkit-text-size-adjust: 100%;
@@ -463,9 +468,13 @@ html.dark .slavia-page-card {
   }
 }
 
+.slavia-public-empty .slavia-empty-state__actions {
+  width: 100%;
+}
+
 .slavia-public-empty .slavia-empty-state__actions > * {
   flex: 0 0 auto;
-  width: auto;
+  width: auto !important;
   max-width: 100%;
   align-self: center;
   margin-inline: auto;

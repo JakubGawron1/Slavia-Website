@@ -99,9 +99,9 @@ async function submit() {
           </template>
         </PublicPageHeader>
 
-        <div class="slavia-glass slavia-page-card overflow-hidden rounded-3xl p-6 shadow-md sm:p-8">
+        <div class="slavia-auth-card slavia-glass slavia-page-card overflow-hidden rounded-3xl p-6 shadow-md sm:p-8">
           <form
-            class="space-y-6"
+            class="slavia-auth-form space-y-6"
             @submit.prevent="submit"
           >
             <UFormField
@@ -193,3 +193,59 @@ async function submit() {
     </PublicPageLayout>
   </div>
 </template>
+
+<style scoped>
+.slavia-auth-card {
+  animation: slavia-auth-card-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.slavia-auth-form :deep(.group) {
+  animation: slavia-auth-field-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.slavia-auth-form :deep(.group:nth-child(1)) {
+  animation-delay: 0.08s;
+}
+
+.slavia-auth-form :deep(.group:nth-child(2)) {
+  animation-delay: 0.14s;
+}
+
+.slavia-auth-form :deep(.group:nth-child(3)) {
+  animation-delay: 0.2s;
+}
+
+.slavia-auth-form :deep(button[type='submit']) {
+  animation: slavia-auth-field-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.26s both;
+}
+
+@keyframes slavia-auth-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes slavia-auth-field-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slavia-auth-card,
+  .slavia-auth-form :deep(.group),
+  .slavia-auth-form :deep(button[type='submit']) {
+    animation: none;
+  }
+}
+</style>

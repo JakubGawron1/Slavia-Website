@@ -190,30 +190,17 @@ function bodyPreview(text: string, max = 100) {
       </template>
       <template #actions>
         <UButton
-          v-if="canManage && sortedPublic.length > 0"
+          v-if="canManage"
           icon="i-lucide-megaphone"
           color="primary"
-          class="min-h-11 shrink-0 justify-center"
+          size="lg"
+          class="min-h-11 w-full shrink-0 justify-center font-semibold sm:w-auto"
           @click="openCreate"
         >
           Dodaj ogłoszenie
         </UButton>
       </template>
     </PublicPageHeader>
-
-    <div
-      v-if="canManage && !pending && sortedPublic.length > 0"
-      class="slavia-content-well slavia-public-section mb-6 flex justify-center md:hidden"
-    >
-      <UButton
-        icon="i-lucide-megaphone"
-        color="primary"
-        class="min-h-11 w-full max-w-sm justify-center font-semibold sm:w-auto"
-        @click="openCreate"
-      >
-        Dodaj ogłoszenie
-      </UButton>
-    </div>
 
     <div class="slavia-content-well slavia-public-section">
     <div

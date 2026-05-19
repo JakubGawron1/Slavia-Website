@@ -70,75 +70,89 @@ async function submit() {
 </script>
 
 <template>
-  <PublicPageLayout
-    narrow
-    padding="hero"
-  >
+  <PublicPageLayout padding="hero">
     <PublicPageHeader
       variant="hero"
       eyebrow="CKS Slavia"
       icon="i-lucide-mail"
       title="Kontakt"
-      description="Cieszymy się, że chcesz napisać do nas. Niezależnie od tego, czy myślisz o pierwszych treningach na platformie, zapisach do kadry czy współpracy — zostaw wiadomość w formularzu poniżej, a administracja klubu odezwie się, gdy tylko będzie to możliwe."
+      description="Cieszymy się, że chcesz napisać do nas. Niezależnie od tego, czy myślisz o pierwszych treningach na platformie, zapisach do kadry czy współpracy — zostaw wiadomość w formularzu, a administracja klubu odezwie się, gdy tylko będzie to możliwe."
     />
 
-    <div
-      class="slavia-page-card mx-auto mb-8 max-w-xl border border-default/60 bg-card/80 px-5 py-6 shadow-sm sm:px-7 sm:py-7"
-    >
-      <p class="text-sm leading-relaxed text-muted sm:text-base">
-        CKS Slavia to sekcja podnoszenia ciężarów z Rudy Śląskiej — trenujemy młodzież i dorosłych, od bezpiecznej nauki techniki po starty w zawodach. Jeśli nie wiesz, od czego zacząć, napisz kilka słów o sobie i swoich planach — chętnie podpowiemy, jak wyglądają zapisy i pierwsze spotkanie na sali.
-      </p>
-      <ul class="mt-5 space-y-3 text-sm text-muted">
-        <li class="flex gap-3">
-          <UIcon
-            name="i-lucide-map-pin"
-            class="mt-0.5 size-4 shrink-0 text-primary"
-            aria-hidden="true"
-          />
-          <span>
-            Siedziba:
-            <a
-              :href="mapsUrl"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="font-medium text-highlighted underline-offset-2 hover:text-primary hover:underline"
-            >
-              ul. Konopnickiej 13, 41-700 Ruda Śląska
-            </a>
-          </span>
-        </li>
-        <li class="flex gap-3">
-          <UIcon
-            name="i-lucide-calendar-clock"
-            class="mt-0.5 size-4 shrink-0 text-primary"
-            aria-hidden="true"
-          />
-          <span>
-            Treningi klubowe: poniedziałek, środa i piątek, <span class="font-medium text-highlighted">15:00–18:00</span>
-            — szczegóły organizacyjne i wydarzenia są też w
-            <NuxtLink
-              to="/kalendarz"
-              class="font-medium text-primary underline-offset-2 hover:underline"
-            >
-              kalendarzu
-            </NuxtLink>.
-          </span>
-        </li>
-        <li class="flex gap-3">
-          <UIcon
-            name="i-lucide-message-square-text"
-            class="mt-0.5 size-4 shrink-0 text-primary"
-            aria-hidden="true"
-          />
-          <span>
-            Najszybciej dotrzesz do nas przez formularz poniżej — podaj e-mail, a w razie potrzeby numer telefonu do oddzwonienia.
-          </span>
-        </li>
-      </ul>
-    </div>
+    <div class="mx-auto grid w-full max-w-6xl gap-8 lg:grid-cols-2 lg:gap-10 lg:items-start">
+      <div class="slavia-page-card space-y-6 border border-default/60 bg-card/80 p-6 shadow-sm sm:p-8">
+        <div>
+          <h2 class="text-lg font-bold text-highlighted">
+            O klubie
+          </h2>
+          <p class="mt-3 text-sm leading-relaxed text-muted sm:text-base">
+            CKS Slavia to sekcja podnoszenia ciężarów z Rudy Śląskiej — trenujemy młodzież i dorosłych, od bezpiecznej nauki techniki po starty w zawodach. Jeśli nie wiesz, od czego zacząć, napisz kilka słów o sobie i swoich planach — chętnie podpowiemy, jak wyglądają zapisy i pierwsze spotkanie na sali.
+          </p>
+        </div>
 
-    <div class="mx-auto max-w-xl">
-      <UCard class="slavia-page-card mt-2">
+        <ul class="space-y-4 text-sm text-muted">
+          <li class="flex gap-3">
+            <UIcon
+              name="i-lucide-map-pin"
+              class="mt-0.5 size-5 shrink-0 text-primary"
+              aria-hidden="true"
+            />
+            <span>
+              Siedziba:
+              <a
+                :href="mapsUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="font-medium text-highlighted underline-offset-2 hover:text-primary hover:underline"
+              >
+                ul. Konopnickiej 13, 41-700 Ruda Śląska
+              </a>
+            </span>
+          </li>
+          <li class="flex gap-3">
+            <UIcon
+              name="i-lucide-calendar-clock"
+              class="mt-0.5 size-5 shrink-0 text-primary"
+              aria-hidden="true"
+            />
+            <span>
+              Treningi klubowe: poniedziałek, środa i piątek,
+              <span class="font-medium text-highlighted">15:00–18:00</span>
+              — szczegóły organizacyjne i wydarzenia są też w
+              <NuxtLink
+                to="/kalendarz"
+                class="font-medium text-primary underline-offset-2 hover:underline"
+              >
+                kalendarzu
+              </NuxtLink>.
+            </span>
+          </li>
+          <li class="flex gap-3">
+            <UIcon
+              name="i-lucide-message-square-text"
+              class="mt-0.5 size-5 shrink-0 text-primary"
+              aria-hidden="true"
+            />
+            <span>
+              Najszybciej dotrzesz do nas przez formularz obok — podaj e-mail, a w razie potrzeby numer telefonu do oddzwonienia.
+            </span>
+          </li>
+        </ul>
+
+        <UButton
+          :href="mapsUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          variant="outline"
+          color="neutral"
+          icon="i-lucide-map"
+          class="w-full justify-center sm:w-auto"
+        >
+          Otwórz w mapach
+        </UButton>
+      </div>
+
+      <UCard class="slavia-page-card h-full">
         <template #header>
           <div class="px-1 pt-1">
             <h2 class="text-lg font-bold text-highlighted">
@@ -207,10 +221,10 @@ async function submit() {
           </UButton>
         </form>
       </UCard>
-
-      <p class="mt-6 text-center text-xs text-muted">
-        Wiadomości przegląda administracja klubu w panelu — zwykle odpowiadamy w ciągu kilku dni roboczych.
-      </p>
     </div>
+
+    <p class="mx-auto mt-8 max-w-6xl text-center text-xs text-muted">
+      Wiadomości przegląda administracja klubu w panelu — zwykle odpowiadamy w ciągu kilku dni roboczych.
+    </p>
   </PublicPageLayout>
 </template>

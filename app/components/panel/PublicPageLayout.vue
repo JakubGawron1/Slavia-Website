@@ -13,6 +13,8 @@ const props = withDefaults(
     padding?: 'default' | 'compact' | 'hero' | 'flush'
     animate?: boolean
     narrow?: boolean
+    /** Węższa, wyśrodkowana studnia treści (kalkulatory) */
+    centered?: boolean
     /** Delikatne tło / poświata jak na kalkulatorach i w galerii */
     ambient?: boolean
   }>(),
@@ -20,17 +22,19 @@ const props = withDefaults(
     padding: 'default',
     animate: true,
     narrow: false,
+    centered: false,
     ambient: true
   }
 )
 
 const containerClass = computed(() => {
-  const c: string[] = ['slavia-public-page', 'relative', 'mx-auto', 'w-full', 'min-w-0']
+  const c: string[] = ['slavia-public-page', 'slavia-below-site-header', 'relative', 'mx-auto', 'w-full', 'min-w-0']
   if (props.narrow) c.push('max-w-3xl')
-  if (props.padding === 'default') c.push('py-8 sm:py-12 lg:py-14')
-  else if (props.padding === 'compact') c.push('py-6 sm:py-10')
-  else if (props.padding === 'hero') c.push('py-10 md:py-16 lg:py-20')
-  else if (props.padding === 'flush') c.push('py-0')
+  else if (props.centered) c.push('max-w-5xl')
+  if (props.padding === 'default') c.push('pt-10 pb-8 sm:pt-14 sm:pb-12 lg:pt-16 lg:pb-14')
+  else if (props.padding === 'compact') c.push('pt-8 pb-6 sm:pt-12 sm:pb-10')
+  else if (props.padding === 'hero') c.push('pt-10 pb-10 md:pt-16 md:pb-16 lg:pt-20 lg:pb-20')
+  else if (props.padding === 'flush') c.push('pt-4 pb-0 sm:pt-6')
   if (props.animate) c.push('animate-page-in')
   if (isGlassThemePreset(preset.value)) c.push('slavia-glass-layout')
   if (isSportTechThemePreset(preset.value)) c.push('slavia-sport-tech-layout')

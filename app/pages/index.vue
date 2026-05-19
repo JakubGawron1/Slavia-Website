@@ -506,29 +506,6 @@ const trainingDays = [
       </UContainer>
     </section>
 
-    <!-- HISTORIA KLUBU -->
-    <section class="relative py-12 lg:py-20">
-      <UContainer>
-        <ClubHistoryTimeline
-          :limit="4"
-          compact
-          heading-id="home-club-history-heading"
-        />
-        <div class="mt-10 flex justify-center">
-          <UButton
-            to="/o-klubie"
-            size="lg"
-            color="neutral"
-            variant="outline"
-            trailing-icon="i-lucide-arrow-right"
-            class="font-bold"
-          >
-            Pełna historia klubu
-          </UButton>
-        </div>
-      </UContainer>
-    </section>
-
     <!-- MISTRZOWIE KLUBU - top 3 Sinclair -->
     <section
       v-if="champions.length > 0"
@@ -612,6 +589,29 @@ const trainingDays = [
             class="font-bold"
           >
             Pełny ranking i lista zawodników
+          </UButton>
+        </div>
+      </UContainer>
+    </section>
+
+    <!-- HISTORIA KLUBU -->
+    <section class="relative py-12 lg:py-20">
+      <UContainer>
+        <ClubHistoryTimeline
+          :limit="4"
+          compact
+          heading-id="home-club-history-heading"
+        />
+        <div class="mt-10 flex justify-center">
+          <UButton
+            to="/o-klubie"
+            size="lg"
+            color="neutral"
+            variant="outline"
+            trailing-icon="i-lucide-arrow-right"
+            class="font-bold"
+          >
+            Pełna historia klubu
           </UButton>
         </div>
       </UContainer>

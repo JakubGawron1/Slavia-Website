@@ -183,7 +183,7 @@ function rowAccentClass(s: string) {
 </script>
 
 <template>
-  <PublicPageLayout>
+  <PublicPageLayout centered>
     <PublicPageHeader
       variant="hero"
       eyebrow="Narzędzie"

@@ -19,11 +19,11 @@ const props = withDefaults(
 )
 
 const containerClass = computed(() => {
-  const c: string[] = ['mx-auto', 'w-full', 'min-w-0']
+  const c: string[] = ['slavia-below-site-header', 'mx-auto', 'w-full', 'min-w-0']
   if (props.panel) c.push('slavia-panel-page')
   if (props.narrow) c.push('max-w-5xl')
-  if (props.padding === 'default') c.push('py-8 md:py-12 lg:py-14')
-  else if (props.padding === 'compact') c.push('py-6 sm:py-8 md:py-10')
+  if (props.padding === 'default') c.push('pt-10 pb-8 md:pt-14 md:pb-12 lg:pt-16 lg:pb-14')
+  else if (props.padding === 'compact') c.push('pt-8 pb-6 sm:pt-10 sm:pb-8 md:pt-12 md:pb-10')
   if (props.animate) c.push('animate-page-in')
   if (isGlassLayout.value) c.push('slavia-glass-layout')
   if (isSportTechLayout.value) c.push('slavia-sport-tech-layout')
