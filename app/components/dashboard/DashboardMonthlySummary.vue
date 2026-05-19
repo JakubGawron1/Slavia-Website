@@ -31,13 +31,13 @@ const currentMonthName = new Intl.DateTimeFormat('pl-PL', { month: 'long', year:
 </script>
 
 <template>
-  <div class="rounded-2xl border border-default bg-card p-5 shadow-sm">
-    <div class="mb-4 flex items-center gap-3">
-      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
+  <div class="h-full rounded-2xl border border-default/70 bg-linear-to-br from-card via-card to-primary/5 p-5 shadow-sm ring-1 ring-default/30 sm:p-6">
+    <div class="mb-5 flex items-center gap-3">
+      <div class="flex size-11 items-center justify-center rounded-xl bg-primary/15 text-primary ring-1 ring-primary/20">
         <UIcon name="i-lucide-bar-chart-3" class="size-6" />
       </div>
-      <div>
-        <h3 class="text-lg font-bold text-highlighted">
+      <div class="min-w-0">
+        <h3 class="text-lg font-bold tracking-tight text-highlighted">
           Podsumowanie: {{ currentMonthName }}
         </h3>
         <p class="text-xs text-muted">
@@ -46,51 +46,51 @@ const currentMonthName = new Intl.DateTimeFormat('pl-PL', { month: 'long', year:
       </div>
     </div>
 
-    <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-      <div class="rounded-xl border border-default/40 bg-muted/5 p-3">
-        <p class="text-[10px] font-bold uppercase text-muted">
+    <div class="grid grid-cols-2 gap-3">
+      <div class="rounded-xl border border-default/50 bg-muted/10 p-3 ring-1 ring-default/20">
+        <p class="text-[10px] font-bold uppercase tracking-wider text-muted">
           Aktywni zawodnicy
         </p>
-        <p class="text-lg font-black tabular-nums text-primary">
+        <p class="mt-1 text-xl font-black tabular-nums text-primary sm:text-2xl">
           {{ athletesActive }}
         </p>
       </div>
-      <div class="rounded-xl border border-default/40 bg-muted/5 p-3">
-        <p class="text-[10px] font-bold uppercase text-muted">
+      <div class="rounded-xl border border-default/50 bg-muted/10 p-3 ring-1 ring-default/20">
+        <p class="text-[10px] font-bold uppercase tracking-wider text-muted">
           Składki (miesiąc)
         </p>
-        <p class="text-lg font-black tabular-nums text-success">
+        <p class="mt-1 text-xl font-black tabular-nums text-success sm:text-2xl">
           {{ paymentProgress }}%
         </p>
         <p class="mt-0.5 text-[10px] text-muted">
           {{ paymentsPending }} oczekuje
         </p>
       </div>
-      <div class="rounded-xl border border-default/40 bg-muted/5 p-3">
-        <p class="text-[10px] font-bold uppercase text-muted">
+      <div class="rounded-xl border border-default/50 bg-muted/10 p-3 ring-1 ring-default/20">
+        <p class="text-[10px] font-bold uppercase tracking-wider text-muted">
           Obecność (30 dni)
         </p>
-        <p class="text-lg font-black tabular-nums text-info">
+        <p class="mt-1 text-xl font-black tabular-nums text-info sm:text-2xl">
           {{ avgAttendance30d }}%
         </p>
       </div>
-      <div class="rounded-xl border border-default/40 bg-muted/5 p-3">
-        <p class="text-[10px] font-bold uppercase text-muted">
+      <div class="rounded-xl border border-default/50 bg-muted/10 p-3 ring-1 ring-default/20">
+        <p class="text-[10px] font-bold uppercase tracking-wider text-muted">
           Wyniki do akceptacji
         </p>
-        <p class="text-lg font-black tabular-nums text-warning">
+        <p class="mt-1 text-xl font-black tabular-nums text-warning sm:text-2xl">
           {{ pendingResults }}
         </p>
       </div>
     </div>
 
-    <div class="mt-4 rounded-xl bg-muted/10 p-3">
+    <div class="mt-4 rounded-xl border border-default/45 bg-muted/10 p-3.5 ring-1 ring-default/20">
       <p class="mb-2 text-xs font-bold uppercase tracking-wider text-muted">
         Głosowanie na zawodnika miesiąca
       </p>
-      <div v-if="topVote" class="flex items-center justify-between">
-        <span class="text-sm font-semibold">{{ topVote.athlete_name }}</span>
-        <UBadge color="primary" variant="subtle">
+      <div v-if="topVote" class="flex items-center justify-between gap-2">
+        <span class="truncate text-sm font-semibold text-highlighted">{{ topVote.athlete_name }}</span>
+        <UBadge color="primary" variant="subtle" class="shrink-0">
           {{ topVote.votes_count }} głosów
         </UBadge>
       </div>

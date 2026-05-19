@@ -13,7 +13,7 @@ const props = withDefaults(
 const sectionClass = computed(() => {
   if (props.tone === 'danger') return 'rounded-2xl border border-error/45 bg-error/5 p-6 shadow-sm ring-1 ring-error/20 sm:p-7'
   if (props.tone === 'accent') return 'relative overflow-hidden rounded-2xl border border-primary/30 bg-linear-to-br from-primary/10 via-card to-card p-6 shadow-sm ring-1 ring-primary/20 sm:p-7'
-  return 'rounded-2xl border border-default/50 bg-card p-6 shadow-sm ring-1 ring-default/20 sm:p-7'
+  return 'slavia-section-card p-6 sm:p-7'
 })
 </script>
 <template>
@@ -24,7 +24,7 @@ const sectionClass = computed(() => {
           <UIcon :name="icon" class="size-5" />
         </div>
         <div class="min-w-0">
-          <h2 class="text-base font-bold text-highlighted">{{ title }}</h2>
+          <h2 class="slavia-display text-base font-bold text-highlighted">{{ title }}</h2>
           <p v-if="description" class="mt-1 text-sm leading-relaxed text-muted">{{ description }}</p>
         </div>
       </div>

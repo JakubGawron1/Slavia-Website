@@ -172,7 +172,9 @@ function bodyPreview(text: string, max = 100) {
 <template>
   <PublicPageLayout>
     <PublicPageHeader
+      variant="hero"
       eyebrow="CKS Slavia"
+      icon="i-lucide-megaphone"
       title="Tablica ogłoszeń"
       description="Komunikaty organizacyjne i ważne daty — widoczne dla wszystkich; edycja wyłącznie dla administratorów."
     >
@@ -228,39 +230,45 @@ function bodyPreview(text: string, max = 100) {
       </div>
     </div>
 
-    <div
+    <PublicEmptyState
       v-else-if="!sortedPublic.length"
-      class="slavia-page-card rounded-2xl border border-dashed border-default px-6 py-14 text-center text-muted"
+      icon="i-lucide-megaphone"
+      title="Brak ogłoszeń"
+      description="Gdy pojawią się komunikaty organizacyjne, zobaczysz je tutaj na pierwszym planie."
     >
-      <UIcon name="i-lucide-megaphone" class="mx-auto mb-3 size-10 text-muted/40" />
-      <p class="font-semibold text-highlighted">
-        Brak ogłoszeń
-      </p>
       <UButton
         v-show="canManage"
-        class="mt-6"
         icon="i-lucide-megaphone"
         color="primary"
         size="lg"
+        class="min-h-11 font-semibold"
         @click="openCreate"
       >
         Dodaj pierwsze ogłoszenie
       </UButton>
-      <p
+      <template
         v-if="auth.isLoggedIn && !canManage && sessionReady"
-        class="mx-auto mt-4 max-w-md text-center text-xs text-muted"
+        #hint
       >
         Tablicę uzupełniają konta Administrator lub SuperAdmin.
         <NuxtLink to="/profil" class="font-semibold text-primary underline">
           Sprawdź swoje role
         </NuxtLink>
         — po zmianie roli wyloguj się i zaloguj ponownie.
-      </p>
-    </div>
+      </template>
+    </PublicEmptyState>
 
     <template v-else>
-      <UCard v-if="canManage" class="slavia-page-card mb-8 hidden overflow-hidden md:block">
-        <div class="slavia-data-table overflow-x-auto">
+      <div
+        v-if="canManage"
+        class="slavia-page-card mb-8 hidden overflow-hidden md:block"
+      >
+        <div class="border-b border-default/50 bg-muted/15 px-4 py-3 sm:px-5">
+          <p class="text-xs font-bold uppercase tracking-wider text-muted">
+            Zarządzanie ogłoszeniami
+          </p>
+        </div>
+        <div class="slavia-data-table overflow-x-auto p-2 sm:p-4">
           <table>
             <thead>
               <tr>
@@ -288,25 +296,30 @@ function bodyPreview(text: string, max = 100) {
                 </td>
                 <td class="text-xs text-muted whitespace-nowrap">{{ formatDate(a.created_at) }}</td>
                 <td class="text-right">
-                  <UButton size="xs" variant="soft" icon="i-lucide-pencil" @click="openEdit(a)" />
-                  <UButton size="xs" variant="ghost" color="error" icon="i-lucide-trash-2" class="ml-1" @click="remove(a.id)" />
+                  <div class="inline-flex flex-wrap justify-end gap-1">
+                    <UButton size="xs" variant="soft" icon="i-lucide-pencil" aria-label="Edytuj" @click="openEdit(a)" />
+                    <UButton size="xs" variant="ghost" color="error" icon="i-lucide-trash-2" aria-label="Usuń" @click="remove(a.id)" />
+                  </div>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
-      </UCard>
+      </div>
 
-      <div :class="canManage ? 'space-y-4 md:hidden' : 'space-y-4'">
-      <UCard
-        v-for="a in sortedPublic"
-        :key="a.id"
-        class="slavia-page-card overflow-hidden transition-colors"
-        :class="a.pinned ? 'slavia-announcement-pin ring-2 ring-primary/35 bg-primary/5' : ''"
+      <div
+        class="grid gap-5 sm:gap-6"
+        :class="canManage ? 'md:hidden lg:grid-cols-2' : 'lg:grid-cols-2'"
       >
-        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div class="min-w-0 flex-1">
-            <div class="mb-2 flex flex-wrap items-center gap-2">
+        <article
+          v-for="a in sortedPublic"
+          :key="a.id"
+          class="slavia-page-card overflow-hidden p-5 transition-all duration-200 sm:p-6"
+          :class="a.pinned ? 'slavia-announcement-pin bg-primary/[0.04] ring-1 ring-primary/25' : ''"
+        >
+          <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div class="min-w-0 flex-1">
+              <div class="mb-3 flex flex-wrap items-center gap-2">
               <UBadge
                 v-if="a.pinned"
                 color="primary"
@@ -325,12 +338,12 @@ function bodyPreview(text: string, max = 100) {
               </UBadge>
               <span class="text-xs text-muted">{{ formatDate(a.created_at) }}</span>
             </div>
-            <h2 class="text-lg font-semibold text-highlighted sm:text-xl">
+            <h2 class="text-lg font-bold tracking-tight text-highlighted sm:text-xl">
               {{ a.title }}
             </h2>
             <!-- eslint-disable vue/no-v-html — renderSimpleMarkdown (DOMPurify) -->
             <div
-              class="prose prose-sm mt-2 max-w-none text-muted sm:prose-base"
+              class="prose prose-sm mt-3 max-w-none leading-relaxed text-muted prose-headings:text-highlighted sm:prose-base"
               v-html="renderSimpleMarkdown(a.body)"
             />
             <!-- eslint-enable vue/no-v-html -->
@@ -361,7 +374,7 @@ function bodyPreview(text: string, max = 100) {
             </UButton>
           </div>
         </div>
-      </UCard>
+      </article>
       </div>
     </template>
 

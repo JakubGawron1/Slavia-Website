@@ -96,15 +96,30 @@ function formatDate(dateStr: string) {
 </script>
 
 <template>
-  <article class="animate-page-in py-8 sm:py-12 lg:py-16">
-    <UContainer class="max-w-3xl px-2 sm:px-0">
-      <NuxtLink
-        to="/aktualnosci"
-        class="mb-8 inline-flex items-center text-sm font-medium text-muted transition-colors hover:text-primary"
-      >
-        <UIcon name="i-lucide-arrow-left" class="mr-1 size-4" />
-        Wróć do aktualności
-      </NuxtLink>
+  <PublicPageLayout narrow :animate="false">
+    <PublicPageHeader
+      v-if="post"
+      back-to="/aktualnosci"
+      back-label="Wróć do aktualności"
+      :title="post.title"
+    >
+      <template #description>
+        <span class="inline-flex items-center gap-1.5 text-primary">
+          <UIcon name="i-lucide-calendar" class="size-4" />
+          Opublikowano {{ formatDate(post.created_at) }}
+        </span>
+      </template>
+    </PublicPageHeader>
+    <NuxtLink
+      v-else
+      to="/aktualnosci"
+      class="mb-8 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
+    >
+      <UIcon name="i-lucide-arrow-left" class="size-4" />
+      Wróć do aktualności
+    </NuxtLink>
+
+    <article class="slavia-public-section">
 
       <div
         v-if="pending && !post"
@@ -124,28 +139,25 @@ function formatDate(dateStr: string) {
         </div>
       </div>
 
-      <div
+      <PublicEmptyState
         v-else-if="!post"
-        class="rounded-2xl border border-dashed border-default bg-muted/10 px-6 py-14 text-center text-muted"
+        icon="i-lucide-file-question"
+        title="Nie znaleziono wpisu"
+        description="Ten artykuł mógł zostać usunięty lub adres jest nieprawidłowy."
+        compact
       >
-        Nie znaleziono wpisu.
-      </div>
+        <UButton
+          to="/aktualnosci"
+          color="primary"
+          variant="soft"
+          icon="i-lucide-arrow-left"
+        >
+          Wróć do listy
+        </UButton>
+      </PublicEmptyState>
 
       <template v-else>
-        <header class="mb-10 text-center">
-          <p class="mb-4 flex items-center justify-center gap-1.5 text-sm font-medium text-primary">
-            <UIcon
-              name="i-lucide-calendar"
-              class="size-4"
-            />
-            Opublikowano {{ formatDate(post.created_at) }}
-          </p>
-          <h1 class="text-3xl font-extrabold tracking-tight text-highlighted sm:text-4xl md:text-5xl">
-            {{ post.title }}
-          </h1>
-        </header>
-
-        <div class="mb-12 w-full overflow-hidden rounded-2xl shadow-inner ring-1 ring-default/40">
+        <div class="mb-10 w-full overflow-hidden rounded-2xl ring-1 ring-default/50 shadow-sm">
           <img
             v-if="post.image_url"
             :src="postImageSrc(post.image_url)"
@@ -154,7 +166,7 @@ function formatDate(dateStr: string) {
           >
           <div
             v-else
-            class="flex h-64 items-center justify-center rounded-2xl bg-linear-to-br from-primary/15 via-muted/30 to-neutral-900/80 md:h-96 dark:from-primary/25 dark:to-neutral-950"
+            class="flex h-64 items-center justify-center bg-linear-to-br from-primary/10 via-muted/25 to-muted/40 md:h-96"
           >
             <UIcon
               name="i-lucide-camera"
@@ -174,6 +186,6 @@ function formatDate(dateStr: string) {
           </p>
         </div>
       </template>
-    </UContainer>
-  </article>
+    </article>
+  </PublicPageLayout>
 </template>

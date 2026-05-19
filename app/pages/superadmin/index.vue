@@ -2,7 +2,6 @@
 import type { AthletePaymentOverviewRow } from '~/types/models'
 import DashboardHero from '~/components/dashboard/DashboardHero.vue'
 import DashboardKpiCard from '~/components/dashboard/DashboardKpiCard.vue'
-import DashboardModuleCard from '~/components/dashboard/DashboardModuleCard.vue'
 import DashboardMonthlySummary from '~/components/dashboard/DashboardMonthlySummary.vue'
 import { dashboardLink, type DashboardModuleLink } from '~/utils/dashboardLink'
 
@@ -158,7 +157,7 @@ function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 
 </script>
 
 <template>
-  <UContainer class="slavia-panel-page py-8 md:py-14 lg:py-16">
+  <PanelPageLayout>
     <DashboardHero
       eyebrow="Superadministracja"
       :title="`Witaj, ${auth.user.value?.username || 'Superadminie'}!`"
@@ -187,26 +186,14 @@ function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 
       />
     </div>
 
-    <div class="mt-12 space-y-8">
-      <div v-for="g in moduleGroups" :key="g.title">
-        <div class="mb-3 flex items-end justify-between gap-3">
-          <h2 class="slavia-panel-section-title">
-            {{ g.title }}
-          </h2>
-        </div>
-        <div class="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <DashboardModuleCard
-            v-for="link in g.items"
-            :key="String(link!.to)"
-            :title="link!.title"
-            :description="link!.description"
-            :icon="link!.icon"
-            :to="link!.to"
-            :tone="toneFromBg(link!.bg)"
-            :icon-wrapper-class="`${link!.bg} ${link!.color}`"
-          />
-        </div>
-      </div>
+    <div class="slavia-panel-section space-y-2">
+      <PanelModuleGrid
+        v-for="g in moduleGroups"
+        :key="g.title"
+        :title="g.title"
+        :items="g.items"
+        :tone-from-bg="toneFromBg"
+      />
     </div>
-  </UContainer>
+  </PanelPageLayout>
 </template>

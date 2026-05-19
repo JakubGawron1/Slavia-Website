@@ -582,13 +582,16 @@ function handleDayClick(day: Date) {
 <template>
   <PublicPageLayout padding="compact">
     <PublicPageHeader
+      variant="hero"
       eyebrow="CKS Slavia"
+      icon="i-lucide-calendar-days"
       title="Kalendarz klubowy"
       description="Harmonogram treningów i startów klubowych."
     />
 
-    <div class="slavia-toolbar mb-6 flex flex-col gap-5 sm:mb-8 md:flex-row md:items-center md:justify-between md:gap-6 lg:mb-10">
-      <div class="flex w-full items-center justify-center gap-2 rounded-xl border border-default bg-muted/20 p-1.5 md:w-auto">
+    <div class="slavia-toolbar mb-6 flex flex-col gap-4 sm:mb-8 lg:mb-10">
+      <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div class="flex w-full items-center justify-center gap-1 rounded-xl border border-default/60 bg-card/80 p-1 shadow-sm md:w-auto">
         <UButton
           icon="i-lucide-chevron-left"
           variant="ghost"
@@ -598,7 +601,7 @@ function handleDayClick(day: Date) {
         <UButton
           variant="ghost"
           color="neutral"
-          class="min-w-0 flex-1 truncate px-2 font-bold text-highlighted sm:min-w-[140px] sm:flex-none"
+          class="min-w-0 flex-1 truncate px-2 text-sm font-bold capitalize text-highlighted sm:min-w-[10rem] sm:flex-none sm:text-base"
           @click="goToToday"
         >
           {{ format(currentDate, 'MMMM yyyy', { locale: pl }) }}
@@ -611,7 +614,7 @@ function handleDayClick(day: Date) {
         />
       </div>
 
-      <div class="flex w-full flex-col gap-2 sm:flex-row sm:justify-end md:w-auto md:flex-none">
+      <div class="flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end md:w-auto md:flex-none md:max-w-xl">
         <UButton
           v-if="canSyncExternalCalendars"
           icon="i-lucide-download-cloud"
@@ -645,13 +648,14 @@ function handleDayClick(day: Date) {
           Przywróć treningi (Pn/Śr/Pt)
         </UButton>
       </div>
+      </div>
       <p
         v-if="canManageEvents"
-        class="mx-auto max-w-2xl text-center text-[11px] leading-snug text-muted md:mx-0 md:text-left"
+        class="rounded-xl border border-default/50 bg-muted/15 px-4 py-3 text-[11px] leading-relaxed text-muted sm:text-xs"
       >
-        <strong>Synchronizacja</strong> scala PZPC i PodnoszenieCiezarow.pl oraz
-        <strong class="text-default">usuwa z bazy wszystkie wydarzenia spoza bieżącego i następnego roku</strong>
-        (w tym wpisy dodane ręcznie). Administratorzy i trenerzy uruchamiają ją tutaj.
+        <strong class="text-default">Synchronizacja</strong> scala PZPC i PodnoszenieCiezarow.pl oraz
+        <strong class="text-default">usuwa z bazy wydarzenia spoza bieżącego i następnego roku</strong>
+        (w tym wpisy dodane ręcznie).
       </p>
     </div>
 
@@ -669,13 +673,13 @@ function handleDayClick(day: Date) {
     </div>
 
     <!-- Calendar Grid (desktop) -->
-    <div class="hidden sm:block overflow-hidden rounded-2xl border border-default bg-card shadow-2xl">
+    <div class="slavia-calendar-grid hidden overflow-hidden rounded-2xl border border-default/60 bg-card/90 shadow-sm ring-1 ring-default/30 sm:block">
       <!-- Header -->
-      <div class="grid grid-cols-7 border-b border-default bg-muted/30">
+      <div class="grid grid-cols-7 border-b border-default/50 bg-muted/15">
         <div
           v-for="day in weekDays"
           :key="day"
-          class="py-2 text-center text-[10px] font-black uppercase tracking-wide text-muted sm:py-4 sm:text-xs sm:tracking-widest"
+          class="py-2.5 text-center text-[10px] font-bold uppercase tracking-[0.14em] text-muted sm:py-3.5 sm:text-[11px]"
         >
           {{ day }}
         </div>
@@ -686,18 +690,18 @@ function handleDayClick(day: Date) {
         <div
           v-for="day in days"
           :key="day.toString()"
-          class="group relative border-b border-r border-default transition-colors last:border-r-0 hover:bg-primary/5"
+          class="group relative border-b border-r border-default/45 bg-background transition-colors last:border-r-0 hover:bg-muted/20"
           :class="[
-            isCompactTablet ? 'min-h-[72px] p-1 sm:min-h-[88px]' : 'min-h-[92px] p-1.5 sm:min-h-[120px] sm:p-2 md:min-h-[140px]',
-            !isSameMonth(day, monthStart) ? 'bg-muted/10 opacity-30' : '',
-            isToday(day) ? 'bg-primary/5' : ''
+            isCompactTablet ? 'min-h-[72px] p-1 sm:min-h-[88px]' : 'min-h-[92px] p-1.5 sm:min-h-[120px] sm:p-2 md:min-h-[132px]',
+            !isSameMonth(day, monthStart) ? 'bg-muted/8 opacity-45' : '',
+            isToday(day) ? 'bg-primary/[0.04] ring-1 ring-inset ring-primary/20' : ''
           ]"
           @click="handleDayClick(day)"
         >
           <div class="flex justify-between items-start mb-2">
             <span
-              class="text-sm font-bold w-7 h-7 flex items-center justify-center rounded-full"
-              :class="isToday(day) ? 'bg-primary text-white shadow-lg' : 'text-muted'"
+              class="flex size-7 items-center justify-center rounded-full text-sm font-bold tabular-nums"
+              :class="isToday(day) ? 'bg-primary/15 font-black text-primary ring-1 ring-primary/30' : 'text-muted'"
             >
               {{ format(day, 'd') }}
             </span>
@@ -718,7 +722,7 @@ function handleDayClick(day: Date) {
             <div
               v-for="event in getEventsForDay(day)"
               :key="event.id"
-              class="text-[10px] p-1.5 rounded-lg border flex flex-col leading-tight cursor-pointer transition-all hover:brightness-110"
+              class="slavia-calendar-event text-[10px] rounded-md border px-1.5 py-1 font-medium leading-snug cursor-pointer transition-colors hover:opacity-95"
               :class="getEventClasses(event)"
               @click.stop="openModal(undefined, event)"
             >
@@ -729,10 +733,10 @@ function handleDayClick(day: Date) {
                   class="size-2.5 shrink-0 opacity-80"
                 />
               </div>
-              <span class="opacity-60">{{ event.time || event.location }}</span>
+              <span class="truncate text-[9px] opacity-75">{{ event.time || event.location }}</span>
               <span
                 v-if="event.status && event.status !== 'scheduled'"
-                class="text-[10px] uppercase tracking-[0.15em] font-semibold mt-1"
+                class="mt-0.5 text-[9px] font-semibold uppercase tracking-wide opacity-90"
               >
                 {{
                   event.status === 'cancelled'
@@ -760,7 +764,7 @@ function handleDayClick(day: Date) {
     </div>
 
     <!-- Legenda -->
-    <div class="mt-6 grid grid-cols-1 gap-4 rounded-2xl border border-default bg-muted/10 p-4 sm:mt-8 sm:grid-cols-2 sm:gap-3 sm:p-5 lg:grid-cols-4">
+    <div class="slavia-page-card mt-6 grid grid-cols-1 gap-4 p-4 sm:mt-8 sm:grid-cols-2 sm:gap-4 sm:p-5 lg:grid-cols-4">
       <div class="flex items-center gap-3">
         <div class="w-3 h-7 rounded-full bg-blue-500/40 border border-blue-500/50 shrink-0" />
         <div>
@@ -1021,5 +1025,13 @@ function handleDayClick(day: Date) {
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+.slavia-calendar-event :deep(svg) {
+  flex-shrink: 0;
+}
+
+.slavia-calendar-grid .slavia-calendar-event {
+  backdrop-filter: blur(4px);
 }
 </style>

@@ -16,11 +16,11 @@ const navPreReleaseBadge = computed(() => {
 
 <template>
   <header
-    class="sticky top-0 z-50 border-b border-default/50 bg-background/92 backdrop-blur-xl supports-backdrop-filter:bg-background/80 dark:border-default/40"
+    class="sticky top-0 z-50 border-b border-default/45 bg-background/88 shadow-sm backdrop-blur-xl supports-backdrop-filter:bg-background/72 dark:border-default/35 dark:bg-background/82 dark:shadow-md dark:shadow-black/20"
   >
     <!-- Jedna belka: marka | nawigacja (desktop) | akcje. Bez drugiego rzędu i bez poziomego paska pod spodem na mobile. -->
     <div
-      class="mx-auto flex w-full max-w-[1440px] items-center gap-2 px-3 py-2.5 sm:gap-3 sm:px-5 lg:min-h-[3.5rem] lg:gap-5 lg:px-8 lg:py-0"
+      class="mx-auto flex w-full max-w-[1440px] items-center gap-2 px-3 py-2.5 sm:gap-3 sm:px-5 lg:min-h-[3.75rem] lg:gap-5 lg:px-8 lg:py-0"
     >
       <div class="flex shrink-0 items-center gap-2 sm:gap-3">
         <div class="flex min-w-0 items-center gap-2">

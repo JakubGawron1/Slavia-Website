@@ -14,7 +14,7 @@ export const SLAVIA_THEME_PRESETS = [
   {
     id: 'slavia',
     label: 'Slavia — sala klubu',
-    description: 'Świeży jasny motyw i klasyczny ciemny z klubową zielenią.'
+    description: 'Ciemne bordo z akcentem łososiowym — domyślny klubowy; jasny wariant ciepły i premium.'
   },
   {
     id: 'iron',

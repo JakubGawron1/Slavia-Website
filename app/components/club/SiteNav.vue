@@ -150,6 +150,11 @@ const calculatorDropdownItems = [
     to: link.to
   }))
 ]
+
+const dropdownUi = {
+  content:
+    'min-w-[15rem] rounded-xl border border-default/50 bg-elevated/95 p-1 shadow-lg ring-1 ring-default/25 backdrop-blur-xl dark:shadow-black/30'
+}
 </script>
 
 <template>
@@ -165,8 +170,8 @@ const calculatorDropdownItems = [
         v-for="link in items.main"
         :key="'nav-' + link.to"
         :to="link.to"
-        class="inline-flex shrink-0 whitespace-nowrap rounded-lg px-2.5 py-2 text-[13px] font-medium text-muted transition-colors hover:bg-muted/70 hover:text-highlighted xl:px-3 xl:text-sm"
-        active-class="bg-primary/14 font-semibold text-primary"
+        class="slavia-nav-link inline-flex shrink-0 whitespace-nowrap rounded-xl px-2.5 py-2 text-[13px] font-medium text-muted hover:bg-muted/60 hover:text-highlighted xl:px-3.5 xl:py-2.5 xl:text-sm"
+        active-class="!bg-primary/12 !font-semibold !text-primary"
       >
         {{ link.label }}
       </NuxtLink>
@@ -177,7 +182,7 @@ const calculatorDropdownItems = [
         :modal="false"
         :items="calculatorDropdownItems"
         :content="{ align: 'end', collisionPadding: 16 }"
-        :ui="{ content: 'min-w-[15rem]' }"
+        :ui="dropdownUi"
       >
         <UButton
           color="neutral"
@@ -185,7 +190,7 @@ const calculatorDropdownItems = [
           size="sm"
           icon="i-lucide-calculator"
           trailing-icon="i-lucide-chevron-down"
-          class="h-9 shrink-0 gap-1.5 rounded-lg px-2.5 text-xs font-bold uppercase tracking-wide xl:h-10 xl:px-3 xl:text-[13px]"
+          class="h-9 shrink-0 gap-1.5 rounded-xl px-2.5 text-xs font-bold uppercase tracking-wide transition-colors hover:bg-muted/50 xl:h-10 xl:px-3 xl:text-[13px]"
           aria-label="Kalkulatory"
         >
           <span class="hidden xl:inline">Kalkulatory</span>
@@ -197,7 +202,7 @@ const calculatorDropdownItems = [
         :modal="false"
         :items="panelDropdownItems"
         :content="{ align: 'end', collisionPadding: 16 }"
-        :ui="{ content: 'min-w-[14rem]' }"
+        :ui="{ ...dropdownUi, content: `${dropdownUi.content} min-w-[14rem]` }"
       >
         <UButton
           color="neutral"
@@ -205,7 +210,7 @@ const calculatorDropdownItems = [
           size="sm"
           icon="i-lucide-layout-grid"
           trailing-icon="i-lucide-chevron-down"
-          class="h-9 shrink-0 gap-1.5 rounded-lg px-2.5 text-xs font-bold uppercase tracking-wide xl:h-10 xl:px-3.5 xl:text-[13px]"
+          class="h-9 shrink-0 gap-1.5 rounded-xl border-default/55 px-2.5 text-xs font-bold uppercase tracking-wide shadow-sm transition-colors hover:border-primary/35 hover:bg-primary/6 xl:h-10 xl:px-3.5 xl:text-[13px]"
           aria-label="Panel"
         >
           <span class="hidden xl:inline">Panel</span>
@@ -251,7 +256,7 @@ const calculatorDropdownItems = [
             <UIcon name="i-lucide-chevron-right" class="size-4 text-muted" />
           </NuxtLink>
 
-          <div class="rounded-2xl border border-default/50 bg-muted/10 p-2 ring-1 ring-default/30">
+          <div class="slavia-glass rounded-2xl p-2">
             <p class="px-2 pb-2 pt-1 text-[10px] font-bold uppercase tracking-wider text-muted">
               Strony klubu
             </p>
@@ -271,7 +276,7 @@ const calculatorDropdownItems = [
             </div>
           </div>
 
-          <div class="rounded-2xl border border-default/50 bg-muted/10 p-2 ring-1 ring-default/30">
+          <div class="slavia-glass rounded-2xl p-2">
             <p class="px-2 pb-2 pt-1 text-[10px] font-bold uppercase tracking-wider text-muted">
               Kalkulatory
             </p>
@@ -297,7 +302,7 @@ const calculatorDropdownItems = [
               v-for="section in items.panelSections"
               :key="section.heading"
             >
-              <div class="rounded-2xl border border-primary/15 bg-primary/4 p-2 ring-1 ring-primary/10 dark:bg-primary/10">
+              <div class="slavia-glass rounded-2xl border-primary/20 bg-primary/5 p-2 ring-1 ring-primary/12 dark:bg-primary/10">
                 <p class="px-2 pb-2 pt-1 text-[10px] font-bold uppercase tracking-wider text-primary">
                   {{ section.heading }}
                 </p>

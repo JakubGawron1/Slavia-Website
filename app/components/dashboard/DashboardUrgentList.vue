@@ -17,34 +17,38 @@ defineProps<{
 </script>
 
 <template>
-  <div class="rounded-2xl border border-default bg-card p-6">
+  <div class="h-full rounded-2xl border border-default/70 bg-card p-5 shadow-sm ring-1 ring-default/30 sm:p-6">
     <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
-      <h2 class="text-lg font-semibold text-highlighted sm:text-xl">
-        <UIcon :name="icon" class="mr-2 inline" />
-        {{ title }}
-        <span v-if="typeof count === 'number'" class="text-muted">({{ count }})</span>
-      </h2>
+      <div class="flex min-w-0 items-center gap-2.5">
+        <span class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-warning/12 text-warning ring-1 ring-warning/20">
+          <UIcon :name="icon" class="size-5" />
+        </span>
+        <h2 class="text-lg font-bold tracking-tight text-highlighted sm:text-xl">
+          {{ title }}
+          <span v-if="typeof count === 'number'" class="font-semibold text-muted">({{ count }})</span>
+        </h2>
+      </div>
       <slot name="actions" />
     </div>
 
     <div
       v-if="items.length === 0"
-      class="rounded-xl border border-dashed border-default/70 bg-muted/10 px-4 py-8 text-center text-sm text-muted"
+      class="rounded-xl border border-dashed border-default/70 bg-muted/10 px-4 py-10 text-center text-sm text-muted"
     >
       {{ emptyText }}
     </div>
 
-    <div v-else class="space-y-3">
+    <div v-else class="space-y-2.5">
       <div
         v-for="it in items"
         :key="it.key"
-        class="flex flex-col gap-3 rounded-xl border border-default/50 bg-muted/20 p-4 sm:flex-row sm:items-center sm:justify-between"
+        class="flex flex-col gap-3 rounded-xl border border-default/55 bg-muted/15 p-4 transition-colors hover:border-primary/25 hover:bg-muted/25 sm:flex-row sm:items-center sm:justify-between"
       >
         <div class="min-w-0">
-          <p class="font-medium text-highlighted">
+          <p class="font-semibold text-highlighted">
             {{ it.title }}
           </p>
-          <p v-if="it.subtitle" class="text-sm text-muted">
+          <p v-if="it.subtitle" class="mt-0.5 text-sm text-muted">
             {{ it.subtitle }}
           </p>
           <UBadge
@@ -81,10 +85,13 @@ defineProps<{
     </div>
 
     <div v-if="footerLink" class="mt-5 border-t border-default/50 pt-4">
-      <NuxtLink :to="footerLink.to" class="text-sm font-semibold text-primary underline-offset-2 hover:underline">
+      <NuxtLink
+        :to="footerLink.to"
+        class="inline-flex items-center gap-1 text-sm font-semibold text-primary underline-offset-2 hover:underline"
+      >
         {{ footerLink.label }}
+        <UIcon name="i-lucide-arrow-right" class="size-4" />
       </NuxtLink>
     </div>
   </div>
 </template>
-

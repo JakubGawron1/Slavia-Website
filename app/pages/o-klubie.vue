@@ -21,8 +21,8 @@ useSeoMeta({
 
     <ClubHistoryTimeline heading-id="o-klubie-history-heading" />
 
-    <div class="mx-auto mt-12 flex max-w-3xl flex-col items-center gap-4 text-center sm:mt-16">
-      <p class="text-sm leading-relaxed text-muted">
+    <div class="slavia-page-card mx-auto mt-12 flex max-w-3xl flex-col items-center gap-5 px-6 py-10 text-center sm:mt-16 sm:px-10 sm:py-12">
+      <p class="text-sm leading-relaxed text-muted sm:text-base">
         Chcesz dołączyć do kadry lub współpracować z klubem? Napisz — chętnie opowiemy więcej o treningach i zapisach.
       </p>
       <div class="flex flex-wrap justify-center gap-3">

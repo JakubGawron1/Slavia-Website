@@ -8,7 +8,6 @@ import {
   membershipMonthBadgeFromStatus,
   showPre10PaymentAthleteReminder
 } from '~/utils/paymentSemantics'
-import DashboardModuleCard from '~/components/dashboard/DashboardModuleCard.vue'
 import DashboardKpiCard from '~/components/dashboard/DashboardKpiCard.vue'
 import { dashboardLink, type DashboardModuleLink } from '~/utils/dashboardLink'
 
@@ -687,7 +686,7 @@ function toggleChecklistItem(id: string) {
 </script>
 
 <template>
-  <UContainer class="slavia-panel-page py-8 md:py-11 lg:py-14">
+  <PanelPageLayout padding="compact">
     <!-- Hero dashboard -->
     <div
       class="relative mb-8 overflow-hidden rounded-[1.75rem] border border-primary/20 bg-linear-to-br from-primary/[0.14] via-card to-card shadow-sm ring-1 ring-primary/10 sm:rounded-3xl"
@@ -1104,26 +1103,14 @@ function toggleChecklistItem(id: string) {
       <AthleteBadges :athlete="athlete" :present-count="attendanceSummary?.present_count || 0" />
     </div>
 
-    <div v-if="auth.canAccessAthletePortal && athlete" class="mt-10 mb-10 space-y-8">
-      <div v-for="g in athleteModuleGroups" :key="g.title">
-        <div class="mb-3 flex items-end justify-between gap-3">
-          <h2 class="text-xl font-semibold text-highlighted">
-            {{ g.title }}
-          </h2>
-        </div>
-        <div class="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <DashboardModuleCard
-            v-for="link in g.items"
-            :key="link.to"
-            :title="link.title"
-            :description="link.description"
-            :icon="link.icon"
-            :to="link.to"
-            :tone="toneFromIconBg(link.bg)"
-            :icon-wrapper-class="`${link.bg} ${link.color}`"
-          />
-        </div>
-      </div>
+    <div v-if="auth.canAccessAthletePortal && athlete" class="mt-10 mb-10 space-y-2">
+      <PanelModuleGrid
+        v-for="g in athleteModuleGroups"
+        :key="g.title"
+        :title="g.title"
+        :items="g.items"
+        :tone-from-bg="toneFromIconBg"
+      />
     </div>
 
     <!-- Licznik startów (statystyki PB są wyżej w hero — bez duplikatu kart) -->
@@ -1523,5 +1510,5 @@ function toggleChecklistItem(id: string) {
 
       </div>
     </div>
-  </UContainer>
+  </PanelPageLayout>
 </template>

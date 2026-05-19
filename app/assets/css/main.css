@@ -27,10 +27,44 @@ body {
   box-sizing: border-box;
 }
 
+/**
+ * Premium design tokens — wspólna warstwa wizualna (presety nadpisują akcent/tło).
+ */
+:root,
+html[data-slavia-preset] {
+  --slavia-radius-lg: 1rem;
+  --slavia-radius-xl: 1.25rem;
+  --slavia-radius-2xl: 1.5rem;
+  --slavia-accent-salmon: #f08070;
+  --slavia-accent-coral: #ff9a8b;
+  --slavia-accent-salmon-deep: #e06452;
+  --slavia-burgundy-950: #0d0609;
+  --slavia-burgundy-900: #140a0f;
+  --slavia-burgundy-800: #1e0f16;
+  --slavia-burgundy-700: #2a1520;
+  --slavia-shadow-xs: 0 1px 2px color-mix(in srgb, var(--ui-bg-inverted, #000) 5%, transparent);
+  --slavia-shadow-sm:
+    0 2px 8px -2px color-mix(in srgb, var(--ui-bg-inverted, #000) 12%, transparent),
+    0 1px 3px color-mix(in srgb, var(--ui-bg-inverted, #000) 6%, transparent);
+  --slavia-shadow-md:
+    0 12px 40px -14px color-mix(in srgb, var(--ui-bg-inverted, #000) 22%, transparent),
+    0 4px 16px -6px color-mix(in srgb, var(--ui-bg-inverted, #000) 10%, transparent);
+  --slavia-shadow-glow: 0 0 40px -6px color-mix(in oklab, var(--ui-primary) 28%, transparent);
+  --slavia-glass-bg: color-mix(in oklab, var(--ui-bg-elevated) 78%, transparent);
+  --slavia-glass-border: color-mix(in oklab, var(--ui-border) 62%, transparent);
+  --slavia-glass-highlight: color-mix(in oklab, #fff 9%, transparent);
+}
+
 /* Kontrastowy focus (klawiatura) — uzupełnienie komponentów Nuxt UI. */
 :focus-visible {
-  outline: 2px solid var(--ui-primary, rgb(14 165 233));
+  outline: 2px solid color-mix(in oklab, var(--ui-primary, #f08070) 85%, #fff);
   outline-offset: 2px;
+}
+
+/** Nagłówki display — Outfit z Google Fonts (app.vue). */
+.slavia-display {
+  font-family: 'Outfit', var(--font-sans, 'Public Sans', sans-serif);
+  letter-spacing: -0.03em;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -105,10 +139,43 @@ svg {
 }
 
 .slavia-panel-section-title {
+  font-family: 'Outfit', var(--font-sans, 'Public Sans', sans-serif);
   font-size: 1.25rem;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--ui-text-highlighted);
+}
+
+/** Nagłówek sekcji (publiczne listy, panele) */
+.slavia-section-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.slavia-section-header__title {
+  font-family: 'Outfit', var(--font-sans, 'Public Sans', sans-serif);
+  font-size: 1.125rem;
+  font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--ui-text-highlighted);
+}
+
+.slavia-section-header__eyebrow {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ui-primary);
+}
+
+@media (min-width: 640px) {
+  .slavia-section-header__title {
+    font-size: 1.25rem;
+  }
 }
 
 /** Strony publiczne — szerszy rytm typografii */
@@ -131,16 +198,159 @@ svg {
   }
 }
 
-/** Karta treści na podstronach (filtry, tabele, formularze) */
+/** Karta treści na podstronach (filtry, tabele, formularze) — szkło + delikatny gradient */
 .slavia-page-card {
-  border-radius: 1rem;
-  border: 1px solid color-mix(in srgb, var(--ui-border) 70%, transparent);
-  background: var(--ui-bg-elevated);
-  box-shadow: 0 1px 2px color-mix(in srgb, var(--ui-bg-inverted) 4%, transparent);
+  border-radius: var(--slavia-radius-xl, 1rem);
+  border: 1px solid var(--slavia-glass-border, color-mix(in srgb, var(--ui-border) 70%, transparent));
+  background: linear-gradient(
+    168deg,
+    color-mix(in oklab, var(--ui-bg-elevated) 96%, var(--ui-primary) 2%),
+    color-mix(in oklab, var(--ui-bg-elevated) 90%, transparent)
+  );
+  box-shadow: var(--slavia-shadow-xs, 0 1px 2px rgb(0 0 0 / 0.04));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.22s ease;
+}
+
+html.dark .slavia-page-card {
+  box-shadow:
+    var(--slavia-shadow-xs),
+    var(--slavia-shadow-sm),
+    inset 0 1px 0 var(--slavia-glass-highlight, rgb(255 255 255 / 0.04));
+}
+
+.slavia-page-card:hover {
+  border-color: color-mix(in oklab, var(--ui-primary) 18%, var(--ui-border));
 }
 
 .slavia-page-card--flat {
   box-shadow: none;
+  backdrop-filter: none;
+}
+
+/** Sekcja profilu / panelu — ten sam język wizualny co karty stron */
+.slavia-section-card {
+  border-radius: var(--slavia-radius-2xl, 1.5rem);
+  border: 1px solid var(--slavia-glass-border);
+  background: linear-gradient(
+    165deg,
+    color-mix(in oklab, var(--ui-bg-elevated, var(--ui-bg)) 94%, var(--ui-primary) 2%),
+    color-mix(in oklab, var(--ui-bg-elevated, var(--ui-bg)) 88%, transparent)
+  );
+  box-shadow: var(--slavia-shadow-xs);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/** Powierzchnia szklana (nav, dropdowny, hero) */
+.slavia-glass {
+  border: 1px solid var(--slavia-glass-border);
+  background: var(--slavia-glass-bg);
+  backdrop-filter: blur(16px) saturate(1.15);
+  -webkit-backdrop-filter: blur(16px) saturate(1.15);
+  box-shadow: var(--slavia-shadow-sm);
+}
+
+/** Pusty stan list / tabel */
+.slavia-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  border-radius: var(--slavia-radius-2xl);
+  border: 1px dashed color-mix(in oklab, var(--ui-border) 75%, var(--ui-primary) 12%);
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--ui-bg-muted) 35%, transparent),
+    color-mix(in oklab, var(--ui-bg-elevated) 20%, transparent)
+  );
+}
+
+.slavia-empty-state__icon {
+  display: flex;
+  size: 3rem;
+  width: 3rem;
+  height: 3rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 1rem;
+  background: color-mix(in oklab, var(--ui-primary) 12%, transparent);
+  color: var(--ui-primary);
+  border: 1px solid color-mix(in oklab, var(--ui-primary) 22%, transparent);
+  box-shadow: var(--slavia-shadow-glow);
+}
+
+.slavia-empty-state__title {
+  font-family: 'Outfit', var(--font-sans, 'Public Sans', sans-serif);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ui-text-highlighted);
+}
+
+.slavia-empty-state__desc {
+  max-width: 22rem;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--ui-text-muted);
+}
+
+/** Badge / pill premium (0.65rem caps) */
+.slavia-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  padding: 0.2rem 0.65rem;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--ui-primary) 88%, var(--ui-text-highlighted));
+  background: color-mix(in oklab, var(--ui-primary) 14%, transparent);
+  border: 1px solid color-mix(in oklab, var(--ui-primary) 28%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in oklab, #fff 12%, transparent);
+}
+
+/** Linki nawigacji głównej — aktywny stan z akcentem */
+.slavia-nav-link {
+  position: relative;
+  transition:
+    color 0.18s ease,
+    background-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.slavia-nav-link.router-link-active,
+.slavia-nav-link[aria-current='page'] {
+  font-weight: 600;
+  color: var(--ui-primary);
+  background: color-mix(in oklab, var(--ui-primary) 12%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in oklab, #fff 8%, transparent);
+}
+
+.slavia-nav-link.router-link-active::after,
+.slavia-nav-link[aria-current='page']::after {
+  content: '';
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  bottom: 0.2rem;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklab, var(--ui-primary) 90%, transparent),
+    transparent
+  );
+  opacity: 0.9;
 }
 
 /** Pasek filtrów / przełączników nad tabelą */
@@ -150,9 +360,12 @@ svg {
   align-items: center;
   gap: 0.5rem;
   padding: 0.375rem;
-  border-radius: 1rem;
-  border: 1px solid color-mix(in srgb, var(--ui-border) 60%, transparent);
-  background: color-mix(in srgb, var(--ui-bg-muted) 18%, transparent);
+  border-radius: var(--slavia-radius-xl, 1rem);
+  border: 1px solid var(--slavia-glass-border, color-mix(in srgb, var(--ui-border) 60%, transparent));
+  background: color-mix(in oklab, var(--ui-bg-muted) 22%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: var(--slavia-shadow-xs);
 }
 
 /** Spójne tabele w panelach */
@@ -220,8 +433,8 @@ svg {
 @keyframes page-rise {
   from {
     opacity: 0;
-    transform: translateY(14px);
-    filter: blur(6px);
+    transform: translateY(12px);
+    filter: blur(4px);
   }
   to {
     opacity: 1;
@@ -328,7 +541,7 @@ html[data-slavia-preset] {
   --slavia-chart-accent-2: #22c55e;
 }
 
-html[data-slavia-preset='slavia'] { --slavia-shimmer-accent: var(--ui-primary, #00a155); }
+html[data-slavia-preset='slavia'] { --slavia-shimmer-accent: var(--slavia-accent-salmon, #f08070); }
 html[data-slavia-preset='iron'] { --slavia-shimmer-accent: #38bdf8; }
 html[data-slavia-preset='arena'] { --slavia-shimmer-accent: #fbbf24; }
 html[data-slavia-preset='platform'] { --slavia-shimmer-accent: #34d399; }
@@ -436,25 +649,38 @@ html:not(.dark) .text-highlighted {
   color: var(--ui-text-highlighted);
 }
 
-/** Preset „Slavia” na jasnym — delikatny akcent primary na obramowaniach i tłach wtórnych */
+/** Preset „Slavia” na jasnym — ciepła baza, akcent łososiowy / koralowy */
 html[data-slavia-preset='slavia']:not(.dark),
 html.light[data-slavia-preset='slavia'] {
-  --ui-bg: #f6f9ff;
-  --ui-border: color-mix(in oklab, var(--ui-primary, #00a155) 14%, #e2e8f0);
-  --ui-bg-muted: color-mix(in oklab, var(--ui-primary, #00a155) 5%, #f1f5f9);
-  --ui-bg-elevated: color-mix(in oklab, var(--ui-primary, #00a155) 4%, #eef2f7);
-  --ui-bg-accented: color-mix(in oklab, var(--ui-primary, #00a155) 11%, #e5eaf3);
-  --ui-border-muted: color-mix(in oklab, var(--ui-primary, #00a155) 9%, #eceff4);
-  --ui-border-accented: color-mix(in oklab, var(--ui-primary, #00a155) 28%, #cbd5e1);
-  --ui-text-dimmed: #7f92ab;
-  --ui-text-muted: #546a84;
-  --ui-text-toned: #3d526d;
-  --ui-text: #2a3f59;
-  --ui-text-highlighted: #0f2138;
+  --ui-bg: #faf7f6;
+  --ui-border: color-mix(in oklab, var(--slavia-accent-salmon, #f08070) 16%, #e8e0de);
+  --ui-bg-muted: color-mix(in oklab, var(--slavia-accent-salmon) 4%, #f5f0ef);
+  --ui-bg-elevated: color-mix(in oklab, var(--slavia-accent-salmon) 3%, #f0eae8);
+  --ui-bg-accented: color-mix(in oklab, var(--slavia-accent-salmon) 9%, #ebe4e2);
+  --ui-border-muted: color-mix(in oklab, var(--slavia-accent-salmon) 8%, #f0ebe9);
+  --ui-border-accented: color-mix(in oklab, var(--slavia-accent-salmon) 32%, #d4c8c4);
+  --ui-text-dimmed: #9a8884;
+  --ui-text-muted: #6b5a56;
+  --ui-text-toned: #524340;
+  --ui-text: #3d302c;
+  --ui-text-highlighted: #1a1210;
+  --color-green-400: var(--slavia-accent-coral, #ff9a8b);
+  --color-green-500: var(--slavia-accent-salmon, #f08070);
+  --color-green-600: var(--slavia-accent-salmon-deep, #e06452);
+}
+
+html.light[data-slavia-preset='slavia'] body,
+html[data-slavia-preset='slavia']:not(.dark) body {
+  background-image:
+    radial-gradient(ellipse 110% 70% at 50% -22%, color-mix(in oklab, var(--slavia-accent-salmon) 14%, transparent), transparent 58%),
+    radial-gradient(ellipse 75% 48% at 100% 8%, color-mix(in oklab, #c4a4a0 22%, transparent), transparent 52%),
+    linear-gradient(172deg, #faf8f7 0%, #f3eeec 46%, #ebe4e2 100%);
+  background-color: #ebe4e2;
+  background-attachment: fixed;
 }
 
 /**
- * Jasny motyw — „Slavia” (domyślny): papierowa baza, subtelny „szklany” gradient z klubową zielenią.
+ * Jasny motyw — domyślny (bez presetu lub inne presety): papierowa baza.
  */
 html.light body,
 html:not(.dark) body {
@@ -626,6 +852,44 @@ html.dark[data-slavia-preset='platform'] {
   --ui-text-toned: #c4d1dd;
   --ui-text: #dde5ee;
   --ui-text-highlighted: #f4f8fb;
+}
+
+/**
+ * Ciemny preset „Slavia” — bordo / burgund, akcent łososiowy (primary).
+ * Domyślny dla gości i kont klubowych na ciemnym tle.
+ */
+html.dark[data-slavia-preset='slavia'] body {
+  background-image:
+    radial-gradient(ellipse 100% 58% at 50% -18%, color-mix(in oklab, var(--slavia-accent-salmon) 16%, transparent), transparent 54%),
+    radial-gradient(ellipse 70% 42% at 92% 22%, color-mix(in oklab, #6b1d3a 28%, transparent), transparent 50%),
+    radial-gradient(ellipse 55% 38% at 4% 78%, color-mix(in oklab, #2d0a14 40%, transparent), transparent 46%),
+    linear-gradient(168deg, var(--slavia-burgundy-950) 0%, var(--slavia-burgundy-900) 42%, #1a0810 100%);
+  background-color: var(--slavia-burgundy-950);
+  background-attachment: fixed;
+}
+
+html.dark[data-slavia-preset='slavia'] {
+  --ui-bg: var(--slavia-burgundy-900);
+  --ui-bg-muted: var(--slavia-burgundy-800);
+  --ui-bg-elevated: var(--slavia-burgundy-700);
+  --ui-bg-accented: #3d1f2e;
+  --ui-border: #4a2a38;
+  --ui-border-muted: #331e28;
+  --ui-border-accented: color-mix(in oklab, var(--slavia-accent-salmon) 42%, #5c3040);
+  --ui-text-dimmed: #a88a94;
+  --ui-text-muted: #c9adb6;
+  --ui-text-toned: #ddc8cf;
+  --ui-text: #f0e4e8;
+  --ui-text-highlighted: #fff8fa;
+  --color-green-400: #ffb4a8;
+  --color-green-500: var(--slavia-accent-salmon, #f08070);
+  --color-green-600: #e86b5a;
+}
+
+html.dark[data-slavia-preset='slavia'] .shadow-md {
+  box-shadow:
+    0 8px 32px -10px rgb(0 0 0 / 0.45),
+    0 0 0 1px color-mix(in oklab, var(--slavia-accent-salmon) 8%, transparent);
 }
 
 /** Motyw „midnight” */

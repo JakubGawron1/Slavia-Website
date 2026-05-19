@@ -73,6 +73,12 @@ const dashboardLink = computed(() => {
 /** Zdjęcie w navbarze: `avatar_url` konta lub zdjęcie profilu sportowego zawodnika. */
 const navAvatarSrc = computed(() => resolveAuthProfilePhotoSrc(auth.user.value ?? undefined))
 
+const colorMode = useColorMode()
+
+const themeColor = computed(() =>
+  colorMode.value === 'dark' ? '#140a0f' : '#faf7f6'
+)
+
 const title = 'CKS Slavia Ruda Śląska — podnoszenie ciężarów'
 const description = 'Klub sportowy Slavia Ruda Śląska: zawodnicy, wyniki i społeczność skupiona wokół sportów siłowych.'
 const siteUrl = computed(() => (config.public.siteUrl as string).replace(/\/$/, ''))
@@ -162,7 +168,7 @@ watch(
 useHead({
   meta: [
     { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
-    { name: 'theme-color', content: '#0f172a' },
+    { name: 'theme-color', content: themeColor },
     { name: 'mobile-web-app-capable', content: 'yes' },
     { name: 'apple-mobile-web-app-capable', content: 'yes' },
     { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' }
@@ -183,6 +189,22 @@ useHead({
 
 <template>
   <UApp>
+    <Transition name="slavia-app-boot">
+      <div
+        v-if="isAppLoading"
+        class="fixed inset-0 z-100 flex flex-col items-center justify-center gap-5 bg-background/96 backdrop-blur-md"
+        aria-hidden="true"
+      >
+        <img
+          src="/logo.png"
+          alt=""
+          class="h-14 w-auto drop-shadow-lg motion-safe:animate-pulse sm:h-16"
+        >
+        <div class="h-0.5 w-28 overflow-hidden rounded-full bg-muted/40">
+          <div class="slavia-deco-barbell h-full w-full rounded-full bg-primary/80" />
+        </div>
+      </div>
+    </Transition>
     <NuxtLoadingIndicator :color="'var(--ui-primary)'" />
     <a
       href="#main-content"
@@ -200,7 +222,7 @@ useHead({
               <ClubNotificationBell v-if="clubNotificationBellOn" />
               <NuxtLink
                 :to="dashboardLink"
-                class="flex h-10 w-10 items-center justify-center rounded-full ring-1 ring-primary/25 transition-colors hover:bg-primary/10 sm:hidden"
+                class="flex h-10 w-10 items-center justify-center rounded-full ring-1 ring-primary/25 transition-all duration-200 hover:bg-primary/12 hover:ring-primary/40 sm:hidden"
                 :aria-label="`Panel: ${auth.user.value?.username ?? ''}`"
               >
                 <UAvatar
@@ -213,7 +235,7 @@ useHead({
               <div class="hidden items-center gap-3 sm:flex sm:gap-4">
                 <NuxtLink
                   :to="dashboardLink"
-                  class="group flex max-w-44 items-center gap-2 rounded-full bg-primary/8 px-3 py-1.5 transition-all hover:bg-primary/14 ring-1 ring-primary/22 lg:max-w-56 lg:px-4"
+                  class="group flex max-w-44 items-center gap-2 rounded-full bg-primary/8 px-3 py-1.5 shadow-sm transition-all duration-200 hover:bg-primary/14 hover:shadow-md ring-1 ring-primary/25 lg:max-w-56 lg:px-4"
                 >
                   <UAvatar
                     :src="navAvatarSrc"
@@ -287,6 +309,17 @@ useHead({
 </template>
 
 <style>
+/* Splash przy starcie aplikacji */
+.slavia-app-boot-enter-active,
+.slavia-app-boot-leave-active {
+  transition: opacity 0.35s ease, visibility 0.35s ease;
+}
+.slavia-app-boot-enter-from,
+.slavia-app-boot-leave-to {
+  opacity: 0;
+  visibility: hidden;
+}
+
 /* Globalne przejścia stron */
 .page-enter-active,
 .page-leave-active {

@@ -265,48 +265,49 @@ const sortedPhotos = computed(() => {
       </div>
     </div>
 
-    <div
+    <PublicEmptyState
       v-else-if="!sortedPhotos.length"
-      class="rounded-2xl border border-dashed border-default bg-muted/10 px-6 py-14 text-center text-muted"
+      icon="i-lucide-images"
+      title="Galeria jest pusta"
+      description="Tu pojawią się zdjęcia i filmy z treningów, zawodów i życia klubu."
     >
-      Galeria jest pusta.
       <UButton
         v-show="canManage"
-        class="mt-6"
         icon="i-lucide-image-plus"
         color="primary"
         size="lg"
+        class="min-h-11 font-semibold"
         @click="openCreate"
       >
         Dodaj pierwsze zdjęcie
       </UButton>
-      <p
+      <template
         v-if="auth.isLoggedIn && !canManage && sessionReady"
-        class="mx-auto mt-4 max-w-md text-center text-xs text-muted"
+        #hint
       >
         Galerię uzupełniają konta Administrator lub SuperAdmin.
         <NuxtLink to="/profil" class="font-semibold text-primary underline">
           Sprawdź swoje role
         </NuxtLink>
         — po zmianie roli wyloguj się i zaloguj ponownie.
-      </p>
-    </div>
+      </template>
+    </PublicEmptyState>
 
     <div
       v-else
-      class="columns-1 gap-4 sm:columns-2 lg:columns-3"
+      class="columns-1 gap-5 sm:columns-2 sm:gap-6 lg:columns-3"
     >
       <figure
         v-for="p in sortedPhotos"
         :key="p.id"
-        class="mb-4 break-inside-avoid overflow-hidden rounded-2xl border border-default bg-card shadow-sm group"
+        class="group slavia-page-card mb-5 break-inside-avoid overflow-hidden transition-all duration-300 hover:border-primary/30 hover:shadow-md sm:mb-6"
       >
         <div class="relative">
           <img
             v-if="p.media_type === 'image'"
             :src="gallerySrc(p.image_url)"
             :alt="p.caption || 'Zdjęcie klubu'"
-            class="w-full cursor-zoom-in object-cover"
+            class="w-full cursor-zoom-in object-cover transition-transform duration-500 group-hover:scale-[1.02]"
             loading="lazy"
             @click="openMediaPreview(p)"
           >
@@ -362,11 +363,11 @@ const sortedPhotos = computed(() => {
         </div>
         <figcaption
           v-if="p.caption || canManage"
-          class="flex flex-col gap-2 p-3"
+          class="flex flex-col gap-2 border-t border-default/50 bg-muted/10 p-4"
         >
           <p
             v-if="p.caption"
-            class="text-sm text-muted"
+            class="text-sm leading-relaxed text-muted"
           >
             {{ p.caption }}
           </p>

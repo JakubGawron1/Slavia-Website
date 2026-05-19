@@ -43,8 +43,11 @@ async function onFormSuccess(e: { published: boolean; postId: string; title: str
           @cancel="goList"
         />
         <template #fallback>
-          <div class="rounded-xl border border-default p-10 text-center text-muted">
-            Ładowanie edytora…
+          <div class="slavia-page-card flex flex-col items-center gap-3 px-6 py-14 text-center text-muted">
+            <UIcon name="i-lucide-loader-circle" class="size-8 animate-spin text-primary/60" />
+            <p class="font-medium text-highlighted">
+              Ładowanie edytora…
+            </p>
           </div>
         </template>
       </ClientOnly>

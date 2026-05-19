@@ -732,52 +732,52 @@ const showAthleteCompareLink = computed(() => {
         description="Żaden zawodnik nie ma jeszcze zatwierdzonego wyniku w systemie zgłoszeń. Po akceptacji wpisów przez trenera lub administrację pozycje pojawią się tutaj automatycznie."
       />
 
-      <UCard
+      <div
         v-if="filteredRankings.length > 0"
-        class="overflow-hidden border-primary/20 shadow-2xl bg-linear-to-b from-primary/5 to-transparent backdrop-blur-md"
+        class="slavia-page-card overflow-hidden"
       >
-        <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse">
+        <div class="slavia-data-table overflow-x-auto">
+          <table>
             <thead>
-              <tr class="border-b border-white/10 bg-white/5">
-                <th class="px-3 py-3 text-[10px] font-black uppercase tracking-wider text-muted sm:px-6 sm:py-5 sm:text-xs sm:tracking-widest lg:px-8">
+              <tr>
+                <th class="w-16">
                   Msc.
                 </th>
-                <th class="px-3 py-3 text-[10px] font-black uppercase tracking-wider text-muted sm:px-6 sm:py-5 sm:text-xs sm:tracking-widest lg:px-8">
+                <th>
                   Zawodnik
                 </th>
-                <th class="hidden px-3 py-3 text-right text-[10px] font-black uppercase tracking-wider text-muted md:table-cell md:px-6 md:py-5 md:text-xs md:tracking-widest lg:px-8">
+                <th class="hidden text-right md:table-cell">
                   Waga
                 </th>
-                <th class="px-3 py-3 text-right text-[10px] font-black uppercase tracking-wider text-muted sm:px-6 sm:py-5 sm:text-xs sm:tracking-widest lg:px-8">
+                <th class="text-right">
                   Dwubój
                 </th>
-                <th class="px-3 py-3 text-right text-[10px] font-black uppercase tracking-wider text-muted sm:px-6 sm:py-5 sm:text-xs sm:tracking-widest lg:px-8">
+                <th class="text-right">
                   Sinclair
                 </th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-white/5">
+            <tbody>
               <tr
                 v-for="(p, idx) in filteredRankings"
                 :key="p.id"
-                class="group transition-all hover:bg-primary/10"
+                class="group"
               >
-                <td class="px-3 py-4 sm:px-6 sm:py-6 lg:px-8">
-                  <span class="font-mono text-base font-black text-muted/50 transition-colors group-hover:text-primary sm:text-lg">
+                <td>
+                  <span class="font-mono text-sm font-bold tabular-nums text-muted transition-colors group-hover:text-primary sm:text-base">
                     {{ (idx + 1).toString().padStart(2, '0') }}
                   </span>
                 </td>
-                <td class="min-w-0 px-3 py-4 sm:px-6 sm:py-6 lg:px-8">
+                <td class="min-w-0">
                   <NuxtLink
                     :to="athleteProfilePath(p.name, p.id)"
-                    class="flex min-w-0 items-center gap-2 sm:gap-4 rounded-lg text-left outline-offset-2 hover:text-primary focus-visible:outline-2 focus-visible:outline-primary"
+                    class="flex min-w-0 items-center gap-2 sm:gap-3 rounded-lg text-left outline-offset-2 hover:text-primary focus-visible:outline-2 focus-visible:outline-primary"
                   >
                     <UAvatar
                       :src="p.photo"
                       :alt="p.name"
                       size="sm"
-                      class="shrink-0 ring-1 ring-white/10"
+                      class="shrink-0 ring-1 ring-default/40"
                     />
                     <span class="truncate font-bold text-highlighted group-hover:text-primary">{{ p.name }}</span>
                   </NuxtLink>
@@ -785,14 +785,14 @@ const showAthleteCompareLink = computed(() => {
                     {{ p.weightCategoryText }}
                   </p>
                 </td>
-                <td class="hidden px-3 py-4 text-right font-mono text-muted md:table-cell md:px-6 md:py-6 lg:px-8">
+                <td class="hidden text-right font-mono text-sm text-muted md:table-cell">
                   {{ p.weightCategoryText }}
                 </td>
-                <td class="px-3 py-4 text-right font-mono text-sm font-bold text-highlighted sm:px-6 sm:py-6 sm:text-base lg:px-8">
+                <td class="text-right font-mono text-sm font-bold tabular-nums text-highlighted">
                   {{ p.total }} kg
                 </td>
-                <td class="px-3 py-4 text-right sm:px-6 sm:py-6 lg:px-8">
-                  <span class="inline-block rounded-full bg-primary/20 px-2 py-1 font-mono text-sm font-black text-primary sm:px-4">
+                <td class="text-right">
+                  <span class="inline-block rounded-full bg-primary/12 px-2.5 py-1 font-mono text-sm font-bold text-primary ring-1 ring-primary/20 sm:px-3">
                     {{ p.sinclair }}
                   </span>
                 </td>
@@ -800,7 +800,7 @@ const showAthleteCompareLink = computed(() => {
             </tbody>
           </table>
         </div>
-      </UCard>
+      </div>
     </div>
 
     <!-- Sekcja TRENINGOWA (tylko dla zalogowanych) -->
@@ -1004,12 +1004,13 @@ const showAthleteCompareLink = computed(() => {
         </div>
       </UCard>
 
-      <div
+      <PublicEmptyState
         v-if="trainingRanking.length === 0"
-        class="rounded-2xl border border-dashed border-info/30 bg-info/5 px-6 py-12 text-center text-sm text-muted"
-      >
-        Brak zatwierdzonych wpisów treningowych w bazie. Dodaj pierwszy w panelu zawodnika lub jako trener.
-      </div>
+        icon="i-lucide-dumbbell"
+        title="Brak wyników treningowych"
+        description="Gdy pojawią się zatwierdzone wpisy treningowe, ranking wewnętrzny wypełni się automatycznie."
+        compact
+      />
     </div>
 
     <!-- Full Athlete List Section -->

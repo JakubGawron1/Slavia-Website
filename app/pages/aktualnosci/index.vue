@@ -203,72 +203,64 @@ function editPostUrl(post: BlogPost) {
       </div>
     </div>
 
-    <div
+    <PublicEmptyState
       v-else-if="!posts || posts.length === 0"
-      class="text-center py-20 border border-dashed border-default rounded-xl bg-muted/5"
+      icon="i-lucide-newspaper"
+      title="Brak wpisów"
+      description="Zaglądaj tu wkrótce po relacje z zawodów, komunikaty i życie sekcji na sali."
     >
-      <UIcon
-        name="i-lucide-newspaper"
-        class="size-12 mx-auto text-muted/50 mb-4"
-      />
-      <h3 class="text-lg font-medium text-highlighted">
-        Brak wpisów
-      </h3>
-      <p class="text-muted mt-1">
-        Zaglądaj tu wkrótce po nowości ze świata ciężarów.
-      </p>
       <UButton
         v-show="canManage"
-        class="mt-6"
         to="/aktualnosci/nowy"
         icon="i-lucide-pen-tool"
         color="primary"
         size="lg"
+        class="min-h-11 font-semibold"
       >
         Dodaj pierwszy wpis
       </UButton>
-      <p
+      <template
         v-if="auth.isLoggedIn && !canManage && sessionReady"
-        class="mt-4 max-w-md text-center text-xs text-muted"
+        #hint
       >
         Tworzenie wpisów mają konta z rolą Administrator lub SuperAdmin.
         <NuxtLink to="/profil" class="font-semibold text-primary underline">
           Sprawdź swoje role
         </NuxtLink>
         — po zmianie roli wyloguj się i zaloguj ponownie.
-      </p>
-    </div>
+      </template>
+    </PublicEmptyState>
 
     <div
       v-else
       class="grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3 xl:gap-10"
     >
-      <UCard
+      <article
         v-for="post in posts"
         :key="post.id"
-        class="group flex flex-col overflow-hidden border-transparent transition-colors hover:border-primary/50"
+        class="group slavia-page-card flex flex-col overflow-hidden transition-all duration-300 hover:border-primary/35 hover:shadow-md"
         @pointerenter="schedulePrefetch(post)"
         @pointerleave="cancelScheduledPrefetch(post)"
       >
-        <div class="relative mb-4 flex h-44 items-center justify-center overflow-hidden rounded-lg bg-neutral-800 sm:h-48">
+        <div class="relative flex aspect-[16/10] items-center justify-center overflow-hidden bg-muted/20 sm:aspect-[5/3]">
           <img
             v-if="post.image_url"
             :src="postImageSrc(post.image_url)"
-            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+            class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
           >
           <div
             v-else
-            class="w-full h-full bg-linear-to-br from-primary/20 to-neutral-900 flex items-center justify-center"
+            class="flex h-full w-full items-center justify-center bg-linear-to-br from-primary/8 via-muted/20 to-muted/40"
           >
             <UIcon
               name="i-lucide-newspaper"
-              class="size-16 text-primary/10"
+              class="size-14 text-primary/25 sm:size-16"
             />
           </div>
         </div>
 
-        <div class="flex-1 flex flex-col">
-          <p class="text-xs font-medium text-primary mb-2 flex items-center gap-1.5">
+        <div class="flex flex-1 flex-col p-5 sm:p-6">
+          <p class="mb-2 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-primary">
             <UIcon
               name="i-lucide-calendar"
               class="size-3.5"
@@ -276,7 +268,7 @@ function editPostUrl(post: BlogPost) {
             {{ formatDate(post.created_at) }}
           </p>
           <div class="mb-3 flex flex-wrap items-center gap-2">
-            <h3 class="text-xl font-bold text-highlighted line-clamp-2 flex-1 min-w-0">
+            <h3 class="min-w-0 flex-1 text-lg font-bold leading-snug tracking-tight text-highlighted line-clamp-2 sm:text-xl">
               {{ post.title }}
             </h3>
             <UBadge
@@ -288,11 +280,11 @@ function editPostUrl(post: BlogPost) {
               Szkic
             </UBadge>
           </div>
-          <p class="text-muted text-sm line-clamp-3 mb-4">
+          <p class="mb-4 line-clamp-3 text-sm leading-relaxed text-muted">
             {{ stripHtmlTags(sanitizeRichHtml(post.content)) }}
           </p>
 
-          <div class="mt-auto flex flex-col gap-3 border-t border-default pt-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+          <div class="mt-auto flex flex-col gap-3 border-t border-default/60 pt-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
             <UButton
               :to="postUrl(post)"
               prefetch
@@ -335,7 +327,7 @@ function editPostUrl(post: BlogPost) {
             </div>
           </div>
         </div>
-      </UCard>
+      </article>
     </div>
   </PublicPageLayout>
 </template>
