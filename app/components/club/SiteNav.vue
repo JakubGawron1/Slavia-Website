@@ -170,8 +170,7 @@ const dropdownUi = {
         v-for="link in items.main"
         :key="'nav-' + link.to"
         :to="link.to"
-        class="slavia-nav-link inline-flex shrink-0 whitespace-nowrap rounded-xl px-2.5 py-2 text-[13px] font-medium text-muted hover:bg-muted/60 hover:text-highlighted xl:px-3.5 xl:py-2.5 xl:text-sm"
-        active-class="!bg-primary/12 !font-semibold !text-primary"
+        class="slavia-nav-link inline-flex shrink-0 whitespace-nowrap px-2.5 py-2 text-[13px] font-medium text-muted xl:px-3.5 xl:py-2.5 xl:text-sm"
       >
         {{ link.label }}
       </NuxtLink>
@@ -190,7 +189,7 @@ const dropdownUi = {
           size="sm"
           icon="i-lucide-calculator"
           trailing-icon="i-lucide-chevron-down"
-          class="h-9 shrink-0 gap-1.5 rounded-xl px-2.5 text-xs font-bold uppercase tracking-wide transition-colors hover:bg-muted/50 xl:h-10 xl:px-3 xl:text-[13px]"
+          class="h-9 shrink-0 gap-1.5 rounded-xl px-2.5 text-xs font-bold uppercase tracking-wide transition-colors hover:bg-muted/40 hover:text-highlighted xl:h-10 xl:px-3 xl:text-[13px]"
           aria-label="Kalkulatory"
         >
           <span class="hidden xl:inline">Kalkulatory</span>
@@ -210,7 +209,7 @@ const dropdownUi = {
           size="sm"
           icon="i-lucide-layout-grid"
           trailing-icon="i-lucide-chevron-down"
-          class="h-9 shrink-0 gap-1.5 rounded-xl border-default/55 px-2.5 text-xs font-bold uppercase tracking-wide shadow-sm transition-colors hover:border-primary/35 hover:bg-primary/6 xl:h-10 xl:px-3.5 xl:text-[13px]"
+          class="h-9 shrink-0 gap-1.5 rounded-xl border-default/55 px-2.5 text-xs font-bold uppercase tracking-wide shadow-sm transition-colors hover:bg-muted/40 hover:text-highlighted xl:h-10 xl:px-3.5 xl:text-[13px]"
           aria-label="Panel"
         >
           <span class="hidden xl:inline">Panel</span>
@@ -244,8 +243,8 @@ const dropdownUi = {
         >
           <NuxtLink
             to="/"
-            class="flex min-h-13 items-center justify-between rounded-2xl border border-default/60 bg-muted/15 px-4 py-3 text-base font-bold text-highlighted ring-1 ring-transparent transition-colors hover:border-primary/35 hover:bg-primary/5"
-            active-class="border-primary/45 bg-primary/10 ring-primary/20"
+            class="flex min-h-13 items-center justify-between rounded-2xl border border-default/60 bg-muted/15 px-4 py-3 text-base font-bold text-highlighted transition-colors hover:bg-muted/30"
+            active-class="border-default bg-muted/35 font-semibold"
           >
             <span class="flex items-center gap-3">
               <span class="flex size-9 items-center justify-center rounded-xl bg-background text-primary ring-1 ring-default/60">
@@ -290,7 +289,7 @@ const dropdownUi = {
                 color="neutral"
                 block
                 class="min-h-11 justify-start rounded-xl border-default/60 font-semibold shadow-none text-highlighted"
-                active-class="border-primary bg-primary/15 text-primary ring-1 ring-primary/25"
+                active-class="border-default bg-muted/40 font-semibold text-highlighted"
               >
                 {{ link.label }}
               </UButton>
@@ -321,7 +320,7 @@ const dropdownUi = {
                         ? 'border-primary/45 bg-primary/10 text-primary'
                         : 'text-highlighted'
                     "
-                    active-class="border-primary bg-primary/18 text-primary ring-1 ring-primary/25"
+                    active-class="border-default bg-muted/40 font-semibold text-highlighted"
                   >
                     {{ link.label }}
                   </UButton>
