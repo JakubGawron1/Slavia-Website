@@ -1,6 +1,6 @@
 /**
- * Sesja CMS na stronach publicznych (blog, galeria, ogłoszenia).
- * Odświeża role z GET /api/auth/me (baza) przed pokazaniem przycisków tworzenia.
+ * Kadra na stronach publicznych (blog, galeria, ogłoszenia) — sesja i uprawnienia do edycji.
+ * Odświeża role z GET /api/auth/me przed pokazaniem przycisków tworzenia.
  */
 export function useClubContentAdmin() {
   const auth = useAuth()
@@ -8,7 +8,7 @@ export function useClubContentAdmin() {
 
   const canManage = computed(() => auth.canManageClubContent.value)
 
-  /** Przyciski CMS widoczne od razu po zalogowaniu (zanim GET /me odświeży role). */
+  /** Przyciski edycji widoczne od razu po zalogowaniu (zanim GET /me odświeży role). */
   const showManageActions = computed(() => {
     if (canManage.value) return true
     if (!import.meta.client) return false

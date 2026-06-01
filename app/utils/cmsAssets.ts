@@ -14,7 +14,7 @@ export function cmsAssetUrl(path: string, cmsBase?: string): string {
   return `${base}/${clean}`
 }
 
-/** Czy URL wygląda jak zasób z CMS (raw GitHub / github.io). */
+/** Czy URL wygląda jak zasób z repo mediów (raw GitHub / github.io). */
 export function isCmsAssetUrl(url: string): boolean {
   const u = url.trim().toLowerCase()
   return u.includes('raw.githubusercontent.com/') && u.includes('slavia-cms')
@@ -22,7 +22,7 @@ export function isCmsAssetUrl(url: string): boolean {
 }
 
 /**
- * Galeria, blog, ogłoszenia: ścieżka względna z API (`media/gallery/...`) → pełny URL z bazy CMS.
+ * Galeria, blog: ścieżka względna z API (`media/gallery/...`) → pełny URL z bazy repo.
  */
 export function resolveCmsMediaUrl(imageUrl: string, cmsBase?: string): string {
   const raw = (imageUrl || '').trim()
@@ -35,5 +35,5 @@ export function resolveCmsMediaUrl(imageUrl: string, cmsBase?: string): string {
   return cmsAssetUrl(raw, cmsBase)
 }
 
-/** @deprecated Użyj `resolveCmsMediaUrl` — alias dla galerii. */
+/** Alias dla galerii. */
 export const resolveGalleryImageUrl = resolveCmsMediaUrl
