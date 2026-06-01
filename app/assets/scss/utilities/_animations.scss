@@ -1,0 +1,164 @@
+@keyframes page-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes slavia-barbell-shimmer {
+  0% {
+    opacity: 0.35;
+    transform: translateX(-8%) scaleX(0.92);
+  }
+  50% {
+    opacity: 0.85;
+    transform: translateX(4%) scaleX(1);
+  }
+  100% {
+    opacity: 0.35;
+    transform: translateX(8%) scaleX(0.92);
+  }
+}
+
+@keyframes slavia-skeleton-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes slavia-plate-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scale(1.04);
+    opacity: 0.95;
+  }
+}
+
+.animate-page-in {
+  animation: page-rise 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.slavia-deco-barbell {
+  position: relative;
+  overflow: hidden;
+}
+
+.slavia-deco-barbell::after {
+  content: '';
+  position: absolute;
+  inset: auto -20% 0 -20%;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklab, var(--ui-primary, #00c16a) 55%, transparent),
+    transparent
+  );
+  animation: slavia-barbell-shimmer 4.2s ease-in-out infinite;
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.slavia-deco-plate {
+  animation: slavia-plate-pulse 2.8s ease-in-out infinite;
+}
+
+.slavia-shimmer {
+  position: relative;
+  display: inline-block;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    var(--slavia-shimmer-base, color-mix(in oklab, var(--ui-bg-muted, #f2f6fb) 84%, transparent)),
+    var(--slavia-shimmer-highlight, color-mix(in oklab, var(--ui-primary, #00a155) 18%, var(--ui-bg, #f9fbff))),
+    var(--slavia-shimmer-base, color-mix(in oklab, var(--ui-bg-muted, #f2f6fb) 84%, transparent))
+  );
+  background-size: 240% 100%;
+  animation: slavia-skeleton-shimmer 1.25s ease-in-out infinite;
+  opacity: 0.85;
+  vertical-align: -0.15em;
+}
+
+.slavia-shimmer--block {
+  display: block;
+}
+
+/**
+ * Kolory shimmer per preset — celowo różne „akcenty”, żeby motywy były wyraźnie od siebie inne.
+ * Bazę bierzemy z tła, highlight z akcentu presetu.
+ */
+html[data-slavia-preset] {
+  --slavia-shimmer-base: color-mix(in oklab, var(--ui-bg-muted, #e2e8f0) 86%, transparent);
+  --slavia-shimmer-accent: var(--ui-primary, #00a155);
+  --slavia-shimmer-highlight: color-mix(in oklab, var(--slavia-shimmer-accent) 22%, var(--ui-bg, #f9fbff));
+  --slavia-chart-accent: var(--slavia-shimmer-accent);
+  --slavia-chart-accent-2: #22c55e;
+}
+
+html[data-slavia-preset='slavia'] { --slavia-shimmer-accent: var(--slavia-accent-salmon, #f08070); }
+html[data-slavia-preset='iron'] { --slavia-shimmer-accent: #38bdf8; }
+html[data-slavia-preset='arena'] { --slavia-shimmer-accent: #fbbf24; }
+html[data-slavia-preset='platform'] { --slavia-shimmer-accent: #34d399; }
+html[data-slavia-preset='midnight'] { --slavia-shimmer-accent: #6366f1; }
+html[data-slavia-preset='ruby'] { --slavia-shimmer-accent: #ef4444; }
+html[data-slavia-preset='neon'] { --slavia-shimmer-accent: #a855f7; }
+html[data-slavia-preset='blackgym'] { --slavia-shimmer-accent: #22c55e; }
+html[data-slavia-preset='pink'] { --slavia-shimmer-accent: #ec4899; }
+html[data-slavia-preset='dark'] { --slavia-shimmer-accent: #60a5fa; }
+html[data-slavia-preset='glass'] { --slavia-shimmer-accent: #a78bfa; }
+html[data-slavia-preset='sport-tech'] { --slavia-shimmer-accent: #22d3ee; }
+html[data-slavia-preset='neon-brutalism'] { --slavia-shimmer-accent: #e879f9; }
+html[data-slavia-preset='podium'] { --slavia-shimmer-accent: #d4af37; }
+html[data-slavia-preset='chalk'] { --slavia-shimmer-accent: #a8a29e; }
+html[data-slavia-preset='aurora'] { --slavia-shimmer-accent: #8b5cf6; }
+html[data-slavia-preset='forge'] { --slavia-shimmer-accent: #f97316; }
+html[data-slavia-preset='velvet'] { --slavia-shimmer-accent: #e8b4a0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-page-in {
+    animation: none !important;
+  }
+
+  .slavia-shimmer {
+    animation: none !important;
+  }
+
+  .slavia-deco-barbell::after,
+  .slavia-deco-plate {
+    animation: none !important;
+  }
+
+  .page-enter-active,
+  .page-leave-active {
+    transition-duration: 0.01ms !important;
+  }
+
+  .slavia-athletics-backdrop,
+  .slavia-athletics-backdrop * {
+    animation: none !important;
+  }
+
+  .slavia-reveal:not(.is-revealed) {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
+
+  .slavia-reveal {
+    transition: none !important;
+  }
+}

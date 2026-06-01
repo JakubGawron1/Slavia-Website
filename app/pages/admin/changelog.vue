@@ -19,7 +19,7 @@ const updates = [
   {
     version: 'v3.2.5-dev',
     date: '19 Maj 2026',
-    title: 'Publiczne CMS, komponenty Public* i scroll-to-top',
+    title: 'Strony publiczne, komponenty Public* i scroll-to-top',
     features: [
       'Strony publiczne: przyciski Dodaj dla kadry także przy niepustych listach i podczas hydracji sesji; mocniejsze marginesy na trasach publicznych i panelowych.',
       'Nuxt: rejestracja komponentów Public* z katalogu panel/ bez prefiksu Panel — naprawa ostrzeżeń Vue na /zawodnicy i innych trasach.',
@@ -46,9 +46,9 @@ const updates = [
     version: 'v3.2.3-dev',
     date: '18 Maj 2026',
     title:
-      'Slavia-cms, konta i awatary, historia klubu, QR WWW, mobilka v0.9.6-dev',
+      'Media klubowe, konta i awatary, historia klubu, QR WWW, mobilka v0.9.6-dev',
     features: [
-      'Slavia-cms: upload mediów galerii i bloga (GitHub Contents API); panel statusu CMS i wyświetlanie treści na witrynie.',
+      'Upload mediów galerii i bloga przez backend; edycja treści na stronach publicznych.',
       'Admin: zarządzanie kontami — awatar, upload zdjęcia profilu, lista kont z profilem zawodnika (`avatar_url`).',
       'Klub: interaktywna oś czasu historii (idea #2417); obecność QR na WWW z ochroną przed duplikatami check-in.',
       'Mobilka v0.9.6-dev: analiza sztangi (MVP), nawigacja 4 zakładek, fallback instalacji APK, sync wydań GitHub (prerelease + `GITHUB_TOKEN`), czytelniejsze komunikaty aktualizacji.',

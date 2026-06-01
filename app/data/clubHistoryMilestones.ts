@@ -14,7 +14,7 @@ export interface ClubHistoryMilestone {
   icon: string
 }
 
-/** Kamienie milowe CKS Slavia — statyczna konfiguracja do czasu CMS/API. */
+/** Kamienie milowe CKS Slavia — statyczna konfiguracja (do ewentualnego API w przyszłości). */
 export const clubHistoryMilestones: ClubHistoryMilestone[] = [
   {
     id: 'founding',

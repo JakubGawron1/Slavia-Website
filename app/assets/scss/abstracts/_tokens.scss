@@ -1,0 +1,50 @@
+/**
+ * Premium design tokens — wspólna warstwa wizualna (presety nadpisują akcent/tło).
+ */
+:root,
+html[data-slavia-preset] {
+  --slavia-radius-lg: 1rem;
+  --slavia-radius-xl: 1.25rem;
+  --slavia-radius-2xl: 1.5rem;
+  --slavia-accent-salmon: #f08070;
+  --slavia-accent-coral: #ff9a8b;
+  --slavia-accent-salmon-deep: #e06452;
+  --slavia-burgundy-950: #0d0609;
+  --slavia-burgundy-900: #140a0f;
+  --slavia-burgundy-800: #1e0f16;
+  --slavia-burgundy-700: #2a1520;
+  --slavia-shadow-xs: 0 1px 2px color-mix(in srgb, var(--ui-bg-inverted, #000) 5%, transparent);
+  --slavia-shadow-sm:
+    0 2px 8px -2px color-mix(in srgb, var(--ui-bg-inverted, #000) 12%, transparent),
+    0 1px 3px color-mix(in srgb, var(--ui-bg-inverted, #000) 6%, transparent);
+  --slavia-shadow-md:
+    0 12px 40px -14px color-mix(in srgb, var(--ui-bg-inverted, #000) 22%, transparent),
+    0 4px 16px -6px color-mix(in srgb, var(--ui-bg-inverted, #000) 10%, transparent);
+  --slavia-shadow-glow: 0 0 40px -6px color-mix(in oklab, var(--ui-primary) 28%, transparent);
+  --slavia-glass-bg: color-mix(in oklab, var(--ui-bg-elevated) 78%, transparent);
+  --slavia-surface-edge: color-mix(in srgb, var(--ui-border) 80%, var(--ui-bg-inverted, #0a0a0a) 20%);
+  --slavia-surface-edge-strong: color-mix(in srgb, var(--ui-primary) 28%, var(--ui-border) 72%);
+  --slavia-surface-sheen: color-mix(in oklab, #fff 11%, transparent);
+  --slavia-glass-border: var(--slavia-surface-edge);
+  --slavia-glass-highlight: color-mix(in oklab, #fff 9%, transparent);
+  --slavia-card-gradient-top: color-mix(in oklab, var(--ui-bg-elevated) 98%, var(--ui-primary) 2%);
+  --slavia-card-gradient-bottom: color-mix(in oklab, var(--ui-bg-muted, var(--ui-bg-elevated)) 86%, var(--ui-bg) 14%);
+  /** Szerokości studni treści — wspólne dla publicznych i panelowych widoków */
+  --slavia-content-max: 80rem;
+  --slavia-content-well: 72rem;
+  --slavia-content-narrow: 48rem;
+  --slavia-page-gutter: 1rem;
+}
+
+@media (min-width: 640px) {
+  :root,
+  html[data-slavia-preset] {
+    --slavia-page-gutter: 1.5rem;
+  }
+}
+
+/* Kontrastowy focus (klawiatura) — uzupełnienie komponentów Nuxt UI. */
+:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--ui-primary, #f08070) 85%, #fff);
+  outline-offset: 2px;
+}

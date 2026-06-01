@@ -1,6 +1,6 @@
 /**
  * Scroll reveal — IntersectionObserver + klasy `.slavia-reveal` / `.is-revealed`.
- * Preferuj dyrektywę `v-slavia-reveal` (plugin `app/plugins/slavia-reveal.client.ts`).
+ * Preferuj dyrektywę `v-slavia-reveal` (plugin `app/plugins/slavia-reveal.ts`).
  *
  * Przykład: `<section v-slavia-reveal="'fade-up'">` lub `v-slavia-reveal="{ variant: 'scale', delay: 80 }"`.
  */

@@ -1,0 +1,211 @@
+/**
+ * Wspólny wygląd formularzy (modale, panele edycji).
+ */
+@layer components {
+  .slavia-form-modal {
+    @apply max-h-[min(88vh,900px)] space-y-6 overflow-y-auto p-5 sm:p-6;
+  }
+
+  /**
+   * UModal slot #body — Nuxt UI nadaje na body `overflow-y-auto` (scrollable: false).
+   * Zostawiamy jeden kontener przewijania; wewnętrzne max-h/overflow dawały drugi pasek i psuły m.in. USwitch.
+   */
+  .slavia-form-modal.slavia-form-modal--umodal-body {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .slavia-form-stack {
+    @apply flex flex-col gap-6;
+  }
+
+  .slavia-form-panel {
+    @apply overflow-hidden rounded-xl border border-default/70 bg-muted/15 shadow-sm ring-1 ring-default/35 dark:bg-muted/10;
+  }
+
+  .slavia-form-panel__header {
+    @apply border-b border-default/60 bg-muted/25 px-4 py-3 sm:px-5 dark:bg-muted/15;
+  }
+
+  .slavia-form-panel__title {
+    @apply flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-highlighted;
+  }
+
+  .slavia-form-panel__desc {
+    @apply mt-1.5 text-[11px] leading-snug text-muted;
+  }
+
+  .slavia-form-panel__body {
+    @apply space-y-5 p-4 sm:p-5;
+  }
+
+  /**
+   * Siatka pól formularza: wyrównanie do dołu komórki — pola (input/select) w jednej linii,
+   * mimo różnej wysokości etykiet / opisów UFormField.
+   *
+   * Konwencja (żeby po zmianie selecta nic nie „skakało” między kolumnami):
+   * — pola zależne od wyboru (np. miejsce zawodów vs sala treningowa) trzymaj w osobnej `.slavia-form-grid`
+   *   albo w jednej komórce (`v-if` / `v-else` na tym samym slocie), a nie obok „stałych” liczb w tej samej siatce;
+   * — stabilne bloki (np. rwanie / podrzut / data) w stałej liczbie kolumn w osobnej siatce.
+   */
+  .slavia-form-grid {
+    @apply grid items-end gap-4;
+  }
+
+  .slavia-form-grid > * {
+    @apply min-w-0;
+  }
+
+  .slavia-form-actions {
+    @apply flex w-full flex-wrap items-center justify-between gap-3 pt-1;
+  }
+
+  .slavia-form-actions:not(:has(> :nth-child(2))) {
+    justify-content: flex-end;
+  }
+
+  @media (max-width: 639px) {
+    .slavia-form-actions {
+      flex-direction: column-reverse;
+      align-items: stretch;
+    }
+
+    .slavia-form-actions > :is(button, a) {
+      width: 100%;
+      min-height: 2.75rem;
+      justify-content: center;
+    }
+  }
+
+  .slavia-form-panel__icon {
+    @apply flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary ring-1 ring-primary/25;
+  }
+
+  .slavia-rich-editor-prose .ProseMirror {
+    min-height: inherit;
+  }
+
+  .slavia-rich-editor-prose .ProseMirror p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+    width: 100%;
+    @apply text-muted;
+  }
+
+  .slavia-rich-editor-prose .ProseMirror h2 {
+    @apply mt-4 mb-2 text-xl font-bold text-highlighted;
+  }
+
+  .slavia-rich-editor-prose .ProseMirror h3 {
+    @apply mt-3 mb-1.5 text-lg font-semibold text-highlighted;
+  }
+
+  .slavia-rich-editor-prose .ProseMirror blockquote {
+    @apply border-l-4 border-primary/45 pl-4 italic text-muted;
+  }
+
+  .slavia-rich-editor-prose .ProseMirror hr {
+    @apply my-6 border-default/60;
+  }
+
+  /**
+   * Treść z TipTap (blog / dziennik): kolory, marker i text-align przychodzą jako inline `style`.
+   * `prose` + wcześniejsze reguły z `@apply text-highlighted` na h2/h3 mogły „zjadać” efekt — dlatego
+   * domyślny kolor nagłówków/linków stosujemy tylko gdy autor nie ustawił własnego koloru w HTML.
+   */
+  .slavia-rich-content {
+    @apply text-muted;
+  }
+
+  .slavia-rich-content :where(h2) {
+    @apply mt-6 text-xl font-bold first:mt-0;
+  }
+
+  .slavia-rich-content :where(h2):not([style*='color']) {
+    @apply text-highlighted;
+  }
+
+  .slavia-rich-content :where(h3) {
+    @apply mt-4 text-lg font-semibold;
+  }
+
+  .slavia-rich-content :where(h3):not([style*='color']) {
+    @apply text-highlighted;
+  }
+
+  .slavia-rich-content :where(h4) {
+    @apply mt-3 text-base font-semibold;
+  }
+
+  .slavia-rich-content :where(h4):not([style*='color']) {
+    @apply text-highlighted;
+  }
+
+  .slavia-rich-content :where(p) {
+    @apply mb-3 leading-relaxed last:mb-0;
+  }
+
+  .slavia-rich-content :where(ul, ol) {
+    @apply mb-3;
+  }
+
+  /* TipTap dodaje klasy `list-disc` / `list-decimal` — nie nadpisuj wtedy paddingu ani stylu listy */
+  .slavia-rich-content :where(ul:not([class*='list-'])) {
+    @apply list-disc pl-6;
+  }
+
+  .slavia-rich-content :where(ol:not([class*='list-'])) {
+    @apply list-decimal pl-6;
+  }
+
+  .slavia-rich-content :where(li) {
+    @apply mb-1;
+  }
+
+  .slavia-rich-content :where(li > ul, li > ol) {
+    @apply mt-1 mb-0;
+  }
+
+  .slavia-rich-content :where(a) {
+    @apply font-medium underline underline-offset-2;
+  }
+
+  .slavia-rich-content :where(a):not([style*='color']) {
+    @apply text-primary;
+  }
+
+  .slavia-rich-content :where(blockquote) {
+    @apply mb-3 border-l-4 border-primary/40 pl-4 italic;
+  }
+
+  .slavia-rich-content :where(blockquote):not([style*='color']) {
+    @apply text-muted;
+  }
+
+  .slavia-rich-content :where(hr) {
+    @apply my-6 border-default/60;
+  }
+
+  .slavia-rich-content :where(pre) {
+    @apply mb-3 overflow-x-auto rounded-lg bg-muted/40 p-3 font-mono text-sm leading-relaxed text-highlighted;
+  }
+
+  .slavia-rich-content :where(code) {
+    @apply rounded-md bg-muted/40 px-1.5 py-0.5 font-mono text-sm text-highlighted;
+  }
+
+  .slavia-rich-content pre code {
+    @apply rounded-none bg-transparent p-0 text-inherit;
+  }
+
+  .slavia-rich-content mark {
+    @apply rounded px-0.5 box-decoration-clone;
+    box-decoration-break: clone;
+  }
+
+  .slavia-rich-content :where(u) {
+    text-underline-offset: 2px;
+  }
+}

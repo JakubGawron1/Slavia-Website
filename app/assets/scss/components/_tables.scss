@@ -1,0 +1,45 @@
+/** Spójne tabele w panelach */
+.slavia-data-table :where(table) {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.slavia-data-table :where(thead th) {
+  padding: 0.65rem 0.75rem;
+  text-align: left;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ui-text-muted);
+  border-bottom: 1px solid color-mix(in srgb, var(--ui-border) 65%, transparent);
+  background: color-mix(in srgb, var(--ui-bg-muted) 25%, transparent);
+}
+
+.slavia-data-table :where(tbody td) {
+  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--ui-border) 45%, transparent);
+  vertical-align: middle;
+}
+
+.slavia-data-table :where(tbody tr:hover) {
+  background: color-mix(in srgb, var(--ui-primary) 5%, transparent);
+}
+
+.slavia-data-table :where(tbody tr:last-child td) {
+  border-bottom: none;
+}
+
+/** Tablica ogłoszeń — karty przypięte + wiersze */
+.slavia-announcement-pin {
+  border-left: 3px solid color-mix(in srgb, var(--ui-primary) 55%, transparent);
+}
+
+.slavia-announcement-row {
+  transition: background-color 0.15s ease;
+}
+
+.slavia-announcement-row:hover {
+  background: color-mix(in srgb, var(--ui-primary) 4%, transparent);
+}

@@ -1,0 +1,44 @@
+/** Debug (panel developera): symulacja „prefer reduced motion”. */
+html.slavia-dev-force-reduced-motion *,
+html.slavia-dev-force-reduced-motion *::before,
+html.slavia-dev-force-reduced-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+/**
+ * Debug (devtools): podgląd mobilny na PC — „ramka” + ograniczenie szerokości aplikacji.
+ * Uwaga: nie zmienia faktycznego viewportu przeglądarki, ale bardzo dobrze symuluje layout
+ * (breakpointy, sticky, formularze, scroll, safe-area).
+ */
+html.slavia-dev-mobile-preview {
+  --slavia-dev-mobile-width: 390px;
+}
+
+html.slavia-dev-mobile-preview body {
+  background-color: color-mix(in oklab, var(--ui-bg, #0f172a) 70%, #000);
+}
+
+html.slavia-dev-mobile-preview #__nuxt {
+  width: min(100%, var(--slavia-dev-mobile-width, 390px));
+  min-height: 100vh;
+  margin-left: auto;
+  margin-right: auto;
+  box-shadow:
+    0 30px 80px rgb(0 0 0 / 0.35),
+    0 12px 30px rgb(0 0 0 / 0.22);
+  border-left: 1px solid color-mix(in oklab, var(--ui-border, #334155) 60%, transparent);
+  border-right: 1px solid color-mix(in oklab, var(--ui-border, #334155) 60%, transparent);
+}
+
+@media (min-width: 640px) {
+  html.slavia-dev-mobile-preview #__nuxt {
+    border-radius: 28px;
+    overflow: clip;
+    margin-top: 18px;
+    margin-bottom: 18px;
+    min-height: calc(100vh - 36px);
+  }
+}

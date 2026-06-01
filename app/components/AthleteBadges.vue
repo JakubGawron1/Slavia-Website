@@ -418,9 +418,3 @@ async function shareBadge() {
   </div>
 </template>
 
-<style scoped>
-@keyframes confettiFall {
-  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
-  100% { transform: translateY(340px) rotate(600deg); opacity: 0; }
-}
-</style>

@@ -636,34 +636,4 @@ function onAgendaSelect(day: Date, ev: { key: string }) {
   </PanelPageLayout>
 </template>
 
-<style scoped>
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
 
-.slavia-calendar-event :deep(svg) {
-  flex-shrink: 0;
-}
-
-.slavia-calendar-grid .slavia-calendar-event {
-  backdrop-filter: blur(4px);
-}
-
-.slavia-calendar-days {
-  grid-auto-rows: 1fr;
-}
-
-.slavia-calendar-day {
-  min-width: 0;
-}
-
-@media (min-width: 1024px) {
-  .slavia-calendar-grid .slavia-calendar-event {
-    font-size: 0.8125rem;
-  }
-}
-</style>

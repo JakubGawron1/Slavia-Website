@@ -1,0 +1,119 @@
+/** Z app/components/club/ClubHistoryTimeline.vue — globalne klasy (bez scoped). */
+.club-history-timeline__list::before {
+  content: '';
+  position: absolute;
+  left: 1.125rem;
+  top: 0.5rem;
+  bottom: 0.5rem;
+  width: 2px;
+  border-radius: 9999px;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in oklab, var(--ui-color-primary-500) 35%, transparent),
+    color-mix(in oklab, var(--ui-color-primary-500) 12%, transparent)
+  );
+}
+
+.club-history-timeline__item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 2.25rem 1fr;
+  gap: 0.75rem 1rem;
+  padding-bottom: 1.75rem;
+  opacity: 0;
+  transform: translateY(1.25rem);
+  transition:
+    opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.club-history-timeline--compact .club-history-timeline__item {
+  padding-bottom: 1.25rem;
+}
+
+.club-history-timeline__item--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.club-history-timeline__item:last-child {
+  padding-bottom: 0;
+}
+
+.club-history-timeline__node {
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  justify-content: center;
+  padding-top: 1.35rem;
+  z-index: 1;
+}
+
+.club-history-timeline__dot {
+  display: block;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 9999px;
+  background: var(--ui-color-primary-500);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--ui-color-primary-500) 22%, transparent);
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+}
+
+.club-history-timeline__item--visible .club-history-timeline__dot {
+  transform: scale(1.15);
+  box-shadow: 0 0 0 6px color-mix(in oklab, var(--ui-color-primary-500) 28%, transparent);
+}
+
+.club-history-timeline__card {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+@media (min-width: 1024px) {
+  .club-history-timeline__list::before {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .club-history-timeline__item {
+    grid-template-columns: 1fr 2.75rem 1fr;
+    gap: 0 1.5rem;
+    align-items: start;
+    padding-bottom: 2.5rem;
+  }
+
+  .club-history-timeline__item--left .club-history-timeline__card {
+    grid-column: 1;
+    text-align: right;
+  }
+
+  .club-history-timeline__item--left .club-history-timeline__body {
+    flex-direction: row-reverse;
+  }
+
+  .club-history-timeline__item--right .club-history-timeline__card {
+    grid-column: 3;
+  }
+
+  .club-history-timeline__node {
+    grid-column: 2;
+    padding-top: 1.5rem;
+  }
+
+  .club-history-timeline__item--left .club-history-timeline__card h3,
+  .club-history-timeline__item--left .club-history-timeline__card p {
+    text-align: right;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .club-history-timeline__item {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .club-history-timeline__item--visible .club-history-timeline__dot {
+    transform: none;
+  }
+}

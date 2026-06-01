@@ -301,7 +301,7 @@ const featureAdoptionRows = ref<FeatureAdoptionRow[]>([])
 const featureAdoptionLoading = ref(false)
 const cmsBaseConfigured = computed(() => Boolean(String(config.public.cmsBaseUrl || '').trim()))
 
-type CmsStatusDto = {
+type GithubMediaStatusDto = {
   repo: string
   branch: string
   media_root: string
@@ -312,24 +312,20 @@ type CmsStatusDto = {
   last_upload_path?: string | null
 }
 
-const cmsStatus = ref<CmsStatusDto | null>(null)
-const cmsStatusLoading = ref(false)
+const githubMediaStatus = ref<GithubMediaStatusDto | null>(null)
+const githubMediaStatusLoading = ref(false)
 
-async function refreshCmsStatus() {
-  cmsStatusLoading.value = true
+async function refreshGithubMediaStatus() {
+  githubMediaStatusLoading.value = true
   try {
-    cmsStatus.value = await apiFetch<CmsStatusDto>(apiRoutes.system.cmsStatus)
+    githubMediaStatus.value = await apiFetch<GithubMediaStatusDto>(apiRoutes.system.cmsStatus)
   } catch (e) {
-    cmsStatus.value = null
-    toast.add({ title: 'Status CMS', description: getApiErrorMessage(e), color: 'warning' })
+    githubMediaStatus.value = null
+    toast.add({ title: 'Status mediów (GitHub)', description: getApiErrorMessage(e), color: 'warning' })
   } finally {
-    cmsStatusLoading.value = false
+    githubMediaStatusLoading.value = false
   }
 }
-
-onMounted(() => {
-  void refreshCmsStatus()
-})
 
 async function refreshFeatureAdoption() {
   featureAdoptionLoading.value = true
@@ -481,6 +477,7 @@ onMounted(() => {
     applyMobilePreviewDom(mobilePreviewOn.value, mobilePreviewWidth.value)
   }
   void refreshBanUsersCatalog()
+  void refreshGithubMediaStatus()
   void refreshFeatureAdoption()
   void $fetch<{ active_provider: 'leapcell' | 'render', updated_at?: string | null }>('/api/system/backend-provider', {
     headers: auth.token.value ? { Authorization: `Bearer ${auth.token.value}` } : undefined
@@ -2021,13 +2018,13 @@ function toastStorageApisAvailability() {
           </div>
           <div>
             <div class="flex flex-wrap items-center justify-between gap-2">
-              <p class="text-[10px] font-bold uppercase tracking-wider text-muted">Slavia-cms (GitHub)</p>
+              <p class="text-[10px] font-bold uppercase tracking-wider text-muted">Slavia-cms (GitHub) — media</p>
               <UButton
                 size="xs"
                 variant="soft"
                 icon="i-lucide-refresh-cw"
-                :loading="cmsStatusLoading"
-                @click="refreshCmsStatus"
+                :loading="githubMediaStatusLoading"
+                @click="refreshGithubMediaStatus"
               >
                 Odśwież
               </UButton>
@@ -2040,36 +2037,36 @@ function toastStorageApisAvailability() {
               </UBadge>
             </p>
             <div
-              v-if="cmsStatus"
+              v-if="githubMediaStatus"
               class="mt-2 space-y-1 rounded-xl border border-default/50 bg-muted/10 p-3 text-xs text-muted"
             >
               <p>
-                Backend: repo <span class="font-mono">{{ cmsStatus.repo }}</span> · gałąź
-                <span class="font-mono">{{ cmsStatus.branch }}</span> · root
-                <span class="font-mono">{{ cmsStatus.media_root }}/</span>
+                Backend: repo <span class="font-mono">{{ githubMediaStatus.repo }}</span> · gałąź
+                <span class="font-mono">{{ githubMediaStatus.branch }}</span> · root
+                <span class="font-mono">{{ githubMediaStatus.media_root }}/</span>
               </p>
               <p class="flex flex-wrap items-center gap-2">
                 <span>PAT (<code>GITHUB_TOKEN</code>):</span>
-                <UBadge size="xs" :color="cmsStatus.token_configured ? 'success' : 'error'" variant="subtle">
-                  {{ cmsStatus.token_configured ? 'ustawiony' : 'brak' }}
+                <UBadge size="xs" :color="githubMediaStatus.token_configured ? 'success' : 'error'" variant="subtle">
+                  {{ githubMediaStatus.token_configured ? 'ustawiony' : 'brak' }}
                 </UBadge>
-                <span>Upload CMS:</span>
-                <UBadge size="xs" :color="cmsStatus.upload_ready ? 'success' : 'warning'" variant="subtle">
-                  {{ cmsStatus.upload_ready ? 'gotowy' : 'niedostępny' }}
+                <span>Upload mediów:</span>
+                <UBadge size="xs" :color="githubMediaStatus.upload_ready ? 'success' : 'warning'" variant="subtle">
+                  {{ githubMediaStatus.upload_ready ? 'gotowy' : 'niedostępny' }}
                 </UBadge>
               </p>
-              <p v-if="cmsStatus.last_upload_at">
-                Ostatni upload: {{ cmsStatus.last_upload_at }}
-                <span v-if="cmsStatus.last_upload_path" class="font-mono"> · {{ cmsStatus.last_upload_path }}</span>
+              <p v-if="githubMediaStatus.last_upload_at">
+                Ostatni upload: {{ githubMediaStatus.last_upload_at }}
+                <span v-if="githubMediaStatus.last_upload_path" class="font-mono"> · {{ githubMediaStatus.last_upload_path }}</span>
               </p>
               <p v-else class="italic">
-                Brak zapisu ostatniego uploadu (jeszcze nie wgrywano przez CMS).
+                Brak zapisu ostatniego uploadu do repo mediów.
               </p>
             </div>
             <ul class="mt-2 list-disc ps-4 text-xs text-muted space-y-1">
               <li><code>GITHUB_TOKEN</code> (PAT) — scope <code>repo</code> tylko na backendzie (Render/Leapcell)</li>
               <li>Struktura repo: <code>media/gallery/</code>, <code>media/blog/</code>, <code>media/announcements/</code></li>
-              <li>Awatary i zdjęcia zawodników — nadal Cloudinary (<code>purpose=avatar|athletes</code>)</li>
+              <li>Awatary i zdjęcia zawodników — Cloudinary (<code>purpose=avatar|athletes</code>)</li>
             </ul>
           </div>
           <div>

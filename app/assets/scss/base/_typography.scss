@@ -1,0 +1,18 @@
+/** Nagłówki display — Outfit z Google Fonts (app.vue). */
+.slavia-display {
+  font-family: 'Outfit', var(--font-sans, 'Public Sans', sans-serif);
+  letter-spacing: -0.03em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse {
+    animation: none !important;
+  }
+}
+
+img,
+video,
+canvas,
+svg {
+  max-width: 100%;
+}

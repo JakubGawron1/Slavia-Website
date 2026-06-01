@@ -1,0 +1,48 @@
+/** Z app/components/dev/DevExperimentalFlagsPanel.vue — globalne klasy (bez scoped). */
+.dev-flags-scroll-wrap {
+  min-width: 0;
+}
+
+.dev-flags-scroll {
+  scroll-padding-inline: 0.25rem;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--ui-primary) 45%, transparent) transparent;
+}
+
+.dev-flags-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+
+.dev-flags-scroll::-webkit-scrollbar-track {
+  margin-inline: 0.25rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ui-bg-muted) 55%, transparent);
+}
+
+.dev-flags-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ui-primary) 50%, var(--ui-border));
+}
+
+.dev-flags-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--ui-primary);
+}
+
+.dev-flags-scroll-fade {
+  position: absolute;
+  top: 0;
+  bottom: 8px;
+  z-index: 1;
+  width: 2.5rem;
+}
+
+.dev-flags-scroll-fade--left {
+  left: 0;
+  background: linear-gradient(to right, var(--ui-bg-elevated, var(--ui-bg)) 15%, transparent);
+}
+
+.dev-flags-scroll-fade--right {
+  right: 0;
+  background: linear-gradient(to left, var(--ui-bg-elevated, var(--ui-bg)) 15%, transparent);
+}

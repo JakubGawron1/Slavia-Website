@@ -1,0 +1,26 @@
+
+/**
+ * Bez poziomego paska przewijania: dekoracje (`absolute -left-*`), szerokie tabele itd.
+ * `clip` nie tworzy scroll kontekstu jak `hidden` i nie psuje typowych sticky/modali.
+ */
+html {
+  overflow-x: clip;
+  /** Stałe miejsce na pasek przewijania — modale (Nuxt UI) blokują scroll i bez tego treść „skacze” w poziomie. */
+  scrollbar-gutter: stable;
+}
+
+body {
+  overflow-x: clip;
+  max-width: 100%;
+}
+
+#__nuxt {
+  width: 100%;
+  overflow-x: clip;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
