@@ -28,19 +28,11 @@ interface BlogPost {
   image_url?: string
 }
 
-function publicBase() {
-  return String(config.public.apiBase || '').replace(/\/$/, '')
-}
-
-const base = computed(() => publicBase())
-
 // SSR zawsze renderuje wersję publiczną wpisu (cache/ISR bez ryzyka per-user).
-const { data: post, pending, refresh: refreshPublic } = await useLazyFetch<BlogPost | null>(
-  () => `${base.value}/api/posts/${encodeURIComponent(String(postId))}`,
+const { data: post, pending, refresh: refreshPublic } = await usePublicLazyFetch<BlogPost>(
+  `posts/${encodeURIComponent(String(postId))}`,
   {
-    key: `aktualnosci-post-public-${String(postId)}`,
-    default: () => null,
-    server: true
+    key: `aktualnosci-post-public-${String(postId)}`
   }
 )
 

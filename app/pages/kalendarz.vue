@@ -30,12 +30,6 @@ useSeoMeta({
 const auth = useAuth()
 const apiFetch = useApi()
 const toast = useToast()
-const config = useRuntimeConfig()
-
-function publicBase() {
-  return String(config.public.apiBase || '').replace(/\/$/, '')
-}
-
 const canManageEvents = computed(() => auth.isTrainer.value || auth.isSuperAdmin.value)
 const {
   viewMode: calendarViewMode,
@@ -61,29 +55,24 @@ const canSyncExternalCalendars = computed(() => auth.isAdmin.value || auth.isSup
 
 const syncLoading = ref(false)
 
-// Bez SSR: na hostingu Node często nie ma dostępu do API / złego apiBase — strona się wywalała u gości.
+/** Publiczny BFF — SSG/ISR + hydracja bez bezpośredniego CORS do backendu. */
 const {
   data: competitions,
   refresh,
   pending: competitionsPending
-} = await useLazyFetch<Competition[]>(
-  () => `${publicBase()}${apiRoutes.competitions.collection}`,
-  {
-    key: 'competitions-public',
-    default: () => [],
-    server: false
-  }
-)
+} = await usePublicLazyFetch<Competition[]>('competitions', {
+  key: 'competitions-public',
+  default: () => []
+})
 
 const {
   data: recurringClubTrainingSessions,
   refresh: refreshRecurringClubTrainingSessions
-} = await useLazyFetch<RecurringTrainingSession[]>(
-  () => `${publicBase()}${apiRoutes.competitions.recurringTrainingCancellations}`,
+} = await usePublicLazyFetch<RecurringTrainingSession[]>(
+  'competitions/recurring-training-cancellations',
   {
     key: 'recurring-training-sessions',
-    default: () => [],
-    server: false
+    default: () => []
   }
 )
 
@@ -1061,34 +1050,4 @@ function handleDayClick(day: Date) {
   </PublicPageLayout>
 </template>
 
-<style scoped>
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
 
-.slavia-calendar-event :deep(svg) {
-  flex-shrink: 0;
-}
-
-.slavia-calendar-grid .slavia-calendar-event {
-  backdrop-filter: blur(4px);
-}
-
-.slavia-calendar-days {
-  grid-auto-rows: 1fr;
-}
-
-.slavia-calendar-day {
-  min-width: 0;
-}
-
-@media (min-width: 1024px) {
-  .slavia-calendar-grid .slavia-calendar-event {
-    font-size: 0.8125rem;
-  }
-}
-</style>

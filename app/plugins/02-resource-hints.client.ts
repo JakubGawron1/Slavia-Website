@@ -16,7 +16,9 @@ export default defineNuxtPlugin(() => {
   useHead({
     link: [
       { rel: 'dns-prefetch', href: origin, key: 'dns-prefetch-api' },
-      { rel: 'preconnect', href: origin, crossorigin: 'anonymous', key: 'preconnect-api' }
+      { rel: 'preconnect', href: origin, crossorigin: 'anonymous', key: 'preconnect-api' },
+      /** BFF publiczny — ten sam origin, szybsze lazy fetch po hydracji. */
+      { rel: 'preconnect', href: window.location.origin, key: 'preconnect-origin' }
     ]
   })
 })

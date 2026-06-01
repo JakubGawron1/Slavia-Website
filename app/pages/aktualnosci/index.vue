@@ -28,25 +28,15 @@ interface BlogPost {
   published?: boolean
 }
 
-function publicBase() {
-  return String(config.public.apiBase || '').replace(/\/$/, '')
-}
-
 function postImageSrc(url?: string) {
   return resolveCmsMediaUrl(url || '', String(config.public.cmsBaseUrl || ''))
 }
 
-const base = computed(() => publicBase())
-
 // SSR zawsze renderuje publiczną listę (bez ryzyka cache per-user).
-const { data: posts, refresh: refreshPublic, pending } = await useLazyFetch<BlogPost[]>(
-  () => `${base.value}/api/posts`,
-  {
-    key: 'aktualnosci-posts-public',
-    default: () => [] as BlogPost[],
-    server: true
-  }
-)
+const { data: posts, refresh: refreshPublic, pending } = await usePublicLazyFetch<BlogPost[]>('posts', {
+  key: 'aktualnosci-posts-public',
+  default: () => [] as BlogPost[]
+})
 
 // Prefetch danych wpisu na hover/focus (limit + debounce), żeby przejście na `/aktualnosci/[slug]` było instant.
 const prefetchedIds = new Set<string>()
@@ -69,7 +59,7 @@ function prefetchPostData(post: BlogPost) {
   }
 
   inFlightIds.add(id)
-  $fetch<BlogPost>(`${base.value}/api/posts/${encodeURIComponent(id)}`)
+  $fetch<BlogPost>(publicApiUrl(`posts/${encodeURIComponent(id)}`))
     .then((res) => {
       if (!res) return
       useNuxtData<BlogPost | null>(key).data.value = res

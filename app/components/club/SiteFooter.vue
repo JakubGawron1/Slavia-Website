@@ -4,7 +4,12 @@ import type { MobileReleaseInfo } from '~/types/models'
 const config = useRuntimeConfig()
 const apiFetch = useApi()
 
-const { data: latestRelease } = await useAsyncData('latest-mobile-release', () => apiFetch<MobileReleaseInfo>('/api/system/mobile-releases/latest').catch(() => null))
+/** Lazy po kliencie — footer nie blokuje SSG/ISR. */
+const { data: latestRelease } = await useAsyncData<MobileReleaseInfo | null>(
+  'latest-mobile-release',
+  () => apiFetch<MobileReleaseInfo>('/api/system/mobile-releases/latest').catch(() => null),
+  { server: false, lazy: true, default: () => null }
+)
 
 const appReleaseLabel = computed(() => String(config.public.appVersion ?? ''))
 </script>

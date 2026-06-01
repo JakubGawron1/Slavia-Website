@@ -29,21 +29,11 @@ function gallerySrc(url: string) {
   return resolveGalleryImageUrl(url, String(config.public.cmsBaseUrl || ''))
 }
 
-function publicBase() {
-  return String(config.public.apiBase || '').replace(/\/$/, '')
-}
-
-const base = computed(() => publicBase())
-
 // SSR zawsze renderuje publiczną galerię (bez ryzyka cache per-user).
-const { data: photos, refresh: refreshPublic, pending } = await useLazyFetch<GalleryPhoto[]>(
-  () => `${base.value}/api/gallery`,
-  {
-    key: 'club-gallery-public',
-    default: () => [] as GalleryPhoto[],
-    server: true
-  }
-)
+const { data: photos, refresh: refreshPublic, pending } = await usePublicLazyFetch<GalleryPhoto[]>('gallery', {
+  key: 'club-gallery-public',
+  default: () => [] as GalleryPhoto[]
+})
 
 async function refreshList() {
   // Adminowe “manage” ładujemy tylko na kliencie (token w localStorage) — nie wpływa na cache SSR.
@@ -197,7 +187,7 @@ async function remove(id: string) {
   if (!confirm('Usunąć to zdjęcie z galerii? Plik zostanie też usunięty z repozytorium Slavia-cms (GitHub), jeśli jest skonfigurowany.')) return
   try {
     await apiFetch(`/api/gallery/${id}`, { method: 'DELETE' })
-    toast.add({ title: 'Usunięto z galerii i CMS', color: 'success' })
+    toast.add({ title: 'Usunięto z galerii i repozytorium mediów', color: 'success' })
     if (mediaPreviewItem.value?.id === id) {
       mediaPreviewOpen.value = false
       mediaPreviewItem.value = null

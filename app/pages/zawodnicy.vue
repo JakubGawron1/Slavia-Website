@@ -32,32 +32,57 @@ function formatWeightCategoryText(threshold: number, bodyweight?: number | null)
   return String(threshold)
 }
 
-const config = useRuntimeConfig()
 const auth = useAuth()
 const apiFetch = useApi()
 
 /** Pełny ranking/podium treningowy klubu — tylko kadra (trener / admin / superadmin). Zawodnik bez tych ról widzi tylko własny trening na swoim profilu. */
 const canSeeClubTrainingRanking = computed(() => auth.isTrainer.value || auth.isAdmin.value)
 
-function publicBase() {
-  return String(config.public.apiBase || '').replace(/\/$/, '')
+interface PublicBoardRow {
+  id: string
+  athlete_id: string
+  snatch: number
+  clean_and_jerk: number
+  total: number
+  date: string
+  kind?: string
+  location?: string | null
+  squat_kg?: number | null
+  bench_kg?: number | null
+  deadlift_kg?: number | null
 }
 
-const base = computed(() => publicBase())
+function boardRowToCompetitionResult(row: PublicBoardRow): CompetitionResult {
+  return {
+    id: row.id,
+    athlete_id: row.athlete_id,
+    snatch: row.snatch,
+    clean_and_jerk: row.clean_and_jerk,
+    total: row.total,
+    status: 'Approved',
+    date: row.date,
+    kind: 'competition',
+    location: row.location ?? null,
+    squat_kg: row.squat_kg,
+    bench_kg: row.bench_kg,
+    deadlift_kg: row.deadlift_kg
+  }
+}
 
 const {
   data: playersRaw,
   pending: playersPending,
   error: playersError,
   refresh: refreshPlayersPublic
-} = await useLazyFetch<AthleteModel[]>(
-  () => `${base.value}/api/athletes`,
-  {
-    key: 'players-public-athletes',
-    default: () => [] as AthleteModel[],
-    server: true
-  }
-)
+} = await usePublicLazyFetch<AthleteModel[]>('athletes', {
+  key: 'players-public-athletes',
+  default: () => [] as AthleteModel[]
+})
+
+const { data: publicBoardRaw } = await usePublicLazyFetch<PublicBoardRow[]>('results/public-board', {
+  key: 'players-public-board',
+  default: () => [] as PublicBoardRow[]
+})
 
 if (import.meta.client) {
   onMounted(() => {
@@ -81,11 +106,17 @@ const players = computed(() => playersRaw.value ?? [])
  */
 const trainingByAthlete = ref<Record<string, CompetitionResult[]>>({})
 
-/**
- * Wyniki startowe (publiczne, `kind=competition`) — potrzebne do wykresów na kartach.
- * Backend domyślnie zwraca zawody także dla niezalogowanych.
- */
-const competitionByAthlete = ref<Record<string, CompetitionResult[]>>({})
+/** Wyniki zawodów z jednego żądania `/api/results/public-board` (zamiast N× `/athlete/{id}`). */
+const competitionByAthlete = computed<Record<string, CompetitionResult[]>>(() => {
+  const grouped = groupPublicBoardByAthlete<PublicBoardRow>(publicBoardRaw.value ?? [])
+  const out: Record<string, CompetitionResult[]> = {}
+  for (const [athleteId, rows] of Object.entries(grouped)) {
+    out[athleteId] = rows
+      .map(boardRowToCompetitionResult)
+      .sort((a, b) => a.date.localeCompare(b.date))
+  }
+  return out
+})
 
 function normalizeApprovedCompetition(rows: CompetitionResult[] | null | undefined) {
   return (rows ?? [])
@@ -138,24 +169,6 @@ async function refreshTrainingResults() {
   trainingByAthlete.value = { [myAthleteId]: rows }
 }
 
-async function refreshCompetitionResults() {
-  if (players.value.length === 0) {
-    competitionByAthlete.value = {}
-    return
-  }
-  const out: Record<string, CompetitionResult[]> = {}
-  await Promise.all(
-    players.value.map(async (p) => {
-      const rows = await apiFetch<CompetitionResult[]>(
-        `/api/results/athlete/${encodeURIComponent(p.id)}`
-      ).catch(() => [] as CompetitionResult[])
-      /* Domyślny endpoint może zwracać też treningi — publiczne karty i ranking tylko ze zawodów. */
-      out[p.id] = rows.filter(r => r.kind !== 'training')
-    })
-  )
-  competitionByAthlete.value = out
-}
-
 watch(
   [
     () => auth.isLoggedIn.value,
@@ -165,14 +178,6 @@ watch(
   ],
   () => {
     void refreshTrainingResults()
-  },
-  { immediate: true }
-)
-
-watch(
-  () => players.value.length,
-  () => {
-    void refreshCompetitionResults()
   },
   { immediate: true }
 )

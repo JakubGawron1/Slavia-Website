@@ -18,8 +18,6 @@ useSeoMeta({
   twitterCard: 'summary_large_image'
 })
 
-const config = useRuntimeConfig()
-
 interface BlogPost {
   id: string
   title: string
@@ -29,40 +27,28 @@ interface BlogPost {
   published?: boolean
 }
 
-function publicBase() {
-  return String(config.public.apiBase || '').replace(/\/$/, '')
-}
+const config = useRuntimeConfig()
 
 function postImageSrc(url?: string) {
   return resolveCmsMediaUrl(url || '', String(config.public.cmsBaseUrl || ''))
 }
 
-/** Strona główna jest publiczna — bez tokenu, dlatego używamy `useLazyFetch` (cache + prefetch) zamiast `useApi`. */
-const base = computed(() => publicBase())
-
+/** Strona główna — publiczny BFF (`/api/public/*`) pod SSG/ISR na Vercel. */
 const {
   data: athletes,
   pending: _athletesPending
-} = await useLazyFetch<Athlete[]>(
-  () => `${base.value}/api/athletes`,
-  {
-    key: 'home-athletes',
-    default: () => [] as Athlete[],
-    server: true
-  }
-)
+} = await usePublicLazyFetch<Athlete[]>('athletes', {
+  key: 'home-athletes',
+  default: () => [] as Athlete[]
+})
 
 const {
   data: posts,
   pending: _postsPending
-} = await useLazyFetch<BlogPost[]>(
-  () => `${base.value}/api/posts`,
-  {
-    key: 'home-posts',
-    default: () => [] as BlogPost[],
-    server: true
-  }
-)
+} = await usePublicLazyFetch<BlogPost[]>('posts', {
+  key: 'home-posts',
+  default: () => [] as BlogPost[]
+})
 
 function genderForSinclair(g?: string | null): SinclairGender | null {
   return g === 'male' || g === 'female' ? g : null

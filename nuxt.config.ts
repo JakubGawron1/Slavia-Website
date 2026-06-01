@@ -37,8 +37,19 @@ const isProd = process.env.NODE_ENV === 'production'
  */
 const devDisableRootIsr = !isProd
 
-/** Trasy panelu — CSR (SPA), bez SSR i bez cache CDN. */
-const panelNoStore = { ssr: false as const, headers: { 'cache-control': 'private, no-store' } }
+/** Trasy panelu — CSR (SPA), bez SSR, bez prerenderu i bez cache CDN. */
+const panelNoStore = {
+  ssr: false as const,
+  prerender: false as const,
+  headers: { 'cache-control': 'private, no-store' }
+}
+
+/** Publiczny BFF — krótki cache na Vercel (zgodny z ISR list). */
+const publicBffCache = {
+  headers: {
+    'cache-control': 'public, s-maxage=60, stale-while-revalidate=300'
+  }
+}
 
 export default defineNuxtConfig({
   compatibilityDate: '2026-05-09',
@@ -79,6 +90,7 @@ export default defineNuxtConfig({
   },
 
   sitemap: {
+    zeroRuntime: true,
     exclude: [
       '/athlete/**',
       '/trainer/**',
@@ -98,7 +110,11 @@ export default defineNuxtConfig({
     }
   },
 
-  devtools: { enabled: true },
+  devtools: { enabled: !isProd },
+
+  typescript: {
+    typeCheck: false
+  },
 
   sourcemap: {
     client: process.env.NUXT_SOURCEMAP === '1',
@@ -110,8 +126,9 @@ export default defineNuxtConfig({
     payloadExtraction: isProd,
     defaults: {
       nuxtLink: {
+        /** Prefetch tylko po hover/focus — mniej równoległych chunków przy starcie. */
         prefetch: true,
-        prefetchOn: { interaction: true }
+        prefetchOn: { interaction: true, visibility: false }
       }
     }
   },
@@ -129,14 +146,18 @@ export default defineNuxtConfig({
   },
 
   nitro: {
+    /** Na Vercel: preset `vercel` (ISR, serverless, edge cache). Lokalnie: domyślny node-server. */
+    preset: process.env.NITRO_PRESET || (process.env.VERCEL ? 'vercel' : undefined),
     /** Vercel: natywne ISR zamiast legacy `static`/`swr` w Build Options API. */
     future: {
       nativeSWR: true
     },
     sourceMap: process.env.NUXT_SOURCEMAP === '1',
     compressPublicAssets: true,
+    minify: isProd,
     prerender: {
       crawlLinks: true,
+      concurrency: 6,
       failOnError: false,
       routes: [
         '/',
@@ -154,9 +175,20 @@ export default defineNuxtConfig({
       ],
       ignore: [
         '/athlete',
+        '/athlete/**',
         '/trainer',
+        '/trainer/**',
         '/admin',
+        '/admin/**',
         '/superadmin',
+        '/superadmin/**',
+        '/chat',
+        '/profil',
+        '/attendance',
+        '/powiadomienia',
+        '/dziennik',
+        '/dziennik/**',
+        '/ogloszenia',
         '/api',
         '/dev-sw.js'
       ]
@@ -171,14 +203,16 @@ export default defineNuxtConfig({
    * - CSR (SPA): panele po zalogowaniu (`ssr: false`)
    */
   routeRules: {
-    '/': devDisableRootIsr ? { isr: false } : { isr: 600, prerender: true },
+    '/api/public/**': publicBffCache,
+
+    '/': devDisableRootIsr ? { isr: false, prerender: true } : { isr: 600, prerender: true },
     '/zawodnicy': { isr: 900, prerender: true },
     '/galeria': { isr: 1800, prerender: true },
     '/aktualnosci': { isr: 600, prerender: true },
     '/aktualnosci/**': { isr: 600 },
     '/klub/**': { isr: 900 },
 
-    '/kalendarz': { prerender: true },
+    '/kalendarz': { isr: 900, prerender: true },
     '/kontakt': { prerender: true },
     '/logowanie': { prerender: true },
     '/banned': { prerender: true },
@@ -220,7 +254,8 @@ export default defineNuxtConfig({
     workbox: {
       navigateFallback: '/',
       navigateFallbackDenylist: [/^\/api\//, /^\/dev-sw/, /^\/_nuxt/, /^\/athlete/, /^\/trainer/, /^\/admin/, /^\/superadmin/],
-      globPatterns: ['**/*.{js,css,html,png,svg,ico,woff2,webmanifest,json}'],
+      globPatterns: ['**/*.{js,css,html,ico,woff2,webmanifest}'],
+      maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
       cleanupOutdatedCaches: true,
       runtimeCaching: [
         {
@@ -242,7 +277,8 @@ export default defineNuxtConfig({
         {
           urlPattern: ({ url }) => {
             const p = url.pathname
-            return p.startsWith('/api/athletes')
+            return p.startsWith('/api/public/')
+              || p.startsWith('/api/athletes')
               || p.startsWith('/api/posts')
               || p.startsWith('/api/gallery')
               || p.startsWith('/api/announcements')
@@ -259,7 +295,7 @@ export default defineNuxtConfig({
       ]
     },
     devOptions: {
-      enabled: true,
+      enabled: !isProd,
       type: 'module',
       navigateFallback: '/',
       suppressWarnings: true
@@ -270,7 +306,7 @@ export default defineNuxtConfig({
     }
   },
 
-  css: ['~/assets/css/main.css'],
+  css: ['~/assets/css/main.css', '~/assets/scss/slavia.scss'],
 
   /**
    * `components/panel/Public*.vue` — bez prefiksu `Panel` w nazwie (np. `PublicPageLayout`, nie `PanelPublicPageLayout`).
@@ -309,7 +345,8 @@ export default defineNuxtConfig({
   vite: {
     build: {
       reportCompressedSize: false,
-      chunkSizeWarningLimit: 1600
+      chunkSizeWarningLimit: 1600,
+      modulePreload: { polyfill: false }
     },
     optimizeDeps: {
       include: [
