@@ -16,6 +16,7 @@
 @use './utilities/animations' as *;
 @use './utilities/backdrop' as *;
 @use './utilities/reveal' as *;
+@use './utilities/scrollbar' as *;
 @use './themes/presets-core' as *;
 @use './themes/presets' as *;
 @use './base/app-transitions' as *;

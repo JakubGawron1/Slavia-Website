@@ -159,7 +159,7 @@ watch(
         />
         <div
           :ref="setStableScrollEl"
-          class="dev-flags-scroll -mx-1 flex gap-2 overflow-x-auto pb-2 pt-1 snap-x snap-mandatory"
+          class="dev-flags-scroll slavia-scrollbar-thin -mx-1 flex gap-2 overflow-x-auto pb-2 pt-1 snap-x snap-mandatory"
           tabindex="0"
           role="region"
           aria-label="Stabilne funkcje eksperymentalne"
@@ -234,7 +234,7 @@ watch(
         />
         <div
           :ref="setExperimentScrollEl"
-          class="dev-flags-scroll -mx-1 flex gap-2 overflow-x-auto pb-2 pt-1 snap-x snap-mandatory"
+          class="dev-flags-scroll slavia-scrollbar-thin -mx-1 flex gap-2 overflow-x-auto pb-2 pt-1 snap-x snap-mandatory"
           tabindex="0"
           role="region"
           aria-label="Eksperymentalne funkcje"
