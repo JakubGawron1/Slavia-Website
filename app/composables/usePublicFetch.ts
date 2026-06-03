@@ -24,7 +24,16 @@ export function usePublicLazyFetch<T>(
   const key = opts.key ?? `public:${apiPath}`
   return useAsyncData<T>(
     key,
-    async () => (await $fetch(publicApiUrl(apiPath))) as T,
+    async () => {
+      try {
+        return (await $fetch(publicApiUrl(apiPath))) as T
+      } catch (err) {
+        if (import.meta.server && opts.default) {
+          return opts.default()
+        }
+        throw err
+      }
+    },
     {
       server: true,
       lazy: true,

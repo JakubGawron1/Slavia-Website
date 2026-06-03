@@ -1,3 +1,10 @@
+import {
+  emptyPublicApiFallback,
+  isLocalApiBase,
+  isPrerenderPass,
+  resolvePublicApiBase
+} from './resolvePublicApiBase'
+
 /**
  * BFF GET → zewnętrzny backend (SSG/ISR/SSR na Vercel).
  * Tylko jawna whitelist ścieżek — bez tokenów i bez tras administracyjnych.
@@ -21,23 +28,35 @@ export function isPublicBackendProxyPath(apiPath: string): boolean {
   return PUBLIC_GET_PATTERNS.some(re => re.test(path))
 }
 
-export function resolveBackendApiBase(): string {
-  const config = useRuntimeConfig()
-  return String(config.public.apiBase ?? '').replace(/\/$/, '')
-}
-
 export async function proxyPublicBackendGet(apiPath: string): Promise<unknown> {
   if (!isPublicBackendProxyPath(apiPath)) {
     throw createError({ statusCode: 404, statusMessage: 'Not Found' })
   }
-  const base = resolveBackendApiBase()
-  if (!base) {
+
+  const base = await resolvePublicApiBase()
+  if (isLocalApiBase(base)) {
+    if (isPrerenderPass()) {
+      console.warn(
+        `[public-api] Prerender: pominięto ${apiPath} — ustaw NUXT_PUBLIC_API_BASE_URL_LEAPCELL lub _RENDER na Vercel.`
+      )
+      return emptyPublicApiFallback(apiPath)
+    }
     throw createError({ statusCode: 503, statusMessage: 'API base not configured' })
   }
+
   const target = `${base}${apiPath.startsWith('/') ? apiPath : `/${apiPath}`}`
-  return await $fetch(target, {
-    method: 'GET',
-    timeout: 12_000,
-    headers: { Accept: 'application/json' }
-  })
+
+  try {
+    return await $fetch(target, {
+      method: 'GET',
+      timeout: 12_000,
+      headers: { Accept: 'application/json' }
+    })
+  } catch (err) {
+    if (isPrerenderPass()) {
+      console.warn(`[public-api] Prerender: ${apiPath} → ${target} niedostępne, używam pustych danych.`, err)
+      return emptyPublicApiFallback(apiPath)
+    }
+    throw err
+  }
 }

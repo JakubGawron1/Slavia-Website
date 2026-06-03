@@ -31,6 +31,34 @@ function resolvePublicSiteUrl(): string {
 const publicSiteUrl = resolvePublicSiteUrl()
 const isProd = process.env.NODE_ENV === 'production'
 
+function isLocalhostApiUrl(url: string): boolean {
+  const u = url.trim().toLowerCase()
+  return !u || u.includes('127.0.0.1') || u.includes('localhost')
+}
+
+/** Na Vercel build: Leapcell/Render z env — nie localhost (prerender BFF). */
+function resolveBuildTimeApiBase(): string {
+  const explicit = (process.env.NUXT_PUBLIC_API_BASE_URL || '').trim()
+  const leapcell = (process.env.NUXT_PUBLIC_API_BASE_URL_LEAPCELL || explicit || '').trim()
+  const render = (process.env.NUXT_PUBLIC_API_BASE_URL_RENDER || explicit || '').trim()
+  const provider = (process.env.DEFAULT_BACKEND_PROVIDER || 'leapcell').toLowerCase()
+
+  const ordered = provider === 'render'
+    ? [render, leapcell, explicit]
+    : [leapcell, render, explicit]
+
+  for (const candidate of ordered) {
+    if (candidate && !isLocalhostApiUrl(candidate)) {
+      return candidate.replace(/\/$/, '')
+    }
+  }
+  return 'http://127.0.0.1:8000'
+}
+
+const buildApiBase = resolveBuildTimeApiBase()
+const buildApiLeapcell = (process.env.NUXT_PUBLIC_API_BASE_URL_LEAPCELL || buildApiBase).replace(/\/$/, '')
+const buildApiRender = (process.env.NUXT_PUBLIC_API_BASE_URL_RENDER || buildApiBase).replace(/\/$/, '')
+
 /**
  * ISR na `/` poza prod wyłączone: `payloadCache` + unstorage → `EISDIR` na Windows przy dev.
  * Nie używać `import.meta.dev` w kontekście ładowania `nuxt.config`.
@@ -324,12 +352,9 @@ export default defineNuxtConfig({
     blobReadWriteToken: process.env.BLOB_READ_WRITE_TOKEN || '',
     githubApiToken: process.env.GITHUB_TOKEN || process.env.GITHUB_API_TOKEN || '',
     public: {
-      apiBase: process.env.NUXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000',
-      apiBaseLeapcell: process.env.NUXT_PUBLIC_API_BASE_URL_LEAPCELL || process.env.NUXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000',
-      apiBaseRender:
-        process.env.NUXT_PUBLIC_API_BASE_URL_RENDER
-        || process.env.NUXT_PUBLIC_API_BASE_URL
-        || 'http://127.0.0.1:8000',
+      apiBase: buildApiBase,
+      apiBaseLeapcell: buildApiLeapcell,
+      apiBaseRender: buildApiRender,
       siteUrl: publicSiteUrl,
       experimentalKillSwitch: process.env.NUXT_PUBLIC_EXPERIMENTAL_KILL_SWITCH || '',
       appVersion: formatPublicAppVersion(packageJsonVersion),

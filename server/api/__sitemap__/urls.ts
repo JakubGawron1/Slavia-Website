@@ -1,10 +1,11 @@
+import { isLocalApiBase, resolvePublicApiBase } from '../../utils/resolvePublicApiBase'
+
 /**
  * Dynamiczne URL-e do sitemap (wpisy bloga). Przy buildzie bez API zwraca pustą listę.
  */
 export default defineSitemapEventHandler(async () => {
-  const config = useRuntimeConfig()
-  const apiBase = String(config.public.apiBase ?? '').replace(/\/$/, '')
-  if (!apiBase || apiBase.includes('127.0.0.1') || apiBase.includes('localhost')) {
+  const apiBase = await resolvePublicApiBase()
+  if (isLocalApiBase(apiBase)) {
     return []
   }
 
