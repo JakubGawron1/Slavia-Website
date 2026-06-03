@@ -684,10 +684,10 @@ function badgeColorForKind(k: string | undefined) {
       v-model:open="modalOpen"
       title="Edytuj wynik"
       :dismissible="true"
-      :ui="{ overlay: 'z-[190]', content: 'z-[200] sm:max-w-3xl md:max-w-4xl lg:max-w-5xl' }"
+      :ui="{ content: 'sm:max-w-3xl md:max-w-4xl lg:max-w-5xl' }"
     >
       <template #body>
-        <div class="slavia-form-modal">
+        <div class="slavia-modal-body">
           <div class="slavia-form-panel">
             <div class="slavia-form-panel__header">
               <div class="slavia-form-panel__title">
@@ -854,10 +854,10 @@ function badgeColorForKind(k: string | undefined) {
       v-model:open="addModalOpen"
       title="Nowy wynik (kadra)"
       :dismissible="true"
-      :ui="{ overlay: 'z-[190]', content: 'z-[200] sm:max-w-3xl md:max-w-4xl lg:max-w-5xl' }"
+      :ui="{ content: 'sm:max-w-3xl md:max-w-4xl lg:max-w-5xl' }"
     >
       <template #body>
-        <div class="slavia-form-modal">
+        <div class="slavia-modal-body">
           <p class="rounded-xl border border-default/60 bg-muted/15 px-4 py-3 text-sm text-muted dark:bg-muted/10">
             Wynik zapisany przez trenera lub administratora trafia od razu jako
             <strong class="text-highlighted">zatwierdzony</strong>.

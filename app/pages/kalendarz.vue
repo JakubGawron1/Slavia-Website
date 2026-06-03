@@ -859,10 +859,10 @@ function handleDayClick(day: Date) {
       v-model:open="isModalOpen"
       :title="readOnlyEvent ? 'Szczegóły wydarzenia' : (editingId ? 'Edytuj wydarzenie' : 'Dodaj wydarzenie')"
       :dismissible="true"
-      :ui="{ overlay: 'z-[190]', content: 'z-[200] max-h-[90vh] overflow-y-auto sm:max-w-2xl md:max-w-3xl lg:max-w-4xl' }"
+      :ui="{ content: 'sm:max-w-2xl md:max-w-3xl lg:max-w-4xl' }"
     >
       <template #body>
-        <div class="slavia-form-modal">
+        <div class="slavia-modal-body">
           <div
             v-if="readOnlyEvent"
             class="rounded-xl border border-amber-400/40 bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-100"

@@ -730,7 +730,7 @@ watch(
       }"
     >
       <template #body="{ close }">
-        <div class="slavia-form-modal slavia-form-modal--umodal-body">
+        <div class="slavia-modal-body">
           <form
             class="slavia-form-stack"
             @submit.prevent="savePlayer"
@@ -1191,7 +1191,7 @@ watch(
                       color="neutral"
                       variant="outline"
                       size="lg"
-                      @click="() => { close(); closeEditModal() }"
+                      @click="closeEditModal"
                     >
                       Anuluj
                     </UButton>
@@ -1217,7 +1217,7 @@ watch(
       description="Tej operacji nie cofniesz."
     >
       <template #body="{ close }">
-        <div class="slavia-form-modal slavia-form-modal--umodal-body">
+        <div class="slavia-modal-body">
           <p
             v-if="pendingDelete"
             class="text-muted leading-relaxed"
@@ -1229,7 +1229,7 @@ watch(
               color="neutral"
               variant="outline"
               size="lg"
-              @click="() => { close(); cancelDelete() }"
+              @click="cancelDelete"
             >
               Wróć
             </UButton>

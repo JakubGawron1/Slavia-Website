@@ -911,7 +911,7 @@ onMounted(() => {
       :ui="{ content: 'rounded-3xl sm:max-w-2xl md:max-w-3xl lg:max-w-4xl' }"
     >
       <template #body>
-        <div class="slavia-form-modal">
+        <div class="slavia-modal-body">
           <form
             class="slavia-form-stack"
             @submit.prevent="saveAdmin"
@@ -1041,7 +1041,7 @@ onMounted(() => {
       :ui="{ content: 'rounded-3xl sm:max-w-2xl md:max-w-3xl lg:max-w-4xl' }"
     >
       <template #body>
-        <div class="slavia-form-modal">
+        <div class="slavia-modal-body">
           <div class="slavia-form-panel rounded-2xl ring-1 ring-default/40">
             <div class="slavia-form-panel__header rounded-t-2xl bg-linear-to-r from-neutral-500/10 to-transparent dark:from-white/5">
               <div class="slavia-form-panel__title">
@@ -1137,7 +1137,7 @@ onMounted(() => {
       :ui="{ content: 'rounded-3xl sm:max-w-sm' }"
     >
       <template #body>
-        <div class="slavia-form-modal space-y-4">
+        <div class="slavia-modal-body space-y-4">
           <div
             v-if="pendingDelete"
             class="rounded-2xl border border-error/25 bg-error/5 px-4 py-3 text-sm text-highlighted"
@@ -1180,7 +1180,7 @@ onMounted(() => {
       :ui="{ content: 'rounded-3xl sm:max-w-md' }"
     >
       <template #body>
-        <div class="slavia-form-modal space-y-4">
+        <div class="slavia-modal-body space-y-4">
           <div
             v-if="banTarget"
             class="rounded-2xl border border-warning/25 bg-warning/5 px-4 py-3 text-sm text-highlighted"

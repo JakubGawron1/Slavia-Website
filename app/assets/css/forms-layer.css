@@ -2,16 +2,20 @@
  * Wspólny wygląd formularzy (modale, panele edycji).
  */
 @layer components {
+  /** Treść modala — bez własnego scrolla (przewija slot #body w SlaviaModal). */
+  .slavia-modal-body {
+    @apply space-y-6 p-5 sm:p-6;
+  }
+
+  /**
+   * Stary kontener ze scrollem — tylko poza SlaviaModal (np. pełnostronicowe formularze).
+   */
   .slavia-form-modal {
     @apply max-h-[min(88vh,900px)] space-y-6 overflow-y-auto p-5 sm:p-6;
   }
 
-  /**
-   * SlaviaModal / UModal: slot #body (nie #content). Preferuj <SlaviaModal> (scrollable + z-index).
-   * Nuxt UI nadaje na body `overflow-y-auto` (scrollable: false).
-   * Zostawiamy jeden kontener przewijania; wewnętrzne max-h/overflow dawały drugi pasek i psuły m.in. USwitch.
-   */
-  .slavia-form-modal.slavia-form-modal--umodal-body {
+  .slavia-form-modal.slavia-form-modal--umodal-body,
+  .slavia-modal-body.slavia-form-modal--umodal-body {
     max-height: none;
     overflow: visible;
   }

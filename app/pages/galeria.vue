@@ -410,7 +410,7 @@ const sortedPhotos = computed(() => {
       v-model:open="modalOpen"
       :title="editingId ? 'Edytuj zdjęcie' : 'Nowe zdjęcie'"
       :dismissible="true"
-      :ui="{ content: 'max-h-[90vh] overflow-y-auto sm:max-w-2xl md:max-w-3xl lg:max-w-4xl' }"
+      :ui="{ content: 'sm:max-w-2xl md:max-w-3xl lg:max-w-4xl' }"
     >
       <template #body>
         <div class="flex flex-col gap-4 p-4 sm:p-6">

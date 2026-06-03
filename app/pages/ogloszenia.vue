@@ -397,7 +397,7 @@ function bodyPreview(text: string, max = 100) {
       v-model:open="modalOpen"
       :title="editingId ? 'Edytuj ogłoszenie' : 'Nowe ogłoszenie'"
       :dismissible="true"
-      :ui="{ content: 'max-h-[90vh] overflow-y-auto sm:max-w-3xl md:max-w-4xl lg:max-w-5xl' }"
+      :ui="{ content: 'sm:max-w-3xl md:max-w-4xl lg:max-w-5xl' }"
     >
       <template #body>
         <div class="flex flex-col gap-4 p-4 sm:p-6">

@@ -516,17 +516,18 @@ function onAgendaSelect(day: Date, ev: { key: string }) {
 
     <SlaviaModal
       v-model:open="modalOpen"
+      :title="selectedEvent?.title || 'Wydarzenie'"
       :dismissible="true"
       :ui="{
-        overlay: 'z-[190] bg-neutral-950/75 backdrop-blur-[3px]',
+        overlay: 'bg-neutral-950/75 backdrop-blur-[3px]',
         content:
-          'z-[200] max-h-[min(92dvh,880px)] w-[min(100vw-1rem,56rem)] overflow-hidden rounded-3xl border border-default/50 shadow-[0_24px_80px_-20px_rgba(0,0,0,0.55)] ring-1 ring-white/10 sm:w-full sm:max-w-2xl md:max-w-3xl lg:max-w-4xl'
+          'w-[min(100vw-1rem,56rem)] rounded-3xl border border-default/50 shadow-[0_24px_80px_-20px_rgba(0,0,0,0.55)] ring-1 ring-white/10 sm:w-full sm:max-w-2xl md:max-w-3xl lg:max-w-4xl'
       }"
     >
       <template #body>
         <div
           v-if="selectedEvent"
-          class="flex max-h-[min(92dvh,880px)] flex-col overflow-y-auto"
+          class="flex flex-col"
         >
           <div
             class="relative shrink-0 px-6 pb-8 pt-7 md:px-9 md:pb-10 md:pt-10"
