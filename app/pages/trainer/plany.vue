@@ -254,7 +254,7 @@ function diaryEntryForPlanHref(plan: TrainingPlan) {
     </div>
 
     <!-- Modal (Correct for Nuxt UI v4) -->
-    <UModal
+    <SlaviaModal
       v-model:open="showAddModal"
       title="Nowy plan treningowy"
       :dismissible="true"
@@ -323,10 +323,10 @@ function diaryEntryForPlanHref(plan: TrainingPlan) {
           </div>
         </div>
       </template>
-    </UModal>
+    </SlaviaModal>
 
     <!-- Edycja meta planu -->
-    <UModal
+    <SlaviaModal
       v-model:open="showEditMetaModal"
       title="Edytuj plan"
       :dismissible="true"
@@ -371,7 +371,7 @@ function diaryEntryForPlanHref(plan: TrainingPlan) {
           </div>
         </div>
       </template>
-    </UModal>
+    </SlaviaModal>
 
     <!-- Content Area -->
     <div v-if="loading" class="flex flex-col items-center justify-center py-20 gap-4 text-muted">

@@ -855,7 +855,7 @@ function handleDayClick(day: Date) {
     </div>
 
     <!-- Modal -->
-    <UModal
+    <SlaviaModal
       v-model:open="isModalOpen"
       :title="readOnlyEvent ? 'Szczegóły wydarzenia' : (editingId ? 'Edytuj wydarzenie' : 'Dodaj wydarzenie')"
       :dismissible="true"
@@ -1046,7 +1046,7 @@ function handleDayClick(day: Date) {
           </div>
         </div>
       </template>
-    </UModal>
+    </SlaviaModal>
   </PublicPageLayout>
 </template>
 

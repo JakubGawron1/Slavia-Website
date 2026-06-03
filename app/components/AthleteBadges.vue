@@ -268,7 +268,7 @@ async function shareBadge() {
     </div>
 
     <!-- Badge Details Modal -->
-    <UModal
+    <SlaviaModal
       v-model:open="isModalOpen"
       :title="selectedBadge?.label || 'Szczegóły odznaki'"
       :dismissible="true"
@@ -341,10 +341,10 @@ async function shareBadge() {
           </div>
         </div>
       </template>
-    </UModal>
+    </SlaviaModal>
 
     <!-- [2070] Badge unlock celebration modal with confetti + share -->
-    <UModal
+    <SlaviaModal
       v-model:open="celebrationOpen"
       title="Nowa odznaka odblokowana! 🏆"
       :dismissible="true"
@@ -419,7 +419,7 @@ async function shareBadge() {
           </div>
         </div>
       </template>
-    </UModal>
+    </SlaviaModal>
   </div>
 </template>
 

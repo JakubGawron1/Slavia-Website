@@ -351,7 +351,7 @@ function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 
   </PanelPageLayout>
 
   <!-- [2002] Modal zatwierdzenia/odrzucenia wyniku z powodem -->
-  <UModal
+  <SlaviaModal
     v-model:open="reviewModalOpen"
     :title="reviewMode === 'approve' ? 'Zatwierdź wynik' : 'Odrzuć wynik'"
     :dismissible="true"
@@ -382,6 +382,6 @@ function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 
         </div>
       </div>
     </template>
-  </UModal>
+  </SlaviaModal>
   </div>
 </template>

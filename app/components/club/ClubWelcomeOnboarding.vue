@@ -57,7 +57,7 @@ watch(
 </script>
 
 <template>
-  <UModal
+  <SlaviaModal
     v-model:open="open"
     title="Powitanie"
     description="Krótki start po zalogowaniu."
@@ -156,5 +156,5 @@ watch(
         </div>
       </div>
     </template>
-  </UModal>
+  </SlaviaModal>
 </template>

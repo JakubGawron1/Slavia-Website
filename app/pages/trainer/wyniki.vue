@@ -680,7 +680,7 @@ function badgeColorForKind(k: string | undefined) {
       </table>
     </UCard>
 
-    <UModal
+    <SlaviaModal
       v-model:open="modalOpen"
       title="Edytuj wynik"
       :dismissible="true"
@@ -848,9 +848,9 @@ function badgeColorForKind(k: string | undefined) {
           </div>
         </div>
       </template>
-    </UModal>
+    </SlaviaModal>
 
-    <UModal
+    <SlaviaModal
       v-model:open="addModalOpen"
       title="Nowy wynik (kadra)"
       :dismissible="true"
@@ -1028,6 +1028,6 @@ function badgeColorForKind(k: string | undefined) {
           </div>
         </div>
       </template>
-    </UModal>
+    </SlaviaModal>
   </PanelPageLayout>
 </template>

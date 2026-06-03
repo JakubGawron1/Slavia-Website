@@ -502,7 +502,7 @@ function toggleChecklistItem(id: string) {
       :description="`Nie masz jeszcze zatwierdzonej wpłaty za ${paymentStatus.month}. Zgłoś przelew w składkach — przypomnienie wyłączysz w ustawieniach konta na dole panelu.`"
     />
 
-    <UModal
+    <SlaviaModal
       v-model:open="showOnboarding"
       title="Witaj w panelu zawodnika"
       :dismissible="true"
@@ -528,7 +528,7 @@ function toggleChecklistItem(id: string) {
           </div>
         </div>
       </template>
-    </UModal>
+    </SlaviaModal>
 
     <div
       v-if="auth.canAccessAthletePortal && athlete"

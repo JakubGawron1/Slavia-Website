@@ -211,7 +211,7 @@ useSeoMeta({
         </div>
       </UCard>
 
-      <UModal
+      <SlaviaModal
         v-model:open="reviewOpen"
         :title="reviewMode === 'approve' ? 'Zatwierdź zgłoszenie' : 'Odrzuć zgłoszenie'"
         :dismissible="true"
@@ -263,7 +263,7 @@ useSeoMeta({
             </div>
           </div>
         </template>
-      </UModal>
+      </SlaviaModal>
     </div>
   </PanelPageLayout>
 </template>

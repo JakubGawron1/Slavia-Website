@@ -7,7 +7,7 @@
   }
 
   /**
-   * UModal: używaj wyłącznie slotu #body (nie #content — wtedy brak „X”, ESC i klik w tło).
+   * SlaviaModal / UModal: slot #body (nie #content). Preferuj <SlaviaModal> (scrollable + z-index).
    * Nuxt UI nadaje na body `overflow-y-auto` (scrollable: false).
    * Zostawiamy jeden kontener przewijania; wewnętrzne max-h/overflow dawały drugi pasek i psuły m.in. USwitch.
    */

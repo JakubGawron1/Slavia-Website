@@ -406,7 +406,7 @@ const sortedPhotos = computed(() => {
     </div>
     </div>
 
-    <UModal
+    <SlaviaModal
       v-model:open="modalOpen"
       :title="editingId ? 'Edytuj zdjęcie' : 'Nowe zdjęcie'"
       :dismissible="true"
@@ -490,8 +490,8 @@ const sortedPhotos = computed(() => {
           </div>
         </div>
       </template>
-    </UModal>
-    <UModal
+    </SlaviaModal>
+    <SlaviaModal
       v-model:open="mediaPreviewOpen"
       :title="mediaPreviewItem?.caption || (mediaPreviewItem?.media_type === 'video' ? 'Podgląd filmu' : 'Podgląd zdjęcia')"
       :dismissible="true"
@@ -535,6 +535,6 @@ const sortedPhotos = computed(() => {
           </div>
         </div>
       </template>
-    </UModal>
+    </SlaviaModal>
   </PublicPageLayout>
 </template>

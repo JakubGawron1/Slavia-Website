@@ -402,7 +402,7 @@ async function rejectPayment(id: string) {
   </PanelPageLayout>
 
   <!-- [2002] Modal zatwierdzenia/odrzucenia wyniku z powodem -->
-  <UModal
+  <SlaviaModal
     v-model:open="reviewModalOpen"
     :title="reviewMode === 'approve' ? 'Zatwierdź wynik' : 'Odrzuć wynik'"
     :dismissible="true"
@@ -433,6 +433,6 @@ async function rejectPayment(id: string) {
         </div>
       </div>
     </template>
-  </UModal>
+  </SlaviaModal>
   </div>
 </template>

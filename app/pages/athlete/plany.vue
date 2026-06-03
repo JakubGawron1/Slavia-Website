@@ -357,7 +357,7 @@ watch(selectedPlanId, () => {
     </PanelPageLayout>
 
     <!-- Plan Details Modal (Nuxt UI v4) -->
-    <UModal
+    <SlaviaModal
       v-model:open="planModalOpen"
       :title="selectedPlan?.title || 'Szczegóły planu'"
       :dismissible="true"
@@ -529,7 +529,7 @@ watch(selectedPlanId, () => {
           </div>
         </div>
       </template>
-    </UModal>
+    </SlaviaModal>
   </div>
 </template>
 

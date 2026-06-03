@@ -167,7 +167,7 @@ watch(open, (v) => {
       aria-label="Szukaj (Ctrl+K, ⌘K lub / poza formularzem)"
       @click="open = true"
     />
-    <UModal
+    <SlaviaModal
       v-model:open="open"
       title="Szukaj"
       description="Zawodnicy, kalendarz i aktualności — tylko publicznie dostępne dane."
@@ -190,6 +190,6 @@ watch(open, (v) => {
           @update:open="onCommandPaletteOpen"
         />
       </template>
-    </UModal>
+    </SlaviaModal>
   </div>
 </template>

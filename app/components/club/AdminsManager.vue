@@ -904,7 +904,7 @@ onMounted(() => {
       </article>
     </div>
 
-    <UModal
+    <SlaviaModal
       v-model:open="modalOpen"
       title="Nowe konto"
       :dismissible="true"
@@ -1032,9 +1032,9 @@ onMounted(() => {
           </form>
         </div>
       </template>
-    </UModal>
+    </SlaviaModal>
 
-    <UModal
+    <SlaviaModal
       v-model:open="accountModalOpen"
       title="Edycja konta"
       :dismissible="true"
@@ -1128,9 +1128,9 @@ onMounted(() => {
           </div>
         </div>
       </template>
-    </UModal>
+    </SlaviaModal>
 
-    <UModal
+    <SlaviaModal
       v-model:open="deleteModalOpen"
       title="Usunąć konto?"
       :dismissible="true"
@@ -1171,9 +1171,9 @@ onMounted(() => {
           </div>
         </div>
       </template>
-    </UModal>
+    </SlaviaModal>
 
-    <UModal
+    <SlaviaModal
       v-model:open="banModalOpen"
       title="Zbanować konto?"
       :dismissible="true"
@@ -1227,6 +1227,6 @@ onMounted(() => {
           </div>
         </div>
       </template>
-    </UModal>
+    </SlaviaModal>
   </div>
 </template>

@@ -248,7 +248,7 @@ onMounted(() => loadExercises())
       </div>
     </PanelPageSection>
 
-    <UModal
+    <SlaviaModal
       v-model:open="showAddModal"
       title="Dodaj nowe ćwiczenie"
       :dismissible="true"
@@ -314,6 +314,6 @@ onMounted(() => loadExercises())
           </div>
         </div>
       </template>
-    </UModal>
+    </SlaviaModal>
   </PanelPageLayout>
 </template>

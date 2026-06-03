@@ -722,18 +722,14 @@ watch(
       </div>
     </UCard>
 
-    <UModal
+    <SlaviaModal
       v-model:open="modalOpen"
       :title="editingId ? 'Edycja zawodnika' : 'Nowy zawodnik'"
-      :dismissible="true"
       :ui="{
-        content: 'rounded-3xl sm:max-w-3xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl',
-        body: 'min-h-0 overflow-y-auto'
+        content: 'rounded-3xl sm:max-w-3xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl'
       }"
     >
-      <!-- Slot #content w Nuxt UI v4 wyłącza nagłówek z domyślnym „X” i psuje dismiss
-           (overlay/ESC) — używamy #body, żeby Dialog dostał normalny header + close. -->
-      <template #body>
+      <template #body="{ close }">
         <div class="slavia-form-modal slavia-form-modal--umodal-body">
           <form
             class="slavia-form-stack"
@@ -1195,7 +1191,7 @@ watch(
                       color="neutral"
                       variant="outline"
                       size="lg"
-                      @click="closeEditModal"
+                      @click="() => { close(); closeEditModal() }"
                     >
                       Anuluj
                     </UButton>
@@ -1213,16 +1209,14 @@ watch(
           </form>
         </div>
       </template>
-    </UModal>
+    </SlaviaModal>
 
-    <UModal
+    <SlaviaModal
       v-model:open="deleteModalOpen"
       title="Usunąć zawodnika?"
       description="Tej operacji nie cofniesz."
-      :dismissible="true"
-      :ui="{ body: 'min-h-0 overflow-y-auto' }"
     >
-      <template #body>
+      <template #body="{ close }">
         <div class="slavia-form-modal slavia-form-modal--umodal-body">
           <p
             v-if="pendingDelete"
@@ -1235,7 +1229,7 @@ watch(
               color="neutral"
               variant="outline"
               size="lg"
-              @click="cancelDelete"
+              @click="() => { close(); cancelDelete() }"
             >
               Wróć
             </UButton>
@@ -1250,6 +1244,6 @@ watch(
           </div>
         </div>
       </template>
-    </UModal>
+    </SlaviaModal>
   </div>
 </template>

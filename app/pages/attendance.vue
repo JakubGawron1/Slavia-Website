@@ -780,7 +780,7 @@ onMounted(() => {
     </UCard>
     </div>
 
-    <UModal
+    <SlaviaModal
       v-model:open="attendanceModalOpen"
       :title="selectedTrainingDay ? `Trening · ${format(selectedTrainingDay, 'dd.MM.yyyy')}` : 'Zapis obecności'"
       :dismissible="true"
@@ -874,6 +874,6 @@ onMounted(() => {
           </div>
         </div>
       </template>
-    </UModal>
+    </SlaviaModal>
   </PanelPageLayout>
 </template>

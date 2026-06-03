@@ -514,7 +514,7 @@ function onAgendaSelect(day: Date, ev: { key: string }) {
     </div>
     </div>
 
-    <UModal
+    <SlaviaModal
       v-model:open="modalOpen"
       :dismissible="true"
       :ui="{
@@ -632,7 +632,7 @@ function onAgendaSelect(day: Date, ev: { key: string }) {
           </div>
         </div>
       </template>
-    </UModal>
+    </SlaviaModal>
   </PanelPageLayout>
 </template>
 

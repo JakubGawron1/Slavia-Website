@@ -393,7 +393,7 @@ function bodyPreview(text: string, max = 100) {
     </template>
     </div>
 
-    <UModal
+    <SlaviaModal
       v-model:open="modalOpen"
       :title="editingId ? 'Edytuj ogłoszenie' : 'Nowe ogłoszenie'"
       :dismissible="true"
@@ -457,6 +457,6 @@ function bodyPreview(text: string, max = 100) {
           </div>
         </div>
       </template>
-    </UModal>
+    </SlaviaModal>
   </PublicPageLayout>
 </template>
