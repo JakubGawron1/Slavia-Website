@@ -27,6 +27,7 @@ useSeoMeta({
 })
 
 const auth = useAuth()
+const { accountSettingsPath } = useRoleDashboardNav()
 const backendProvider = useBackendProvider()
 const apiFetch = useApi()
 const toast = useToast()
@@ -1419,7 +1420,7 @@ function toastStorageApisAvailability() {
               ·
               <NuxtLink
                 class="font-medium text-primary underline-offset-2 hover:underline"
-                to="/profil"
+                :to="accountSettingsPath"
               >
                 Profil
               </NuxtLink>

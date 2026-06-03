@@ -595,3 +595,28 @@ html[data-slavia-preset='velvet'] .slavia-velvet-layout [aria-hidden='true'] .bg
     animation: none !important;
   }
 }
+
+/* --- Design 2.0: spójność paneli we wszystkich presetach --- */
+html[data-slavia-preset] .slavia-toolbar {
+  border-radius: 1rem;
+  border: 1px solid color-mix(in oklab, var(--ui-border) 80%, transparent);
+  background: color-mix(in oklab, var(--ui-bg-elevated) 88%, var(--ui-primary) 4%);
+  padding: 0.35rem;
+  gap: 0.35rem;
+}
+
+html[data-slavia-preset] .slavia-form-panel {
+  border-color: color-mix(in oklab, var(--ui-border) 75%, var(--ui-primary) 8%);
+}
+
+html[data-slavia-preset] table thead {
+  background: color-mix(in oklab, var(--ui-bg-muted, var(--ui-bg-elevated)) 92%, var(--ui-primary) 3%);
+}
+
+html.dark[data-slavia-preset] .slavia-panel-page {
+  color-scheme: dark;
+}
+
+html[data-slavia-preset]:not(.dark) .slavia-panel-page {
+  color-scheme: light;
+}

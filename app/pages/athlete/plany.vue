@@ -17,6 +17,13 @@ const { data: plans, refresh, pending } = await useAsyncData(
 )
 
 const selectedPlanId = ref<string | null>(null)
+
+const planModalOpen = computed({
+  get: () => selectedPlanId.value !== null,
+  set: (open: boolean) => {
+    if (!open) selectedPlanId.value = null
+  }
+})
 const selectedPlanItems = ref<TrainingPlanItem[]>([])
 const loadingItems = ref(false)
 
@@ -351,12 +358,12 @@ watch(selectedPlanId, () => {
 
     <!-- Plan Details Modal (Nuxt UI v4) -->
     <UModal
-      :open="!!selectedPlanId" 
+      v-model:open="planModalOpen"
       :title="selectedPlan?.title || 'Szczegóły planu'"
-      :ui="{ 
+      :dismissible="true"
+      :ui="{
         content: 'rounded-4xl sm:max-w-3xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl',
       }"
-      @update:open="(val) => !val && (selectedPlanId = null)"
     >
       <template #body>
         <div class="py-2">

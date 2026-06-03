@@ -910,7 +910,7 @@ onMounted(() => {
       :dismissible="true"
       :ui="{ content: 'rounded-3xl sm:max-w-2xl md:max-w-3xl lg:max-w-4xl' }"
     >
-      <template #content>
+      <template #body>
         <div class="slavia-form-modal">
           <form
             class="slavia-form-stack"
@@ -1040,7 +1040,7 @@ onMounted(() => {
       :dismissible="true"
       :ui="{ content: 'rounded-3xl sm:max-w-2xl md:max-w-3xl lg:max-w-4xl' }"
     >
-      <template #content>
+      <template #body>
         <div class="slavia-form-modal">
           <div class="slavia-form-panel rounded-2xl ring-1 ring-default/40">
             <div class="slavia-form-panel__header rounded-t-2xl bg-linear-to-r from-neutral-500/10 to-transparent dark:from-white/5">
@@ -1136,7 +1136,7 @@ onMounted(() => {
       :dismissible="true"
       :ui="{ content: 'rounded-3xl sm:max-w-sm' }"
     >
-      <template #content>
+      <template #body>
         <div class="slavia-form-modal space-y-4">
           <div
             v-if="pendingDelete"
@@ -1179,7 +1179,7 @@ onMounted(() => {
       :dismissible="true"
       :ui="{ content: 'rounded-3xl sm:max-w-md' }"
     >
-      <template #content>
+      <template #body>
         <div class="slavia-form-modal space-y-4">
           <div
             v-if="banTarget"

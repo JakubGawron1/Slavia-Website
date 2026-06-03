@@ -6,6 +6,7 @@ import { parseLiveNumber } from '~/utils/liveNumber'
 
 const auth = useAuth()
 const apiFetch = useApi()
+const { accountSettingsPath } = useRoleDashboardNav()
 
 const gender = ref<SinclairGender>((auth.user.value?.athlete_gender as SinclairGender) || 'male')
 const bodyweight = ref<number | undefined>(undefined)
@@ -192,7 +193,7 @@ useSeoMeta({
       icon="i-lucide-alert-triangle"
       class="mb-8 max-w-3xl"
       :title="profileWarning"
-      :actions="[{ label: 'Przejdź do profilu', to: '/profil', color: 'warning' }]"
+      :actions="[{ label: 'Ustawienia konta', to: accountSettingsPath, color: 'warning' }]"
     />
 
       <div class="grid w-full gap-8 lg:grid-cols-5">

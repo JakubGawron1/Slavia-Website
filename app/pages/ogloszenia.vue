@@ -4,6 +4,8 @@ import { pl } from 'date-fns/locale'
 import { getApiErrorMessage } from '~/composables/useApi'
 import { renderSimpleMarkdown } from '~/utils/renderSimpleMarkdown'
 
+const { accountSettingsPath } = useRoleDashboardNav()
+
 interface Announcement {
   id: string
   title: string
@@ -248,7 +250,7 @@ function bodyPreview(text: string, max = 100) {
         #hint
       >
         Tablicę uzupełniają konta Administrator lub SuperAdmin.
-        <NuxtLink to="/profil" class="font-semibold text-primary underline">
+        <NuxtLink :to="accountSettingsPath" class="font-semibold text-primary underline">
           Sprawdź swoje role
         </NuxtLink>
         — po zmianie roli wyloguj się i zaloguj ponownie.
@@ -397,7 +399,7 @@ function bodyPreview(text: string, max = 100) {
       :dismissible="true"
       :ui="{ content: 'max-h-[90vh] overflow-y-auto sm:max-w-3xl md:max-w-4xl lg:max-w-5xl' }"
     >
-      <template #content>
+      <template #body>
         <div class="flex flex-col gap-4 p-4 sm:p-6">
           <UFormField
             label="Tytuł"

@@ -16,6 +16,8 @@ useSeoMeta({
 })
 
 const auth = useAuth()
+const { isAccountView } = useDashboardAccountView()
+const { accountSettingsPath } = useRoleDashboardNav()
 const apiFetch = useApi()
 
 const { data: athletes } = await useAsyncData(
@@ -123,21 +125,12 @@ const pendingCount = computed(() => (Array.isArray(pendingResults.value) ? pendi
 const pendingPaymentsCount = computed(() => (Array.isArray(pendingPayments.value) ? pendingPayments.value.length : 0))
 const _competitionsCount = computed(() => (Array.isArray(competitions.value) ? competitions.value.length : 0))
 
-const lowerDashboards = computed(() => {
-  const roles = new Set(auth.roles.value || [])
-  const list: { label: string, to: string, icon: string }[] = []
-  if (roles.has('Admin')) list.push({ label: 'Panel admina', to: '/admin', icon: 'i-lucide-shield' })
-  if (roles.has('SuperAdmin')) list.push({ label: 'Panel SuperAdmin', to: '/superadmin', icon: 'i-lucide-crown' })
-  if (roles.has('Athlete')) list.push({ label: 'Panel zawodnika', to: '/athlete', icon: 'i-lucide-user' })
-  return list
-})
-
 const moduleGroups: { title: string, items: DashboardModuleLink[] }[] = [
   {
     title: 'Najczęstsze',
     items: [
       dashboardLink('Wszystkie starty', 'Lista startów z edycją', 'i-lucide-list-checks', '/trainer/wyniki', 'text-teal-500', 'bg-teal-500/10'),
-      dashboardLink('Baza zawodników', 'Profile i przypisania do zawodów', 'i-lucide-users', '/trainer/zawodnicy', 'text-blue-500', 'bg-blue-500/10'),
+      dashboardLink('Zespół i konta', 'Zawodnicy + logowania', 'i-lucide-users-round', '/trainer/zawodnicy', 'text-blue-500', 'bg-blue-500/10'),
       dashboardLink('Składki klubowe', 'Widok miesiąca i zatwierdzanie', 'i-lucide-banknote', '/trainer/skladki', 'text-green-600', 'bg-green-500/10'),
       dashboardLink('Lista obecności', 'Statusy i weryfikacja', 'i-lucide-user-check', '/attendance', 'text-indigo-600', 'bg-indigo-500/10'),
       dashboardLink('Dzienniki treningów', 'Wpisy po jednostkach', 'i-lucide-book-marked', '/trainer/dziennik', 'text-cyan-600', 'bg-cyan-500/10'),
@@ -170,7 +163,6 @@ const moduleGroups: { title: string, items: DashboardModuleLink[] }[] = [
       dashboardLink('Inne ćwiczenia', 'Ranking siłowy', 'i-lucide-bar-chart-3', '/trainer/exercises', 'text-lime-600', 'bg-lime-500/10'),
       dashboardLink('Słownik ćwiczeń', 'Baza do planów', 'i-lucide-library', '/trainer/cwiczenia', 'text-indigo-500', 'bg-indigo-500/10'),
       dashboardLink('Proporcje (ratio)', 'Kalkulator bojów', 'i-lucide-sigma', '/kalkulator-proporcji', 'text-success', 'bg-success/12'),
-      dashboardLink('Ustawienia konta', 'E-mail, avatar, hasło', 'i-lucide-user-cog', '/profil', 'text-neutral-500', 'bg-neutral-500/10')
     ]
   }
 ]
@@ -255,6 +247,8 @@ async function rejectPayment(id: string) {
 <template>
   <div>
   <PanelPageLayout>
+    <DashboardAccountView v-if="isAccountView" />
+    <template v-else>
     <DashboardHero
       eyebrow="Panel trenera"
       :title="`Witaj, ${auth.user.value?.username || 'Trenerze'}!`"
@@ -264,37 +258,12 @@ async function rejectPayment(id: string) {
         { label: `Oczekujące wyniki: ${pendingCount}`, color: pendingCount ? 'warning' : 'neutral' },
         { label: `Oczekujące składki: ${pendingPaymentsCount}`, color: pendingPaymentsCount ? 'warning' : 'neutral' }
       ]"
+      :actions="[
+        { label: 'Ustawienia konta', to: accountSettingsPath, icon: 'i-lucide-user-cog', variant: 'outline' }
+      ]"
     />
 
-    <div
-      v-if="lowerDashboards.length"
-      class="mb-10 rounded-2xl border border-default/70 bg-muted/10 p-4 sm:p-5"
-    >
-      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p class="text-xs font-bold uppercase tracking-wider text-muted">
-            Inne panele na tym koncie
-          </p>
-          <p class="mt-1 text-sm text-muted">
-            Masz rolę zawodnika — możesz przełączyć dashboard.
-          </p>
-        </div>
-        <div class="flex flex-col gap-2 sm:flex-row">
-          <UButton
-            v-for="d in lowerDashboards"
-            :key="d.to"
-            :to="d.to"
-            :icon="d.icon"
-            variant="outline"
-            color="neutral"
-            size="lg"
-            class="min-h-11 justify-center"
-          >
-            {{ d.label }}
-          </UButton>
-        </div>
-      </div>
-    </div>
+    <PanelDashboardHub />
 
     <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
       <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:col-span-2 lg:gap-4">
@@ -429,12 +398,14 @@ async function rejectPayment(id: string) {
       </UCard>
     </div>
 
+    </template>
   </PanelPageLayout>
 
   <!-- [2002] Modal zatwierdzenia/odrzucenia wyniku z powodem -->
   <UModal
     v-model:open="reviewModalOpen"
     :title="reviewMode === 'approve' ? 'Zatwierdź wynik' : 'Odrzuć wynik'"
+    :dismissible="true"
     :ui="{ content: 'sm:max-w-lg rounded-3xl' }"
   >
     <template #body>

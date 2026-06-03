@@ -251,6 +251,7 @@ onMounted(() => loadExercises())
     <UModal
       v-model:open="showAddModal"
       title="Dodaj nowe ćwiczenie"
+      :dismissible="true"
       :ui="{ content: 'rounded-2xl sm:max-w-2xl' }"
     >
       <template #body>

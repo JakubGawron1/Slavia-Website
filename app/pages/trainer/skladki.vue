@@ -192,18 +192,23 @@ async function createApprovedPayment() {
 </script>
 
 <template>
-  <PanelPageLayout>
+  <PanelPageLayout padding="compact">
     <PanelPageHeader
       area="trainer"
       title="Składki klubowe"
       icon="i-lucide-banknote"
     >
       <template #description>
-        Widok miesiąca: <span class="font-mono">{{ month }}</span>. Statusy: opłacone, oczekujące, brak wpłaty.
+        Widok miesiąca <span class="font-mono font-semibold">{{ month }}</span> — zatwierdzanie przelewów, szybkie wpisy i podgląd roku per zawodnik.
+      </template>
+      <template #actions>
+        <UButton to="/trainer/zawodnicy" variant="soft" color="neutral" size="sm" icon="i-lucide-users">
+          Zawodnicy
+        </UButton>
       </template>
     </PanelPageHeader>
 
-    <UCard class="slavia-page-card mb-6">
+    <UCard class="slavia-page-card mb-6 ring-1 ring-default/30">
       <div class="grid gap-3 md:grid-cols-12 md:items-end">
         <UFormField label="Miesiąc" class="md:col-span-3">
           <UInput v-model="month" type="month" class="w-full" @change="() => refreshOverview()" />

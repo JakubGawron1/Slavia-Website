@@ -861,7 +861,7 @@ function handleDayClick(day: Date) {
       :dismissible="true"
       :ui="{ overlay: 'z-[190]', content: 'z-[200] max-h-[90vh] overflow-y-auto sm:max-w-2xl md:max-w-3xl lg:max-w-4xl' }"
     >
-      <template #content>
+      <template #body>
         <div class="slavia-form-modal">
           <div
             v-if="readOnlyEvent"

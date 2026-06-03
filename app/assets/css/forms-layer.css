@@ -7,7 +7,8 @@
   }
 
   /**
-   * UModal slot #body — Nuxt UI nadaje na body `overflow-y-auto` (scrollable: false).
+   * UModal: używaj wyłącznie slotu #body (nie #content — wtedy brak „X”, ESC i klik w tło).
+   * Nuxt UI nadaje na body `overflow-y-auto` (scrollable: false).
    * Zostawiamy jeden kontener przewijania; wewnętrzne max-h/overflow dawały drugi pasek i psuły m.in. USwitch.
    */
   .slavia-form-modal.slavia-form-modal--umodal-body {

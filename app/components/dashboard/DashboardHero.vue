@@ -1,11 +1,13 @@
 <script setup lang="ts">
+import type { RouteLocationRaw } from 'vue-router'
+
 const props = defineProps<{
   eyebrow: string
   title: string
   lead?: string
   icon: string
   badges?: Array<{ label: string, color?: 'primary' | 'neutral' | 'success' | 'warning' | 'error' | 'info' }>
-  actions?: Array<{ label: string, to: string, icon?: string, variant?: 'solid' | 'soft' | 'outline' | 'ghost', color?: 'primary' | 'neutral' }>
+  actions?: Array<{ label: string, to: RouteLocationRaw, icon?: string, variant?: 'solid' | 'soft' | 'outline' | 'ghost', color?: 'primary' | 'neutral' }>
 }>()
 
 const badgeItems = computed(() => props.badges ?? [])
@@ -44,15 +46,16 @@ const actionItems = computed(() => props.actions ?? [])
           {{ b.label }}
         </UBadge>
 
-        <div v-if="actionItems.length" class="ml-auto flex flex-wrap gap-2">
+        <div v-if="actionItems.length" class="flex w-full flex-wrap gap-2 sm:ml-auto sm:w-auto">
           <UButton
             v-for="a in actionItems"
-            :key="a.to"
+            :key="a.label"
             :to="a.to"
             size="sm"
             :icon="a.icon"
             :variant="a.variant || 'soft'"
             :color="a.color || 'neutral'"
+            class="min-h-9 flex-1 justify-center sm:flex-initial"
           >
             {{ a.label }}
           </UButton>

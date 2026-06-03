@@ -15,6 +15,8 @@ useSeoMeta({
 })
 
 const auth = useAuth()
+const { isAccountView } = useDashboardAccountView()
+const { accountSettingsPath } = useRoleDashboardNav()
 const apiFetch = useApi()
 const isSuperAdmin = computed(() => auth.isSuperAdmin.value)
 /** Sam administrator (bez osobnej roli trenera i bez SuperAdmin). */
@@ -162,8 +164,7 @@ const moduleGroups = computed((): { title: string, items: DashboardModuleLink[] 
     {
       title: 'Najczęstsze',
       items: [
-        dashboardLink('Zawodnicy', 'Lista i dane zawodników', 'i-lucide-users', '/admin/zawodnicy', 'text-blue-500', 'bg-blue-500/10'),
-        dashboardLink('Konta kadry', 'Login, e-mail, hasła', 'i-lucide-key-round', '/admin/konta', 'text-rose-500', 'bg-rose-500/10'),
+        dashboardLink('Zespół i konta', 'Zawodnicy + logowania', 'i-lucide-users-round', '/admin/zawodnicy', 'text-blue-500', 'bg-blue-500/10'),
         dashboardLink('Wiadomości (kontakt)', 'Skrzynka formularza', 'i-lucide-mail', '/admin/kontakt-wiadomosci', 'text-info', 'bg-info/12'),
         dashboardLink('Changelog', 'Historia wydań', 'i-lucide-file-text', '/admin/changelog', 'text-success', 'bg-success/12'),
         dashboardLink('Powiadomienia', 'Alerty systemowe', 'i-lucide-bell', '/powiadomienia', 'text-amber-600', 'bg-amber-500/10')
@@ -184,7 +185,6 @@ const moduleGroups = computed((): { title: string, items: DashboardModuleLink[] 
       title: 'Konto i narzędzia',
       items: [
         dashboardLink('Proporcje (ratio)', 'Kalkulator bojów', 'i-lucide-sigma', '/kalkulator-proporcji', 'text-success', 'bg-success/12'),
-        dashboardLink('Ustawienia konta', 'Profil', 'i-lucide-user-cog', '/profil', 'text-neutral-500', 'bg-neutral-500/10')
       ]
     }
   ]
@@ -224,19 +224,13 @@ function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 
   return 'neutral'
 }
 
-const lowerDashboards = computed(() => {
-  const list: { label: string, to: string, icon: string }[] = []
-  const roles = new Set(auth.roles.value || [])
-  if (roles.has('SuperAdmin')) list.push({ label: 'Panel SuperAdmin', to: '/superadmin', icon: 'i-lucide-crown' })
-  if (roles.has('Trainer')) list.push({ label: 'Panel trenera', to: '/trainer', icon: 'i-lucide-dumbbell' })
-  if (roles.has('Athlete')) list.push({ label: 'Panel zawodnika', to: '/athlete', icon: 'i-lucide-user' })
-  return list
-})
 </script>
 
 <template>
   <div>
   <PanelPageLayout>
+    <DashboardAccountView v-if="isAccountView" />
+    <template v-else>
     <DashboardHero
       eyebrow="Administracja"
       :title="`Witaj, ${auth.user.value?.username || 'Adminie'}!`"
@@ -245,6 +239,9 @@ const lowerDashboards = computed(() => {
       :badges="[
         { label: `Wyniki do zatwierdzenia: ${pendingCount}`, color: pendingCount ? 'warning' : 'neutral' },
         { label: `Zawodnicy: ${athletesCount}`, color: 'neutral' }
+      ]"
+      :actions="[
+        { label: 'Ustawienia konta', to: accountSettingsPath, icon: 'i-lucide-user-cog', variant: 'outline' }
       ]"
     />
 
@@ -327,35 +324,7 @@ const lowerDashboards = computed(() => {
       </div>
     </div>
 
-    <div
-      v-if="lowerDashboards.length"
-      class="mb-10 rounded-2xl border border-default/70 bg-muted/10 p-4 sm:p-5"
-    >
-      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p class="text-xs font-bold uppercase tracking-wider text-muted">
-            Inne panele na tym koncie
-          </p>
-          <p class="mt-1 text-sm text-muted">
-            Masz więcej ról — możesz przełączyć dashboard.
-          </p>
-        </div>
-        <div class="flex flex-col gap-2 sm:flex-row">
-          <UButton
-            v-for="d in lowerDashboards"
-            :key="d.to"
-            :to="d.to"
-            :icon="d.icon"
-            variant="outline"
-            color="neutral"
-            size="lg"
-            class="min-h-11 justify-center"
-          >
-            {{ d.label }}
-          </UButton>
-        </div>
-      </div>
-    </div>
+    <PanelDashboardHub />
 
     <div class="mt-10">
       <DashboardUrgentList
@@ -378,13 +347,14 @@ const lowerDashboards = computed(() => {
         </template>
       </DashboardUrgentList>
     </div>
-
+    </template>
   </PanelPageLayout>
 
   <!-- [2002] Modal zatwierdzenia/odrzucenia wyniku z powodem -->
   <UModal
     v-model:open="reviewModalOpen"
     :title="reviewMode === 'approve' ? 'Zatwierdź wynik' : 'Odrzuć wynik'"
+    :dismissible="true"
     :ui="{ content: 'sm:max-w-lg rounded-3xl' }"
   >
     <template #body>

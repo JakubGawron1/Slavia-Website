@@ -63,12 +63,8 @@ onBeforeUnmount(() => {
   document.documentElement.classList.remove('overflow-hidden')
 })
 
-const dashboardLink = computed(() => {
-  if (auth.isSuperAdmin.value) return '/superadmin'
-  if (auth.isAdmin.value) return '/admin'
-  if (auth.isTrainer.value) return '/trainer'
-  return '/athlete'
-})
+const { primaryDashboardPath } = useRoleDashboardNav()
+const dashboardLink = primaryDashboardPath
 
 /** Zdjęcie w navbarze: `avatar_url` konta lub zdjęcie profilu sportowego zawodnika. */
 const navAvatarSrc = computed(() => resolveAuthProfilePhotoSrc(auth.user.value ?? undefined))

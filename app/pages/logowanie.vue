@@ -7,6 +7,7 @@ definePageMeta({
 })
 
 const auth = useAuth()
+const { accountSettingsPath } = useRoleDashboardNav()
 const route = useRoute()
 const toast = useToast()
 
@@ -293,7 +294,7 @@ const perks = [
                 />
                 2FA włączysz po zalogowaniu w
                 <NuxtLink
-                  to="/profil"
+                  :to="accountSettingsPath"
                   class="font-medium text-primary underline-offset-2 hover:underline"
                 >ustawieniach konta</NuxtLink>.
               </p>

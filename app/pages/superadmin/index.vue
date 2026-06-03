@@ -13,6 +13,8 @@ useSeoMeta({
 })
 
 const auth = useAuth()
+const { isAccountView } = useDashboardAccountView()
+const { accountSettingsPath } = useRoleDashboardNav()
 const apiFetch = useApi()
 
 // Pobieranie podstawowych statystyk
@@ -105,7 +107,7 @@ const moduleGroups: { title: string, items: DashboardModuleLink[] }[] = [
   {
     title: 'Administracja treści',
     items: [
-      dashboardLink('Konta kadry', 'Login i hasła', 'i-lucide-key-round', '/admin/konta', 'text-rose-500', 'bg-rose-500/10'),
+      dashboardLink('Zespół i konta', 'Zawodnicy + logowania', 'i-lucide-users-round', '/superadmin/zawodnicy', 'text-rose-500', 'bg-rose-500/10'),
       dashboardLink('Wiadomości (kontakt)', 'Formularz publiczny', 'i-lucide-mail', '/admin/kontakt-wiadomosci', 'text-info', 'bg-info/12'),
       dashboardLink('Changelog', 'Historia wydań', 'i-lucide-file-text', '/admin/changelog', 'text-success', 'bg-success/12'),
       dashboardLink('Aktualności', 'Wpisy klubu', 'i-lucide-newspaper', '/aktualnosci', 'text-orange-500', 'bg-orange-500/10'),
@@ -137,7 +139,6 @@ const moduleGroups: { title: string, items: DashboardModuleLink[] }[] = [
       dashboardLink('Wyzwania miesiąca', 'Aktywność', 'i-lucide-flame', '/klub/wyzwania', 'text-orange-600', 'bg-orange-500/10'),
       dashboardLink('Powiadomienia', 'Alerty', 'i-lucide-bell', '/powiadomienia', 'text-amber-600', 'bg-amber-500/10'),
       dashboardLink('Proporcje', 'Kalkulator bojów', 'i-lucide-sigma', '/kalkulator-proporcji', 'text-success', 'bg-success/12'),
-      dashboardLink('Profil', 'Ustawienia konta', 'i-lucide-user-cog', '/profil', 'text-neutral-500', 'bg-neutral-500/10')
     ]
   }
 ]
@@ -158,6 +159,8 @@ function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 
 
 <template>
   <PanelPageLayout>
+    <DashboardAccountView v-if="isAccountView" />
+    <template v-else>
     <DashboardHero
       eyebrow="Superadministracja"
       :title="`Witaj, ${auth.user.value?.username || 'Superadminie'}!`"
@@ -167,10 +170,15 @@ function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 
         { label: `Konta admin: ${adminsCount}`, color: 'neutral' },
         { label: `Zawodnicy: ${athletesCount}`, color: 'neutral' }
       ]"
+      :actions="[
+        { label: 'Ustawienia konta', to: accountSettingsPath, icon: 'i-lucide-user-cog', variant: 'outline' }
+      ]"
     />
 
+    <PanelDashboardHub />
+
     <div class="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-4">
-      <DashboardKpiCard label="Konta (kadra)" :value="adminsCount" icon="i-lucide-shield-check" tone="error" to="/superadmin/administratorzy" />
+      <DashboardKpiCard label="Konta (kadra)" :value="adminsCount" icon="i-lucide-shield-check" tone="error" :to="{ path: '/superadmin/zawodnicy', query: { tab: 'accounts' } }" />
       <DashboardKpiCard label="Zawodnicy (aktywni)" :value="athletesCount" icon="i-lucide-users" tone="info" to="/superadmin/zawodnicy" />
       <DashboardKpiCard label="Składki (opłacone)" :value="`${paymentProgress}%`" icon="i-lucide-banknote" tone="success" to="/admin" />
       <DashboardKpiCard label="Obecność (30d)" :value="`${avgAttendance}%`" icon="i-lucide-user-check" tone="primary" to="/trainer" />
@@ -195,5 +203,6 @@ function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 
         :tone-from-bg="toneFromBg"
       />
     </div>
+    </template>
   </PanelPageLayout>
 </template>

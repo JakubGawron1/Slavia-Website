@@ -268,8 +268,12 @@ async function shareBadge() {
     </div>
 
     <!-- Badge Details Modal -->
-    <UModal v-model:open="isModalOpen" :title="selectedBadge?.label || 'Szczegóły odznaki'">
-      <template #content>
+    <UModal
+      v-model:open="isModalOpen"
+      :title="selectedBadge?.label || 'Szczegóły odznaki'"
+      :dismissible="true"
+    >
+      <template #body>
         <div v-if="selectedBadge" class="space-y-6 p-6">
           <div class="flex items-center gap-5">
             <div
@@ -343,9 +347,10 @@ async function shareBadge() {
     <UModal
       v-model:open="celebrationOpen"
       title="Nowa odznaka odblokowana! 🏆"
-      :ui="{ content: 'sm:max-w-md rounded-3xl overflow-hidden' }"
+      :dismissible="true"
+      :ui="{ content: 'sm:max-w-md rounded-3xl' }"
     >
-      <template #content>
+      <template #body>
         <div class="relative overflow-hidden">
           <!-- Animated confetti particles -->
           <div v-if="confettiActive" class="pointer-events-none absolute inset-0 z-10 overflow-hidden">

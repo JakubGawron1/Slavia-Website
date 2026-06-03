@@ -27,10 +27,47 @@ type AttendanceRecord = {
 
 const auth = useAuth()
 const route = useRoute()
+const router = useRouter()
 const api = useApi()
 const toast = useToast()
+const qrEnabled = useExperimentalFlag('attendance_qr_checkin')
 
 const isStaff = computed(() => auth.isTrainer.value || auth.isAdmin.value || auth.isSuperAdmin.value)
+
+type AttendanceView = 'calendar' | 'qr' | 'scan'
+
+const attendanceViews = computed(() => {
+  const views: Array<{ id: AttendanceView, label: string, icon: string }> = [
+    { id: 'calendar', label: 'Kalendarz', icon: 'i-lucide-calendar-days' }
+  ]
+  if (isStaff.value && qrEnabled.value) {
+    views.push({ id: 'qr', label: 'Kod QR dla sali', icon: 'i-lucide-qr-code' })
+  }
+  if (!isStaff.value && qrEnabled.value) {
+    views.push({ id: 'scan', label: 'Skaner QR', icon: 'i-lucide-scan-line' })
+  }
+  return views
+})
+
+const activeView = computed<AttendanceView>({
+  get() {
+    const q = String(route.query.view || '')
+    if (q === 'qr' || q === 'scan') return q
+    return 'calendar'
+  },
+  set(id: AttendanceView) {
+    const query = { ...route.query }
+    if (id === 'calendar') delete query.view
+    else query.view = id
+    router.replace({ query })
+  }
+})
+
+watch(attendanceViews, (views) => {
+  if (!views.some(v => v.id === activeView.value)) {
+    activeView.value = 'calendar'
+  }
+}, { immediate: true })
 const panelArea = computed(() => panelAreaFromPath(route.path))
 
 const selectedAthleteId = ref('')
@@ -403,14 +440,35 @@ onMounted(() => {
       :title="isStaff ? 'Obecność kadry' : 'Moja obecność'"
       icon="i-lucide-user-check"
       :description="isStaff
-        ? 'Zatwierdzaj zgłoszenia zawodników jednym kliknięciem i przeglądaj kalendarz treningów Pn/Śr/Pt.'
-        : 'Zgłoś obecność na trening — kadra zweryfikuje wpis lub użyj skanera QR w aplikacji mobilnej.'"
+        ? 'Kalendarz, weryfikacja zgłoszeń i kod QR do druku — jeden moduł obecności.'
+        : 'Kalendarz treningów, ręczne zgłoszenie lub skaner QR na sali.'"
     />
 
-    <AttendanceQrPanel v-if="isStaff" />
+    <nav
+      v-if="attendanceViews.length > 1"
+      class="mb-6 flex flex-wrap gap-2"
+      aria-label="Widoki obecności"
+    >
+      <UButton
+        v-for="v in attendanceViews"
+        :key="v.id"
+        size="lg"
+        class="min-h-11"
+        :variant="activeView === v.id ? 'solid' : 'outline'"
+        :color="activeView === v.id ? 'primary' : 'neutral'"
+        :icon="v.icon"
+        @click="activeView = v.id"
+      >
+        {{ v.label }}
+      </UButton>
+    </nav>
+
+    <AttendanceQrPanel v-if="isStaff && activeView === 'qr'" />
+
+    <AttendanceQrScannerPanel v-if="!isStaff && activeView === 'scan'" />
 
     <section
-      v-if="isStaff"
+      v-if="isStaff && activeView === 'calendar'"
       class="relative mb-6 overflow-hidden rounded-[1.75rem] border border-warning/30 bg-linear-to-br from-warning/14 via-card to-card p-5 shadow-lg ring-1 ring-warning/20 sm:p-6"
     >
       <div class="pointer-events-none absolute -right-16 -top-16 size-48 rounded-full bg-warning/20 blur-3xl" />
@@ -496,7 +554,7 @@ onMounted(() => {
       </ul>
     </section>
 
-    <UCard v-if="!isStaff" class="slavia-page-card mb-6">
+    <UCard v-if="!isStaff && activeView === 'calendar'" class="slavia-page-card mb-6">
       <p class="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
         Szybkie zgłoszenie
       </p>
@@ -528,7 +586,7 @@ onMounted(() => {
       </div>
     </UCard>
 
-    <div class="slavia-content-well">
+    <div v-show="activeView === 'calendar'" class="slavia-content-well">
     <UCard class="slavia-page-card overflow-hidden">
       <div class="mb-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div class="min-w-0 flex-1">
@@ -728,7 +786,7 @@ onMounted(() => {
       :dismissible="true"
       :ui="{ content: 'sm:max-w-2xl md:max-w-3xl lg:max-w-4xl' }"
     >
-      <template #content>
+      <template #body>
         <div class="space-y-4 p-4 sm:p-5">
           <UAlert
             v-if="selectedTrainingDay"

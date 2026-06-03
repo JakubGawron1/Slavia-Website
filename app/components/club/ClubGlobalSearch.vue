@@ -174,7 +174,7 @@ watch(open, (v) => {
       :dismissible="true"
       :ui="{ content: 'sm:max-w-xl' }"
     >
-      <template #content>
+      <template #body>
         <UCommandPalette
           v-model:search-term="searchTerm"
           :loading="paletteLoading"

@@ -6,6 +6,8 @@ import { sanitizeRichHtml } from '~/utils/sanitizeHtml'
 import { resolveCmsMediaUrl } from '~/utils/cmsAssets'
 import { blogEditPath, blogPostPath, slugify } from '~/utils/slug'
 
+const { accountSettingsPath } = useRoleDashboardNav()
+
 useSeoMeta({
   title: 'Aktualności — Slavia Ruda Śląska',
   description: 'Relacje z zawodów i nowości z życia klubu CKS Slavia.',
@@ -216,7 +218,7 @@ function editPostUrl(post: BlogPost) {
         #hint
       >
         Tworzenie wpisów mają konta z rolą Administrator lub SuperAdmin.
-        <NuxtLink to="/profil" class="font-semibold text-primary underline">
+        <NuxtLink :to="accountSettingsPath" class="font-semibold text-primary underline">
           Sprawdź swoje role
         </NuxtLink>
         — po zmianie roli wyloguj się i zaloguj ponownie.

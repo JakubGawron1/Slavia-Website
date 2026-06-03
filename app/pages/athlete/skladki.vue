@@ -149,12 +149,41 @@ const standingOrderTimeline = computed(() => {
 </script>
 
 <template>
-  <PanelPageLayout>
+  <PanelPageLayout padding="compact">
     <PanelPageHeader area="athlete" title="Składka klubowa" icon="i-lucide-banknote">
       <template #description>
-        Składka miesięczna to <span class="font-bold">50 zł</span>. Jeśli zapłacisz więcej, nadpłata przechodzi na kolejne miesiące (po zatwierdzeniu przez kadrę).
+        Składka miesięczna to <span class="font-bold">50 zł</span> (termin <span class="font-bold">10.</span> dnia miesiąca). Nadpłata przechodzi na kolejne miesiące po zatwierdzeniu przez kadrę.
+      </template>
+      <template #actions>
+        <UButton to="/athlete" variant="soft" color="neutral" icon="i-lucide-layout-dashboard" size="sm">
+          Panel
+        </UButton>
       </template>
     </PanelPageHeader>
+
+    <div
+      v-if="paymentStatus && membershipMonthBadge"
+      class="mb-6 grid gap-3 sm:grid-cols-3"
+    >
+      <div class="rounded-2xl border border-default/60 bg-card p-4 shadow-sm ring-1 ring-default/25 sm:col-span-2">
+        <p class="text-[10px] font-black uppercase tracking-[0.2em] text-muted">Bieżący miesiąc</p>
+        <p class="mt-1 text-2xl font-black text-highlighted">{{ paymentStatus.month }}</p>
+        <p class="mt-2 text-sm text-muted">Termin płatności: <span class="font-semibold text-highlighted">{{ paymentStatus.due_date }}</span></p>
+      </div>
+      <div
+        class="flex flex-col justify-center rounded-2xl border p-4 shadow-sm"
+        :class="membershipMonthBadge.color === 'success'
+          ? 'border-success/40 bg-success/10'
+          : membershipMonthBadge.color === 'error'
+            ? 'border-error/40 bg-error/10'
+            : 'border-warning/40 bg-warning/10'"
+      >
+        <p class="text-[10px] font-black uppercase tracking-[0.2em] text-muted">Status</p>
+        <UBadge :color="membershipMonthBadge.color" variant="subtle" size="lg" class="mt-2 w-fit font-bold">
+          {{ membershipMonthBadge.label }}
+        </UBadge>
+      </div>
+    </div>
 
     <UAlert
       v-if="auth.isAthlete.value && paymentStatus && paymentStatus.is_overdue && !paymentStatus.is_paid"

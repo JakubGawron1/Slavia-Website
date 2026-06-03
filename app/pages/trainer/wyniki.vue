@@ -114,6 +114,8 @@ const commentSaving = ref(false)
 
 const addModalOpen = ref(false)
 const savingAdd = ref(false)
+/** Po zapisie — kolejny start tego samego zawodnika (data i wyniki do uzupełnienia). */
+const addAnotherSameAthlete = ref(false)
 const formAdd = reactive({
   athlete_id: '',
   snatch: 0,
@@ -220,10 +222,27 @@ async function submitAdd() {
     })
     toast.add({
       title: formAdd.kind === 'training' ? 'Wpis treningowy zapisany' : 'Start zapisany',
-      description: 'Wpis kadry jest od razu zatwierdzany — bez kolejki oczekujących.',
+      description: addAnotherSameAthlete.value
+        ? 'Możesz dodać kolejny start tego samego zawodnika.'
+        : 'Wpis kadry jest od razu zatwierdzany — bez kolejki oczekujących.',
       color: 'success'
     })
-    addModalOpen.value = false
+    if (addAnotherSameAthlete.value) {
+      const keepAthlete = formAdd.athlete_id
+      const keepKind = formAdd.kind
+      const keepLocation = formAdd.location
+      const keepBw = formAdd.bodyweight_kg
+      formAdd.snatch = 0
+      formAdd.clean_and_jerk = 0
+      formAdd.total = 0
+      formAdd.date = defaultDateStr()
+      formAdd.athlete_id = keepAthlete
+      formAdd.kind = keepKind
+      formAdd.location = keepLocation
+      formAdd.bodyweight_kg = keepBw
+    } else {
+      addModalOpen.value = false
+    }
     await refresh()
   } catch (e) {
     toast.add({
@@ -416,7 +435,7 @@ function badgeColorForKind(k: string | undefined) {
       </template>
       <template #actions>
         <UButton icon="i-lucide-plus-circle" @click="openAddModal">
-          Dodaj wynik (zatwierdzony)
+          Dodaj start
         </UButton>
         <UButton icon="i-lucide-refresh-ccw" variant="soft" :loading="pending" @click="refresh()">
           Odśwież
@@ -667,7 +686,7 @@ function badgeColorForKind(k: string | undefined) {
       :dismissible="true"
       :ui="{ overlay: 'z-[190]', content: 'z-[200] sm:max-w-3xl md:max-w-4xl lg:max-w-5xl' }"
     >
-      <template #content>
+      <template #body>
         <div class="slavia-form-modal">
           <div class="slavia-form-panel">
             <div class="slavia-form-panel__header">
@@ -837,7 +856,7 @@ function badgeColorForKind(k: string | undefined) {
       :dismissible="true"
       :ui="{ overlay: 'z-[190]', content: 'z-[200] sm:max-w-3xl md:max-w-4xl lg:max-w-5xl' }"
     >
-      <template #content>
+      <template #body>
         <div class="slavia-form-modal">
           <p class="rounded-xl border border-default/60 bg-muted/15 px-4 py-3 text-sm text-muted dark:bg-muted/10">
             Wynik zapisany przez trenera lub administratora trafia od razu jako
@@ -976,6 +995,17 @@ function badgeColorForKind(k: string | undefined) {
               <p class="text-xs text-muted">
                 Dwubój (auto): <strong class="tabular-nums text-highlighted">{{ formAdd.total }}</strong> kg
               </p>
+              <label class="mt-4 flex cursor-pointer items-start gap-3 rounded-xl border border-primary/25 bg-primary/5 px-4 py-3">
+                <input
+                  v-model="addAnotherSameAthlete"
+                  type="checkbox"
+                  class="mt-1 size-4 accent-primary"
+                >
+                <span class="text-sm">
+                  <span class="font-semibold text-highlighted">Dodaj kolejny start</span>
+                  <span class="block text-muted">Po zapisie zostaw ten sam zawodnik — wyczyść tylko datę i wyniki (serie startów).</span>
+                </span>
+              </label>
             </div>
           </div>
           <div class="slavia-form-actions border-t border-default/60 pt-4">
@@ -990,9 +1020,10 @@ function badgeColorForKind(k: string | undefined) {
             <UButton
               size="lg"
               :loading="savingAdd"
+              icon="i-lucide-save"
               @click="submitAdd"
             >
-              Zapisz start
+              {{ addAnotherSameAthlete ? 'Zapisz i dodaj następny' : 'Zapisz start' }}
             </UButton>
           </div>
         </div>

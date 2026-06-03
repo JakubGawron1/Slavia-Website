@@ -523,7 +523,7 @@ function onAgendaSelect(day: Date, ev: { key: string }) {
           'z-[200] max-h-[min(92dvh,880px)] w-[min(100vw-1rem,56rem)] overflow-hidden rounded-3xl border border-default/50 shadow-[0_24px_80px_-20px_rgba(0,0,0,0.55)] ring-1 ring-white/10 sm:w-full sm:max-w-2xl md:max-w-3xl lg:max-w-4xl'
       }"
     >
-      <template #content>
+      <template #body>
         <div
           v-if="selectedEvent"
           class="flex max-h-[min(92dvh,880px)] flex-col overflow-y-auto"

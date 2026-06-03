@@ -34,14 +34,13 @@ export async function proxyPublicBackendGet(apiPath: string): Promise<unknown> {
   }
 
   const base = await resolvePublicApiBase()
-  if (isLocalApiBase(base)) {
+  if (isLocalApiBase(base) && (process.env.VERCEL || isPrerenderPass())) {
     if (isPrerenderPass()) {
       console.warn(
         `[public-api] Prerender: pominięto ${apiPath} — ustaw NUXT_PUBLIC_API_BASE_URL_LEAPCELL lub _RENDER na Vercel.`
       )
-      return emptyPublicApiFallback(apiPath)
     }
-    throw createError({ statusCode: 503, statusMessage: 'API base not configured' })
+    return emptyPublicApiFallback(apiPath)
   }
 
   const target = `${base}${apiPath.startsWith('/') ? apiPath : `/${apiPath}`}`

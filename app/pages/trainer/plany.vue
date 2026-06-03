@@ -254,10 +254,11 @@ function diaryEntryForPlanHref(plan: TrainingPlan) {
     </div>
 
     <!-- Modal (Correct for Nuxt UI v4) -->
-    <UModal 
-      v-model:open="showAddModal" 
+    <UModal
+      v-model:open="showAddModal"
       title="Nowy plan treningowy"
-      :ui="{ 
+      :dismissible="true"
+      :ui="{
         content: 'rounded-[2rem] sm:max-w-xl',
       }"
     >
@@ -328,6 +329,7 @@ function diaryEntryForPlanHref(plan: TrainingPlan) {
     <UModal
       v-model:open="showEditMetaModal"
       title="Edytuj plan"
+      :dismissible="true"
       :ui="{ content: 'rounded-[2rem] sm:max-w-xl' }"
     >
       <template #body>

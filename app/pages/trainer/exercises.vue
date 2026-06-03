@@ -214,6 +214,7 @@ useSeoMeta({
       <UModal
         v-model:open="reviewOpen"
         :title="reviewMode === 'approve' ? 'Zatwierdź zgłoszenie' : 'Odrzuć zgłoszenie'"
+        :dismissible="true"
         :ui="{ content: 'rounded-3xl sm:max-w-2xl' }"
       >
         <template #body>

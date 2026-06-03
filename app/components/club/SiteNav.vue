@@ -11,6 +11,7 @@ const props = defineProps<{
 const auth = useAuth()
 const route = useRoute()
 const mobileDrawerOpen = ref(false)
+const { accountSettingsPath } = useRoleDashboardNav()
 
 watch(
   () => route.fullPath,
@@ -27,7 +28,7 @@ async function logoutFromMenu() {
 
 type ManagementLink = {
   label: string
-  to: string
+  to: string | { path: string, hash?: string }
   icon: string
   emphasis?: boolean
 }
@@ -113,7 +114,7 @@ const items = computed(() => {
 
   pushLink(accountLinks, {
     label: 'Ustawienia konta',
-    to: '/profil',
+    to: accountSettingsPath.value,
     icon: 'i-lucide-user-circle'
   })
 

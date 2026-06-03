@@ -21,6 +21,7 @@ useSeoMeta({
 })
 
 const { auth, canManage, showManageActions, sessionReady } = useClubContentAdmin()
+const { accountSettingsPath } = useRoleDashboardNav()
 const apiFetch = useApi()
 const toast = useToast()
 const config = useRuntimeConfig()
@@ -278,7 +279,7 @@ const sortedPhotos = computed(() => {
         #hint
       >
         Galerię uzupełniają konta Administrator lub SuperAdmin.
-        <NuxtLink to="/profil" class="font-semibold text-primary underline">
+        <NuxtLink :to="accountSettingsPath" class="font-semibold text-primary underline">
           Sprawdź swoje role
         </NuxtLink>
         — po zmianie roli wyloguj się i zaloguj ponownie.
@@ -411,7 +412,7 @@ const sortedPhotos = computed(() => {
       :dismissible="true"
       :ui="{ content: 'max-h-[90vh] overflow-y-auto sm:max-w-2xl md:max-w-3xl lg:max-w-4xl' }"
     >
-      <template #content>
+      <template #body>
         <div class="flex flex-col gap-4 p-4 sm:p-6">
           <UFormField
             label="Zdjęcie"
@@ -496,7 +497,7 @@ const sortedPhotos = computed(() => {
       :dismissible="true"
       :ui="{ content: 'max-w-5xl' }"
     >
-      <template #content>
+      <template #body>
         <div class="p-3 sm:p-4">
           <img
             v-if="mediaPreviewItem?.media_type === 'image'"

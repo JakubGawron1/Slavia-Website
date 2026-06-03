@@ -36,7 +36,7 @@ function isLocalhostApiUrl(url: string): boolean {
   return !u || u.includes('127.0.0.1') || u.includes('localhost')
 }
 
-/** Na Vercel build: Leapcell/Render z env — nie localhost (prerender BFF). */
+/** Lokalny dev: honoruj .env (localhost:8080 OK). Na Vercel: tylko publiczny URL Leapcell/Render. */
 function resolveBuildTimeApiBase(): string {
   const explicit = (process.env.NUXT_PUBLIC_API_BASE_URL || '').trim()
   const leapcell = (process.env.NUXT_PUBLIC_API_BASE_URL_LEAPCELL || explicit || '').trim()
@@ -47,12 +47,21 @@ function resolveBuildTimeApiBase(): string {
     ? [render, leapcell, explicit]
     : [leapcell, render, explicit]
 
+  if (!process.env.VERCEL) {
+    for (const candidate of ordered) {
+      if (candidate) {
+        return candidate.replace(/\/$/, '')
+      }
+    }
+    return 'http://127.0.0.1:8080'
+  }
+
   for (const candidate of ordered) {
     if (candidate && !isLocalhostApiUrl(candidate)) {
       return candidate.replace(/\/$/, '')
     }
   }
-  return 'http://127.0.0.1:8000'
+  return 'http://127.0.0.1:8080'
 }
 
 const buildApiBase = resolveBuildTimeApiBase()

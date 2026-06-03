@@ -2,19 +2,11 @@
 definePageMeta({ middleware: 'admin' })
 
 useSeoMeta({
-  title: 'Zawodnicy — Panel admina',
+  title: 'Zespół i konta — Panel admina',
   robots: 'noindex, nofollow'
 })
 </script>
 
 <template>
-  <PanelPageLayout>
-    <PanelPageHeader
-      area="admin"
-      title="Zawodnicy"
-      icon="i-lucide-users"
-      description="Zarządzaj listą zawodników, danymi kontaktowymi i przypisaniami. Tworzenie kont logowania dla zawodników — w zależności od uprawnień konta administratora."
-    />
-    <ClubPlayersManager />
-  </PanelPageLayout>
+  <ClubTeamManagementHub area="admin" default-tab="players" />
 </template>

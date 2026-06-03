@@ -48,7 +48,13 @@ export async function resolvePublicApiBase(): Promise<string> {
     }
   }
 
-  const primary = apiBaseForProvider(provider, cfg)
+  const primary = apiBaseForProvider(provider, cfg) || normalizeBase(cfg.apiBase)
+
+  /** Lokalny `nuxt dev` — proxy na localhost/127.0.0.1 jest poprawny. */
+  if (!process.env.VERCEL) {
+    return primary
+  }
+
   if (!isLocalApiBase(primary)) {
     return primary
   }
