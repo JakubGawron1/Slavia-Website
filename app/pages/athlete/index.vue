@@ -134,20 +134,15 @@ const athleteModuleGroups: { title: string, items: DashboardModuleLink[] }[] = [
     ]
   },
   {
-    title: 'Klub',
+    title: 'Klub i narzędzia',
     items: [
       dashboardLink('Kalendarz klubu', 'Treningi i zawody', 'i-lucide-calendar-days', '/kalendarz', 'text-purple-600', 'bg-purple-500/12'),
       dashboardLink('Aktualności', 'Komunikaty klubu', 'i-lucide-newspaper', '/aktualnosci', 'text-warning', 'bg-warning/10'),
       dashboardLink('Wyzwania miesiąca', 'Ranking aktywności', 'i-lucide-flame', '/klub/wyzwania', 'text-orange-600', 'bg-orange-500/12'),
-      dashboardLink('Ranking zawodników', 'Wyniki w klubie', 'i-lucide-trophy', '/zawodnicy', 'text-yellow-600', 'bg-yellow-500/12')
-    ]
-  },
-  {
-    title: 'Klub i narzędzia',
-    items: [
+      dashboardLink('Ranking zawodników', 'Wyniki w klubie', 'i-lucide-trophy', '/zawodnicy', 'text-yellow-600', 'bg-yellow-500/12'),
       dashboardLink('Tor sztangi', 'Analiza nagrania', 'i-lucide-scan-line', '/athlete/analiza-sztangi', 'text-orange-600', 'bg-orange-500/12'),
       dashboardLink('Inne ćwiczenia', 'Przysiad, wycisk, martwy', 'i-lucide-bar-chart-3', '/athlete/exercises', 'text-warning', 'bg-warning/10'),
-      dashboardLink('Proporcje (ratio)', 'Kalkulator bojów', 'i-lucide-sigma', '/kalkulator-proporcji', 'text-success', 'bg-success/12'),
+      dashboardLink('Proporcje (ratio)', 'Kalkulator bojów', 'i-lucide-sigma', '/kalkulator-proporcji', 'text-success', 'bg-success/12')
     ]
   }
 ]
@@ -453,15 +448,14 @@ function toggleChecklistItem(id: string) {
             </p>
           </div>
         </div>
-        <div class="grid w-full shrink-0 grid-cols-1 gap-2 sm:grid-cols-3 lg:w-52 lg:grid-cols-1">
+        <div class="flex w-full shrink-0 flex-wrap gap-2 lg:max-w-md lg:justify-end">
           <UButton
             :to="accountSettingsPath"
             variant="outline"
             color="neutral"
-            size="lg"
-            block
+            size="md"
             icon="i-lucide-user-cog"
-            class="h-11 justify-center"
+            class="min-h-10"
           >
             Ustawienia
           </UButton>
@@ -469,21 +463,19 @@ function toggleChecklistItem(id: string) {
             to="/athlete/wyniki"
             variant="soft"
             color="primary"
-            size="lg"
-            block
+            size="md"
             icon="i-lucide-trophy"
-            class="h-11 justify-center"
+            class="min-h-10"
           >
-            Moje starty
+            Starty
           </UButton>
           <UButton
             to="/athlete/skladki"
             variant="soft"
             color="primary"
-            size="lg"
-            block
+            size="md"
             icon="i-lucide-banknote"
-            class="h-11 justify-center"
+            class="min-h-10"
           >
             Składka
           </UButton>
@@ -491,7 +483,16 @@ function toggleChecklistItem(id: string) {
       </div>
     </div>
 
-    <PanelDashboardHub class="!mb-6" />
+    <PanelCollapsibleSection
+      v-if="auth.canAccessAthletePortal && athlete"
+      class="mb-6"
+      title="Osiągnięcia"
+      icon="i-lucide-award"
+      badge="Badges"
+      :default-open="true"
+    >
+      <AthleteBadges :athlete="athlete" :present-count="attendanceSummary?.present_count || 0" />
+    </PanelCollapsibleSection>
 
     <UAlert
       v-if="showPre10PaymentBanner && paymentStatus"
@@ -532,31 +533,36 @@ function toggleChecklistItem(id: string) {
 
     <div
       v-if="auth.canAccessAthletePortal && athlete"
-      class="mt-8 grid grid-cols-1 items-stretch gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-4"
+      class="mt-8 space-y-4"
     >
-      <DashboardKpiCard
-        label="Składka (bieżący miesiąc)"
-        :value="paymentKpi.value"
-        icon="i-lucide-banknote"
-        :tone="paymentKpi.tone"
-        :hint="paymentKpi.hint"
-        to="/athlete/skladki"
-      />
-      <DashboardKpiCard
-        label="Frekwencja"
-        :value="attendanceSummary ? `${attendanceSummary.attendance_percent}%` : '—'"
-        icon="i-lucide-user-check"
-        :tone="attendanceSummary ? 'primary' : 'info'"
-        :hint="attendanceSummary ? `${attendanceSummary.present_count} obecności · ${attendanceSummary.absent_count} nieob.` : null"
-        to="/attendance"
-      />
-      <DashboardKpiCard
-        label="Wyniki (oczekujące)"
-        :value="myPendingResultsCount"
-        icon="i-lucide-clipboard-clock"
-        :tone="myPendingResultsCount ? 'warning' : 'info'"
-        to="/athlete/wyniki"
-      />
+      <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        <DashboardKpiCard
+          size="compact"
+          label="Składka"
+          :value="paymentKpi.value"
+          icon="i-lucide-banknote"
+          :tone="paymentKpi.tone"
+          :hint="paymentKpi.hint"
+          to="/athlete/skladki"
+        />
+        <DashboardKpiCard
+          size="compact"
+          label="Frekwencja"
+          :value="attendanceSummary ? `${attendanceSummary.attendance_percent}%` : '—'"
+          icon="i-lucide-user-check"
+          :tone="attendanceSummary ? 'primary' : 'info'"
+          :hint="attendanceSummary ? `${attendanceSummary.present_count} obecności · ${attendanceSummary.absent_count} nieob.` : null"
+          to="/attendance"
+        />
+        <DashboardKpiCard
+          size="compact"
+          label="Wyniki oczek."
+          :value="myPendingResultsCount"
+          icon="i-lucide-clipboard-clock"
+          :tone="myPendingResultsCount ? 'warning' : 'info'"
+          to="/athlete/wyniki"
+        />
+      </div>
       <ClubVotingWidget />
     </div>
 
@@ -749,15 +755,12 @@ function toggleChecklistItem(id: string) {
       </div>
     </PanelCollapsibleSection>
 
-    <div v-if="auth.canAccessAthletePortal && athlete" class="mt-8 mb-6 space-y-2">
-      <PanelModuleGrid
-        v-for="g in athleteModuleGroups"
-        :key="g.title"
-        :title="g.title"
-        :items="g.items"
-        :tone-from-bg="toneFromIconBg"
-      />
-    </div>
+    <PanelModuleNav
+      v-if="auth.canAccessAthletePortal && athlete"
+      class="mt-8 mb-6"
+      :groups="athleteModuleGroups"
+      :tone-from-bg="toneFromIconBg"
+    />
 
     <!-- Pobierz aplikację mobile -->
     <PanelCollapsibleSection
@@ -797,16 +800,6 @@ function toggleChecklistItem(id: string) {
           </UButton>
         </div>
       </div>
-    </PanelCollapsibleSection>
-
-    <PanelCollapsibleSection
-      v-if="auth.canAccessAthletePortal && athlete"
-      class="mb-8"
-      title="Osiągnięcia"
-      icon="i-lucide-award"
-      badge="Badges"
-    >
-      <AthleteBadges :athlete="athlete" :present-count="attendanceSummary?.present_count || 0" />
     </PanelCollapsibleSection>
 
     <div
