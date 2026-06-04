@@ -3,7 +3,6 @@ import type { Athlete, AthletePaymentOverviewRow, CompetitionResult, PendingPaym
 import { apiRoutes } from '~/config/api'
 import { getApiErrorMessage } from '~/composables/useApi'
 import DashboardHero from '~/components/dashboard/DashboardHero.vue'
-import DashboardKpiCard from '~/components/dashboard/DashboardKpiCard.vue'
 import DashboardUrgentList from '~/components/dashboard/DashboardUrgentList.vue'
 import DashboardMonthlySummary from '~/components/dashboard/DashboardMonthlySummary.vue'
 import { dashboardLink, type DashboardModuleLink } from '~/utils/dashboardLink'
@@ -228,6 +227,35 @@ async function approvePayment(id: string) {
   }
 }
 
+const summaryMetrics = computed(() => [
+  {
+    label: 'Zawodnicy',
+    value: athletesCount.value,
+    tone: 'info' as const,
+    to: '/trainer/zawodnicy'
+  },
+  {
+    label: 'Obecność 30d',
+    value: `${avgAttendance.value}%`,
+    tone: 'success' as const,
+    hint: pendingAttendanceCount.value ? `${pendingAttendanceCount.value} do weryfikacji` : null,
+    to: '/attendance'
+  },
+  {
+    label: 'Składki',
+    value: `${paymentProgress.value}%`,
+    tone: (paymentProgress.value < 50 ? 'warning' : 'success') as const,
+    hint: paymentsPendingCount.value ? `${paymentsPendingCount.value} oczekuje` : null,
+    to: '/trainer/skladki'
+  },
+  {
+    label: 'Wyniki oczek.',
+    value: pendingCount.value,
+    tone: (pendingCount.value ? 'warning' : 'neutral') as const,
+    to: { path: '/trainer', hash: '#wyniki-oczekujace' }
+  }
+])
+
 async function rejectPayment(id: string) {
   try {
     await apiFetch(apiRoutes.payments.reject(id), { method: 'PATCH' })
@@ -263,50 +291,7 @@ async function rejectPayment(id: string) {
       ]"
     />
 
-    <PanelDashboardHub />
-
-    <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
-      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:col-span-2 lg:gap-4">
-        <DashboardKpiCard
-          label="Zawodnicy (aktywni)"
-          :value="athletesCount"
-          icon="i-lucide-users"
-          tone="info"
-          to="/trainer/zawodnicy"
-        />
-        <DashboardKpiCard
-          label="Frekwencja (30d)"
-          :value="`${avgAttendance}%`"
-          icon="i-lucide-user-check"
-          tone="success"
-          to="/attendance"
-          :hint="pendingAttendanceCount ? `${pendingAttendanceCount} do weryfikacji` : 'Pełna lista na /attendance'"
-        />
-        <DashboardKpiCard
-          label="Składki (opłacone)"
-          :value="`${paymentProgress}%`"
-          icon="i-lucide-banknote"
-          :tone="paymentProgress < 50 ? 'warning' : 'success'"
-          to="/trainer/skladki"
-        />
-        <DashboardKpiCard
-          label="Wyniki oczekujące"
-          :value="pendingCount"
-          icon="i-lucide-clipboard-clock"
-          :tone="pendingCount ? 'warning' : 'neutral'"
-          :to="{ path: '/trainer', hash: '#wyniki-oczekujace' }"
-        />
-      </div>
-      <div class="lg:col-span-1">
-        <DashboardMonthlySummary
-          :athletes-active="athletesCount"
-          :payment-progress="paymentProgress"
-          :payments-pending="paymentsPendingCount"
-          :avg-attendance30d="avgAttendance"
-          :pending-results="pendingCount"
-        />
-      </div>
-    </div>
+    <DashboardMonthlySummary class="mt-8" :metrics="summaryMetrics" />
 
     <UAlert
       v-if="pendingAttendanceCount > 0"
@@ -324,15 +309,10 @@ async function rejectPayment(id: string) {
       </template>
     </UAlert>
 
-    <div class="slavia-panel-section space-y-2">
-      <PanelModuleGrid
-        v-for="g in moduleGroups"
-        :key="g.title"
-        :title="g.title"
-        :items="g.items"
-        :tone-from-bg="toneFromBg"
-      />
-    </div>
+    <PanelModuleNav
+      :groups="moduleGroups"
+      :tone-from-bg="toneFromBg"
+    />
 
     <div class="mt-10 grid gap-4 lg:grid-cols-2">
       <DashboardUrgentList

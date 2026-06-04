@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { AthletePaymentOverviewRow } from '~/types/models'
 import DashboardHero from '~/components/dashboard/DashboardHero.vue'
-import DashboardKpiCard from '~/components/dashboard/DashboardKpiCard.vue'
 import DashboardMonthlySummary from '~/components/dashboard/DashboardMonthlySummary.vue'
 import { dashboardLink, type DashboardModuleLink } from '~/utils/dashboardLink'
 
@@ -97,14 +96,6 @@ const moduleGroups: { title: string, items: DashboardModuleLink[] }[] = [
     ]
   },
   {
-    title: 'Panele ról',
-    items: [
-      dashboardLink('Panel admina', 'Administracja treści', 'i-lucide-settings', '/admin', 'text-neutral-500', 'bg-neutral-500/10'),
-      dashboardLink('Panel trenera', 'Kadra i zawodnicy', 'i-lucide-dumbbell', '/trainer', 'text-success', 'bg-success/12'),
-      dashboardLink('Panel zawodnika', 'Widok zawodnika', 'i-lucide-user', '/athlete', 'text-amber-500', 'bg-amber-500/10')
-    ]
-  },
-  {
     title: 'Administracja treści',
     items: [
       dashboardLink('Zespół i konta', 'Zawodnicy + logowania', 'i-lucide-users-round', '/superadmin/zawodnicy', 'text-rose-500', 'bg-rose-500/10'),
@@ -143,6 +134,40 @@ const moduleGroups: { title: string, items: DashboardModuleLink[] }[] = [
   }
 ]
 
+const summaryMetrics = computed(() => [
+  {
+    label: 'Konta kadry',
+    value: adminsCount.value,
+    tone: 'error' as const,
+    to: { path: '/superadmin/zawodnicy', query: { tab: 'accounts' } }
+  },
+  {
+    label: 'Zawodnicy',
+    value: athletesCount.value,
+    tone: 'info' as const,
+    to: '/superadmin/zawodnicy'
+  },
+  {
+    label: 'Składki',
+    value: `${paymentProgress.value}%`,
+    tone: 'success' as const,
+    hint: paymentsPendingCount.value ? `${paymentsPendingCount.value} oczekuje` : null,
+    to: '/trainer/skladki'
+  },
+  {
+    label: 'Obecność 30d',
+    value: `${avgAttendance.value}%`,
+    tone: 'primary' as const,
+    to: '/attendance'
+  },
+  {
+    label: 'Wyniki oczek.',
+    value: pendingResultsCount.value,
+    tone: (pendingResultsCount.value ? 'warning' : 'neutral') as const,
+    to: '/trainer/wyniki'
+  }
+])
+
 function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral' {
   const s = String(bg || '').toLowerCase()
   if (s.includes('red')) return 'error'
@@ -175,34 +200,12 @@ function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 
       ]"
     />
 
-    <PanelDashboardHub />
+    <DashboardMonthlySummary class="mt-8" :metrics="summaryMetrics" />
 
-    <div class="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-4">
-      <DashboardKpiCard label="Konta (kadra)" :value="adminsCount" icon="i-lucide-shield-check" tone="error" :to="{ path: '/superadmin/zawodnicy', query: { tab: 'accounts' } }" />
-      <DashboardKpiCard label="Zawodnicy (aktywni)" :value="athletesCount" icon="i-lucide-users" tone="info" to="/superadmin/zawodnicy" />
-      <DashboardKpiCard label="Składki (opłacone)" :value="`${paymentProgress}%`" icon="i-lucide-banknote" tone="success" to="/admin" />
-      <DashboardKpiCard label="Obecność (30d)" :value="`${avgAttendance}%`" icon="i-lucide-user-check" tone="primary" to="/trainer" />
-    </div>
-
-    <div class="mt-8">
-      <DashboardMonthlySummary
-        :athletes-active="athletesCount"
-        :payment-progress="paymentProgress"
-        :payments-pending="paymentsPendingCount"
-        :avg-attendance30d="avgAttendance"
-        :pending-results="pendingResultsCount"
-      />
-    </div>
-
-    <div class="slavia-panel-section space-y-2">
-      <PanelModuleGrid
-        v-for="g in moduleGroups"
-        :key="g.title"
-        :title="g.title"
-        :items="g.items"
-        :tone-from-bg="toneFromBg"
-      />
-    </div>
+    <PanelModuleNav
+      :groups="moduleGroups"
+      :tone-from-bg="toneFromBg"
+    />
     </template>
   </PanelPageLayout>
 </template>

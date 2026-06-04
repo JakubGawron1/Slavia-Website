@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import type { Athlete, AthletePaymentOverviewRow, CompetitionResult, MobileReleaseInfo } from '~/types/models'
+import type { Athlete, AthletePaymentOverviewRow, CompetitionResult } from '~/types/models'
 import { getApiErrorMessage } from '~/composables/useApi'
 import DashboardHero from '~/components/dashboard/DashboardHero.vue'
-import DashboardKpiCard from '~/components/dashboard/DashboardKpiCard.vue'
 import DashboardUrgentList from '~/components/dashboard/DashboardUrgentList.vue'
 import DashboardMonthlySummary from '~/components/dashboard/DashboardMonthlySummary.vue'
 import { dashboardLink, type DashboardModuleLink } from '~/utils/dashboardLink'
@@ -18,7 +17,6 @@ const auth = useAuth()
 const { isAccountView } = useDashboardAccountView()
 const { accountSettingsPath } = useRoleDashboardNav()
 const apiFetch = useApi()
-const isSuperAdmin = computed(() => auth.isSuperAdmin.value)
 /** Sam administrator (bez osobnej roli trenera i bez SuperAdmin). */
 const isPureAdmin = computed(() => {
   const r = auth.user.value?.roles ?? []
@@ -137,27 +135,6 @@ async function submitReview() {
   }
 }
 
-const syncingMobile = ref(false)
-async function syncMobileReleases() {
-  syncingMobile.value = true
-  try {
-    const res = await apiFetch<MobileReleaseInfo>('/api/system/mobile-releases/sync', { method: 'POST' })
-    toast.add({
-      title: 'Zsynchronizowano wydania mobilne',
-      description: `Najnowsza wersja: ${res.version}`,
-      color: 'success'
-    })
-  } catch (e) {
-    toast.add({
-      title: 'Błąd synchronizacji',
-      description: getApiErrorMessage(e),
-      color: 'error'
-    })
-  } finally {
-    syncingMobile.value = false
-  }
-}
-
 const moduleGroups = computed((): { title: string, items: DashboardModuleLink[] }[] => {
   const isTrainerScope = !isPureAdmin.value
   const admin: { title: string, items: DashboardModuleLink[] }[] = [
@@ -211,6 +188,35 @@ const moduleGroups = computed((): { title: string, items: DashboardModuleLink[] 
   return [most, content, trainerBlock, account]
 })
 
+const summaryMetrics = computed(() => [
+  {
+    label: 'Zawodnicy',
+    value: athletesCount.value,
+    tone: 'info' as const,
+    to: '/admin/zawodnicy'
+  },
+  {
+    label: 'Wyniki oczek.',
+    value: pendingCount.value,
+    tone: (pendingCount.value ? 'warning' : 'neutral') as const,
+    to: { path: '/admin', hash: '#wyniki-oczekujace' }
+  },
+  {
+    label: 'Składki',
+    value: `${paymentProgress.value}%`,
+    tone: 'success' as const,
+    hint: paymentsPendingCount.value ? `${paymentsPendingCount.value} oczekuje` : null,
+    to: '/admin/zawodnicy'
+  },
+  {
+    label: 'Obecność 30d',
+    value: `${avgAttendance.value}%`,
+    tone: 'primary' as const,
+    hint: 'Lista na /attendance',
+    to: '/attendance'
+  }
+])
+
 function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral' {
   const s = String(bg || '').toLowerCase()
   if (s.includes('red')) return 'error'
@@ -245,86 +251,12 @@ function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 
       ]"
     />
 
-    <!-- Statystyki — nad banerami i skrótami -->
-    <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
-      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:col-span-2 lg:gap-4">
-        <DashboardKpiCard label="Zawodnicy (aktywni)" :value="athletesCount" icon="i-lucide-users" tone="info" to="/admin/zawodnicy" />
-        <DashboardKpiCard
-          label="Wyniki oczekujące"
-          :value="pendingCount"
-          icon="i-lucide-clipboard-clock"
-          :tone="pendingCount ? 'warning' : 'info'"
-          :to="{ path: '/admin', hash: '#wyniki-oczekujace' }"
-        />
-        <DashboardKpiCard label="Składki (opłacone)" :value="`${paymentProgress}%`" icon="i-lucide-banknote" tone="success" to="/admin/zawodnicy" />
-        <DashboardKpiCard label="Obecność (30d)" :value="`${avgAttendance}%`" icon="i-lucide-user-check" tone="primary" to="/attendance" hint="Lista i weryfikacja na /attendance" />
-      </div>
-      <div class="lg:col-span-1">
-        <DashboardMonthlySummary
-          :athletes-active="athletesCount"
-          :payment-progress="paymentProgress"
-          :payments-pending="paymentsPendingCount"
-          :avg-attendance30d="avgAttendance"
-          :pending-results="pendingCount"
-        />
-      </div>
-    </div>
+    <DashboardMonthlySummary class="mt-8" :metrics="summaryMetrics" />
 
-    <div class="slavia-panel-section space-y-2">
-      <PanelModuleGrid
-        v-for="g in moduleGroups"
-        :key="g.title"
-        :title="g.title"
-        :items="g.items"
-        :tone-from-bg="toneFromBg"
-      />
-    </div>
-
-    <!-- SuperAdmin Banner -->
-    <div
-      v-if="isSuperAdmin"
-      class="mb-10 flex flex-col gap-4 rounded-2xl border border-primary/20 bg-linear-to-r from-primary/10 to-purple-500/10 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5"
-    >
-      <div class="flex items-start gap-3 sm:items-center sm:gap-4">
-        <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/20 text-primary sm:h-12 sm:w-12">
-          <UIcon
-            name="i-lucide-shield-check"
-            class="size-6"
-          />
-        </div>
-        <div class="min-w-0">
-          <p class="text-xs font-bold uppercase tracking-wider text-primary sm:text-sm">
-            Tryb SuperAdmin
-          </p>
-          <p class="mt-0.5 text-sm text-muted">
-            Masz dostęp do zaawansowanych narzędzi systemowych.
-          </p>
-        </div>
-      </div>
-      <div class="flex flex-col gap-2 sm:flex-row">
-        <UButton
-          size="lg"
-          variant="soft"
-          color="neutral"
-          icon="i-lucide-refresh-ccw"
-          :loading="syncingMobile"
-          class="min-h-11 justify-center"
-          @click="syncMobileReleases"
-        >
-          Sync Mobile Releases
-        </UButton>
-        <UButton
-          to="/superadmin"
-          trailing-icon="i-lucide-arrow-right"
-          size="lg"
-          class="min-h-11 w-full shrink-0 justify-center sm:w-auto"
-        >
-          Panel SuperAdmin
-        </UButton>
-      </div>
-    </div>
-
-    <PanelDashboardHub />
+    <PanelModuleNav
+      :groups="moduleGroups"
+      :tone-from-bg="toneFromBg"
+    />
 
     <div class="mt-10">
       <DashboardUrgentList
