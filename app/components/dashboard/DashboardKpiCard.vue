@@ -3,14 +3,19 @@ import type { RouteLocationRaw } from 'vue-router'
 
 type Tone = 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral'
 
-const props = defineProps<{
-  label: string
-  value: string | number
-  icon: string
-  tone?: Tone
-  hint?: string | null
-  to?: RouteLocationRaw | string
-}>()
+const props = withDefaults(
+  defineProps<{
+    label: string
+    value: string | number
+    icon: string
+    tone?: Tone
+    hint?: string | null
+    to?: RouteLocationRaw | string
+    /** Kompaktowy wariant na dashboardzie zawodnika */
+    size?: 'default' | 'compact'
+  }>(),
+  { size: 'default' }
+)
 
 const tone = computed<Tone>(() => props.tone ?? 'neutral')
 
@@ -32,20 +37,43 @@ const iconClass = computed(() => {
   >
     <UCard
       class="h-full min-h-0 rounded-2xl border-default/70 shadow-sm ring-1 ring-default/30 transition-colors"
-      :class="to ? 'cursor-pointer hover:bg-muted/10' : ''"
+      :class="[
+        to ? 'cursor-pointer hover:bg-muted/10' : '',
+        size === 'compact' ? 'p-0' : ''
+      ]"
+      :ui="size === 'compact' ? { body: 'p-3 sm:p-3.5' } : undefined"
     >
-      <div class="flex items-start gap-4 sm:items-center">
-        <div class="flex h-12 w-12 items-center justify-center rounded-xl ring-1" :class="iconClass">
-          <UIcon :name="icon" class="size-6" />
+      <div
+        class="flex gap-3"
+        :class="size === 'compact' ? 'items-center' : 'items-start gap-4 sm:items-center'"
+      >
+        <div
+          class="flex shrink-0 items-center justify-center rounded-xl ring-1"
+          :class="[
+            iconClass,
+            size === 'compact' ? 'size-9' : 'h-12 w-12'
+          ]"
+        >
+          <UIcon :name="icon" :class="size === 'compact' ? 'size-4' : 'size-6'" />
         </div>
-        <div class="min-w-0">
-          <p class="text-[11px] font-bold uppercase tracking-wider text-muted">
+        <div class="min-w-0 flex-1">
+          <p
+            class="font-bold uppercase tracking-wider text-muted"
+            :class="size === 'compact' ? 'text-[10px]' : 'text-[11px]'"
+          >
             {{ label }}
           </p>
-          <p class="truncate text-2xl font-black tabular-nums text-highlighted">
+          <p
+            class="truncate font-black tabular-nums text-highlighted"
+            :class="size === 'compact' ? 'text-xl' : 'text-2xl'"
+          >
             {{ value }}
           </p>
-          <p v-if="hint" class="mt-0.5 line-clamp-1 text-[11px] text-muted">
+          <p
+            v-if="hint"
+            class="line-clamp-2 text-muted"
+            :class="size === 'compact' ? 'mt-0.5 text-[10px] leading-snug' : 'mt-0.5 line-clamp-1 text-[11px]'"
+          >
             {{ hint }}
           </p>
         </div>
