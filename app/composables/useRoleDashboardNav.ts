@@ -52,13 +52,13 @@ export function useRoleDashboardNav() {
     if (roles.has('SuperAdmin')) {
       list.push({ area: 'superadmin', ...DASHBOARD_BY_AREA.superadmin })
     }
-    if (roles.has('Admin')) {
+    if (roles.has('Admin') || roles.has('SuperAdmin')) {
       list.push({ area: 'admin', ...DASHBOARD_BY_AREA.admin })
     }
     if (roles.has('Trainer') || roles.has('SuperAdmin')) {
       list.push({ area: 'trainer', ...DASHBOARD_BY_AREA.trainer })
     }
-    if (roles.has('Athlete')) {
+    if (roles.has('Athlete') || roles.has('SuperAdmin')) {
       list.push({ area: 'athlete', ...DASHBOARD_BY_AREA.athlete })
     }
     return list
