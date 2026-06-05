@@ -11,6 +11,7 @@ import {
  */
 const PUBLIC_GET_PATTERNS: RegExp[] = [
   /^\/api\/athletes$/,
+  /^\/api\/athletes\/archive$/,
   /^\/api\/posts$/,
   /^\/api\/posts\/[^/]+$/,
   /^\/api\/gallery$/,
