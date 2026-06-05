@@ -33,7 +33,9 @@ function inferParentPath(path: string): string | null {
   if (normalized.startsWith('/aktualnosci/')) return '/aktualnosci'
 
   const segments = normalized.split('/').filter(Boolean)
-  if (segments.length <= 1) return '/'
+  // Trasy „płaskie” (/galeria, /zawodnicy) — bez domyślnego skoku na stronę główną;
+  // wstecz przez historię przeglądarki (poprzednia strona w sesji).
+  if (segments.length <= 1) return null
 
   return `/${segments.slice(0, -1).join('/')}`
 }
@@ -54,7 +56,7 @@ function resolveBackFromRoute(route: ReturnType<typeof useRoute>): SlaviaBackTar
   }
 
   const inferred = inferParentPath(path)
-  if (inferred && inferred !== path) {
+  if (inferred && inferred !== path && inferred !== '/') {
     return {
       mode: 'link',
       to: inferred,
@@ -150,6 +152,7 @@ export function useSlaviaPageBack(config?: MaybeRefOrGetter<SlaviaBackOverride |
 /** Stan przycisku wstecz w nagłówku (SiteHeader). */
 export function useSlaviaNavBack() {
   const route = useRoute()
+  const router = useRouter()
 
   if (import.meta.client) {
     onMounted(() => {
@@ -177,11 +180,9 @@ export function useSlaviaNavBack() {
     }
 
     if (!import.meta.client) return
-    if (window.history.length > 1) {
-      window.history.back()
-      return
+    if (canUseHistoryBack.value) {
+      router.back()
     }
-    await navigateTo('/')
   }
 
   return {
