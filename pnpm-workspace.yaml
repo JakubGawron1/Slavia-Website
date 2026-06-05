@@ -1,0 +1,14 @@
+packages:
+  - '.'
+
+overrides:
+  '@tiptap/core': 3.23.4
+  '@tiptap/pm': 3.23.4
+
+allowBuilds:
+  '@parcel/watcher': true
+  '@tailwindcss/oxide': true
+  core-js: true
+  esbuild: true
+  unrs-resolver: true
+  vue-demi: true

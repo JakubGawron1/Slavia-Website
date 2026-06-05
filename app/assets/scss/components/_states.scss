@@ -1,0 +1,173 @@
+/** Powierzchnia szklana (nav, dropdowny, hero) */
+.slavia-glass {
+  border: 1px solid var(--slavia-glass-border);
+  background: var(--slavia-glass-bg);
+  backdrop-filter: blur(16px) saturate(1.15);
+  -webkit-backdrop-filter: blur(16px) saturate(1.15);
+  box-shadow: var(--slavia-shadow-sm);
+}
+
+/** Pusty stan — wyśrodkowany blok (ikona, tytuł, opis, CTA) */
+.slavia-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  gap: 0.75rem;
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  border-radius: var(--slavia-radius-2xl);
+  border: 1px dashed color-mix(in oklab, var(--slavia-surface-edge-strong, var(--ui-border)) 82%, var(--ui-primary) 18%);
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--ui-bg-muted) 35%, transparent),
+    color-mix(in oklab, var(--ui-bg-elevated) 20%, transparent)
+  );
+}
+
+/** Otoczka pustego stanu — pełna szerokość, wyśrodkowana studnia max-w-lg */
+.slavia-public-empty-shell {
+  width: 100%;
+}
+
+/** Publiczny pusty stan (PublicEmptyState) */
+.slavia-public-empty {
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--slavia-shadow-xs);
+  outline: 1px solid color-mix(in oklab, var(--slavia-surface-edge-strong, var(--ui-border)) 55%, transparent);
+  outline-offset: -1px;
+}
+
+.slavia-public-empty--compact {
+  padding: 3rem 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .slavia-public-empty--compact {
+    padding-block: 3.5rem;
+  }
+}
+
+.slavia-public-empty--default {
+  padding: 4rem 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .slavia-public-empty--default {
+    padding: 5rem 2.5rem;
+  }
+}
+
+.slavia-empty-state__body {
+  position: relative;
+  width: 100%;
+  max-width: min(32rem, 100%);
+  margin-inline: auto;
+  text-align: center;
+}
+
+.slavia-empty-state__icon {
+  display: flex;
+  width: 3rem;
+  height: 3rem;
+  margin-inline: auto;
+  margin-bottom: 1.25rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 1rem;
+  background: color-mix(in oklab, var(--ui-primary) 12%, transparent);
+  color: var(--ui-primary);
+  border: 1px solid color-mix(in oklab, var(--ui-primary) 22%, transparent);
+  box-shadow: var(--slavia-shadow-glow);
+}
+
+.slavia-public-empty .slavia-empty-state__icon {
+  width: 3.5rem;
+  height: 3.5rem;
+}
+
+@media (min-width: 640px) {
+  .slavia-public-empty:not(.slavia-public-empty--compact) .slavia-empty-state__icon {
+    width: 4.5rem;
+    height: 4.5rem;
+  }
+}
+
+.slavia-empty-state__title {
+  margin: 0;
+  font-family: 'Outfit', var(--font-sans, 'Public Sans', sans-serif);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ui-text-highlighted);
+}
+
+.slavia-public-empty .slavia-empty-state__title {
+  font-size: 1.125rem;
+}
+
+@media (min-width: 640px) {
+  .slavia-public-empty:not(.slavia-public-empty--compact) .slavia-empty-state__title {
+    font-size: 1.25rem;
+  }
+}
+
+.slavia-empty-state__desc {
+  max-width: 22rem;
+  margin: 0.5rem auto 0;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--ui-text-muted);
+}
+
+@media (min-width: 640px) {
+  .slavia-public-empty .slavia-empty-state__desc {
+    font-size: 1rem;
+  }
+}
+
+.slavia-empty-state__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .slavia-public-empty .slavia-empty-state__actions {
+    gap: 0.75rem;
+  }
+}
+
+.slavia-public-empty .slavia-empty-state__actions {
+  width: 100%;
+}
+
+.slavia-public-empty .slavia-empty-state__actions > * {
+  flex: 0 0 auto;
+  width: auto !important;
+  max-width: 100%;
+  align-self: center;
+  margin-inline: auto;
+}
+
+.slavia-public-empty .slavia-empty-state__actions :is(button, a) {
+  width: auto;
+  max-width: 100%;
+  justify-content: center;
+  margin-inline: auto;
+}
+
+.slavia-empty-state__hint {
+  margin: 1rem auto 0;
+  max-width: 22rem;
+  font-size: 0.75rem;
+  line-height: 1.55;
+  text-align: center;
+  color: var(--ui-text-muted);
+}

@@ -1,0 +1,54 @@
+/** Scroll reveal — dyrektywa `v-slavia-reveal` / komponent SlaviaReveal */
+.slavia-reveal {
+  transition:
+    opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--slavia-reveal-delay, 0ms);
+}
+
+.slavia-reveal:not(.is-revealed) {
+  opacity: 0;
+}
+
+.slavia-reveal--fade-up:not(.is-revealed) {
+  transform: translateY(1.25rem);
+}
+
+.slavia-reveal--fade-left:not(.is-revealed) {
+  transform: translateX(-1.25rem);
+}
+
+.slavia-reveal--fade-right:not(.is-revealed) {
+  transform: translateX(1.25rem);
+}
+
+.slavia-reveal--scale:not(.is-revealed) {
+  transform: scale(0.96);
+}
+
+.slavia-reveal--blur-in:not(.is-revealed) {
+  filter: blur(6px);
+  transform: translateY(0.5rem);
+}
+
+.slavia-reveal.is-revealed {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+html.slavia-dev-force-reduced-motion .slavia-athletics-backdrop,
+html.slavia-dev-force-reduced-motion .slavia-athletics-backdrop * {
+  animation: none !important;
+}
+
+html.slavia-dev-force-reduced-motion .slavia-reveal:not(.is-revealed) {
+  opacity: 1 !important;
+  transform: none !important;
+  filter: none !important;
+}
+
+html.slavia-dev-force-reduced-motion .slavia-reveal {
+  transition: none !important;
+}

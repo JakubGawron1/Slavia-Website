@@ -1,0 +1,26 @@
+/** Z app/components/dev/DevExperimentalFlagsPanel.vue — globalne klasy (bez scoped). */
+.dev-flags-scroll-wrap {
+  min-width: 0;
+}
+
+.dev-flags-scroll {
+  scroll-padding-inline: 0.25rem;
+}
+
+.dev-flags-scroll-fade {
+  position: absolute;
+  top: 0;
+  bottom: 8px;
+  z-index: 1;
+  width: 2.5rem;
+}
+
+.dev-flags-scroll-fade--left {
+  left: 0;
+  background: linear-gradient(to right, var(--ui-bg-elevated, var(--ui-bg)) 15%, transparent);
+}
+
+.dev-flags-scroll-fade--right {
+  right: 0;
+  background: linear-gradient(to left, var(--ui-bg-elevated, var(--ui-bg)) 15%, transparent);
+}

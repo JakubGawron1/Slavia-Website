@@ -1,0 +1,23 @@
+/** Z app/app.vue — globalne klasy (bez scoped). */
+/* Splash przy starcie aplikacji */
+.slavia-app-boot-enter-active,
+.slavia-app-boot-leave-active {
+  transition: opacity 0.35s ease, visibility 0.35s ease;
+}
+.slavia-app-boot-enter-from,
+.slavia-app-boot-leave-to {
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* Globalne przejścia stron */
+.page-enter-active,
+.page-leave-active {
+  transition: all 0.4s ease-out;
+}
+.page-enter-from,
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
+  filter: blur(4px);
+}

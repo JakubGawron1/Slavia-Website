@@ -1,0 +1,94 @@
+/**
+ * Paski przewijania dopasowane do motywów Nuxt UI (--ui-primary, tła, obramowań).
+ * Firefox: scrollbar-color; Chromium/Safari: ::-webkit-scrollbar-*.
+ */
+
+:root,
+html[data-slavia-preset] {
+  --slavia-scrollbar-size: 10px;
+  --slavia-scrollbar-size-thin: 7px;
+  --slavia-scrollbar-track: color-mix(in srgb, var(--ui-bg-muted, var(--ui-bg)) 82%, transparent);
+  --slavia-scrollbar-thumb: color-mix(
+    in srgb,
+    var(--ui-primary) 48%,
+    var(--ui-border, var(--ui-bg-inverted)) 52%
+  );
+  --slavia-scrollbar-thumb-hover: color-mix(in srgb, var(--ui-primary) 78%, var(--ui-bg-elevated) 22%);
+  --slavia-scrollbar-thumb-active: var(--ui-primary);
+}
+
+@mixin slavia-scrollbar-base($size: var(--slavia-scrollbar-size)) {
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: var(--slavia-scrollbar-thumb) var(--slavia-scrollbar-track);
+
+  &::-webkit-scrollbar {
+    width: $size;
+    height: $size;
+  }
+
+  &::-webkit-scrollbar-track {
+    margin: 2px;
+    border-radius: 999px;
+    background: var(--slavia-scrollbar-track);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background: var(--slavia-scrollbar-thumb);
+    background-clip: padding-box;
+    transition: background 0.18s ease;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: var(--slavia-scrollbar-thumb-hover);
+    background-clip: padding-box;
+  }
+
+  &::-webkit-scrollbar-thumb:active {
+    background: var(--slavia-scrollbar-thumb-active);
+    background-clip: padding-box;
+  }
+
+  &::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+}
+
+/** Domyślny scroll strony (html) — cienki, w kolorze akcentu klubu. */
+html {
+  @include slavia-scrollbar-base(var(--slavia-scrollbar-size));
+}
+
+/** Obszary przewijane: modale, panele, listy. */
+.slavia-scrollbar {
+  @include slavia-scrollbar-base(var(--slavia-scrollbar-size));
+}
+
+.slavia-scrollbar-thin {
+  @include slavia-scrollbar-base(var(--slavia-scrollbar-size-thin));
+}
+
+/** Ciało modala SlaviaModal (Nuxt UI). */
+[data-slot='body'] {
+  @include slavia-scrollbar-base(var(--slavia-scrollbar-size));
+}
+
+/** Listy / panele z własnym scrollem (np. messenger). */
+.slavia-scroll-panel {
+  @include slavia-scrollbar-base(var(--slavia-scrollbar-size));
+}
+
+/**
+ * Wszystkie przewijane panele — bez ręcznego dopisywania klasy w każdym widoku.
+ * `.scrollbar-hide` (kalendarz) zostaje bez paska — reguły niżej w _calendar.scss.
+ */
+.overflow-y-auto:not(.scrollbar-hide),
+.overflow-auto:not(.scrollbar-hide) {
+  @include slavia-scrollbar-base(var(--slavia-scrollbar-size));
+}
+
+.overflow-x-auto:not(.scrollbar-hide) {
+  @include slavia-scrollbar-base(var(--slavia-scrollbar-size-thin));
+}

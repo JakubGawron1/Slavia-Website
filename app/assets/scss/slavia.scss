@@ -1,0 +1,29 @@
+/**
+ * Globalne style Slavia — importowane z main.css po Tailwind i Nuxt UI.
+ * Nie dodawaj tutaj @use tailwindcss / @nuxt/ui (to warstwa CSS w main.css).
+ */
+@use './abstracts/tokens' as *;
+@use './base/reset' as *;
+@use './base/typography' as *;
+@use './base/enhancements' as *;
+@use './layout/layout' as *;
+@use './components/cards' as *;
+@use './components/states' as *;
+@use './components/nav' as *;
+@use './components/tables' as *;
+@use './components/select' as *;
+@use './components/messenger' as *;
+@use './utilities/animations' as *;
+@use './utilities/backdrop' as *;
+@use './utilities/reveal' as *;
+@use './utilities/scrollbar' as *;
+@use './themes/presets-core' as *;
+@use './themes/presets' as *;
+@use './base/app-transitions' as *;
+@use './base/vue-transitions' as *;
+@use './components/auth' as *;
+@use './components/timeline' as *;
+@use './components/dev-flags' as *;
+@use './components/calendar' as *;
+@use './components/editor-sheet' as *;
+@use './utilities/confetti' as *;
