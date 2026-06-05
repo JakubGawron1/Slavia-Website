@@ -50,6 +50,8 @@ const {
   default: () => [] as BlogPost[]
 })
 
+await useCmsPageHydrate('home')
+
 function genderForSinclair(g?: string | null): SinclairGender | null {
   return g === 'male' || g === 'female' ? g : null
 }
@@ -305,20 +307,45 @@ const trainingDays = [
               <span class="absolute inline-flex size-full animate-ping rounded-full bg-primary/70 opacity-75" />
               <span class="relative inline-flex size-2 rounded-full bg-primary" />
             </span>
-            CKS Slavia Ruda Śląska
+            <CmsEditable
+              page-name="home"
+              field-key="hero_badge"
+              type="text"
+              label="Odznaka hero"
+              fallback="CKS Slavia Ruda Śląska"
+            />
           </div>
 
           <h1 class="text-balance text-4xl font-black uppercase italic leading-[0.95] tracking-tight text-highlighted sm:text-5xl md:text-6xl lg:text-7xl">
-            Sztanga, drużyna,
+            <CmsEditable
+              page-name="home"
+              field-key="hero_title"
+              type="text"
+              label="Tytuł hero"
+              tag="span"
+              fallback="Sztanga, drużyna,"
+            />
             <span class="bg-linear-to-r from-primary via-amber-500 to-primary bg-clip-text text-transparent">
-              Slavia.
+              <CmsEditable
+                page-name="home"
+                field-key="hero_title_accent"
+                type="text"
+                label="Akcent tytułu"
+                tag="span"
+                fallback="Slavia."
+              />
             </span>
           </h1>
 
           <p class="mt-6 max-w-3xl text-pretty text-base leading-relaxed text-muted sm:text-lg lg:text-xl">
-            Klub podnoszenia ciężarów z tradycją i pasją. Trenujemy młodzież i dorosłych — od pierwszych kroków
-            na platformie po starty w zawodach ogólnopolskich. Zapraszamy do
-            <strong class="text-highlighted">Rudy Śląskiej</strong>.
+            <CmsEditable
+              page-name="home"
+              field-key="hero_subtitle"
+              type="html"
+              label="Podtytuł hero"
+              tag="span"
+              fallback="Klub podnoszenia ciężarów z tradycją i pasją. Trenujemy młodzież i dorosłych — od pierwszych kroków na platformie po starty w zawodach ogólnopolskich. Zapraszamy do <strong>Rudy Śląskiej</strong>."
+            />
           </p>
 
           <div class="mt-8 flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-center lg:gap-4">
@@ -435,14 +462,20 @@ const trainingDays = [
       <UContainer>
         <div class="mx-auto mb-10 max-w-3xl text-center lg:mb-14">
           <p class="mb-3 text-[11px] font-black uppercase tracking-[0.25em] text-primary">
-            Kim jesteśmy
+            <CmsEditable page-name="home" field-key="pillars_eyebrow" type="text" label="Filary — odznaka" fallback="Kim jesteśmy" />
           </p>
           <h2 class="text-balance text-3xl font-black uppercase italic leading-tight tracking-tight text-highlighted sm:text-4xl lg:text-5xl">
-            Sport, ludzie i zdrowy progres
+            <CmsEditable page-name="home" field-key="pillars_title" type="text" label="Filary — tytuł" tag="span" fallback="Sport, ludzie i zdrowy progres" />
           </h2>
           <p class="mt-4 text-pretty text-base leading-relaxed text-muted lg:text-lg">
-            Slavia to nie tylko medalowe nazwiska — to przede wszystkim ludzie, codzienna praca i bezpieczna nauka
-            techniki, która ma służyć zdrowiu na lata.
+            <CmsEditable
+              page-name="home"
+              field-key="pillars_subtitle"
+              type="text"
+              label="Filary — opis"
+              tag="span"
+              fallback="Slavia to nie tylko medalowe nazwiska — to przede wszystkim ludzie, codzienna praca i bezpieczna nauka techniki, która ma służyć zdrowiu na lata."
+            />
           </p>
         </div>
 
@@ -454,11 +487,17 @@ const trainingDays = [
                 <UIcon name="i-lucide-users-round" class="size-6" />
               </div>
               <h3 class="text-xl font-black text-highlighted">
-                Społeczność
+                <CmsEditable page-name="home" field-key="pillar_community_title" type="text" label="Filar 1 — tytuł" tag="span" fallback="Społeczność" />
               </h3>
               <p class="mt-3 text-sm leading-relaxed text-muted">
-                Trenerzy, zawodnicy i rodzice tworzą przyjazną atmosferę. Tu każdy zaczyna od solidnych podstaw —
-                a po roku potrafi wstać po pierwszy medal.
+                <CmsEditable
+                  page-name="home"
+                  field-key="pillar_community_text"
+                  type="text"
+                  label="Filar 1 — tekst"
+                  tag="span"
+                  fallback="Trenerzy, zawodnicy i rodzice tworzą przyjazną atmosferę. Tu każdy zaczyna od solidnych podstaw — a po roku potrafi wstać po pierwszy medal."
+                />
               </p>
             </div>
           </div>
@@ -470,11 +509,17 @@ const trainingDays = [
                 <UIcon name="i-lucide-medal" class="size-6" />
               </div>
               <h3 class="text-xl font-black text-highlighted">
-                Sport i rozwój
+                <CmsEditable page-name="home" field-key="pillar_sport_title" type="text" label="Filar 2 — tytuł" tag="span" fallback="Sport i rozwój" />
               </h3>
               <p class="mt-3 text-sm leading-relaxed text-muted">
-                Starty w zawodach klubowych, lidze śląskiej i mistrzostwach Polski. Cele dopasowane do wieku i poziomu
-                zaawansowania — bez przeskakiwania etapów.
+                <CmsEditable
+                  page-name="home"
+                  field-key="pillar_sport_text"
+                  type="text"
+                  label="Filar 2 — tekst"
+                  tag="span"
+                  fallback="Starty w zawodach klubowych, lidze śląskiej i mistrzostwach Polski. Cele dopasowane do wieku i poziomu zaawansowania — bez przeskakiwania etapów."
+                />
               </p>
             </div>
           </div>
@@ -486,11 +531,17 @@ const trainingDays = [
                 <UIcon name="i-lucide-heart-pulse" class="size-6" />
               </div>
               <h3 class="text-xl font-black text-highlighted">
-                Zdrowy trening
+                <CmsEditable page-name="home" field-key="pillar_health_title" type="text" label="Filar 3 — tytuł" tag="span" fallback="Zdrowy trening" />
               </h3>
               <p class="mt-3 text-sm leading-relaxed text-muted">
-                Nacisk na technikę, regenerację i długofalowe bezpieczeństwo. Siła ma służyć przez lata —
-                także po zakończeniu kariery startowej.
+                <CmsEditable
+                  page-name="home"
+                  field-key="pillar_health_text"
+                  type="text"
+                  label="Filar 3 — tekst"
+                  tag="span"
+                  fallback="Nacisk na technikę, regenerację i długofalowe bezpieczeństwo. Siła ma służyć przez lata — także po zakończeniu kariery startowej."
+                />
               </p>
             </div>
           </div>
@@ -738,13 +789,20 @@ const trainingDays = [
       <UContainer>
         <div class="mx-auto mb-10 max-w-3xl text-center lg:mb-14">
           <p class="mb-3 text-[11px] font-black uppercase tracking-[0.25em] text-primary">
-            Narzędzia
+            <CmsEditable page-name="home" field-key="tools_eyebrow" type="text" label="Narzędzia — odznaka" fallback="Narzędzia" />
           </p>
           <h2 class="text-balance text-3xl font-black uppercase italic leading-tight tracking-tight text-highlighted sm:text-4xl lg:text-5xl">
-            Wszystko w jednym miejscu
+            <CmsEditable page-name="home" field-key="tools_title" type="text" label="Narzędzia — tytuł" tag="span" fallback="Wszystko w jednym miejscu" />
           </h2>
           <p class="mt-4 text-pretty text-base leading-relaxed text-muted lg:text-lg">
-            Ranking Sinclair, kalkulatory, blog, galeria i kontakt — żeby trenować mądrzej i być na bieżąco z życiem klubu.
+            <CmsEditable
+              page-name="home"
+              field-key="tools_subtitle"
+              type="text"
+              label="Narzędzia — opis"
+              tag="span"
+              fallback="Ranking Sinclair, kalkulatory, blog, galeria i kontakt — żeby trenować mądrzej i być na bieżąco z życiem klubu."
+            />
           </p>
         </div>
 
@@ -780,10 +838,17 @@ const trainingDays = [
       <UContainer>
         <div class="mx-auto mb-10 max-w-3xl text-center lg:mb-14">
           <p class="mb-3 text-[11px] font-black uppercase tracking-[0.25em] text-primary">
-            Gdzie nas znaleźć
+            <CmsEditable page-name="home" field-key="location_eyebrow" type="text" label="Lokalizacja — odznaka" fallback="Gdzie nas znaleźć" />
           </p>
           <h2 class="text-balance text-3xl font-black uppercase italic leading-tight tracking-tight text-highlighted sm:text-4xl lg:text-5xl">
-            Slavia. Ruda Śląska. Poniedziałek 15:00.
+            <CmsEditable
+              page-name="home"
+              field-key="location_title"
+              type="text"
+              label="Lokalizacja — tytuł"
+              tag="span"
+              fallback="Slavia. Ruda Śląska. Poniedziałek 15:00."
+            />
           </h2>
         </div>
 
@@ -811,9 +876,14 @@ const trainingDays = [
                     Adres sali treningowej
                   </p>
                   <p class="mt-1 text-sm leading-relaxed text-muted">
-                    CKS Slavia Ruda Śląska<br>
-                    ul. Konopnickiej 13<br>
-                    41-700 Ruda Śląska
+                    <CmsEditable
+                      page-name="home"
+                      field-key="location_address"
+                      type="html"
+                      label="Adres"
+                      tag="span"
+                      fallback="CKS Slavia Ruda Śląska<br>ul. Konopnickiej 13<br>41-700 Ruda Śląska"
+                    />
                   </p>
                 </div>
               </div>

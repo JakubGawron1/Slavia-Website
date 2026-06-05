@@ -118,7 +118,7 @@ const iconWrapClass = computed(() => {
         :class="variant === 'centered' ? 'mx-auto' : 'flex-1'"
       >
         <p
-          v-if="eyebrow"
+          v-if="eyebrow || $slots.eyebrow"
           :class="eyebrowClass"
         >
           <UIcon
@@ -127,7 +127,9 @@ const iconWrapClass = computed(() => {
             class="shrink-0"
             :class="compact ? 'size-4 sm:size-5' : 'size-5 sm:size-6'"
           />
-          {{ eyebrow }}
+          <slot name="eyebrow">
+            {{ eyebrow }}
+          </slot>
         </p>
         <h1 :class="titleClass">
           <slot name="title">

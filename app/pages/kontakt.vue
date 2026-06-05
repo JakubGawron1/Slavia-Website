@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { getApiErrorMessage } from '~/composables/useApi'
 
+await useCmsPageHydrate('kontakt')
+
 useSeoMeta({
   title: 'Kontakt — Slavia Ruda Śląska',
   description:
@@ -73,11 +75,39 @@ async function submit() {
   <PublicPageLayout padding="hero">
     <PublicPageHeader
       variant="hero"
-      eyebrow="CKS Slavia"
       icon="i-lucide-mail"
-      title="Kontakt"
-      description="Cieszymy się, że chcesz napisać do nas. Niezależnie od tego, czy myślisz o pierwszych treningach na platformie, zapisach do kadry czy współpracy — zostaw wiadomość w formularzu, a administracja klubu odezwie się, gdy tylko będzie to możliwe."
-    />
+    >
+      <template #eyebrow>
+        <CmsEditable
+          page-name="kontakt"
+          field-key="eyebrow"
+          type="text"
+          label="Odznaka"
+          tag="span"
+          fallback="CKS Slavia"
+        />
+      </template>
+      <template #title>
+        <CmsEditable
+          page-name="kontakt"
+          field-key="title"
+          type="text"
+          label="Tytuł"
+          tag="span"
+          fallback="Kontakt"
+        />
+      </template>
+      <template #description>
+        <CmsEditable
+          page-name="kontakt"
+          field-key="description"
+          type="text"
+          label="Opis nagłówka"
+          tag="span"
+          fallback="Cieszymy się, że chcesz napisać do nas. Niezależnie od tego, czy myślisz o pierwszych treningach na platformie, zapisach do kadry czy współpracy — zostaw wiadomość w formularzu, a administracja klubu odezwie się, gdy tylko będzie to możliwe."
+        />
+      </template>
+    </PublicPageHeader>
 
     <div class="mx-auto grid w-full max-w-6xl gap-8 lg:grid-cols-2 lg:gap-10 lg:items-start">
       <div class="slavia-page-card space-y-6 border border-default/60 bg-card/80 p-6 shadow-sm sm:p-8">
@@ -86,7 +116,14 @@ async function submit() {
             O klubie
           </h2>
           <p class="mt-3 text-sm leading-relaxed text-muted sm:text-base">
-            CKS Slavia to sekcja podnoszenia ciężarów z Rudy Śląskiej — trenujemy młodzież i dorosłych, od bezpiecznej nauki techniki po starty w zawodach. Jeśli nie wiesz, od czego zacząć, napisz kilka słów o sobie i swoich planach — chętnie podpowiemy, jak wyglądają zapisy i pierwsze spotkanie na sali.
+            <CmsEditable
+              page-name="kontakt"
+              field-key="about_text"
+              type="html"
+              label="O klubie (bok)"
+              tag="span"
+              fallback="CKS Slavia to sekcja podnoszenia ciężarów z Rudy Śląskiej — trenujemy młodzież i dorosłych, od bezpiecznej nauki techniki po starty w zawodach. Jeśli nie wiesz, od czego zacząć, napisz kilka słów o sobie i swoich planach — chętnie podpowiemy, jak wyglądają zapisy i pierwsze spotkanie na sali."
+            />
           </p>
         </div>
 
@@ -224,7 +261,14 @@ async function submit() {
     </div>
 
     <p class="mx-auto mt-8 max-w-6xl text-center text-xs text-muted">
-      Wiadomości przegląda administracja klubu w panelu — zwykle odpowiadamy w ciągu kilku dni roboczych.
+      <CmsEditable
+        page-name="kontakt"
+        field-key="footer_note"
+        type="text"
+        label="Notka pod formularzem"
+        tag="span"
+        fallback="Wiadomości przegląda administracja klubu w panelu — zwykle odpowiadamy w ciągu kilku dni roboczych."
+      />
     </p>
   </PublicPageLayout>
 </template>
