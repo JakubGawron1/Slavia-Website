@@ -11,7 +11,9 @@
     "start": "node .output/server/index.mjs",
     "postinstall": "nuxt prepare",
     "lint": "eslint .",
-    "openapi:types": "openapi-typescript ../Slavia-backend/src/embed/openapi.json -o app/types/generated/openapi.types.ts",
+    "openapi:snapshot": "node scripts/sync-openapi-snapshot.mjs",
+    "openapi:types": "node scripts/openapi-generate-types.mjs",
+    "openapi:check": "node scripts/check-openapi-types.mjs",
     "typecheck": "nuxt typecheck",
     "test:e2e": "playwright test",
     "smoke:backend": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/smoke-backend.ps1",
@@ -22,6 +24,7 @@
     "@iconify-json/lucide": "^1.2.108",
     "@iconify/utils": "^3.1.3",
     "@netlify/blobs": "^10.7.7",
+    "@nuxt/devalue": "^2.0.2",
     "@nuxt/ui": "^4.7.1",
     "@tensorflow-models/pose-detection": "^2.1.3",
     "@tensorflow/tfjs": "^4.22.0",
@@ -60,20 +63,5 @@
     "typescript": "^6.0.3",
     "vue-tsc": "^3.2.9"
   },
-  "packageManager": "pnpm@11.0.9+sha512.34ce82e6780233cf9cad8685029a8f81d2e06196c5a9bad98879f7424940c6817c4e4524fb7d38b8553ceed48b9758b8ebaf1abd3600c232c4c8cf7366086f38",
-  "pnpm": {
-    "allowBuilds": {
-      "@parcel/watcher": true,
-      "@tailwindcss/oxide": true,
-      "core-js": true,
-      "esbuild": true,
-      "unrs-resolver": true,
-      "vue-demi": true
-    },
-    "confirmModulesPurge": false,
-    "overrides": {
-      "@tiptap/core": "3.23.4",
-      "@tiptap/pm": "3.23.4"
-    }
-  }
+  "packageManager": "pnpm@11.5.1+sha512.93f7b57422ea7068257235b4c16eb60762eb68e1dc23723199cc739043ea9be2c4143274a399d8c6defa2b1176226d9ca1c4b63482d6200c1a8fbaa78c1d1485"
 }
