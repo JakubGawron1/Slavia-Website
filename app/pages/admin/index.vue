@@ -4,7 +4,7 @@ import { getApiErrorMessage } from '~/composables/useApi'
 import DashboardHero from '~/components/dashboard/DashboardHero.vue'
 import DashboardUrgentList from '~/components/dashboard/DashboardUrgentList.vue'
 import DashboardMonthlySummary from '~/components/dashboard/DashboardMonthlySummary.vue'
-import { dashboardLink, type DashboardModuleLink } from '~/utils/dashboardLink'
+import type { DashboardModuleLink } from '~/utils/dashboardLink'
 
 definePageMeta({ middleware: 'admin' })
 
@@ -135,57 +135,17 @@ async function submitReview() {
   }
 }
 
+const { moduleGroupsForRole } = usePanelNavigationFlags()
+
 const moduleGroups = computed((): { title: string, items: DashboardModuleLink[] }[] => {
-  const isTrainerScope = !isPureAdmin.value
-  const admin: { title: string, items: DashboardModuleLink[] }[] = [
-    {
-      title: 'Najczęstsze',
-      items: [
-        dashboardLink('Zespół i konta', 'Zawodnicy + logowania', 'i-lucide-users-round', '/admin/zawodnicy', 'text-blue-500', 'bg-blue-500/10'),
-        dashboardLink('Wiadomości (kontakt)', 'Skrzynka formularza', 'i-lucide-mail', '/admin/kontakt-wiadomosci', 'text-info', 'bg-info/12'),
-        dashboardLink('Changelog', 'Historia wydań', 'i-lucide-file-text', '/admin/changelog', 'text-success', 'bg-success/12'),
-        dashboardLink('Powiadomienia', 'Alerty systemowe', 'i-lucide-bell', '/powiadomienia', 'text-amber-600', 'bg-amber-500/10')
-      ]
-    },
-    {
-      title: 'Treści publiczne',
-      items: [
-        dashboardLink('Aktualności', 'Wpisy na stronie', 'i-lucide-newspaper', '/aktualnosci', 'text-orange-500', 'bg-orange-500/10'),
-        dashboardLink('Ogłoszenia', 'Tablica klubu', 'i-lucide-megaphone', '/ogloszenia', 'text-violet-500', 'bg-violet-500/10'),
-        dashboardLink('Galeria', 'Zdjęcia', 'i-lucide-images', '/galeria', 'text-pink-500', 'bg-pink-500/10'),
-        dashboardLink('Ranking zawodników', 'Wyniki publiczne', 'i-lucide-trophy', '/zawodnicy', 'text-yellow-500', 'bg-yellow-500/10'),
-        dashboardLink('Wyzwania miesiąca', 'Aktywność w klubie', 'i-lucide-flame', '/klub/wyzwania', 'text-orange-500', 'bg-orange-500/10'),
-        dashboardLink('Kalendarz', 'Wydarzenia', 'i-lucide-calendar', '/kalendarz', 'text-purple-500', 'bg-purple-500/10')
-      ]
-    },
-    {
-      title: 'Konto i narzędzia',
-      items: [
-        dashboardLink('Proporcje (ratio)', 'Kalkulator bojów', 'i-lucide-sigma', '/kalkulator-proporcji', 'text-success', 'bg-success/12'),
-      ]
-    }
-  ]
-  if (!isTrainerScope) return admin
-  const trainerBlock: { title: string, items: DashboardModuleLink[] } = {
-    title: 'Kadra trenera',
-    items: [
-      dashboardLink('Starty zawodników', 'Lista startów', 'i-lucide-list-checks', '/trainer/wyniki', 'text-teal-500', 'bg-teal-500/10'),
-      dashboardLink('Składki klubowe', 'Zatwierdzanie wpłat', 'i-lucide-banknote', '/trainer/skladki', 'text-green-600', 'bg-green-500/10'),
-      dashboardLink('Lista obecności', 'Weryfikacja', 'i-lucide-user-check', '/attendance', 'text-indigo-600', 'bg-indigo-500/10'),
-      dashboardLink('Dzienniki', 'Wpisy treningowe', 'i-lucide-book-marked', '/trainer/dziennik', 'text-cyan-600', 'bg-cyan-500/10'),
-      dashboardLink('Plany treningowe', 'Monitoring progresu', 'i-lucide-clipboard-list', '/trainer/plany', 'text-emerald-600', 'bg-emerald-500/10'),
-      dashboardLink('Regeneracja', 'Check-in zawodników', 'i-lucide-heart-pulse', '/trainer/regeneracja', 'text-rose-600', 'bg-rose-500/10'),
-      dashboardLink('Feed wydarzeń', 'Aktywności', 'i-lucide-list-collapse', '/trainer/wydarzenia', 'text-fuchsia-600', 'bg-fuchsia-500/10'),
-      dashboardLink('Inne ćwiczenia', 'Ranking siłowy', 'i-lucide-bar-chart-3', '/trainer/exercises', 'text-lime-600', 'bg-lime-500/10'),
-      dashboardLink('Słownik ćwiczeń', 'Baza do planów', 'i-lucide-library', '/trainer/cwiczenia', 'text-indigo-500', 'bg-indigo-500/10'),
-      dashboardLink('Analiza sztangi', 'Wideo', 'i-lucide-scan-line', '/trainer/analiza-sztangi', 'text-orange-500', 'bg-orange-500/10'),
-      dashboardLink('Monitoring', 'Metryki', 'i-lucide-activity', '/trainer/monitoring', 'text-sky-600', 'bg-sky-500/10'),
-      dashboardLink('Czat', 'Wiadomości 1:1', 'i-lucide-messages-square', '/chat', 'text-info', 'bg-info/12')
-    ]
-  }
-  const [most, content, account] = admin
-  if (!most || !content || !account) return admin
-  return [most, content, trainerBlock, account]
+  const adminGroups = moduleGroupsForRole('admin')
+  if (isPureAdmin.value) return adminGroups
+
+  const trainerItems = moduleGroupsForRole('trainer').flatMap(g => g.items)
+  const trainerBlock = { title: 'Kadra trenera', items: trainerItems }
+  const [most, content, account] = adminGroups
+  if (!most || !content || !account) return adminGroups
+  return [most, content, trainerBlock, account].filter(g => g.items.length > 0)
 })
 
 const summaryMetrics = computed(() => [
@@ -198,7 +158,7 @@ const summaryMetrics = computed(() => [
   {
     label: 'Wyniki oczek.',
     value: pendingCount.value,
-    tone: (pendingCount.value ? 'warning' : 'neutral') as const,
+    tone: pendingCount.value ? ('warning' as const) : ('neutral' as const),
     to: { path: '/admin', hash: '#wyniki-oczekujace' }
   },
   {

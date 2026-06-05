@@ -5,8 +5,6 @@ import { getApiErrorMessage } from '~/composables/useApi'
 import DashboardHero from '~/components/dashboard/DashboardHero.vue'
 import DashboardUrgentList from '~/components/dashboard/DashboardUrgentList.vue'
 import DashboardMonthlySummary from '~/components/dashboard/DashboardMonthlySummary.vue'
-import { dashboardLink, type DashboardModuleLink } from '~/utils/dashboardLink'
-
 definePageMeta({ middleware: 'trainer' })
 
 useSeoMeta({
@@ -124,47 +122,8 @@ const pendingCount = computed(() => (Array.isArray(pendingResults.value) ? pendi
 const pendingPaymentsCount = computed(() => (Array.isArray(pendingPayments.value) ? pendingPayments.value.length : 0))
 const _competitionsCount = computed(() => (Array.isArray(competitions.value) ? competitions.value.length : 0))
 
-const moduleGroups: { title: string, items: DashboardModuleLink[] }[] = [
-  {
-    title: 'Najczęstsze',
-    items: [
-      dashboardLink('Wszystkie starty', 'Lista startów z edycją', 'i-lucide-list-checks', '/trainer/wyniki', 'text-teal-500', 'bg-teal-500/10'),
-      dashboardLink('Zespół i konta', 'Zawodnicy + logowania', 'i-lucide-users-round', '/trainer/zawodnicy', 'text-blue-500', 'bg-blue-500/10'),
-      dashboardLink('Składki klubowe', 'Widok miesiąca i zatwierdzanie', 'i-lucide-banknote', '/trainer/skladki', 'text-green-600', 'bg-green-500/10'),
-      dashboardLink('Lista obecności', 'Statusy i weryfikacja', 'i-lucide-user-check', '/attendance', 'text-indigo-600', 'bg-indigo-500/10'),
-      dashboardLink('Dzienniki treningów', 'Wpisy po jednostkach', 'i-lucide-book-marked', '/trainer/dziennik', 'text-cyan-600', 'bg-cyan-500/10'),
-      dashboardLink('Czat z zawodnikami', 'Wiadomości 1:1', 'i-lucide-messages-square', '/chat', 'text-info', 'bg-info/12')
-    ]
-  },
-  {
-    title: 'Planowanie i monitoring',
-    items: [
-      dashboardLink('Kalendarz', 'Zawody i treningi klubu', 'i-lucide-calendar', '/kalendarz', 'text-purple-500', 'bg-purple-500/10'),
-      dashboardLink('Plany treningowe', 'Cykle i monitoring progresu', 'i-lucide-clipboard-list', '/trainer/plany', 'text-emerald-600', 'bg-emerald-500/10'),
-      dashboardLink('Regeneracja', 'Check-in snu i zmęczenia', 'i-lucide-heart-pulse', '/trainer/regeneracja', 'text-rose-600', 'bg-rose-500/10'),
-      dashboardLink('Feed wydarzeń', 'Aktywności w klubie', 'i-lucide-list-collapse', '/trainer/wydarzenia', 'text-fuchsia-600', 'bg-fuchsia-500/10'),
-      dashboardLink('Monitoring', 'Metryki systemowe', 'i-lucide-activity', '/trainer/monitoring', 'text-sky-600', 'bg-sky-500/10')
-    ]
-  },
-  {
-    title: 'Klub i treści',
-    items: [
-      dashboardLink('Aktualności', 'Wpisy na stronie', 'i-lucide-newspaper', '/aktualnosci', 'text-amber-600', 'bg-amber-500/10'),
-      dashboardLink('Wyzwania miesiąca', 'Ranking aktywności', 'i-lucide-flame', '/klub/wyzwania', 'text-orange-600', 'bg-orange-500/10'),
-      dashboardLink('Ranking zawodników', 'Publiczne wyniki', 'i-lucide-trophy', '/zawodnicy', 'text-yellow-600', 'bg-yellow-500/10'),
-      dashboardLink('Powiadomienia', 'Alerty systemowe', 'i-lucide-bell', '/powiadomienia', 'text-amber-600', 'bg-amber-500/10')
-    ]
-  },
-  {
-    title: 'Narzędzia',
-    items: [
-      dashboardLink('Analiza toru sztangi', 'Wideo i diagnostyka', 'i-lucide-scan-line', '/trainer/analiza-sztangi', 'text-orange-500', 'bg-orange-500/10'),
-      dashboardLink('Inne ćwiczenia', 'Ranking siłowy', 'i-lucide-bar-chart-3', '/trainer/exercises', 'text-lime-600', 'bg-lime-500/10'),
-      dashboardLink('Słownik ćwiczeń', 'Baza do planów', 'i-lucide-library', '/trainer/cwiczenia', 'text-indigo-500', 'bg-indigo-500/10'),
-      dashboardLink('Proporcje (ratio)', 'Kalkulator bojów', 'i-lucide-sigma', '/kalkulator-proporcji', 'text-success', 'bg-success/12'),
-    ]
-  }
-]
+const { moduleGroupsForRole } = usePanelNavigationFlags()
+const moduleGroups = computed(() => moduleGroupsForRole('trainer'))
 
 function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral' {
   const s = String(bg || '').toLowerCase()
@@ -244,14 +203,14 @@ const summaryMetrics = computed(() => [
   {
     label: 'Składki',
     value: `${paymentProgress.value}%`,
-    tone: (paymentProgress.value < 50 ? 'warning' : 'success') as const,
+    tone: paymentProgress.value < 50 ? ('warning' as const) : ('success' as const),
     hint: paymentsPendingCount.value ? `${paymentsPendingCount.value} oczekuje` : null,
     to: '/trainer/skladki'
   },
   {
     label: 'Wyniki oczek.',
     value: pendingCount.value,
-    tone: (pendingCount.value ? 'warning' : 'neutral') as const,
+    tone: pendingCount.value ? ('warning' as const) : ('neutral' as const),
     to: { path: '/trainer', hash: '#wyniki-oczekujace' }
   }
 ])

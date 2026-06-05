@@ -10,8 +10,29 @@ const props = defineProps<{
 
 const auth = useAuth()
 const route = useRoute()
+const panelNav = usePanelNavigationFlags()
 const mobileDrawerOpen = ref(false)
 const { accountSettingsPath } = useRoleDashboardNav()
+
+type ManagementLink = {
+  label: string
+  to: string | { path: string, hash?: string }
+  icon?: string
+  emphasis?: boolean
+}
+
+type PanelSection = {
+  heading: string
+  links: ManagementLink[]
+}
+
+function linkPath(to: string | { path: string, hash?: string }): string {
+  return typeof to === 'string' ? to.split('#')[0]! : to.path
+}
+
+function filterByPanelNav(links: ManagementLink[]): ManagementLink[] {
+  return links.filter(link => panelNav.isNavLinkEnabled(linkPath(link.to)))
+}
 
 watch(
   () => route.fullPath,
@@ -26,18 +47,6 @@ async function logoutFromMenu() {
   await navigateTo('/')
 }
 
-type ManagementLink = {
-  label: string
-  to: string | { path: string, hash?: string }
-  icon: string
-  emphasis?: boolean
-}
-
-type PanelSection = {
-  heading: string
-  links: ManagementLink[]
-}
-
 /** Kalkulatory wydzielone do osobnego dropdownu „Kalkulatory” — żeby nie zaśmiecać
  *  głównego paska i zawsze mieścić się w jednym wierszu, niezależnie od szerokości ekranu. */
 const calculatorLinks: ManagementLink[] = [
@@ -50,7 +59,7 @@ const items = computed(() => {
   // Główny pasek: same „strony klubu”. Świadomie ograniczone do 5–6 krótkich etykiet,
   // żeby nigdy nie powodować przewijania w poziomie ani ucinania ostatniego linku
   // (testowane na 1024 / 1280 / 1440 / 1920 px).
-  const main = [
+  const main = filterByPanelNav([
     ...(auth.isLoggedIn.value ? [{ label: 'Ogłoszenia', to: '/ogloszenia' }] : []),
     { label: 'Aktualności', to: '/aktualnosci' },
     { label: 'Galeria', to: '/galeria' },
@@ -59,7 +68,7 @@ const items = computed(() => {
     { label: 'Zawodnicy', to: '/zawodnicy' },
     { label: 'Kalendarz', to: '/kalendarz' },
     ...(auth.isLoggedIn.value ? [] : [{ label: 'Kontakt', to: '/kontakt' }])
-  ]
+  ])
 
   const adminLinks: ManagementLink[] = []
   const athleteLinks: ManagementLink[] = []
@@ -119,14 +128,17 @@ const items = computed(() => {
   })
 
   const panelSections: PanelSection[] = []
-  if (adminLinks.length) {
-    panelSections.push({ heading: 'Administracja i kadra', links: adminLinks })
+  const adminFiltered = filterByPanelNav(adminLinks)
+  const athleteFiltered = filterByPanelNav(athleteLinks)
+  const accountFiltered = filterByPanelNav(accountLinks)
+  if (adminFiltered.length) {
+    panelSections.push({ heading: 'Administracja i kadra', links: adminFiltered })
   }
-  if (athleteLinks.length) {
-    panelSections.push({ heading: 'Panel zawodnika', links: athleteLinks })
+  if (athleteFiltered.length) {
+    panelSections.push({ heading: 'Panel zawodnika', links: athleteFiltered })
   }
-  if (accountLinks.length) {
-    panelSections.push({ heading: 'Konto', links: accountLinks })
+  if (accountFiltered.length) {
+    panelSections.push({ heading: 'Konto', links: accountFiltered })
   }
 
   return { main, panelSections }
@@ -146,13 +158,13 @@ const panelDropdownItems = computed(() =>
 )
 
 /** Dropdown „Kalkulatory” — Sinclair, proporcje, Max PR; dostępny dla wszystkich (publiczny). */
-const calculatorDropdownItems = [
-  calculatorLinks.map(link => ({
+const calculatorDropdownItems = computed(() => [
+  filterByPanelNav(calculatorLinks).map(link => ({
     label: link.label,
     icon: link.icon,
     to: link.to
   }))
-]
+])
 
 const dropdownUi = {
   content:
@@ -283,7 +295,7 @@ const dropdownUi = {
             </p>
             <div class="flex flex-col gap-1">
               <UButton
-                v-for="link in calculatorLinks"
+                v-for="link in filterByPanelNav(calculatorLinks)"
                 :key="'drawer-tools-' + link.to"
                 :to="link.to"
                 :icon="link.icon"

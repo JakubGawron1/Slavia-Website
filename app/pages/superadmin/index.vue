@@ -90,6 +90,7 @@ const moduleGroups: { title: string, items: DashboardModuleLink[] }[] = [
       dashboardLink('Logi systemowe', 'Audyt operacji', 'i-lucide-history', '/superadmin/audit-logs', 'text-primary', 'bg-primary/10'),
       dashboardLink('Workery cron', 'Zadania w tle', 'i-lucide-timer', '/superadmin/workers', 'text-fuchsia-500', 'bg-fuchsia-500/10'),
       dashboardLink('Narzędzia developera', 'Diagnostyka API i PWA', 'i-lucide-terminal', '/superadmin/developer', 'text-violet-500', 'bg-violet-500/10'),
+      dashboardLink('Nawigacja paneli', 'Widoczność modułów ról', 'i-lucide-layout-grid', '/superadmin/nawigacja-paneli', 'text-sky-500', 'bg-sky-500/10'),
       dashboardLink('Import danych', 'Federacje i CSV', 'i-lucide-file-up', '/superadmin/import', 'text-cyan-600', 'bg-cyan-500/10'),
       dashboardLink('Baza zawodników', 'Pełna edycja profili', 'i-lucide-users', '/superadmin/zawodnicy', 'text-blue-500', 'bg-blue-500/10'),
       dashboardLink('Barbell Lab', 'Eksperymenty wizji', 'i-lucide-beaker', '/superadmin/barbell-lab', 'text-pink-500', 'bg-pink-500/10')
@@ -163,7 +164,7 @@ const summaryMetrics = computed(() => [
   {
     label: 'Wyniki oczek.',
     value: pendingResultsCount.value,
-    tone: (pendingResultsCount.value ? 'warning' : 'neutral') as const,
+    tone: pendingResultsCount.value ? ('warning' as const) : ('neutral' as const),
     to: '/trainer/wyniki'
   }
 ])

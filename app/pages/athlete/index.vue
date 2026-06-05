@@ -7,8 +7,6 @@ import {
   showPre10PaymentAthleteReminder
 } from '~/utils/paymentSemantics'
 import DashboardKpiCard from '~/components/dashboard/DashboardKpiCard.vue'
-import { dashboardLink, type DashboardModuleLink } from '~/utils/dashboardLink'
-
 definePageMeta({ middleware: 'auth' })
 
 const auth = useAuth()
@@ -112,40 +110,8 @@ const paymentKpi = computed(() => {
   return athletePaymentKpiFromStatus(paymentStatus.value, terms.paymentStandingOrder())
 })
 
-const athleteModuleGroups: { title: string, items: DashboardModuleLink[] }[] = [
-  {
-    title: 'Najczęstsze',
-    items: [
-      dashboardLink('Moje starty', 'Zgłoś wynik i historia', 'i-lucide-trophy', '/athlete/wyniki', 'text-amber-600', 'bg-amber-500/12'),
-      dashboardLink('Składka klubowa', 'Zgłoś płatność i status', 'i-lucide-banknote', '/athlete/skladki', 'text-primary', 'bg-primary/15'),
-      dashboardLink('Kalendarz startów', 'Przypisania od kadry', 'i-lucide-calendar-heart', '/athlete/kalendarz', 'text-primary', 'bg-primary/15'),
-      dashboardLink('Obecność i QR', 'Kalendarz, skaner, zgłoszenia', 'i-lucide-user-check', '/attendance', 'text-primary', 'bg-primary/12'),
-      dashboardLink('Czat z trenerem', 'Wiadomości 1:1', 'i-lucide-messages-square', '/chat', 'text-info', 'bg-info/14'),
-      dashboardLink('Powiadomienia', 'Alerty od kadry', 'i-lucide-bell', '/powiadomienia', 'text-amber-600', 'bg-amber-500/12')
-    ]
-  },
-  {
-    title: 'Trening i progres',
-    items: [
-      dashboardLink('Dziennik treningów', 'Wpisy po jednostkach', 'i-lucide-book-marked', '/dziennik', 'text-info', 'bg-info/12'),
-      dashboardLink('Historia treningów', 'Oś czasu aktywności', 'i-lucide-timeline', '/athlete/timeline', 'text-primary', 'bg-primary/10'),
-      dashboardLink('Plany treningowe', 'Cele i progres', 'i-lucide-clipboard-list', '/athlete/plany', 'text-success', 'bg-success/12'),
-      dashboardLink('Regeneracja', 'Check-in snu i zmęczenia', 'i-lucide-heart-pulse', '/athlete/regeneracja', 'text-error', 'bg-error/10')
-    ]
-  },
-  {
-    title: 'Klub i narzędzia',
-    items: [
-      dashboardLink('Kalendarz klubu', 'Treningi i zawody', 'i-lucide-calendar-days', '/kalendarz', 'text-purple-600', 'bg-purple-500/12'),
-      dashboardLink('Aktualności', 'Komunikaty klubu', 'i-lucide-newspaper', '/aktualnosci', 'text-warning', 'bg-warning/10'),
-      dashboardLink('Wyzwania miesiąca', 'Ranking aktywności', 'i-lucide-flame', '/klub/wyzwania', 'text-orange-600', 'bg-orange-500/12'),
-      dashboardLink('Ranking zawodników', 'Wyniki w klubie', 'i-lucide-trophy', '/zawodnicy', 'text-yellow-600', 'bg-yellow-500/12'),
-      dashboardLink('Tor sztangi', 'Analiza nagrania', 'i-lucide-scan-line', '/athlete/analiza-sztangi', 'text-orange-600', 'bg-orange-500/12'),
-      dashboardLink('Inne ćwiczenia', 'Przysiad, wycisk, martwy', 'i-lucide-bar-chart-3', '/athlete/exercises', 'text-warning', 'bg-warning/10'),
-      dashboardLink('Proporcje (ratio)', 'Kalkulator bojów', 'i-lucide-sigma', '/kalkulator-proporcji', 'text-success', 'bg-success/12')
-    ]
-  }
-]
+const { moduleGroupsForRole } = usePanelNavigationFlags()
+const athleteModuleGroups = computed(() => moduleGroupsForRole('athlete'))
 
 function toneFromIconBg(iconBg?: string): 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral' {
   const s = String(iconBg || '').toLowerCase()
@@ -170,6 +136,11 @@ const pageLead = computed(() => {
     ? 'To jest Twój osobisty panel. Tutaj możesz śledzić swoje postępy, wyniki z zawodów oraz zarządzać swoim profilem.'
     : 'Ustawienia konta (e-mail, hasło, zdjęcie). Funkcje zawodnicze są dostępne tylko dla kont z rolą zawodnika.'
 })
+
+/** Konto z rolą zawodnika powiązane z rekordem oznaczonym jako nieaktywny (archiwum kadry). */
+const showArchivedAthleteNote = computed(
+  () => isAthleteRole.value && !!athlete.value?.id && athlete.value.is_active === false
+)
 
 const PAY_HIDE_LS = 'slavia_hide_payment_reminder'
 const hidePaymentReminderLocal = ref(false)
@@ -482,6 +453,37 @@ function toggleChecklistItem(id: string) {
         </div>
       </div>
     </div>
+
+    <UAlert
+      v-if="showArchivedAthleteNote"
+      class="mb-6 rounded-2xl"
+      color="warning"
+      variant="subtle"
+      icon="i-lucide-ghost"
+      title="Gratulacje — oficjalnie jesteś eksponatem"
+      description="Kadra włożyła Cię do archiwum jak winyl, którego nikt już nie puszcza: na liście zawodników Cię nie ma, za to możesz podziwiać siebie w muzeum nieaktywnych legend. Panel nadal działa — historia startów nie ginie, nawet gdy kolana już dawno o tym zapomniały. Ale sztanga się nie podnosi sama i nikt nie wraca do formy przez scrollowanie archiwum. Jak masz dość bycia reliktem — wpadnij na trening albo napisz trenerowi. Chętnie Cię ściągną z półki."
+    >
+      <template #actions>
+        <UButton
+          to="/chat"
+          size="xs"
+          color="primary"
+          variant="soft"
+          icon="i-lucide-messages-square"
+        >
+          Napisz do trenera
+        </UButton>
+        <UButton
+          to="/zawodnicy/archiwum"
+          size="xs"
+          color="neutral"
+          variant="ghost"
+          icon="i-lucide-archive"
+        >
+          Twoje miejsce w archiwum
+        </UButton>
+      </template>
+    </UAlert>
 
     <PanelCollapsibleSection
       v-if="auth.canAccessAthletePortal && athlete"

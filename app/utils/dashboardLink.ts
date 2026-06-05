@@ -6,6 +6,8 @@ export type DashboardModuleLink = {
   to: string
   color: string
   bg: string
+  /** Id flagi `panel_nav_*` — do filtrowania widoczności przez superadmina. */
+  panelNavId?: string
 }
 
 export function dashboardLink(
