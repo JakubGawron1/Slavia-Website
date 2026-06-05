@@ -1,13 +1,13 @@
 import { defineConfig, devices } from '@playwright/test'
 
 /**
- * Smoke E2E bez logowania — pełne ścieżki SA wymagają konta testowego.
- * Uruchomienie: `pnpm exec playwright install` (raz).
- * Serwer: w osobnym terminalu `pnpm dev --host 127.0.0.1 --port 3000`, potem `pnpm run test:e2e`.
- * Opcjonalnie auto-start: ustaw PLAYWRIGHT_START_SERVER=1 (pierwsze uruchomienie może trwać kilka minut).
+ * Smoke E2E bez logowania — pełne ścieżki paneli wymagają konta testowego.
+ * Uruchomienie: `pnpm exec playwright install chromium` (raz).
+ * Auto-start dev: `PLAYWRIGHT_START_SERVER=1 pnpm test:e2e`
  */
 export default defineConfig({
   testDir: 'e2e',
+  timeout: 60_000,
   workers: process.env.CI ? 2 : 1,
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
@@ -17,7 +17,18 @@ export default defineConfig({
     baseURL: process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:3000',
     trace: 'on-first-retry'
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    {
+      name: 'desktop-chrome',
+      testIgnore: /smoke-mobile\.spec\.ts/,
+      use: { ...devices['Desktop Chrome'] }
+    },
+    {
+      name: 'mobile-pixel5',
+      testMatch: /smoke-mobile\.spec\.ts/,
+      use: { ...devices['Pixel 5'] }
+    }
+  ],
   ...(process.env.PLAYWRIGHT_START_SERVER === '1'
     ? {
         webServer: {
