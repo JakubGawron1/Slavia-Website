@@ -227,6 +227,72 @@ E2E smoke: publiczne trasy (w tym `/zawodnicy/archiwum`), manifest PWA, ochrona 
 
 ---
 
+## Migracje bazy danych (backend)
+
+Schemat bazy **nie żyje we frontendzie** — wszystkie tabele i migracje są w `../Slavia-backend/src/db.rs`. Frontend nie ma folderu `migrations/` ani własnego ORM.
+
+### Stack i gdzie szukać
+
+| Element | Lokalizacja |
+|---------|-------------|
+| Driver | **libsql** — SQLite lokalnie (`.local/slavia.db` lub `slavia.db`), Turso zdalnie (`TURSO_DATABASE_URL`) |
+| Inicjalizacja | `init_db()` przy starcie `create_app()` w `lib.rs` |
+| Nowe tabele / kolumny | `db.rs` → tablica `create_tables` + bloki `ALTER TABLE` po pętli |
+| Migracje złożone | osobne funkcje `migrate_*` w `db.rs` (np. `migrate_cms_schema`, `migrate_attendance_unique_index`) |
+| Modele Rust | `src/models.rs` — pola JSON/API muszą zgadzać się z kolumnami |
+
+**Brak SQLx / SeaORM** — nie dodawaj `migrations/*.sql`; wzorzec projektu to inline DDL w `db.rs`.
+
+### Jak dodawać zmiany schematu
+
+1. **Nowa tabela** — wpis `CREATE TABLE IF NOT EXISTS …` w `create_tables` (+ indeksy w tej samej tablicy lub osobna funkcja `create_*_tables`).
+2. **Nowa kolumna** — po pętli `create_tables`:
+   ```rust
+   let _ = conn.execute("ALTER TABLE athletes ADD COLUMN nowa_kolumna TEXT", ()).await;
+   ```
+   Powtórny start ignoruje błąd „duplicate column” (`let _ =`).
+3. **Zmiana niedodatnia** (rename kolumny, inny typ, usunięcie) — dedykowana `migrate_*`:
+   - wykryj stary schemat (`PRAGMA table_info`, `sqlite_master`),
+   - `PRAGMA foreign_keys = OFF` jeśli są tabele potomne z FK,
+   - `DROP` w kolejności od liści do korzenia,
+   - `CREATE` nowego schematu,
+   - przed DDL zamknij kursory (`drop(rows)` po `PRAGMA` — inaczej SQLite może zablokować tabelę).
+4. **Endpoint + frontend** — po zmianie backendu: `pnpm openapi:snapshot` + `openapi:types`; publiczne GET → whitelist w `publicBackendProxy.ts`.
+
+### CMS — uwaga na stary schemat `dev-cms`
+
+Gałąź `dev-cms` zostawiła inne tabele (`cms_fields`, `cms_sections`, `cms_navigation`, `cms_pages.page_key`). Aktualny moduł używa `cms_pages.page_name`, `cms_variables`, `cms_navigation_items`, `cms_version_history`.
+
+Przy starcie `migrate_cms_schema()` wykrywa legacy i odtwarza tabele CMS. Jeśli backend **wisi na migracji CMS**:
+
+1. Zamknij wszystkie instancje `Slavia-backend.exe` (drugi proces trzyma blokadę `slavia.db`).
+2. Lokalnie możesz wyczyścić ręcznie (PowerShell, w katalogu backendu):
+   ```powershell
+   sqlite3 slavia.db "PRAGMA foreign_keys=OFF; DROP TABLE IF EXISTS cms_fields; DROP TABLE IF EXISTS cms_sections; DROP TABLE IF EXISTS cms_navigation; DROP TABLE IF EXISTS cms_pages; DROP TABLE IF EXISTS cms_variables; DROP TABLE IF EXISTS cms_navigation_items; DROP TABLE IF EXISTS cms_version_history; PRAGMA foreign_keys=ON;"
+   ```
+3. Uruchom ponownie `cargo run` — tabele CMS powstaną od zera.
+
+### Dev reset vs produkcja
+
+| Środowisko | Zachowanie |
+|------------|------------|
+| Lokalne | `REBUILD_DB=true` → `reset_database()` + `seed_data()` — **tylko dev**, kasuje całą bazę |
+| Turso / prod | wyłącznie migracje addytywne i `migrate_*`; **nigdy** `REBUILD_DB` na deployu |
+| Backup prod | panel Turso lub `turso db shell … .dump` |
+
+Po zwykłym starcie (bez `REBUILD_DB`) backend uruchamia też `sync_all_athletes_bests_from_results` — to synchronizacja danych, nie DDL.
+
+### Checklist dla agenta (nowa tabela / moduł z DB)
+
+1. `db.rs` — `CREATE TABLE` + ewentualna `migrate_*` przy konflikcie ze starym schematem
+2. `models.rs` + `routes/*.rs` — handlery
+3. `router.rs` — nest tras
+4. `embed/openapi.json` — ścieżki dla CI
+5. Frontend: `apiRoutes`, typy, BFF whitelist (publiczne GET)
+6. Lokalnie: jedna instancja backendu, `cargo run` — logi `🔄 Migracja …` przy pierwszym uruchomieniu po zmianie
+
+---
+
 ## Antywzorce — czego unikać
 
 | ❌ Unikaj | ✅ Zamiast tego |
