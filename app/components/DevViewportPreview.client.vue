@@ -69,9 +69,11 @@ onMounted(() => {
   window.addEventListener('slavia-dev-viewport-changed', readStorage as EventListener)
 
   const onKeyDown = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      closePreview()
-    }
+    if (e.key !== 'Escape') return
+    // Nie przechwytuj ESC gdy otwarty jest modal lub panel edycji.
+    if (document.querySelector('[data-slot="content"][data-state="open"]')) return
+    if (document.querySelector('[data-slavia-editor-sheet="open"]')) return
+    closePreview()
   }
   window.addEventListener('keydown', onKeyDown)
 

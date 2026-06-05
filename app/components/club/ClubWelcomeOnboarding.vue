@@ -35,6 +35,9 @@ function dismiss(variant: 'athlete' | 'staff' | 'superadmin') {
   open.value = false
 }
 
+const userId = computed(() => auth.user.value?.id)
+const { progressLabel, markStepDone } = useOnboardingChecklist(userId, portal)
+
 watch(
   [portal, () => auth.user.value?.id, () => auth.isLoggedIn.value],
   () => {
@@ -60,7 +63,7 @@ watch(
   <SlaviaModal
     v-model:open="open"
     title="Powitanie"
-    description="Krótki start po zalogowaniu."
+    :description="progressLabel ? `Krótki start po zalogowaniu — postęp: ${progressLabel}` : 'Krótki start po zalogowaniu.'"
     :dismissible="true"
     :ui="{ content: 'sm:max-w-lg' }"
   >
@@ -73,15 +76,15 @@ watch(
         <ul class="space-y-2.5 text-sm text-highlighted">
           <li class="flex gap-2">
             <UIcon name="i-lucide-check-circle" class="mt-0.5 size-4 shrink-0 text-primary" />
-            <span><NuxtLink class="font-semibold text-primary underline-offset-2 hover:underline" to="/profil">Uzupełnij profil</NuxtLink> — zdjęcie, dane konta</span>
+            <span><NuxtLink class="font-semibold text-primary underline-offset-2 hover:underline" to="/profil" @click="markStepDone('profile')">Uzupełnij profil</NuxtLink> — zdjęcie, dane konta</span>
           </li>
           <li class="flex gap-2">
             <UIcon name="i-lucide-check-circle" class="mt-0.5 size-4 shrink-0 text-primary" />
-            <span><NuxtLink class="font-semibold text-primary underline-offset-2 hover:underline" to="/athlete/skladki">Składka klubowa</NuxtLink> — status i zgłoszenia</span>
+            <span><NuxtLink class="font-semibold text-primary underline-offset-2 hover:underline" to="/athlete/skladki" @click="markStepDone('payments')">Składka klubowa</NuxtLink> — status i zgłoszenia</span>
           </li>
           <li class="flex gap-2">
             <UIcon name="i-lucide-check-circle" class="mt-0.5 size-4 shrink-0 text-primary" />
-            <span><NuxtLink class="font-semibold text-primary underline-offset-2 hover:underline" to="/athlete/kalendarz">Kalendarz startów</NuxtLink> — przypisania od kadry</span>
+            <span><NuxtLink class="font-semibold text-primary underline-offset-2 hover:underline" to="/athlete/kalendarz" @click="markStepDone('calendar')">Kalendarz startów</NuxtLink> — przypisania od kadry</span>
           </li>
         </ul>
         <div class="flex flex-col gap-2 border-t border-default/60 pt-4 sm:flex-row sm:justify-end">

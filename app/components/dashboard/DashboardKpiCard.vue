@@ -14,7 +14,12 @@ const props = withDefaults(
     /** Kompaktowy wariant na dashboardzie zawodnika */
     size?: 'default' | 'compact'
   }>(),
-  { size: 'default' }
+  {
+    tone: undefined,
+    hint: undefined,
+    to: undefined,
+    size: 'default'
+  }
 )
 
 const tone = computed<Tone>(() => props.tone ?? 'neutral')

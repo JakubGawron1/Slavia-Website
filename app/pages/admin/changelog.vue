@@ -18,14 +18,19 @@ type ChangelogUpdate = {
 const updates = [
   {
     version: 'v3.2.5-dev',
-    date: '19 Maj 2026',
-    title: 'Strony publiczne, komponenty Public* i scroll-to-top',
+    date: '5 Czerwiec 2026',
+    title: 'Kadra, overlay formularzy, OpenAPI CI, Nuxt 4 i smoke E2E',
     features: [
-      'Strony publiczne: przyciski Dodaj dla kadry także przy niepustych listach i podczas hydracji sesji; mocniejsze marginesy na trasach publicznych i panelowych.',
-      'Nuxt: rejestracja komponentów Public* z katalogu panel/ bez prefiksu Panel — naprawa ostrzeżeń Vue na /zawodnicy i innych trasach.',
-      'Scroll-to-top na layoutach publicznych; aktualności — kopiuj link / udostępnij i meta OG; strona błędu ze skrótami do sekcji klubu.'
+      'Kadra (admin/trener): naprawa listy zawodników po refaktorze — `ClubPlayersListPanel`, filtry, wyszukiwanie, edycja w `SlaviaEditorSheet` z zakładkami i strażnikiem niezapisanych zmian.',
+      'Overlay: `SlaviaOverlaySelect` / `SlaviaSheetSelect` (portal poza overflow sheeta i modala), `useFormDirtyGuard`, `SlaviaModal` z obsługą wstecz.',
+      'Migracja ciężkich formularzy na `SlaviaEditorSheet` (kalendarz, plany, wyniki, admin konta); dialog usuwania zawodnika → `SlaviaModal`.',
+      'Publiczne trasy zagnieżdżone: `/zawodnicy` → `zawodnicy/index.vue` (naprawa `/zawodnicy/archiwum` i `/porownanie`).',
+      'OpenAPI: commitowany snapshot `openapi/`, `pnpm openapi:check` w CI (drift + SHA); typy domenowe nadal w `models.ts` do czasu `components.schemas` w backendzie.',
+      'Smoke E2E Playwright: desktop + mobile (`smoke-mobile.spec.ts`), manifest PWA, ochrona tras bez sesji.',
+      'SuperAdmin: nawigacja paneli — zakładki per rola (zawodnik/trener/admin) zamiast długiego scrolla.',
+      'Nuxt 4: jawne `future.compatibilityVersion: 4`; strony publiczne — przyciski Dodaj, marginesy, scroll-to-top, komponenty Public* bez prefiksu Panel.'
     ],
-    type: 'bugfix'
+    type: 'release'
   },
   {
     version: 'v3.2.4-dev',

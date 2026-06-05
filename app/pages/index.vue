@@ -700,8 +700,11 @@ const trainingDays = [
                 v-if="p.image_url"
                 :src="postImageSrc(p.image_url)"
                 :alt="p.title"
+                width="640"
+                height="400"
                 class="size-full object-cover transition-transform duration-500 group-hover:scale-105"
                 loading="lazy"
+                decoding="async"
               >
               <div
                 v-else

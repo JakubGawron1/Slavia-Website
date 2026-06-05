@@ -173,10 +173,10 @@ async function submitResult() {
         <div class="slavia-form-panel__body">
           <div class="slavia-form-grid grid-cols-1 sm:max-w-md">
             <UFormField label="Typ wpisu">
-              <select v-model="resultForm.kind" class="slavia-select w-full py-3 text-[15px]">
+              <SlaviaFormNativeSelect v-model="resultForm.kind">
                 <option value="competition">Zawody (publiczne)</option>
                 <option value="training">Trening (po zalogowaniu)</option>
-              </select>
+              </SlaviaFormNativeSelect>
             </UFormField>
           </div>
           <div v-if="resultForm.kind === 'competition'" class="slavia-form-grid grid-cols-1 sm:max-w-2xl">
@@ -211,11 +211,14 @@ async function submitResult() {
                 </UButton>
               </div>
             </UFormField>
-            <UFormField label="Sinclair">
+            <div class="space-y-1.5">
+              <p class="text-sm font-medium text-highlighted">
+                Sinclair
+              </p>
               <div class="flex h-11 items-center rounded-lg border border-default bg-muted/20 px-4 font-black text-primary">
                 {{ sinclairValue.toFixed(2) }} pkt
               </div>
-            </UFormField>
+            </div>
           </div>
           <div class="slavia-form-actions border-t border-default/60 pt-5">
             <UButton color="primary" size="lg" icon="i-lucide-send" @click="submitResult">

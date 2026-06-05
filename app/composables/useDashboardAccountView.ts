@@ -32,8 +32,7 @@ export function useDashboardAccountView() {
   }
 
   function closeAccountView() {
-    const nextQuery = { ...route.query }
-    delete nextQuery[ACCOUNT_SETTINGS_QUERY_KEY]
+    const { [ACCOUNT_SETTINGS_QUERY_KEY]: _removed, ...nextQuery } = route.query
     return router.replace({
       path: route.path,
       hash: '',

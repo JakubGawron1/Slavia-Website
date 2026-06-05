@@ -9,7 +9,7 @@ export type DashboardSummaryMetric = {
   tone?: 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral'
 }
 
-const props = defineProps<{
+defineProps<{
   metrics: DashboardSummaryMetric[]
 }>()
 

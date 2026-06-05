@@ -3,14 +3,9 @@
  * Punkt „ideas”: jedna wyszukiwarka z belki — zawodnicy (dane jak na publicznej liście), zawody, aktualności.
  * Wyniki ograniczone do publicznego API (bez adresów wyłącznie administracyjnych).
  */
-import { apiRoutes } from '~/config/api'
+import { publicApiUrl } from '~/composables/usePublicFetch'
 import type { Athlete, Competition } from '~/types/models'
 import { blogPostPath, slugify, athleteProfilePath } from '~/utils/slug'
-
-const config = useRuntimeConfig()
-function publicBase(): string {
-  return String(config.public.apiBase || '').replace(/\/$/, '')
-}
 
 type BlogBrief = { id: string, title: string }
 
@@ -33,20 +28,12 @@ const competitionItems = shallowRef<CmdItem[]>([])
 const postItems = shallowRef<CmdItem[]>([])
 
 async function loadIndex() {
-  const base = publicBase()
-  if (!base) {
-    athleteItems.value = []
-    competitionItems.value = []
-    postItems.value = []
-    return
-  }
-
   paletteLoading.value = true
   try {
     const [athletes, comps, posts] = await Promise.all([
-      $fetch<Athlete[]>(`${base}${apiRoutes.athletes.list}`).catch(() => []),
-      $fetch<Competition[]>(`${base}${apiRoutes.competitions.collection}`).catch(() => []),
-      $fetch<BlogBrief[]>(`${base}${apiRoutes.posts.list}`).catch(() => [])
+      $fetch<Athlete[]>(publicApiUrl('athletes')).catch(() => []),
+      $fetch<Competition[]>(publicApiUrl('competitions')).catch(() => []),
+      $fetch<BlogBrief[]>(publicApiUrl('posts')).catch(() => [])
     ])
 
     athleteItems.value = (Array.isArray(athletes) ? athletes : []).map((a) => {

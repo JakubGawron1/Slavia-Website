@@ -315,8 +315,11 @@ const sortedPhotos = computed(() => {
             v-if="p.media_type === 'image'"
             :src="gallerySrc(p.image_url)"
             :alt="p.caption || 'Zdjęcie klubu'"
+            width="640"
+            height="480"
             class="w-full cursor-zoom-in object-cover transition-transform duration-500 group-hover:scale-[1.02]"
             loading="lazy"
+            decoding="async"
             @click="openMediaPreview(p)"
           >
           <button

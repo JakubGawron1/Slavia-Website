@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Pose } from '@tensorflow-models/pose-detection'
+import { loadPoseDetector, MODEL_PROGRESS_READY, type PoseDetector } from '~/utils/loadPoseDetector'
 import { buildBiomechanicalFeedback, buildTechniqueMetrics, smoothSamplesForFps, type BarbellSample, type BarbellTechniqueMetrics } from '~/utils/barbellPathAnalysis'
 
 const toast = useToast()
@@ -70,9 +71,7 @@ watch(
   }
 )
 
-let detector: Awaited<
-  ReturnType<typeof import('@tensorflow-models/pose-detection').createDetector>
-> | null = null
+let detector: PoseDetector | null = null
 
 // „Token” aktualnej analizy — rośnie przy nowym uruchomieniu lub unmount.
 // Dzięki temu pętle async (seek + estimatePoses) kończą się szybko po zmianie strony.
@@ -541,61 +540,13 @@ async function waitForVideoFrame(v: HTMLVideoElement): Promise<void> {
   })
 }
 
-const MODEL_PROGRESS_READY = 62
 const ANALYSIS_PROGRESS_START = MODEL_PROGRESS_READY
 
-function bumpLoadProgress(onProgress: ((pct: number) => void) | undefined, pct: number) {
-  onProgress?.(Math.min(100, Math.max(0, Math.round(pct))))
-}
-
 async function ensureDetector(onProgress?: (pct: number) => void) {
-  if (detector) {
-    bumpLoadProgress(onProgress, MODEL_PROGRESS_READY)
-    return detector
-  }
-
   phaseStep.value = 1
-  busyLabel.value = 'TensorFlow.js — start…'
-  bumpLoadProgress(onProgress, 4)
-  const tf = await import('@tensorflow/tfjs')
-  bumpLoadProgress(onProgress, 10)
-  await tf.ready()
-  bumpLoadProgress(onProgress, 16)
-  try {
-    busyLabel.value = 'TensorFlow.js — backend WebGL…'
-    await tf.setBackend('webgl')
-    await tf.ready()
-    bumpLoadProgress(onProgress, 22)
-  } catch {
-    busyLabel.value = 'WebGL niedostępny — backend CPU (wolniejszy)…'
-    await tf.setBackend('cpu')
-    await tf.ready()
-    bumpLoadProgress(onProgress, 22)
-  }
-  busyLabel.value = 'MoveNet — pobieranie modelu…'
-  bumpLoadProgress(onProgress, 26)
-  const poseDetection = await import('@tensorflow-models/pose-detection')
-  bumpLoadProgress(onProgress, 30)
-
-  let simulated = 30
-  const cap = 56
-  const timer = window.setInterval(() => {
-    simulated += Math.max(0.35, (cap - simulated) * 0.06)
-    if (simulated > cap) {
-      simulated = cap
-    }
-    bumpLoadProgress(onProgress, simulated)
-  }, 120)
-
-  try {
-    detector = await poseDetection.createDetector(poseDetection.SupportedModels.MoveNet, {
-      modelType: poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING
-    })
-  } finally {
-    window.clearInterval(timer)
-  }
-  bumpLoadProgress(onProgress, MODEL_PROGRESS_READY)
-  busyLabel.value = 'Model MoveNet gotowy — przygotowanie wideo…'
+  detector = await loadPoseDetector(detector, onProgress, (label) => {
+    busyLabel.value = label
+  })
   return detector
 }
 
