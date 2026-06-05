@@ -54,6 +54,8 @@ export function useRoleDashboardNav() {
     }
     if (roles.has('Admin') || roles.has('SuperAdmin')) {
       list.push({ area: 'admin', ...DASHBOARD_BY_AREA.admin })
+    } else if (roles.has('Editor')) {
+      list.push({ area: 'admin', label: 'CMS', to: '/admin/cms', icon: 'i-lucide-layout-template' })
     }
     if (roles.has('Trainer') || roles.has('SuperAdmin')) {
       list.push({ area: 'trainer', ...DASHBOARD_BY_AREA.trainer })

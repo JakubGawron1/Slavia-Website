@@ -91,6 +91,7 @@ export const PANEL_NAV_MODULES: PanelNavModuleDef[] = [
   mod('admin', 'kontakt', 'Najczęstsze', 'Wiadomości (kontakt)', 'Skrzynka formularza', 'i-lucide-mail', '/admin/kontakt-wiadomosci', 'text-info', 'bg-info/12', true),
   mod('admin', 'changelog', 'Najczęstsze', 'Changelog', 'Historia wydań', 'i-lucide-file-text', '/admin/changelog', 'text-success', 'bg-success/12', true),
   mod('admin', 'powiadomienia', 'Najczęstsze', 'Powiadomienia', 'Alerty systemowe', 'i-lucide-bell', '/powiadomienia', 'text-amber-600', 'bg-amber-500/10', true),
+  mod('admin', 'cms', 'Treści publiczne', 'CMS', 'Treści stron i nawigacja', 'i-lucide-layout-template', '/admin/cms', 'text-primary', 'bg-primary/12', true),
   mod('admin', 'aktualnosci', 'Treści publiczne', 'Aktualności', 'Wpisy na stronie', 'i-lucide-newspaper', '/aktualnosci', 'text-orange-500', 'bg-orange-500/10'),
   mod('admin', 'ogloszenia', 'Treści publiczne', 'Ogłoszenia', 'Tablica klubu', 'i-lucide-megaphone', '/ogloszenia', 'text-violet-500', 'bg-violet-500/10'),
   mod('admin', 'galeria', 'Treści publiczne', 'Galeria', 'Zdjęcia', 'i-lucide-images', '/galeria', 'text-pink-500', 'bg-pink-500/10'),

@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import type { PanelNavRole } from '~/data/panelNavigationCatalog'
 import type { DashboardModuleLink } from '~/utils/dashboardLink'
+import { resolveDashboardNavRole } from '~/utils/dashboardNavRole'
 import { useRoleDashboardNav, type RoleDashboardItem } from '~/composables/useRoleDashboardNav'
 
 export type PanelModuleGroup = {
@@ -10,6 +12,8 @@ export type PanelModuleGroup = {
 const props = defineProps<{
   groups: PanelModuleGroup[]
   toneFromBg?: (bg?: string) => 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral'
+  /** Opcjonalny override roli; domyślnie wykrywana z trasy (`/admin`, `/trainer`, …). */
+  navRole?: PanelNavRole | 'superadmin'
 }>()
 
 const auth = useAuth()
@@ -17,8 +21,24 @@ const { availableDashboards } = useRoleDashboardNav()
 const { syncing: syncingMobile, syncMobileReleases } = useMobileReleaseSync()
 const route = useRoute()
 
+const resolvedNavRole = computed(() =>
+  resolveDashboardNavRole(route.path, props.navRole ?? null)
+)
+
+const sourceGroups = computed(() => props.groups)
+
+const cmsNav = useCmsDashboardNav(resolvedNavRole, sourceGroups)
+
+const cmsEditMode = computed(() => cmsNav?.editMode.value ?? false)
+const cmsSaving = computed(() => cmsNav?.saving.value ?? false)
+const cmsErrorMsg = computed(() => cmsNav?.errorMsg.value ?? '')
+
+const displayGroups = cmsNav.displayGroups
+
 const showSuperAdminToolbar = computed(() => auth.isSuperAdmin.value)
-const showNavToolbar = computed(() => hasMultipleRoles.value || showSuperAdminToolbar.value)
+const showNavToolbar = computed(() =>
+  hasMultipleRoles.value || showSuperAdminToolbar.value || cmsNav.canEditNav.value
+)
 
 const defaultToneFromBg = (bg?: string): 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral' => {
   const s = String(bg || '').toLowerCase()
@@ -68,7 +88,7 @@ function roleTabClass(area: string, active: boolean) {
     <div class="overflow-hidden rounded-2xl border border-default/60 bg-card/80 shadow-sm ring-1 ring-default/20 backdrop-blur-sm">
       <div
         v-if="showNavToolbar"
-        class="flex items-center gap-2 border-b border-default/50 bg-muted/6 p-2.5 sm:p-3"
+        class="flex flex-wrap items-center gap-2 border-b border-default/50 bg-muted/6 p-2.5 sm:p-3"
       >
         <div
           v-if="hasMultipleRoles"
@@ -97,6 +117,40 @@ function roleTabClass(area: string, active: boolean) {
           Moduły panelu
         </p>
 
+        <div
+          v-if="cmsNav.canEditNav && resolvedNavRole"
+          class="flex shrink-0 flex-wrap items-center gap-1.5"
+        >
+          <template v-if="!cmsEditMode">
+            <UButton
+              size="xs"
+              variant="soft"
+              color="primary"
+              icon="i-lucide-grip-vertical"
+              @click="cmsNav.startEdit()"
+            >
+              <span class="hidden sm:inline">Edytuj kolejność</span>
+            </UButton>
+          </template>
+          <template v-else>
+            <UButton
+              size="xs"
+              :loading="cmsSaving"
+              icon="i-lucide-save"
+              @click="cmsNav.saveOrder()"
+            >
+              Zapisz
+            </UButton>
+            <UButton
+              size="xs"
+              variant="ghost"
+              @click="cmsNav.cancelEdit()"
+            >
+              Anuluj
+            </UButton>
+          </template>
+        </div>
+
         <UButton
           v-if="showSuperAdminToolbar"
           size="sm"
@@ -112,9 +166,23 @@ function roleTabClass(area: string, active: boolean) {
         </UButton>
       </div>
 
+      <p
+        v-if="cmsEditMode"
+        class="border-b border-primary/20 bg-primary/5 px-4 py-2 text-xs text-primary"
+      >
+        Tryb edycji — przeciągnij moduły, aby zmienić kolejność. Zmiany widoczne dla wszystkich kont tej roli.
+      </p>
+
+      <p
+        v-if="cmsErrorMsg"
+        class="border-b border-error/20 bg-error/5 px-4 py-2 text-xs text-error"
+      >
+        {{ cmsErrorMsg }}
+      </p>
+
       <div class="divide-y divide-default/40">
         <div
-          v-for="(group, gi) in groups"
+          v-for="(group, gi) in displayGroups"
           :key="group.title"
           class="p-3 sm:p-4"
         >
@@ -124,16 +192,30 @@ function roleTabClass(area: string, active: boolean) {
           <ul class="grid grid-cols-1 gap-0.5 sm:grid-cols-2 sm:gap-1">
             <li
               v-for="(link, index) in group.items"
-              :key="String(link.to)"
-              v-slavia-reveal="{ variant: 'fade-up', delay: gi * 40 + index * 25 }"
+              :key="`${group.title}-${link.to}-${index}`"
+              v-slavia-reveal="cmsEditMode ? undefined : { variant: 'fade-up', delay: gi * 40 + index * 25 }"
+              :draggable="cmsEditMode || undefined"
+              class="rounded-xl transition-colors"
+              :class="cmsEditMode ? 'cursor-grab active:cursor-grabbing ring-1 ring-primary/20 bg-primary/5' : ''"
+              @dragstart="cmsNav.onDragStart(gi, index)"
+              @dragover.prevent
+              @drop="cmsNav.onDrop(gi, index)"
             >
+              <div
+                v-if="cmsEditMode"
+                class="flex items-center gap-2 px-2 pt-2"
+              >
+                <UIcon name="i-lucide-grip-vertical" class="size-4 shrink-0 text-muted" />
+                <span class="truncate text-xs font-bold text-highlighted">{{ link.title }}</span>
+              </div>
               <DashboardModuleRow
                 :title="link.title"
                 :description="link.description"
                 :icon="link.icon"
-                :to="link.to"
+                :to="cmsEditMode ? '#' : link.to"
                 :tone="resolveTone(link)"
                 :icon-wrapper-class="`${link.bg} ${link.color}`"
+                :class="cmsEditMode ? 'pointer-events-none opacity-90' : ''"
               />
             </li>
           </ul>

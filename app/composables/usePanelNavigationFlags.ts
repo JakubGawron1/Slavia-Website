@@ -9,6 +9,7 @@ import {
   type PanelModuleGroup,
   type PanelNavRole
 } from '~/data/panelNavigationCatalog'
+import { cmsNavGroupsFromItems } from '~/composables/useCmsDashboardNav'
 
 const GLOBAL_OVERRIDES_KEY = 'slavia-panel-nav-global'
 const USER_OVERRIDES_KEY = 'slavia-panel-nav-user'
@@ -124,6 +125,12 @@ export function usePanelNavigationFlags() {
   }
 
   function moduleGroupsForRole(role: PanelNavRole): PanelModuleGroup[] {
+    const cms = useCms()
+    const cmsGroups = cmsNavGroupsFromItems(role, cms.navigation.value)
+    const hasOverride = cms.navigation.value.some(n => n.role === role)
+    if (hasOverride) {
+      return filterModuleGroups(role, cmsGroups)
+    }
     return filterModuleGroups(role, buildPanelModuleGroups(role))
   }
 

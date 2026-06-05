@@ -82,7 +82,7 @@ const adminsCount = computed(() =>
 )
 const _competitionsCount = computed(() => Array.isArray(competitions.value) ? competitions.value.length : 0)
 
-const moduleGroups: { title: string, items: DashboardModuleLink[] }[] = [
+const SUPERADMIN_MODULE_GROUPS: { title: string, items: DashboardModuleLink[] }[] = [
   {
     title: 'System i bezpieczeństwo',
     items: [
@@ -134,6 +134,11 @@ const moduleGroups: { title: string, items: DashboardModuleLink[] }[] = [
     ]
   }
 ]
+
+const cms = useCms()
+const moduleGroups = computed(() =>
+  cmsNavGroupsFromItems('superadmin', cms.navigation.value, SUPERADMIN_MODULE_GROUPS)
+)
 
 const summaryMetrics = computed(() => [
   {

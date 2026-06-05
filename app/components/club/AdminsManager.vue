@@ -20,11 +20,12 @@ const bucketAthletes = ref<AdminAccount[]>([])
 const loading = ref(true)
 
 /** Kolejność i zestaw ról nadawalnych przez superadmina. */
-const ALL_ROLES: UserRole[] = ['SuperAdmin', 'Admin', 'Trainer', 'Athlete']
+const ALL_ROLES: UserRole[] = ['SuperAdmin', 'Admin', 'Editor', 'Trainer', 'Athlete']
 
 const ROLE_LABELS: Record<UserRole, string> = {
   SuperAdmin: 'SuperAdmin',
   Admin: 'Admin',
+  Editor: 'Redaktor',
   Trainer: 'Trener',
   Athlete: 'Zawodnik'
 }
@@ -39,6 +40,11 @@ const ROLE_FILTER_META: Record<UserRole, { hint: string, pillClass: string, tool
     hint: 'Panel administracyjny',
     pillClass: 'border-info/35 bg-info/10 text-info',
     tooltip: 'Admin: panel administracyjny (zawodnicy, składki, treści). Nie widzi kont SuperAdmin.'
+  },
+  Editor: {
+    hint: 'CMS — treści stron',
+    pillClass: 'border-primary/35 bg-primary/10 text-primary',
+    tooltip: 'Redaktor: edycja treści CMS (strony, zmienne, nawigacja). Bez pełnego panelu admina.'
   },
   Trainer: {
     hint: 'Panel trenera',
@@ -56,6 +62,7 @@ const ROLE_FILTER_META: Record<UserRole, { hint: string, pillClass: string, tool
 const ROLE_SEARCH_ALIASES: Record<UserRole, string[]> = {
   SuperAdmin: ['superadmin', 'super', 'administrator główny'],
   Admin: ['administrator', 'administracja', 'panel admina', 'admin i trener', 'admin trener'],
+  Editor: ['redaktor', 'cms', 'treści', 'edytor'],
   Trainer: ['trener', 'coach', 'panel trenera', 'admin i trener', 'admin trener'],
   Athlete: ['zawodnik', 'zawodniczka', 'sportowiec', 'sport']
 }
