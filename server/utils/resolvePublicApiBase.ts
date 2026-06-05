@@ -84,5 +84,8 @@ export function emptyPublicApiFallback(apiPath: string): unknown {
   if (/\/posts\/[^/]+$/.test(apiPath)) {
     return null
   }
+  if (/\/cms\/page\/[^/]+$/.test(apiPath)) {
+    return { id: '', page_name: 'home', fields: {}, created_at: '', updated_at: '' }
+  }
   return []
 }

@@ -18,7 +18,10 @@ const PUBLIC_GET_PATTERNS: RegExp[] = [
   /^\/api\/competitions$/,
   /^\/api\/competitions\/recurring-training-cancellations$/,
   /^\/api\/results\/public-board$/,
-  /^\/api\/results\/public-board-olympic$/
+  /^\/api\/results\/public-board-olympic$/,
+  /^\/api\/cms\/variables$/,
+  /^\/api\/cms\/page\/[^/]+$/,
+  /^\/api\/cms\/navigation$/
 ]
 
 export function isPublicBackendProxyPath(apiPath: string): boolean {

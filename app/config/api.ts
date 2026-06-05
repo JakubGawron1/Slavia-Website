@@ -185,6 +185,15 @@ export const apiRoutes = {
     pending: '/api/submissions/pending',
     approve: (id: string) => `/api/submissions/${encodeURIComponent(id)}/approve`,
     one: (id: string) => `/api/submissions/${encodeURIComponent(id)}`
+  },
+  cms: {
+    variables: '/api/cms/variables',
+    variableCreate: '/api/cms/variable',
+    variable: (key: string) => `/api/cms/variable/${encodeURIComponent(key)}`,
+    pages: '/api/cms/pages',
+    page: (name: string) => `/api/cms/page/${encodeURIComponent(name)}`,
+    navigation: '/api/cms/navigation',
+    history: '/api/cms/history'
   }
 } as const
 

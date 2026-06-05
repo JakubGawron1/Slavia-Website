@@ -7,13 +7,14 @@ const USER_STATE_KEY = 'slavia-auth-user'
 const ROLE_LABELS: Record<UserRole, string> = {
   SuperAdmin: 'Superadmin',
   Admin: 'Administrator',
+  Editor: 'Redaktor',
   Trainer: 'Trener',
   Athlete: 'Zawodnik'
 }
 
-const ROLE_ORDER: UserRole[] = ['SuperAdmin', 'Admin', 'Trainer', 'Athlete']
+const ROLE_ORDER: UserRole[] = ['SuperAdmin', 'Admin', 'Editor', 'Trainer', 'Athlete']
 
-const KNOWN_ROLES = new Set<UserRole>(['SuperAdmin', 'Admin', 'Trainer', 'Athlete'])
+const KNOWN_ROLES = new Set<UserRole>(['SuperAdmin', 'Admin', 'Editor', 'Trainer', 'Athlete'])
 
 /** Normalizuje role z API / JWT (string lub legacy obiekt z serde). */
 export function normalizeUserRoles(raw: unknown): UserRole[] {
@@ -41,6 +42,7 @@ export function pickPostLoginPath(roleList: UserRole[]): string {
   const r = new Set(roleList)
   if (r.has('SuperAdmin')) return '/superadmin'
   if (r.has('Admin')) return '/admin'
+  if (r.has('Editor')) return '/admin/cms'
   if (r.has('Trainer')) return '/trainer'
   if (r.has('Athlete')) return '/athlete'
   return '/'
@@ -116,6 +118,13 @@ export function useAuth() {
 
   /** Blog, galeria, ogłoszenia — Admin lub SuperAdmin (role z bazy przez GET /me). */
   const canManageClubContent = computed(() => isAdmin.value)
+
+  /** CMS — Editor, Admin lub SuperAdmin. */
+  const canEditCms = computed(() =>
+    roles.value.some(r => ['Editor', 'Admin', 'SuperAdmin'].includes(r))
+  )
+
+  const isEditor = computed(() => roles.value.includes('Editor'))
 
   /** Konto ma przypisaną rolę zawodnika (bez konfliktu z kadrowymi flagami). */
   const isAthlete = computed(() => roles.value.includes('Athlete'))
@@ -214,6 +223,8 @@ export function useAuth() {
     isLoggedIn,
     isAdmin,
     canManageClubContent,
+    canEditCms,
+    isEditor,
     isTrainer,
     isSuperAdmin,
     isAthlete,

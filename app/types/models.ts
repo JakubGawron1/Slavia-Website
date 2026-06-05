@@ -2,7 +2,7 @@
  * Kształt JSON z zewnętrznego backendu — dopasuj pola do odpowiedzi z Rust.
  * Ścieżki HTTP: `app/config/api.ts` + `NUXT_PUBLIC_API_BASE_URL`.
  */
-export type UserRole = 'Athlete' | 'Trainer' | 'Admin' | 'SuperAdmin'
+export type UserRole = 'Athlete' | 'Trainer' | 'Admin' | 'Editor' | 'SuperAdmin'
 
 export interface AuthUser {
   id: string
