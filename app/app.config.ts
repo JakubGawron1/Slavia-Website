@@ -13,12 +13,18 @@ export default defineAppConfig({
     dropdownMenu: {
       slots: {
         content:
-          'rounded-xl border border-default/50 bg-elevated/95 p-1 shadow-lg ring-1 ring-default/25 backdrop-blur-xl dark:shadow-black/30'
+          'z-[900] rounded-xl border border-default/50 bg-elevated/95 p-1 shadow-lg ring-1 ring-default/25 backdrop-blur-xl dark:shadow-black/30'
       }
     },
     drawer: {
       slots: {
         content: 'bg-background/95 backdrop-blur-xl ring-1 ring-default/30'
+      }
+    },
+    /** Listy USelect w modalach — ponad overlay; w sheecie portal jest lokalny (z-25 zakładek). */
+    select: {
+      slots: {
+        content: 'z-[700] pointer-events-auto'
       }
     }
   }

@@ -570,7 +570,7 @@ onMounted(() => {
           <UInput v-model="sessionDate" type="date" class="w-full" />
         </UFormField>
         <UFormField label="Status">
-          <USelect
+          <SlaviaOverlaySelect
             v-model="status"
             :items="[{ label: 'Obecny', value: 'obecny' }, { label: 'Nieobecny', value: 'nieobecny' }]"
           />
@@ -601,7 +601,7 @@ onMounted(() => {
           </div>
         </div>
         <UFormField v-if="isStaff" label="Zawodnik" class="w-full lg:max-w-xs">
-          <USelect
+          <SlaviaOverlaySelect
             v-model="selectedAthleteId"
             :items="(athletes || []).map(a => ({ label: a.full_name, value: a.id }))"
             class="w-full"
@@ -813,7 +813,7 @@ onMounted(() => {
               : 'Po zatwierdzeniu w panelu trenera status zmieni się na zweryfikowany.'"
           />
           <UFormField v-if="isStaff && !activePendingForSession" label="Zawodnik">
-            <USelect
+            <SlaviaOverlaySelect
               v-model="selectedAthleteId"
               :items="(athletes || []).map(a => ({ label: a.full_name, value: a.id }))"
               class="w-full"

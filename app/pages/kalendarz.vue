@@ -854,15 +854,14 @@ function handleDayClick(day: Date) {
     </div>
     </div>
 
-    <!-- Modal -->
-    <SlaviaModal
+    <SlaviaEditorSheet
       v-model:open="isModalOpen"
       :title="readOnlyEvent ? 'Szczegóły wydarzenia' : (editingId ? 'Edytuj wydarzenie' : 'Dodaj wydarzenie')"
-      :dismissible="true"
-      :ui="{ content: 'sm:max-w-2xl md:max-w-3xl lg:max-w-4xl' }"
+      size="lg"
+      :prevent-close="isSubmitting"
+      scroll-restore-key="kalendarz-event-sheet"
     >
-      <template #body>
-        <div class="slavia-modal-body">
+      <div class="slavia-form-stack">
           <div
             v-if="readOnlyEvent"
             class="rounded-xl border border-amber-400/40 bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-100"
@@ -941,9 +940,8 @@ function handleDayClick(day: Date) {
             </UFormField>
           </div>
           <UFormField label="Status">
-            <select
+            <SlaviaFormNativeSelect
               v-model="formState.status"
-              class="slavia-select w-full"
               :disabled="readOnlyEvent && !bannerEvent?.external_source"
             >
               <option value="scheduled">
@@ -955,7 +953,7 @@ function handleDayClick(day: Date) {
               <option value="moved">
                 Przesunięte
               </option>
-            </select>
+            </SlaviaFormNativeSelect>
           </UFormField>
           <div
             v-if="canManageEvents && !readOnlyEvent && athletesPickList.length && (editingId == null || !String(editingId).startsWith('training-'))"
@@ -1002,51 +1000,52 @@ function handleDayClick(day: Date) {
               Otwórz stronę źródła zawodów
             </a>
           </div>
-          <div class="mt-6 flex flex-col gap-3 border-t border-default/60 pt-6 sm:flex-row sm:items-center sm:justify-between">
-            <div class="flex min-h-10 shrink-0 flex-wrap items-center gap-2">
-              <UButton
-                v-if="canExportReadOnlyCompetitionIcs"
-                variant="soft"
-                color="primary"
-                size="lg"
-                icon="i-lucide-calendar-plus"
-                @click="exportReadOnlyEventToIcs"
-              >
-                Dodaj do kalendarza (.ics)
-              </UButton>
-              <UButton
-                v-if="canShowCalendarDeleteButton"
-                color="error"
-                variant="ghost"
-                size="lg"
-                icon="i-lucide-trash-2"
-                @click="editingId && deleteEvent(editingId)"
-              >
-                {{ typeof editingId === 'string' && editingId.startsWith('training-') ? 'Usuń z kalendarza' : 'Usuń' }}
-              </UButton>
-            </div>
-            <div class="slavia-form-actions w-full sm:w-auto">
-              <UButton
-                color="neutral"
-                variant="soft"
-                size="lg"
-                @click="isModalOpen = false"
-              >
-                Anuluj
-              </UButton>
-              <UButton
-                size="lg"
-                :loading="isSubmitting"
-                :disabled="readOnlyEvent && !bannerEvent?.external_source"
-                @click="saveEvent"
-              >
-                Zapisz
-              </UButton>
-            </div>
+      </div>
+      <template #footer>
+        <div class="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div class="flex min-h-10 shrink-0 flex-wrap items-center gap-2">
+            <UButton
+              v-if="canExportReadOnlyCompetitionIcs"
+              variant="soft"
+              color="primary"
+              size="lg"
+              icon="i-lucide-calendar-plus"
+              @click="exportReadOnlyEventToIcs"
+            >
+              Dodaj do kalendarza (.ics)
+            </UButton>
+            <UButton
+              v-if="canShowCalendarDeleteButton"
+              color="error"
+              variant="ghost"
+              size="lg"
+              icon="i-lucide-trash-2"
+              @click="editingId && deleteEvent(editingId)"
+            >
+              {{ typeof editingId === 'string' && editingId.startsWith('training-') ? 'Usuń z kalendarza' : 'Usuń' }}
+            </UButton>
+          </div>
+          <div class="slavia-form-actions w-full sm:w-auto">
+            <UButton
+              color="neutral"
+              variant="soft"
+              size="lg"
+              @click="isModalOpen = false"
+            >
+              Anuluj
+            </UButton>
+            <UButton
+              size="lg"
+              :loading="isSubmitting"
+              :disabled="readOnlyEvent && !bannerEvent?.external_source"
+              @click="saveEvent"
+            >
+              Zapisz
+            </UButton>
           </div>
         </div>
       </template>
-    </SlaviaModal>
+    </SlaviaEditorSheet>
   </PublicPageLayout>
 </template>
 

@@ -1,0 +1,204 @@
+@use '../utilities/scrollbar' as *;
+
+.slavia-editor-sheet-root {
+  isolation: isolate;
+}
+
+.slavia-editor-sheet {
+  box-shadow:
+    0 25px 50px -12px rgb(0 0 0 / 0.35),
+    0 0 0 1px color-mix(in srgb, var(--ui-border, #ccc) 40%, transparent);
+}
+
+.slavia-editor-sheet__handle {
+  display: block;
+  width: 2.5rem;
+  height: 0.25rem;
+  margin: 0.65rem auto 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ui-border) 70%, transparent);
+
+  @media (min-width: 640px) {
+    display: none;
+  }
+}
+
+.slavia-editor-sheet__header {
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+  padding: 0.85rem 3.75rem 0.85rem 1.25rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--ui-border) 55%, transparent);
+  background: color-mix(in srgb, var(--ui-bg-muted, var(--ui-bg)) 55%, var(--ui-bg) 45%);
+
+  @media (min-width: 640px) {
+    padding: 1.1rem 4.25rem 1.1rem 1.5rem;
+  }
+}
+
+/** Przycisk na poziomie section — ponad headerem i portalem selectów. */
+.slavia-editor-sheet__close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 50;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--ui-border) 50%, transparent);
+  background: color-mix(in srgb, var(--ui-bg-elevated, var(--ui-bg)) 92%, transparent);
+  color: var(--ui-text-muted, var(--ui-text-dimmed));
+  cursor: pointer;
+  touch-action: manipulation;
+  pointer-events: auto;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+
+  @media (min-width: 640px) {
+    top: 0.85rem;
+    right: 0.85rem;
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  &:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--ui-border) 80%, transparent);
+    background: color-mix(in srgb, var(--ui-bg-muted) 70%, var(--ui-bg) 30%);
+    color: var(--ui-text-highlighted, var(--ui-text));
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ui-primary);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+}
+
+.slavia-editor-sheet__portal {
+  /** Cel portali USelect — pointer-events-none, żeby nie blokować zakładek i przycisków. */
+}
+
+/** Listy selectów wychodzą poza panel — bez overflow-hidden na form-panel. */
+.slavia-editor-sheet .slavia-form-panel {
+  overflow: visible;
+}
+
+.slavia-editor-sheet__tabs {
+  position: relative;
+  z-index: 25;
+  flex-shrink: 0;
+  padding: 0.65rem 1.25rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--ui-border) 50%, transparent);
+  background: var(--ui-bg);
+  isolation: isolate;
+
+  @media (min-width: 640px) {
+    padding: 0.65rem 1.5rem;
+  }
+}
+
+.slavia-editor-tab-panel {
+  position: relative;
+  z-index: 1;
+  min-height: 0;
+  width: 100%;
+}
+
+.slavia-editor-sheet__body {
+  position: relative;
+  z-index: 10;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 1.15rem 1.25rem 1.25rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+
+  @media (min-width: 640px) {
+    padding: 1.25rem 1.5rem 1.5rem;
+  }
+
+  @include slavia-scrollbar-base(var(--slavia-scrollbar-size));
+}
+
+.slavia-editor-sheet__content {
+  min-height: min(100%, 12rem);
+}
+
+.slavia-editor-sheet__footer {
+  position: relative;
+  z-index: 20;
+  flex-shrink: 0;
+  padding: 0.9rem 1.25rem calc(0.9rem + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid color-mix(in srgb, var(--ui-border) 55%, transparent);
+  background: color-mix(in srgb, var(--ui-bg-muted, var(--ui-bg)) 50%, var(--ui-bg) 50%);
+  box-shadow: 0 -8px 24px -12px rgb(0 0 0 / 0.12);
+
+  @media (min-width: 640px) {
+    padding: 1rem 1.5rem;
+    padding-bottom: 1rem;
+  }
+}
+
+.slavia-editor-tabs {
+  display: flex;
+  gap: 0.35rem;
+  padding: 0.2rem;
+  border-radius: 0.85rem;
+  background: color-mix(in srgb, var(--ui-bg-muted) 65%, var(--ui-bg) 35%);
+  overflow-x: auto;
+
+  @include slavia-scrollbar-base(var(--slavia-scrollbar-size-thin));
+}
+
+.slavia-editor-tab {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 0.65rem;
+  border: 1px solid transparent;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ui-text-muted, var(--ui-text-dimmed));
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+
+  &:hover {
+    color: var(--ui-text-highlighted, var(--ui-text));
+    background: color-mix(in srgb, var(--ui-bg-elevated) 80%, transparent);
+  }
+}
+
+.slavia-editor-tab--active {
+  color: var(--ui-primary);
+  border-color: color-mix(in srgb, var(--ui-primary) 28%, transparent);
+  background: color-mix(in srgb, var(--ui-primary) 12%, var(--ui-bg) 88%);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.06);
+}
+
+.slavia-editor-hero {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.slavia-editor-hero__meta {
+  min-width: 0;
+  flex: 1 1 auto;
+}

@@ -253,17 +253,14 @@ function diaryEntryForPlanHref(plan: TrainingPlan) {
       </div>
     </div>
 
-    <!-- Modal (Correct for Nuxt UI v4) -->
-    <SlaviaModal
+    <SlaviaEditorSheet
       v-model:open="showAddModal"
       title="Nowy plan treningowy"
-      :dismissible="true"
-      :ui="{
-        content: 'rounded-[2rem] sm:max-w-xl',
-      }"
+      size="lg"
+      :prevent-close="saving"
+      scroll-restore-key="trainer-plan-create"
     >
-      <template #body>
-        <div class="space-y-6 py-2">
+      <div class="space-y-6 py-2">
           <div class="mb-2">
             <p class="text-sm text-muted">Zdefiniuj parametry nowego cyklu treningowego.</p>
           </div>
@@ -278,15 +275,16 @@ function diaryEntryForPlanHref(plan: TrainingPlan) {
                 <UInput v-model="form.week_start" type="date" size="xl" icon="i-lucide-calendar" />
               </UFormField>
               <UFormField label="Status">
-                <USelect 
-                  v-model="form.status" 
+                <SlaviaSheetSelect
+                  v-model="form.status"
                   size="xl"
+                  value-key="value"
                   :items="[
                     { label: 'Zaplanowany', value: 'planned' },
                     { label: 'Aktywny', value: 'active' },
                     { label: 'Wstrzymany', value: 'paused' },
                     { label: 'Zakończony', value: 'completed' }
-                  ]" 
+                  ]"
                 />
               </UFormField>
             </div>
@@ -300,40 +298,34 @@ function diaryEntryForPlanHref(plan: TrainingPlan) {
             </UFormField>
           </div>
 
-          <div class="mt-8 flex flex-col sm:flex-row gap-3 pt-4 border-t border-default/50">
-            <UButton 
-              class="flex-1 justify-center rounded-2xl py-4 font-black" 
-              size="xl" 
-              color="primary" 
-              :loading="saving"
-              icon="i-lucide-save"
-              @click="createPlan"
-            >
-              Zapisz plan
-            </UButton>
-            <UButton 
-              variant="soft" 
-              color="neutral" 
-              class="rounded-2xl py-4 px-8 font-bold" 
-              size="xl" 
-              @click="showAddModal = false"
-            >
-              Anuluj
-            </UButton>
-          </div>
+      </div>
+      <template #footer>
+        <div class="slavia-form-actions w-full">
+          <UButton variant="soft" color="neutral" class="rounded-2xl font-bold" size="xl" @click="showAddModal = false">
+            Anuluj
+          </UButton>
+          <UButton
+            class="rounded-2xl font-black"
+            size="xl"
+            color="primary"
+            :loading="saving"
+            icon="i-lucide-save"
+            @click="createPlan"
+          >
+            Zapisz plan
+          </UButton>
         </div>
       </template>
-    </SlaviaModal>
+    </SlaviaEditorSheet>
 
-    <!-- Edycja meta planu -->
-    <SlaviaModal
+    <SlaviaEditorSheet
       v-model:open="showEditMetaModal"
       title="Edytuj plan"
-      :dismissible="true"
-      :ui="{ content: 'rounded-[2rem] sm:max-w-xl' }"
+      size="lg"
+      :prevent-close="metaSaving"
+      scroll-restore-key="trainer-plan-edit"
     >
-      <template #body>
-        <div class="space-y-5 py-2">
+      <div class="space-y-5 py-2">
           <UFormField label="Tytuł" required>
             <UInput v-model="editingMeta.title" size="xl" class="font-bold" />
           </UFormField>
@@ -342,9 +334,10 @@ function diaryEntryForPlanHref(plan: TrainingPlan) {
               <UInput v-model="editingMeta.week_start" type="date" size="xl" />
             </UFormField>
             <UFormField label="Status">
-              <USelect
+              <SlaviaSheetSelect
                 v-model="editingMeta.status"
                 size="xl"
+                value-key="value"
                 :items="[
                   { label: 'Zaplanowany', value: 'planned' },
                   { label: 'Aktywny', value: 'active' },
@@ -361,17 +354,18 @@ function diaryEntryForPlanHref(plan: TrainingPlan) {
             <UTextarea v-model="editingMeta.coach_note" :rows="3" size="xl" />
           </UFormField>
 
-          <div class="flex flex-col gap-3 border-t border-default/50 pt-4 sm:flex-row sm:justify-end">
-            <UButton color="neutral" variant="outline" size="xl" class="rounded-2xl" @click="showEditMetaModal = false">
-              Anuluj
-            </UButton>
-            <UButton color="primary" size="xl" class="rounded-2xl font-black" :loading="metaSaving" @click="savePlanMeta">
-              Zapisz
-            </UButton>
-          </div>
+      </div>
+      <template #footer>
+        <div class="slavia-form-actions w-full">
+          <UButton color="neutral" variant="outline" size="xl" class="rounded-2xl" @click="showEditMetaModal = false">
+            Anuluj
+          </UButton>
+          <UButton color="primary" size="xl" class="rounded-2xl font-black" :loading="metaSaving" @click="savePlanMeta">
+            Zapisz
+          </UButton>
         </div>
       </template>
-    </SlaviaModal>
+    </SlaviaEditorSheet>
 
     <!-- Content Area -->
     <div v-if="loading" class="flex flex-col items-center justify-center py-20 gap-4 text-muted">

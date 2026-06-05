@@ -680,14 +680,13 @@ function badgeColorForKind(k: string | undefined) {
       </table>
     </UCard>
 
-    <SlaviaModal
+    <SlaviaEditorSheet
       v-model:open="modalOpen"
       title="Edytuj wynik"
-      :dismissible="true"
-      :ui="{ content: 'sm:max-w-3xl md:max-w-4xl lg:max-w-5xl' }"
+      size="xl"
+      scroll-restore-key="trainer-wyniki-edit"
     >
-      <template #body>
-        <div class="slavia-modal-body">
+      <div class="slavia-form-stack">
           <div class="slavia-form-panel">
             <div class="slavia-form-panel__header">
               <div class="slavia-form-panel__title">
@@ -829,35 +828,26 @@ function badgeColorForKind(k: string | undefined) {
               </div>
             </div>
           </div>
-          <div class="slavia-form-actions border-t border-default/60 pt-4">
-            <UButton
-              color="neutral"
-              variant="outline"
-              size="lg"
-              @click="modalOpen = false"
-            >
-              Anuluj
-            </UButton>
-            <UButton
-              size="lg"
-              :loading="saving"
-              @click="saveEdit"
-            >
-              Zapisz
-            </UButton>
-          </div>
+      </div>
+      <template #footer>
+        <div class="slavia-form-actions w-full border-t border-default/60 pt-4">
+          <UButton color="neutral" variant="outline" size="lg" @click="modalOpen = false">
+            Anuluj
+          </UButton>
+          <UButton size="lg" :loading="saving" @click="saveEdit">
+            Zapisz
+          </UButton>
         </div>
       </template>
-    </SlaviaModal>
+    </SlaviaEditorSheet>
 
-    <SlaviaModal
+    <SlaviaEditorSheet
       v-model:open="addModalOpen"
       title="Nowy wynik (kadra)"
-      :dismissible="true"
-      :ui="{ content: 'sm:max-w-3xl md:max-w-4xl lg:max-w-5xl' }"
+      size="xl"
+      scroll-restore-key="trainer-wyniki-add"
     >
-      <template #body>
-        <div class="slavia-modal-body">
+      <div class="slavia-form-stack">
           <p class="rounded-xl border border-default/60 bg-muted/15 px-4 py-3 text-sm text-muted dark:bg-muted/10">
             Wynik zapisany przez trenera lub administratora trafia od razu jako
             <strong class="text-highlighted">zatwierdzony</strong>.
@@ -1008,26 +998,17 @@ function badgeColorForKind(k: string | undefined) {
               </label>
             </div>
           </div>
-          <div class="slavia-form-actions border-t border-default/60 pt-4">
-            <UButton
-              color="neutral"
-              variant="outline"
-              size="lg"
-              @click="addModalOpen = false"
-            >
-              Anuluj
-            </UButton>
-            <UButton
-              size="lg"
-              :loading="savingAdd"
-              icon="i-lucide-save"
-              @click="submitAdd"
-            >
-              {{ addAnotherSameAthlete ? 'Zapisz i dodaj następny' : 'Zapisz start' }}
-            </UButton>
-          </div>
+      </div>
+      <template #footer>
+        <div class="slavia-form-actions w-full border-t border-default/60 pt-4">
+          <UButton color="neutral" variant="outline" size="lg" @click="addModalOpen = false">
+            Anuluj
+          </UButton>
+          <UButton size="lg" :loading="savingAdd" icon="i-lucide-save" @click="submitAdd">
+            {{ addAnotherSameAthlete ? 'Zapisz i dodaj następny' : 'Zapisz start' }}
+          </UButton>
         </div>
       </template>
-    </SlaviaModal>
+    </SlaviaEditorSheet>
   </PanelPageLayout>
 </template>

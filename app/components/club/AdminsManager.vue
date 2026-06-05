@@ -999,7 +999,7 @@ onMounted(() => {
                   label="Przypisz profil zawodnika"
                   description="Opcjonalnie — tylko rekordy bez wcześniejszego konta logowania."
                 >
-                  <USelect
+                  <SlaviaOverlaySelect
                     v-model="linkAthleteId"
                     :items="[{ label: '— bez profilu —', value: '' }, ...athletesForLink]"
                     value-key="value"
@@ -1034,14 +1034,14 @@ onMounted(() => {
       </template>
     </SlaviaModal>
 
-    <SlaviaModal
+    <SlaviaEditorSheet
       v-model:open="accountModalOpen"
       title="Edycja konta"
-      :dismissible="true"
-      :ui="{ content: 'rounded-3xl sm:max-w-2xl md:max-w-3xl lg:max-w-4xl' }"
+      size="lg"
+      :prevent-close="accountSaving"
+      scroll-restore-key="admins-account-edit"
     >
-      <template #body>
-        <div class="slavia-modal-body">
+      <div class="slavia-form-stack">
           <div class="slavia-form-panel rounded-2xl ring-1 ring-default/40">
             <div class="slavia-form-panel__header rounded-t-2xl bg-linear-to-r from-neutral-500/10 to-transparent dark:from-white/5">
               <div class="slavia-form-panel__title">
@@ -1086,9 +1086,10 @@ onMounted(() => {
                 label="Powiązany zawodnik"
                 description="Linkowanie konta z profilem w bazie zawodników"
               >
-                <USelect
+                <SlaviaSheetSelect
                   v-model="accountAthleteId"
                   :items="[{ label: 'Brak powiązania', value: '' }, ...athletesForLink]"
+                  value-key="value"
                   class="w-full rounded-xl"
                   size="lg"
                 />
@@ -1107,28 +1108,29 @@ onMounted(() => {
               </UButton>
             </div>
           </div>
-          <div class="slavia-form-actions border-t border-default/60 pt-4">
-            <UButton
-              color="neutral"
-              variant="outline"
-              size="lg"
-              class="rounded-xl"
-              @click="accountModalOpen = false"
-            >
-              Anuluj
-            </UButton>
-            <UButton
-              size="lg"
-              class="rounded-xl font-bold"
-              :loading="accountSaving"
-              @click="saveAccountEdit"
-            >
-              Zapisz
-            </UButton>
-          </div>
+      </div>
+      <template #footer>
+        <div class="slavia-form-actions w-full border-t border-default/60 pt-4">
+          <UButton
+            color="neutral"
+            variant="outline"
+            size="lg"
+            class="rounded-xl"
+            @click="accountModalOpen = false"
+          >
+            Anuluj
+          </UButton>
+          <UButton
+            size="lg"
+            class="rounded-xl font-bold"
+            :loading="accountSaving"
+            @click="saveAccountEdit"
+          >
+            Zapisz
+          </UButton>
         </div>
       </template>
-    </SlaviaModal>
+    </SlaviaEditorSheet>
 
     <SlaviaModal
       v-model:open="deleteModalOpen"
