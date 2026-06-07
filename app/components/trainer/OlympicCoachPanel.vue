@@ -85,7 +85,8 @@ const modePromptLabels: Record<OlympicCoachMode, string> = {
   chat: 'Technika',
   plan: 'Plan tygodnia',
   supplements: 'Suplementacja',
-  recovery: 'Regeneracja'
+  recovery: 'Regeneracja',
+  barbell_path: 'Tor sztangi'
 }
 
 const quickPrompts: Record<OlympicCoachMode, string[]> = {
@@ -108,7 +109,8 @@ const quickPrompts: Record<OlympicCoachMode, string[]> = {
     'Plan powrotu do rwania po bolesności nadgarstka (2 tyg. przerwy).',
     'Regeneracja po przeciążeniu kolana — co robić przez 10 dni?',
     'Deload tydzień — jak obniżyć objętość bez utraty techniki?'
-  ]
+  ],
+  barbell_path: []
 }
 
 const activeModeItem = computed(() => modeItems.find(m => m.value === mode.value))

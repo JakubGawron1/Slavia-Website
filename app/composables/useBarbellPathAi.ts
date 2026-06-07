@@ -1,16 +1,35 @@
 import { apiRoutes } from '~/config/api'
 import { getApiErrorMessage } from '~/composables/useApi'
+import {
+  barbellPathRefineBlockedReason,
+  type OlympicCoachStatus
+} from '~/composables/useOlympicCoachAi'
 import type { BarbellSample, BarbellTechniqueMetrics } from '~/utils/barbellPathAnalysis'
+import {
+  compactSamplesForApi,
+  sanitizeRefinedSamples,
+  type BarbellPathRefineProvider,
+  type BarbellPathRefineResponse
+} from '~/utils/barbellPathRefine'
+import type { BarbellVideoFrame } from '~/utils/barbellVideoFrames'
 
-/** Identyfikatory agentów — dodaj nowy wpis + handler w `interpret()`. */
+/** Agenci interpretacji tekstowej (po narysowaniu toru). */
 export type BarbellPathAiProviderId = 'groq_coach'
+
+/** Agenci korekty / rysowania toru. */
+export type BarbellPathTrackingProviderId = BarbellPathRefineProvider
 
 export interface BarbellPathAiProviderMeta {
   id: BarbellPathAiProviderId
   label: string
   description: string
-  /** Czy wymaga JWT / panelu (vs publiczny BFF). */
   requiresAuth: boolean
+}
+
+export interface BarbellPathTrackingProviderMeta {
+  id: BarbellPathTrackingProviderId
+  label: string
+  description: string
 }
 
 export const BARBELL_PATH_AI_PROVIDERS: BarbellPathAiProviderMeta[] = [
@@ -18,8 +37,32 @@ export const BARBELL_PATH_AI_PROVIDERS: BarbellPathAiProviderMeta[] = [
     id: 'groq_coach',
     label: 'Groq LLaMA — Trener AI',
     description:
-      'Klubowy backend (/api/ai/coach/chat). Domyślny agent — limity free tier Groq.',
+      'Klubowy backend (/api/ai/coach/chat). Interpretacja techniczna po narysowaniu toru.',
     requiresAuth: true
+  }
+]
+
+export const BARBELL_PATH_TRACKING_PROVIDERS: BarbellPathTrackingProviderMeta[] = [
+  {
+    id: 'auto',
+    label: 'Auto (vision → numeric)',
+    description:
+      'Gemini vision jeśli GEMINI_API_KEY, inaczej Groq vision z klatek, fallback numeryczny.'
+  },
+  {
+    id: 'gemini_vision',
+    label: 'Gemini Flash (vision)',
+    description: 'Wymaga GEMINI_API_KEY na backendzie — śledzenie gryfu z klatek JPEG.'
+  },
+  {
+    id: 'groq_vision',
+    label: 'Groq Vision',
+    description: 'Llama vision na klatkach wideo + korekta toru (GROQ_VISION_MODEL).'
+  },
+  {
+    id: 'groq_numeric',
+    label: 'Groq numeric',
+    description: 'Korekta samego wektora współrzędnych bez vision (szybsze, słabsze).'
   }
 ]
 
@@ -36,10 +79,24 @@ export interface BarbellPathAiResult {
   provider: BarbellPathAiProviderId
 }
 
-function liftLabel(lift?: BarbellPathAiInput['liftType']) {
+export interface BarbellPathRefineInput {
+  rawSamples: BarbellSample[]
+  frames?: BarbellVideoFrame[]
+  liftType?: 'snatch' | 'clean_jerk' | 'unknown'
+}
+
+export interface BarbellPathRefineResult {
+  samples: BarbellSample[]
+  model: string
+  provider: string
+  method: string
+  notes?: string | null
+}
+
+function liftLabel(lift?: BarbellPathRefineInput['liftType']) {
   if (lift === 'snatch') return 'rwanie (snatch)'
   if (lift === 'clean_jerk') return 'podrzut (clean & jerk)'
-  return 'nie określono — oceń ogólnie pod dwubój'
+  return 'nie określono'
 }
 
 export function buildBarbellPathAiMessage(input: BarbellPathAiInput): string {
@@ -49,23 +106,32 @@ export function buildBarbellPathAiMessage(input: BarbellPathAiInput): string {
       ? samples[samples.length - 1]!.t - samples[0]!.t
       : 0
 
-  return `Analiza toru sztangi z nagrania wideo (MoveNet, profil boczny, współrzędne znormalizowane 0–1).
+  return `Analiza toru sztangi (AI-skorygowany tor, profil boczny, współrzędne 0–1).
 
-Typ ruchu (deklaracja użytkownika): ${liftLabel(liftType)}.
-Liczba próbek w fazie aktywnej: ${samples.length}.
-Czas trwania fazy: ${duration.toFixed(2)} s.
+Typ ruchu: ${liftLabel(liftType)}.
+Próbek: ${samples.length}, czas fazy: ${duration.toFixed(2)} s.
 
-Metryki numeryczne:
-- stabilność toru (0–100): ${metrics.stabilityScore}
-- średnia odchyłka pozioma od linii bioder: ${metrics.meanDeviation}
-- maks. odchyłka pozioma: ${metrics.maxHorizontalDeviation}
-- długość trajektorii (norm.): ${metrics.trajectoryLength}
-- maks. prędkość pionowa |vY|: ${metrics.maxVerticalSpeed}
+Metryki:
+- stabilność: ${metrics.stabilityScore}%
+- średnia odchyłka X: ${metrics.meanDeviation}
+- max odchyłka X: ${metrics.maxHorizontalDeviation}
+- długość trajektorii: ${metrics.trajectoryLength}
+- max |vY|: ${metrics.maxVerticalSpeed}
 
-Heurystyki lokalne (algorytm w przeglądarce — możesz je rozwinąć, nie powtarzaj wprost):
+Heurystyki lokalne:
 ${heuristicHints.map(h => `- ${h}`).join('\n')}
 
-Zadanie: podaj 3–5 konkretnych wskazówek technicznych dla zawodnika dwuboju olimpijskiego. Skup się na zbliżeniu sztangi, kontakcie z nogami, płynności toru i fazie eksplozywnej. Krótko, po polsku, listą.`
+Podaj 3–5 konkretnych wskazówek technicznych (lista, po polsku).`
+}
+
+function mapRefineResponse(res: BarbellPathRefineResponse): BarbellSample[] {
+  return res.samples.map(s => ({
+    t: s.t,
+    barX: s.barX,
+    barY: s.barY,
+    hipMidX: s.hipMidX,
+    shoulderMidX: s.shoulderMidX
+  }))
 }
 
 async function interpretWithGroqCoach(
@@ -83,19 +149,92 @@ async function interpretWithGroqCoach(
   })
 }
 
-/**
- * Warstwa AI dla analizy toru — domyślnie Groq przez istniejący Trener AI.
- * Aby podmienić provider (np. Gemini direct), dodaj id w `BarbellPathAiProviderId`
- * i branch w `interpret()`.
- */
 export function useBarbellPathAi() {
   const api = useApi()
 
   const provider = ref<BarbellPathAiProviderId>('groq_coach')
+  const trackingProvider = ref<BarbellPathTrackingProviderId>('auto')
+  const aiStatus = ref<OlympicCoachStatus | null>(null)
+  const statusLoading = ref(false)
   const loading = ref(false)
+  const refining = ref(false)
   const interpretation = ref<string | null>(null)
+  const refineNotes = ref<string | null>(null)
   const lastModel = ref<string | null>(null)
+  const lastRefineMeta = ref<{ model: string; provider: string; method: string } | null>(null)
   const error = ref<string | null>(null)
+  const refineError = ref<string | null>(null)
+
+  const refineBlockedReason = computed(() => barbellPathRefineBlockedReason(aiStatus.value))
+
+  async function refreshAiStatus() {
+    statusLoading.value = true
+    try {
+      aiStatus.value = await api<OlympicCoachStatus>(apiRoutes.aiCoach.status)
+    } catch {
+      aiStatus.value = null
+    } finally {
+      statusLoading.value = false
+    }
+  }
+
+  async function refinePath(input: BarbellPathRefineInput): Promise<BarbellPathRefineResult | null> {
+    if (refining.value) return null
+    if (input.rawSamples.length < 4) {
+      refineError.value = 'Za mało punktów do korekty AI (min. 4).'
+      return null
+    }
+
+    const blocked = refineBlockedReason.value
+    if (blocked) {
+      refineError.value = blocked
+      return null
+    }
+
+    refining.value = true
+    refineError.value = null
+    refineNotes.value = null
+    lastRefineMeta.value = null
+
+    try {
+      const res = await api<BarbellPathRefineResponse>(apiRoutes.aiCoach.barbellPathRefine, {
+        method: 'POST',
+        body: {
+          rawSamples: compactSamplesForApi(input.rawSamples),
+          frames: input.frames?.map(f => ({ t: f.t, jpegBase64: f.jpegBase64 })),
+          liftType: input.liftType ?? 'unknown',
+          provider: trackingProvider.value
+        },
+        timeout: 180_000
+      })
+
+      const mapped = mapRefineResponse(res)
+      const sanitized = sanitizeRefinedSamples(input.rawSamples, mapped) ?? mapped
+
+      lastRefineMeta.value = {
+        model: res.model,
+        provider: res.provider,
+        method: res.method
+      }
+      refineNotes.value = res.notes ?? null
+
+      await refreshAiStatus().catch(() => {})
+
+      return {
+        samples: sanitized,
+        model: res.model,
+        provider: res.provider,
+        method: res.method,
+        notes: res.notes
+      }
+    } catch (e) {
+      refineError.value = getApiErrorMessage(e, 'AI nie poprawiło toru — użyto detekcji algorytmicznej.')
+      await refreshAiStatus().catch(() => {})
+      return null
+    } finally {
+      refining.value = false
+    }
+  }
 
   async function interpret(input: BarbellPathAiInput): Promise<BarbellPathAiResult | null> {
     if (loading.value) return null
@@ -112,16 +251,7 @@ export function useBarbellPathAi() {
     const message = buildBarbellPathAiMessage(input)
 
     try {
-      let res: { reply: string; model: string }
-
-      switch (provider.value) {
-        case 'groq_coach':
-          res = await interpretWithGroqCoach(api, message)
-          break
-        default:
-          throw new Error(`Nieobsługiwany agent: ${provider.value}`)
-      }
-
+      const res = await interpretWithGroqCoach(api, message)
       interpretation.value = res.reply
       lastModel.value = res.model
       return { reply: res.reply, model: res.model, provider: provider.value }
@@ -139,14 +269,36 @@ export function useBarbellPathAi() {
     error.value = null
   }
 
+  function resetRefine() {
+    refineNotes.value = null
+    lastRefineMeta.value = null
+    refineError.value = null
+  }
+
+  if (import.meta.client) {
+    void refreshAiStatus()
+  }
+
   return {
     provider,
+    trackingProvider,
+    aiStatus,
+    statusLoading,
+    refineBlockedReason,
     providers: BARBELL_PATH_AI_PROVIDERS,
+    trackingProviders: BARBELL_PATH_TRACKING_PROVIDERS,
     loading,
+    refining,
     interpretation,
+    refineNotes,
     lastModel,
+    lastRefineMeta,
     error,
+    refineError,
+    refreshAiStatus,
+    refinePath,
     interpret,
-    reset
+    reset,
+    resetRefine
   }
 }
