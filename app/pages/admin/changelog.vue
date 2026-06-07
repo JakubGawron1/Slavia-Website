@@ -17,6 +17,19 @@ type ChangelogUpdate = {
 
 const updates = [
   {
+    version: 'v5.1.0',
+    date: '7 Czerwiec 2026',
+    title: 'Modularyzacja klubu, UX i wydajność',
+    features: [
+      'KlubPageShell + useRoleAwareCopy — spójny layout `/klub/*` z CTA zależnym od roli.',
+      'Obecność: useAttendancePage + komponenty kalendarza; dashboard `/klub` z kafelkami per rola.',
+      'Rename: `/athlete|trainer/ai-coach` (301 z trener-ai), `/trainer/cwiczenia-slownik`; prefetch rankingów i aktualności.',
+      'Backend 5.1.0: LIMIT 500 na publicznej tablicy wyników; sync bests tylko przy REBUILD_DB.',
+      'Wersja monorepo witryny: **v5.1.0** (`package.json`).'
+    ],
+    type: 'release'
+  },
+  {
     version: 'v5.0.0',
     date: '7 Czerwiec 2026',
     title: 'Trener AI (Groq), asystent publiczny i CMS inline',
