@@ -1,5 +1,16 @@
 # Changelog - Slavia Frontend
 
+## [5.1.0] - 2026-06-07
+
+### Modularyzacja i UX klubu
+- **`KlubPageShell`**, **`useRoleAwareCopy`**, tokeny spacingu w `_tokens.scss`.
+- **`/klub/obecnosc`**: logika w `useAttendancePage.ts`, widok na `KlubPageShell`.
+- **Dashboard `/klub`**: kafelki modułów zależne od roli (`useKlubDashboardNav`).
+- **Rename tras**: `/athlete|trainer/ai-coach` (301 z `trener-ai`), `/trainer/cwiczenia-slownik` (301 z `cwiczenia`); usunięto `obecnosc-qr` (redirect w `routeRules`).
+- **`useDeveloperPage`**: wydzielono `useDeveloperVercelCache`, `routeMapUtils`.
+- **Prefetch**: `createPrefetchScheduler` — aktualności i ranking zawodników.
+- **E2E**: `e2e/klub-redirects.spec.ts` (301 legacy + ochrona `/klub/*`).
+
 ## [5.0.0] - 2026-06-07
 
 ### Trener AI (Groq / LLaMA)
