@@ -50,6 +50,11 @@ const displayContent = computed(() => {
   return cms.getPageField(resolvedPageName.value, props.fieldKey, props.fallback)
 })
 
+/** Podwójna warstwa: getPageField sanityzuje HTML; tu jawnie przed v-html (DOMPurify). */
+const sanitizedDisplayHtml = computed(() =>
+  sanitizeRichHtml(String(displayContent.value ?? ''))
+)
+
 watch(editOpen, async (open) => {
   if (!open) return
   errorMsg.value = ''
@@ -144,10 +149,13 @@ function bindExistingVariable(key: string) {
     @click="openEditor"
     @keydown="onKeydown"
   >
+    <!-- eslint-disable vue/no-v-html — sanitizeRichHtml (DOMPurify), pola CMS typu html -->
     <span
       v-if="type === 'html' && !(cms.editMode.value && cms.canEdit.value)"
-      v-html="displayContent"
+      class="slavia-rich-content"
+      v-html="sanitizedDisplayHtml"
     />
+    <!-- eslint-enable vue/no-v-html -->
     <span
       v-else-if="type === 'html' && cms.editMode.value && cms.canEdit.value"
       class="whitespace-pre-wrap font-mono text-sm"
