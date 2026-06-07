@@ -31,6 +31,19 @@ const updates = [
     type: 'release'
   },
   {
+    version: 'v4.0.0',
+    date: '6 Czerwiec 2026',
+    title: 'CMS 4.0 — globalna edycja inline, DevTools i purge cache Vercel',
+    features: [
+      'CMS v4.0: globalny tryb edycji treści (`CmsGlobalEditToggle`, `CmsInlinePageBar`) na stronach publicznych i panelowych — bez wchodzenia w `/admin/cms`.',
+      'Hydracja pól CMS po nawigacji klienckiej; edycja inline nagłówków, akapitów i zmiennych z poziomu każdej trasy.',
+      'SuperAdmin — `/superadmin/developer`: przebudowa na sekcje Overview, Tools, Map i Ops (czytelniejsza nawigacja zakładek).',
+      'Vercel: purge cache BFF/ISR z panelu SuperAdmina; pomijanie zbędnych buildów gałęzi poza `main` / `dev`.',
+      'Wersja witryny: **v4.0.0** (linia przed Trener AI v5.0).'
+    ],
+    type: 'release'
+  },
+  {
     version: 'v3.2.5-dev',
     date: '5 Czerwiec 2026',
     title: 'Kadra, overlay formularzy, OpenAPI CI, Nuxt 4 i smoke E2E',
