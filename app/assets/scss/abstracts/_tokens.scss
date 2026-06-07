@@ -34,6 +34,18 @@ html[data-slavia-preset] {
   --slavia-content-well: 72rem;
   --slavia-content-narrow: 48rem;
   --slavia-page-gutter: 1rem;
+  /** Odstępy sekcji — panel i publiczne studnie treści */
+  --slavia-section-gap: 1.5rem;
+  --slavia-card-padding: 1rem;
+  --slavia-table-cell-py: 0.625rem;
+}
+
+@media (min-width: 640px) {
+  :root,
+  html[data-slavia-preset] {
+    --slavia-section-gap: 2rem;
+    --slavia-card-padding: 1.25rem;
+  }
 }
 
 @media (min-width: 640px) {
