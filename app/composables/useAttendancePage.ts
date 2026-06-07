@@ -30,7 +30,6 @@ export type AttendanceView = 'calendar' | 'qr' | 'scan'
 type CompetitionRow = { id: string, date: string, category?: string | null, status?: string }
 
 export function useAttendancePage() {
-  const auth = useAuth()
   const route = useRoute()
   const router = useRouter()
   const api = useApi()

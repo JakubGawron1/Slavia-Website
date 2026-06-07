@@ -32,7 +32,7 @@ const STAT_PRIORITY: Record<KlubHubContext, string[]> = {
     'Twoja frekwencja',
     'Lider wyzwania',
     'Wyzwanie miesiąca',
-    'Nadchodzące wydarzenia',
+    'Nadchodzące starty klubu',
     'Aktualności'
   ],
   trainer: [
@@ -40,19 +40,19 @@ const STAT_PRIORITY: Record<KlubHubContext, string[]> = {
     'Aktywni zawodnicy',
     'Lider wyzwania',
     'Wyzwanie miesiąca',
-    'Nadchodzące wydarzenia'
+    'Nadchodzące starty klubu'
   ],
   admin: [
     'Obecności do weryfikacji',
     'Aktywni zawodnicy',
     'Aktualności',
-    'Nadchodzące wydarzenia',
+    'Nadchodzące starty klubu',
     'Lider wyzwania'
   ],
   superadmin: [
     'Aktywni zawodnicy',
     'Obecności do weryfikacji',
-    'Nadchodzące wydarzenia',
+    'Nadchodzące starty klubu',
     'Aktualności',
     'Zdjęcia w galerii'
   ]
