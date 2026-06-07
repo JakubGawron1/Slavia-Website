@@ -114,7 +114,7 @@ const items = computed(() => {
     pushLink(athleteLinks, { label: 'Profil zawodnika', to: '/athlete', icon: 'i-lucide-user' })
     athleteLinks.push({ label: 'Składka klubowa', to: '/athlete/skladki', icon: 'i-lucide-banknote' })
     athleteLinks.push({ label: 'Mój kalendarz', to: '/athlete/kalendarz', icon: 'i-lucide-calendar-days' })
-    athleteLinks.push({ label: 'Dziennik', to: '/dziennik', icon: 'i-lucide-book-open' })
+    athleteLinks.push({ label: 'Dziennik', to: '/athlete/dziennik', icon: 'i-lucide-book-open' })
     athleteLinks.push({ label: 'Inne ćwiczenia', to: '/athlete/exercises', icon: 'i-lucide-bar-chart-3' })
   }
 

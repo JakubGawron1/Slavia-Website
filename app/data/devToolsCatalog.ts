@@ -19,7 +19,7 @@ export const DEV_TOOL_SUPERADMIN_GROUP: DevToolLinkGroup = {
   description: 'Najczęściej używane moduły operacyjne — nie wymagają przeszukiwania mapy tras.',
   links: [
     {
-      to: '/superadmin/administratorzy',
+      to: '/superadmin/zawodnicy?tab=accounts',
       label: 'Konta i role',
       description: 'Administratorzy, trenerzy, zawodnicy',
       icon: 'i-lucide-shield-alert'

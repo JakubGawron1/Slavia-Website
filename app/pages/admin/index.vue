@@ -172,7 +172,7 @@ const summaryMetrics = computed(() => [
     label: 'Obecność 30d',
     value: `${avgAttendance.value}%`,
     tone: 'primary' as const,
-    hint: 'Lista na /attendance',
+    hint: 'Lista na /klub/obecnosc',
     to: '/klub/obecnosc'
   }
 ])

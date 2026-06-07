@@ -38,7 +38,7 @@ export function useNotificationLinks() {
     }
 
     if (n.kind === 'training_log_trainer_note' && auth.isAthlete.value) {
-      return '/dziennik'
+      return '/athlete/dziennik'
     }
 
     if (n.kind === 'result_pending' || n.kind === 'result_approved_staff') {

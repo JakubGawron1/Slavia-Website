@@ -86,7 +86,7 @@ const SUPERADMIN_MODULE_GROUPS: { title: string, items: DashboardModuleLink[] }[
   {
     title: 'System i bezpieczeństwo',
     items: [
-      dashboardLink('Konta i role', 'Administratorzy, trenerzy, zawodnicy', 'i-lucide-shield-alert', '/superadmin/administratorzy', 'text-red-500', 'bg-red-500/10'),
+      dashboardLink('Konta i role', 'Administratorzy, trenerzy, zawodnicy', 'i-lucide-shield-alert', '/superadmin/zawodnicy?tab=accounts', 'text-red-500', 'bg-red-500/10'),
       dashboardLink('Logi systemowe', 'Audyt operacji', 'i-lucide-history', '/superadmin/audit-logs', 'text-primary', 'bg-primary/10'),
       dashboardLink('Workery cron', 'Zadania w tle', 'i-lucide-timer', '/superadmin/workers', 'text-fuchsia-500', 'bg-fuchsia-500/10'),
       dashboardLink('Narzędzia developera', 'Diagnostyka API i PWA', 'i-lucide-terminal', '/superadmin/developer', 'text-violet-500', 'bg-violet-500/10'),
@@ -118,7 +118,7 @@ const SUPERADMIN_MODULE_GROUPS: { title: string, items: DashboardModuleLink[] }[
       dashboardLink('Plany', 'Monitoring progresu', 'i-lucide-clipboard-list', '/trainer/plany', 'text-emerald-600', 'bg-emerald-500/10'),
       dashboardLink('Regeneracja', 'Check-in zawodników', 'i-lucide-heart-pulse', '/trainer/regeneracja', 'text-rose-600', 'bg-rose-500/10'),
       dashboardLink('Inne ćwiczenia', 'Ranking siłowy', 'i-lucide-bar-chart-3', '/trainer/exercises', 'text-lime-600', 'bg-lime-500/10'),
-      dashboardLink('Słownik ćwiczeń', 'Baza do planów', 'i-lucide-library', '/trainer/cwiczenia', 'text-indigo-500', 'bg-indigo-500/10'),
+      dashboardLink('Słownik ćwiczeń', 'Baza do planów', 'i-lucide-library', '/trainer/cwiczenia-slownik', 'text-indigo-500', 'bg-indigo-500/10'),
       dashboardLink('Analiza sztangi', 'Wideo i diagnostyka', 'i-lucide-scan-line', '/trainer/analiza-sztangi', 'text-orange-500', 'bg-orange-500/10'),
       dashboardLink('Monitoring', 'Metryki kadry', 'i-lucide-activity', '/trainer/monitoring', 'text-sky-600', 'bg-sky-500/10'),
       dashboardLink('Czat', 'Wiadomości 1:1', 'i-lucide-messages-square', '/klub/czat', 'text-info', 'bg-info/12')
