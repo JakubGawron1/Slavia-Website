@@ -67,7 +67,9 @@ const containerClass = computed(() => {
         class="absolute inset-x-0 bottom-0 h-24 bg-linear-to-t from-background/80 to-transparent dark:from-background/90"
       />
     </div>
-    <slot />
+    <div class="slavia-page-flow">
+      <slot />
+    </div>
     <SlaviaScrollToTop />
   </UContainer>
 </template>
