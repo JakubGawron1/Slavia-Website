@@ -10,20 +10,28 @@ export interface AthleteChartPoint {
 const props = withDefaults(defineProps<{
   series: AthleteChartPoint[]
   height?: number
+  /** Unikalny sufiks gradientów SVG — wiele wykresów na jednej stronie. */
+  chartKey?: string
 }>(), {
-  height: 120
+  height: 120,
+  chartKey: ''
 })
 
 const CHART_W = 420
 const PAD_TOP = 14
 const PAD_BOTTOM = 14
+const TOOLTIP_EST_WIDTH = 288
+const TOOLTIP_MARGIN = 12
 
+const chartRoot = ref<HTMLElement | null>(null)
 const chartHoverIndex = ref<number | null>(null)
+const tooltipAnchor = ref<{ x: number, y: number } | null>(null)
 
 watch(
   () => props.series,
   () => {
     chartHoverIndex.value = null
+    tooltipAnchor.value = null
   }
 )
 
@@ -74,7 +82,7 @@ function smoothLinePath(pts: Array<{ x: number, y: number }>) {
 }
 
 const chartSvgIds = computed(() => {
-  const raw = String(props.series?.[0]?.date || 'chart')
+  const raw = props.chartKey || String(props.series?.[0]?.date || 'chart')
   const slug = raw.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 32) || 'athlete'
   return {
     gradArea: `slavia-area-${slug}`,
@@ -112,60 +120,57 @@ const tooltipPoint = computed(() => {
   return ch?.[i] ?? null
 })
 
-const tooltipLeftPct = computed(() => {
-  const i = chartHoverIndex.value
-  const n = props.series.length
-  if (i === null || n < 2) return 50
-  return (i / (n - 1)) * 100
+function clampTooltipX(centerX: number) {
+  if (!import.meta.client) return centerX
+  const half = TOOLTIP_EST_WIDTH / 2
+  const min = TOOLTIP_MARGIN + half
+  const max = window.innerWidth - TOOLTIP_MARGIN - half
+  return Math.min(max, Math.max(min, centerX))
+}
+
+const tooltipStyle = computed(() => {
+  const anchor = tooltipAnchor.value
+  if (!anchor) return null
+  const x = clampTooltipX(anchor.x)
+  return {
+    left: `${x}px`,
+    top: `${anchor.y - 8}px`,
+    transform: 'translate(-50%, -100%)'
+  }
 })
+
+function setHoverFromPoint(i: number, event: MouseEvent) {
+  chartHoverIndex.value = i
+  const target = event.currentTarget as Element | null
+  if (!target) return
+  const rect = target.getBoundingClientRect()
+  tooltipAnchor.value = {
+    x: rect.left + rect.width / 2,
+    y: rect.top
+  }
+}
+
+function clearHover() {
+  chartHoverIndex.value = null
+  tooltipAnchor.value = null
+}
+
+function onChartLeave() {
+  clearHover()
+}
 </script>
 
 <template>
   <div
     v-if="chartPaths"
-    class="relative w-full rounded-xl bg-linear-to-b from-primary/[0.07] via-muted/20 to-muted/5 ring-1 ring-inset ring-primary/10 overflow-visible"
+    ref="chartRoot"
+    class="relative w-full overflow-visible rounded-xl bg-linear-to-b from-primary/[0.07] via-muted/20 to-muted/5 ring-1 ring-inset ring-primary/10"
     :style="{ height: `${height}px` }"
-    @mouseleave="chartHoverIndex = null"
+    @mouseleave="onChartLeave"
   >
-    <Transition
-      enter-active-class="transition-opacity duration-150 ease-out"
-      enter-from-class="opacity-0"
-      enter-to-class="opacity-100"
-      leave-active-class="transition-opacity duration-100 ease-in"
-      leave-from-class="opacity-100"
-      leave-to-class="opacity-0"
-    >
-      <div
-        v-if="tooltipPoint"
-        class="pointer-events-none absolute z-40 bottom-full mb-2 w-max max-w-[min(calc(100vw-2rem),18rem)]"
-        :style="{ left: `${tooltipLeftPct}%`, transform: 'translateX(-50%)' }"
-      >
-        <div class="rounded-xl border border-primary/25 bg-background/95 px-3.5 py-2.5 shadow-xl shadow-primary/10 ring-1 ring-default/40 backdrop-blur-md">
-          <p class="text-[11px] font-bold uppercase tracking-wide text-primary mb-1.5">
-            {{ fmtPlDate(tooltipPoint.date) }}
-          </p>
-          <div class="flex items-baseline gap-2 flex-wrap">
-            <span class="text-lg font-mono font-black text-success">{{ tooltipPoint.total }}</span>
-            <span class="text-[11px] font-semibold text-muted">kg total</span>
-          </div>
-          <div class="mt-1.5 grid grid-cols-2 gap-x-4 gap-y-0.5 text-[11px]">
-            <span class="text-muted">Rwanie</span>
-            <span class="font-mono font-bold text-highlighted text-right">{{ tooltipPoint.snatch }} kg</span>
-            <span class="text-muted">Podrzut</span>
-            <span class="font-mono font-bold text-highlighted text-right">{{ tooltipPoint.clean_and_jerk }} kg</span>
-            <span class="text-muted">Sinclair</span>
-            <span class="font-mono font-bold text-amber-400 text-right">
-              {{ tooltipPoint.sinclair != null ? tooltipPoint.sinclair : '—' }}
-              <span v-if="tooltipPoint.sinclair != null" class="text-[10px] font-normal text-muted">pkt</span>
-            </span>
-          </div>
-        </div>
-      </div>
-    </Transition>
-
     <svg
       :viewBox="`0 0 ${CHART_W} ${height}`"
-      class="w-full h-full block"
+      class="block h-full w-full"
       preserveAspectRatio="xMidYMid meet"
     >
       <defs>
@@ -197,7 +202,7 @@ const tooltipLeftPct = computed(() => {
         stroke="currentColor"
         stroke-width="1"
         stroke-dasharray="5 7"
-        class="text-default/12 pointer-events-none"
+        class="pointer-events-none text-default/12"
       />
 
       <path :d="chartPaths.areaD" :fill="`url(#${chartSvgIds.gradArea})`" class="pointer-events-none" />
@@ -220,7 +225,7 @@ const tooltipLeftPct = computed(() => {
         r="18"
         fill="transparent"
         class="cursor-crosshair"
-        @mouseenter="chartHoverIndex = i"
+        @mouseenter="setHoverFromPoint(i, $event)"
       />
 
       <circle
@@ -229,7 +234,7 @@ const tooltipLeftPct = computed(() => {
         :cx="pt.x"
         :cy="pt.y"
         :r="chartHoverIndex === i ? 7 : 5"
-        class="pointer-events-none fill-white stroke-2 stroke-primary dark:fill-neutral-950 transition-all duration-150"
+        class="pointer-events-none fill-white stroke-2 stroke-primary transition-all duration-150 dark:fill-neutral-950"
         :class="chartHoverIndex === i ? 'stroke-success' : ''"
       />
       <circle
@@ -241,18 +246,55 @@ const tooltipLeftPct = computed(() => {
         class="pointer-events-none fill-primary transition-all duration-150"
       />
     </svg>
+
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition-opacity duration-150 ease-out"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="transition-opacity duration-100 ease-in"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+      >
+        <div
+          v-if="tooltipPoint && tooltipStyle"
+          class="pointer-events-none fixed z-100 w-max max-w-[min(calc(100vw-1.5rem),18rem)]"
+          :style="tooltipStyle"
+        >
+          <div class="rounded-xl border border-primary/25 bg-background/95 px-3.5 py-2.5 shadow-xl shadow-primary/10 ring-1 ring-default/40 backdrop-blur-md">
+            <p class="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-primary">
+              {{ fmtPlDate(tooltipPoint.date) }}
+            </p>
+            <div class="flex flex-wrap items-baseline gap-2">
+              <span class="font-mono text-lg font-black text-success">{{ tooltipPoint.total }}</span>
+              <span class="text-[11px] font-semibold text-muted">kg total</span>
+            </div>
+            <div class="mt-1.5 grid grid-cols-2 gap-x-4 gap-y-0.5 text-[11px]">
+              <span class="text-muted">Rwanie</span>
+              <span class="text-right font-mono font-bold text-highlighted">{{ tooltipPoint.snatch }} kg</span>
+              <span class="text-muted">Podrzut</span>
+              <span class="text-right font-mono font-bold text-highlighted">{{ tooltipPoint.clean_and_jerk }} kg</span>
+              <span class="text-muted">Sinclair</span>
+              <span class="text-right font-mono font-bold text-amber-400">
+                {{ tooltipPoint.sinclair != null ? tooltipPoint.sinclair : '—' }}
+                <span v-if="tooltipPoint.sinclair != null" class="text-[10px] font-normal text-muted">pkt</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
   <div
     v-else-if="(series || []).length === 1"
-    class="rounded-xl bg-linear-to-b from-primary/[0.07] to-muted/10 ring-1 ring-inset ring-primary/10 px-4 py-6 text-sm text-muted"
+    class="rounded-xl bg-linear-to-b from-primary/[0.07] to-muted/10 px-4 py-6 text-sm text-muted ring-1 ring-inset ring-primary/10"
   >
     Za mało danych na wykres (1 start).
   </div>
   <div
     v-else
-    class="rounded-xl bg-muted/10 ring-1 ring-inset ring-default/30 px-4 py-6 text-sm text-muted"
+    class="rounded-xl bg-muted/10 px-4 py-6 text-sm text-muted ring-1 ring-inset ring-default/30"
   >
     Brak danych do wykresu.
   </div>
 </template>
-

@@ -1,4 +1,5 @@
 import type { Athlete, CompetitionResult } from '~/types/models'
+import type { ClubHallOfFameRecordCardData } from '~/components/club/ClubHallOfFameRecordCard.vue'
 import type { SinclairGender } from '~/utils/sinclair'
 import { sinclairTotal } from '~/utils/sinclair'
 import { effectiveBodyweightKgForSinclair, parseWeightCategoryLimitKg } from '~/utils/sinclairAthlete'
@@ -86,6 +87,68 @@ export function pickBestCompetitionStart(rows: CompetitionResult[]): Competition
   return best
 }
 
+export interface ChartHistoryPoint {
+  date: string
+  total: number
+  snatch: number
+  clean_and_jerk: number
+  sinclair: number | null
+}
+
+/** Serie wykresu progresu — opcjonalnie tylko starty z danego roku; fallback PB z profilu gdy brak wyników. */
+export function buildCompetitionChartHistory(
+  athlete: Athlete,
+  rows: CompetitionResult[] | null | undefined,
+  opts?: { year?: number, profileFallback?: boolean }
+): ChartHistoryPoint[] {
+  const effectiveWeight = effectiveBodyweightKgForSinclair(athlete)
+  const sg = cardGender(athlete.gender ?? undefined)
+
+  let compStarts = approvedCompetitionStarts(rows)
+  if (opts?.year != null) {
+    const prefix = String(opts.year)
+    compStarts = compStarts.filter(r => r.date.startsWith(prefix))
+  }
+
+  if (compStarts.length > 0) {
+    return compStarts.map((r) => {
+      let sinclairPt: number | null = null
+      if (effectiveWeight > 0 && sg) {
+        const c = sinclairTotal(r.total, effectiveWeight, sg)
+        if (!Number.isNaN(c)) sinclairPt = Number(c.toFixed(2))
+      }
+      const raw = r.date || ''
+      const dateShort = raw.length >= 10 ? raw.slice(0, 10) : raw
+      return {
+        date: dateShort,
+        total: r.total,
+        snatch: r.snatch,
+        clean_and_jerk: r.clean_and_jerk,
+        sinclair: sinclairPt
+      }
+    })
+  }
+
+  if (opts?.profileFallback === false || opts?.year != null) {
+    return []
+  }
+
+  const fallbackSnatch = Number(athlete.best_snatch_kg ?? 0)
+  const fallbackCj = Number(athlete.best_clean_jerk_kg ?? 0)
+  const fallbackTotal = Number(athlete.total_kg ?? 0)
+  if (fallbackTotal <= 0) return []
+
+  return [{
+    date: 'PB',
+    total: fallbackTotal,
+    snatch: fallbackSnatch,
+    clean_and_jerk: fallbackCj,
+    sinclair: effectiveWeight > 0 && sg
+      ? Number(sinclairTotal(fallbackTotal, effectiveWeight, sg).toFixed(2))
+      : null
+  }]
+}
+
 export interface ZawodnikCardData {
   id: string
   name: string
@@ -149,32 +212,7 @@ export function mapAthleteToCard(
     }
   }
 
-  const chartHistory = compStarts.length > 0
-    ? compStarts.map((r) => {
-        let sinclairPt: number | null = null
-        if (effectiveWeight > 0 && sg) {
-          const c = sinclairTotal(r.total, effectiveWeight, sg)
-          if (!Number.isNaN(c)) sinclairPt = Number(c.toFixed(2))
-        }
-        const raw = r.date || ''
-        const dateShort = raw.length >= 10 ? raw.slice(0, 10) : raw
-        return {
-          date: dateShort,
-          total: r.total,
-          snatch: r.snatch,
-          clean_and_jerk: r.clean_and_jerk,
-          sinclair: sinclairPt
-        }
-      })
-    : (fallbackTotal > 0
-        ? [{
-            date: 'PB',
-            total: fallbackTotal,
-            snatch: fallbackSnatch,
-            clean_and_jerk: fallbackCj,
-            sinclair: effectiveWeight > 0 && sg ? Number(sinclairTotal(fallbackTotal, effectiveWeight, sg).toFixed(2)) : null
-          }]
-        : [])
+  const chartHistory = buildCompetitionChartHistory(p, competitionByAthlete[p.id], { profileFallback: true })
 
   const totals = chartHistory.map(x => x.total)
   const maxHistory = totals.length > 0 ? Math.max(...totals) * 1.15 || 300 : 300
@@ -220,5 +258,52 @@ export function mapAthleteToCard(
     photo: p.image_url || undefined,
     chartHistory,
     maxHistory
+  }
+}
+
+const DEFAULT_ATHLETE_CARD_DESCRIPTION = 'Zawodnik klubu CKS Slavia Ruda Śląska.'
+
+/** Mapowanie karty z `/zawodnicy` → wspólny komponent `ClubHallOfFameRecordCard`. */
+export function zawodnikCardToHallRecordCard(player: ZawodnikCardData): ClubHallOfFameRecordCardData {
+  const usesProfileFallback = player.chartHistory.length === 1 && player.chartHistory[0]?.date === 'PB'
+  let resultDate: string | null = null
+  if (!usesProfileFallback && player.chartHistory.length > 0) {
+    const best = player.chartHistory.reduce((acc, row) => {
+      if (!acc) return row
+      if (row.total > acc.total) return row
+      if (row.total === acc.total && row.date > acc.date) return row
+      return acc
+    }, player.chartHistory[0]!)
+    resultDate = best.date !== 'PB' ? best.date : null
+  }
+
+  const tagline = player.description !== DEFAULT_ATHLETE_CARD_DESCRIPTION
+    ? player.description
+    : undefined
+
+  return {
+    athleteId: player.id,
+    name: player.name,
+    weightCategoryText: player.weightCategoryText,
+    birthYear: player.birthYear || null,
+    bodyweight: player.bodyweight,
+    photo: player.photo,
+    tagline,
+    total: player.total,
+    snatch: player.snatch,
+    cleanJerk: player.cleanAndJerk,
+    sinclair: player.sinclair,
+    resultDate,
+    chartHistory: player.chartHistory,
+    usesProfileFallback,
+    chartCaption: 'Progres totalu — zawody',
+    chartKey: `zawodnicy-${player.id}`,
+    statsTitle: 'Zawody',
+    statsSubtitle: 'Oficjalne PB',
+    dateLabel: 'Najlepszy start',
+    trainingStrip: player.trainingStrip,
+    membershipPaid: player.membershipPaid,
+    hasStandingOrder: player.hasStandingOrder,
+    isActive: player.isActive
   }
 }
