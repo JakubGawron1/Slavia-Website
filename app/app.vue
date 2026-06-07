@@ -264,6 +264,8 @@ useHead({
       </UMain>
 
       <ClubSiteFooter />
+      <CmsGlobalEditToggle />
+      <CmsInlinePageBar />
     </div>
   </UApp>
 </template>
