@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { apiRoutes } from '~/config/api'
 import { athleteProfilePath } from '~/utils/slug'
 
 type LeaderboardRow = {
@@ -14,51 +13,23 @@ type ApiResponse = {
   leaderboard: LeaderboardRow[]
 }
 
-const config = useRuntimeConfig()
 const monthInput = ref('')
 /** `null` = bieżący miesiąc po stronie API. */
 const activeMonth = ref<string | null>(null)
 
-function publicApiBase() {
-  return String(config.public.apiBase || '').replace(/\/$/, '')
-}
+const monthQuery = computed(() =>
+  activeMonth.value ? { month: activeMonth.value } : {}
+)
 
-function requestUrl(month: string | null) {
-  const u = new URL(`${publicApiBase()}${apiRoutes.challenges.monthlyTrainingSessions}`)
-  if (month?.trim()) {
-    u.searchParams.set('month', month.trim())
+const { data, pending, error, refresh } = usePublicLazyFetch<ApiResponse>(
+  'challenges/monthly-training-sessions',
+  {
+    key: 'klub-wyzwania',
+    query: monthQuery,
+    default: () => ({ month: '', metric: '', leaderboard: [] }),
+    staleTimeMs: 120_000
   }
-  return u.toString()
-}
-
-const data = shallowRef<ApiResponse>({
-  month: '',
-  metric: '',
-  leaderboard: []
-})
-const pending = ref(true)
-const error = ref(false)
-
-async function load() {
-  pending.value = true
-  error.value = false
-  try {
-    data.value = await $fetch<ApiResponse>(requestUrl(activeMonth.value))
-  } catch {
-    error.value = true
-    data.value = { month: '', metric: '', leaderboard: [] }
-  } finally {
-    pending.value = false
-  }
-}
-
-onMounted(() => {
-  void load()
-})
-
-watch(activeMonth, () => {
-  void load()
-})
+)
 
 useSeoMeta({
   title: 'Wyzwania klubu — Slavia',
@@ -121,11 +92,11 @@ function podiumAccent(idx: number) {
               </UButton>
             </div>
           </UFormField>
-          <UButton icon="i-lucide-refresh-ccw" variant="ghost" color="neutral" @click="load()">
+          <UButton icon="i-lucide-refresh-ccw" variant="ghost" color="neutral" @click="refresh()">
             Odśwież
           </UButton>
         </div>
-        <p v-if="data.month" class="mt-4 text-sm text-muted">
+        <p v-if="data?.month" class="mt-4 text-sm text-muted">
           Ranking za <span class="font-semibold text-highlighted">{{ data.month }}</span>.
         </p>
       </UCard>

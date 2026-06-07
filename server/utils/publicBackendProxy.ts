@@ -21,7 +21,8 @@ const PUBLIC_GET_PATTERNS: RegExp[] = [
   /^\/api\/results\/public-board-olympic$/,
   /^\/api\/cms\/variables$/,
   /^\/api\/cms\/page\/[^/]+$/,
-  /^\/api\/cms\/navigation$/
+  /^\/api\/cms\/navigation$/,
+  /^\/api\/challenges\/monthly-training-sessions$/
 ]
 
 export function isPublicBackendProxyPath(apiPath: string): boolean {
@@ -32,7 +33,10 @@ export function isPublicBackendProxyPath(apiPath: string): boolean {
   return PUBLIC_GET_PATTERNS.some(re => re.test(path))
 }
 
-export async function proxyPublicBackendGet(apiPath: string): Promise<unknown> {
+export async function proxyPublicBackendGet(
+  apiPath: string,
+  query?: Record<string, string | string[] | undefined>
+): Promise<unknown> {
   if (!isPublicBackendProxyPath(apiPath)) {
     throw createError({ statusCode: 404, statusMessage: 'Not Found' })
   }
@@ -47,17 +51,27 @@ export async function proxyPublicBackendGet(apiPath: string): Promise<unknown> {
     return emptyPublicApiFallback(apiPath)
   }
 
-  const target = `${base}${apiPath.startsWith('/') ? apiPath : `/${apiPath}`}`
+  const url = new URL(`${base}${apiPath.startsWith('/') ? apiPath : `/${apiPath}`}`)
+  if (query) {
+    for (const [key, value] of Object.entries(query)) {
+      if (value === undefined) continue
+      if (Array.isArray(value)) {
+        for (const v of value) url.searchParams.append(key, v)
+      } else {
+        url.searchParams.set(key, value)
+      }
+    }
+  }
 
   try {
-    return await $fetch(target, {
+    return await $fetch(url.toString(), {
       method: 'GET',
       timeout: 12_000,
       headers: { Accept: 'application/json' }
     })
   } catch (err) {
     if (isPrerenderPass()) {
-      console.warn(`[public-api] Prerender: ${apiPath} → ${target} niedostępne, używam pustych danych.`, err)
+      console.warn(`[public-api] Prerender: ${apiPath} → ${url} niedostępne, używam pustych danych.`, err)
       return emptyPublicApiFallback(apiPath)
     }
     throw err

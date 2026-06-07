@@ -10,5 +10,6 @@ export default defineEventHandler(async (event) => {
   if (!isPublicBackendProxyPath(apiPath)) {
     throw createError({ statusCode: 404, statusMessage: 'Not Found' })
   }
-  return proxyPublicBackendGet(apiPath)
+  const query = getQuery(event) as Record<string, string | string[] | undefined>
+  return proxyPublicBackendGet(apiPath, query)
 })
