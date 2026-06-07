@@ -114,6 +114,8 @@ async function logout() {
   await navigateTo('/')
 }
 
+const showPublicAi = computed(() => !isSlaviaPrivateRoute(route.path))
+
 const { items: notifications, refresh: refreshNotifications } = useNotifications()
 const unreadCount = computed(() => (notifications.value || []).filter(n => !n.is_read).length)
 
@@ -264,6 +266,7 @@ useHead({
       </UMain>
 
       <ClubSiteFooter />
+      <ClubPublicAiAssistant v-if="showPublicAi" />
       <CmsGlobalEditToggle />
       <CmsInlinePageBar />
     </div>
