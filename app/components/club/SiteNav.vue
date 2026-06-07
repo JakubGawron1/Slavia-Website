@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { PUBLIC_ROUTES } from '~/config/klubRoutes'
+
 const props = defineProps<{
   /**
    * drawer — szuflada na węższych ekranach
@@ -51,7 +53,7 @@ async function logoutFromMenu() {
  *  głównego paska i zawsze mieścić się w jednym wierszu, niezależnie od szerokości ekranu. */
 const calculatorLinks: ManagementLink[] = [
   { label: 'Kalkulator Sinclair', to: '/kalkulator-sinclair', icon: 'i-lucide-calculator' },
-  { label: 'Kalkulator proporcji', to: '/kalkulator-proporcji', icon: 'i-lucide-sliders-horizontal' },
+  { label: 'Kalkulator proporcji', to: PUBLIC_ROUTES.proporcje, icon: 'i-lucide-sliders-horizontal' },
   { label: 'Kalkulator Max PR', to: '/kalkulator-max-pr', icon: 'i-lucide-dumbbell' }
 ]
 
@@ -60,13 +62,13 @@ const items = computed(() => {
   // żeby nigdy nie powodować przewijania w poziomie ani ucinania ostatniego linku
   // (testowane na 1024 / 1280 / 1440 / 1920 px).
   const main = filterByPanelNav([
-    ...(auth.isLoggedIn.value ? [{ label: 'Ogłoszenia', to: '/ogloszenia' }] : []),
-    { label: 'Aktualności', to: '/aktualnosci' },
-    { label: 'Galeria', to: '/galeria' },
+    ...(auth.isLoggedIn.value ? [{ label: 'Ogłoszenia', to: PUBLIC_ROUTES.ogloszenia }] : []),
+    { label: 'Aktualności', to: PUBLIC_ROUTES.aktualnosci },
+    { label: 'Galeria', to: PUBLIC_ROUTES.galeria },
     // „Wyniki” są dostępne jako sekcja na stronie „Zawodnicy” (#wyniki-zawodow) —
     // dlatego skracamy etykietę, najdłuższa pozycja w pasku to wąskie gardło.
-    { label: 'Zawodnicy', to: '/zawodnicy' },
-    { label: 'Kalendarz', to: '/kalendarz' },
+    { label: 'Zawodnicy', to: PUBLIC_ROUTES.zawodnicy },
+    { label: 'Kalendarz', to: PUBLIC_ROUTES.kalendarz },
     ...(auth.isLoggedIn.value ? [] : [{ label: 'Kontakt', to: '/kontakt' }])
   ])
 

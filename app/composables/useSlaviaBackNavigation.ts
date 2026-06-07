@@ -28,7 +28,6 @@ function inferParentPath(path: string): string | null {
   if (normalized === '/') return null
 
   if (normalized.startsWith('/athlete/')) return '/zawodnicy'
-  if (normalized.startsWith('/klub/')) return '/zawodnicy'
   if (normalized.startsWith('/zawodnicy/')) return '/zawodnicy'
   if (normalized.startsWith('/aktualnosci/')) return '/aktualnosci'
 

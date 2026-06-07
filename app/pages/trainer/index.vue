@@ -198,7 +198,7 @@ const summaryMetrics = computed(() => [
     value: `${avgAttendance.value}%`,
     tone: 'success' as const,
     hint: pendingAttendanceCount.value ? `${pendingAttendanceCount.value} do weryfikacji` : null,
-    to: '/attendance'
+    to: '/klub/obecnosc'
   },
   {
     label: 'Składki',
@@ -262,7 +262,7 @@ async function rejectPayment(id: string) {
       :description="`${pendingAttendanceCount} wpisów — zarządzaj na dedykowanej stronie listy obecności (kalendarz + agenda).`"
     >
       <template #actions>
-        <UButton to="/attendance" size="sm" color="primary" variant="soft">
+        <UButton to="/klub/obecnosc" size="sm" color="primary" variant="soft">
           Otwórz listę obecności
         </UButton>
       </template>

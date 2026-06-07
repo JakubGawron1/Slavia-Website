@@ -42,7 +42,7 @@ async function submitCheckin(payload: string) {
     toast.add({ title: 'Zatwierdzono obecność', color: 'success' })
     await stopCameraScan()
     if (props.redirectOnSuccess) {
-      setTimeout(() => router.push('/attendance'), 1500)
+      setTimeout(() => router.push('/klub/obecnosc'), 1500)
     }
   } catch (e) {
     const msg = getApiErrorMessage(e)

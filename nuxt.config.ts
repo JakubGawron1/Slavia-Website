@@ -110,15 +110,15 @@ export default defineNuxtConfig({
 
       '/superadmin/**',
 
-      '/chat',
-
       '/profil',
 
-      '/attendance',
-
-      '/powiadomienia',
-
       '/dziennik',
+
+      '/klub/obecnosc',
+
+      '/klub/czat',
+
+      '/klub/powiadomienia',
 
       '/ogloszenia'
 
@@ -142,15 +142,15 @@ export default defineNuxtConfig({
 
       '/superadmin/**',
 
-      '/chat',
-
       '/profil',
 
-      '/attendance',
-
-      '/powiadomienia',
-
       '/dziennik',
+
+      '/klub/obecnosc',
+
+      '/klub/czat',
+
+      '/klub/powiadomienia',
 
       '/ogloszenia',
 

@@ -17,11 +17,15 @@ const PRIVATE_ROUTE_PREFIXES = [
   '/trainer',
   '/admin',
   '/superadmin',
-  '/chat',
   '/profil',
+  '/dziennik',
+  '/klub/obecnosc',
+  '/klub/czat',
+  '/klub/powiadomienia',
+  '/ogloszenia',
+  '/chat',
   '/attendance',
   '/powiadomienia',
-  '/dziennik',
   '/ogloszenia'
 ] as const
 

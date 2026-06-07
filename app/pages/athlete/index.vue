@@ -465,7 +465,7 @@ function toggleChecklistItem(id: string) {
     >
       <template #actions>
         <UButton
-          to="/chat"
+          to="/klub/czat"
           size="xs"
           color="primary"
           variant="soft"
@@ -554,7 +554,7 @@ function toggleChecklistItem(id: string) {
           icon="i-lucide-user-check"
           :tone="attendanceSummary ? 'primary' : 'info'"
           :hint="attendanceSummary ? `${attendanceSummary.present_count} obecności · ${attendanceSummary.absent_count} nieob.` : null"
-          to="/attendance"
+          to="/klub/obecnosc"
         />
         <DashboardKpiCard
           size="compact"

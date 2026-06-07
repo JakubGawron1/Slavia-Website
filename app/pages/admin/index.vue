@@ -173,7 +173,7 @@ const summaryMetrics = computed(() => [
     value: `${avgAttendance.value}%`,
     tone: 'primary' as const,
     hint: 'Lista na /attendance',
-    to: '/attendance'
+    to: '/klub/obecnosc'
   }
 ])
 
