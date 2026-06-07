@@ -1,5 +1,11 @@
 <script setup lang="ts">
 const d = useDeveloperPage()
+
+type PurgeRow = { path: string, ok: boolean, status?: number, error?: string }
+
+const vercelPurgeFailures = computed(() =>
+  ((d.vercelCachePurgeLastResult?.results ?? []) as PurgeRow[]).filter(row => !row.ok)
+)
 </script>
 
 <template>
@@ -211,14 +217,29 @@ const d = useDeveloperPage()
           >
             Ustaw <code>VERCEL_ISR_BYPASS_TOKEN</code> w Vercel (Production + Preview) i zrób redeploy frontendu.
           </p>
-          <p
+          <div
             v-if="d.vercelCachePurgeLastResult"
-            class="mt-2 rounded-lg border border-default/40 bg-muted/10 px-3 py-2 text-[11px] font-mono text-muted"
+            class="mt-2 space-y-1 rounded-lg border border-default/40 bg-muted/10 px-3 py-2 text-[11px] font-mono text-muted"
           >
-            Ostatni purge: {{ d.vercelCachePurgeLastResult.okCount }}/{{ d.vercelCachePurgeLastResult.path_count }} OK
-            · {{ d.vercelCachePurgeLastResult.failCount }} błędów
-            · {{ d.vercelCachePurgeLastResult.at }}
-          </p>
+            <p>
+              Ostatni purge: {{ d.vercelCachePurgeLastResult.okCount }}/{{ d.vercelCachePurgeLastResult.path_count }} OK
+              · {{ d.vercelCachePurgeLastResult.failCount }} błędów
+              · {{ d.vercelCachePurgeLastResult.at }}
+            </p>
+            <ul
+              v-if="d.vercelCachePurgeLastResult.failCount > 0"
+              class="max-h-28 list-disc space-y-0.5 overflow-y-auto ps-4 text-[10px] text-warning"
+            >
+              <li
+                v-for="row in vercelPurgeFailures"
+                :key="row.path"
+              >
+                {{ row.path }}
+                <span v-if="row.status">({{ row.status }})</span>
+                <span v-else-if="row.error"> — {{ row.error }}</span>
+              </li>
+            </ul>
+          </div>
         </div>
       </UCard>
   </div>

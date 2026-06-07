@@ -26,12 +26,13 @@ export function buildRouteRules(devDisableRootIsr: boolean) {
     '/klub/**': { isr: 900 },
 
     '/kalendarz': { isr: 900, prerender: true },
-    '/kontakt': { prerender: true },
-    '/logowanie': { prerender: true },
-    '/banned': { prerender: true },
-    '/kalkulator-proporcji': { prerender: true },
-    '/kalkulator-sinclair': { prerender: true },
-    '/kalkulator-max-pr': { prerender: true },
+    '/o-klubie': { isr: 900, prerender: true },
+    '/kontakt': { isr: 3600, prerender: true },
+    '/logowanie': { isr: 3600, prerender: true },
+    '/banned': { isr: 3600, prerender: true },
+    '/kalkulator-proporcji': { isr: 3600, prerender: true },
+    '/kalkulator-sinclair': { isr: 3600, prerender: true },
+    '/kalkulator-max-pr': { isr: 3600, prerender: true },
 
     '/ogloszenia': { ...panelNoStore },
 
