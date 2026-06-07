@@ -1,14 +1,21 @@
 <script setup lang="ts">
+import DashboardKpiCard from '~/components/dashboard/DashboardKpiCard.vue'
+
 definePageMeta({ middleware: 'auth' })
+
+const copy = useRoleAwareCopy()
+const { moduleGroups, panelRole } = useKlubDashboardNav()
+const { moduleGroupsForRole } = usePanelNavigationFlags()
+const fullRoleModuleGroups = computed(() => moduleGroupsForRole(panelRole.value))
+const { statCards } = useKlubDashboardStats()
+
+provideDashboardSections()
 
 useSlaviaSeo({
   title: 'Klub — Slavia',
   description: 'Moduły wspólne klubu: obecność, czat, wyzwania i strony publiczne.',
   noindex: true
 })
-
-const copy = useRoleAwareCopy()
-const { moduleGroups } = useKlubDashboardNav()
 
 function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral' {
   const s = String(bg || '').toLowerCase()
@@ -29,11 +36,45 @@ function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 
     athlete-title="Twój klub"
     athlete-description="Obecność, czat, wyzwania i ranking — szybkie wejścia bez szukania w menu."
   >
-    <PanelModuleNav
+    <DashboardSectionsToolbar class="mb-6" />
+
+    <PanelCollapsibleSection
+      section-id="stats"
+      title="Statystyki klubu"
+      icon="i-lucide-bar-chart-3"
+      :default-open="true"
+      class="mb-6"
+    >
+      <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <DashboardKpiCard
+          v-for="card in statCards"
+          :key="card.label"
+          :label="card.label"
+          :value="card.value"
+          :icon="card.icon"
+          :tone="card.tone"
+          :hint="card.hint"
+          :to="card.to"
+          size="compact"
+        />
+      </div>
+    </PanelCollapsibleSection>
+
+    <PanelCollapsibleSection
       v-if="moduleGroups.length"
-      :groups="moduleGroups"
-      :tone-from-bg="toneFromBg"
-    />
+      section-id="modules"
+      title="Moduły klubu"
+      icon="i-lucide-layout-grid"
+      :default-open="true"
+      embedded
+    >
+      <PanelModuleNav
+        :groups="moduleGroups"
+        :nav-role="panelRole"
+        :persist-groups="fullRoleModuleGroups"
+        :tone-from-bg="toneFromBg"
+      />
+    </PanelCollapsibleSection>
     <PublicEmptyState
       v-else
       icon="i-lucide-layout-grid"

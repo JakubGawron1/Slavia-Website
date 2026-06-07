@@ -14,6 +14,8 @@ const props = defineProps<{
   toneFromBg?: (bg?: string) => 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral'
   /** Opcjonalny override roli; domyślnie wykrywana z trasy (`/admin`, `/trainer`, …). */
   navRole?: PanelNavRole | 'superadmin'
+  /** Pełna nawigacja roli do zapisu — gdy `groups` to podzbiór (np. `/klub`). */
+  persistGroups?: PanelModuleGroup[]
 }>()
 
 const auth = useAuth()
@@ -26,8 +28,10 @@ const resolvedNavRole = computed(() =>
 )
 
 const sourceGroups = computed(() => props.groups)
+const persistGroups = computed(() => props.persistGroups ?? null)
 
-const cmsNav = useCmsDashboardNav(resolvedNavRole, sourceGroups)
+const cms = useCms()
+const cmsNav = useCmsDashboardNav(resolvedNavRole, sourceGroups, persistGroups)
 
 const cmsEditMode = computed(() => cmsNav?.editMode.value ?? false)
 const cmsSaving = computed(() => cmsNav?.saving.value ?? false)
@@ -121,34 +125,33 @@ function roleTabClass(area: string, active: boolean) {
           v-if="cmsNav.canEditNav && resolvedNavRole"
           class="flex shrink-0 flex-wrap items-center gap-1.5"
         >
-          <template v-if="!cmsEditMode">
-            <UButton
-              size="xs"
-              variant="soft"
-              color="primary"
-              icon="i-lucide-grip-vertical"
-              @click="cmsNav.startEdit()"
-            >
-              <span class="hidden sm:inline">Edytuj kolejność</span>
-            </UButton>
-          </template>
-          <template v-else>
+          <template v-if="cmsEditMode">
             <UButton
               size="xs"
               :loading="cmsSaving"
               icon="i-lucide-save"
               @click="cmsNav.saveOrder()"
             >
-              Zapisz
+              Zapisz kolejność
             </UButton>
             <UButton
               size="xs"
               variant="ghost"
               @click="cmsNav.cancelEdit()"
             >
-              Anuluj
+              Cofnij
             </UButton>
           </template>
+          <UButton
+            v-else-if="!cms.editMode"
+            size="xs"
+            variant="soft"
+            color="primary"
+            icon="i-lucide-grip-vertical"
+            @click="cmsNav.startEdit()"
+          >
+            <span class="hidden sm:inline">Edytuj kolejność</span>
+          </UButton>
         </div>
 
         <UButton
@@ -170,7 +173,7 @@ function roleTabClass(area: string, active: boolean) {
         v-if="cmsEditMode"
         class="border-b border-primary/20 bg-primary/5 px-4 py-2 text-xs text-primary"
       >
-        Tryb edycji — przeciągnij moduły, aby zmienić kolejność. Zmiany widoczne dla wszystkich kont tej roli.
+        Tryb edycji CMS — przeciągnij kafelki, potem „Zapisz kolejność”. Zmiany dotyczą dashboardu tej roli.
       </p>
 
       <p

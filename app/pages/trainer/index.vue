@@ -125,6 +125,8 @@ const _competitionsCount = computed(() => (Array.isArray(competitions.value) ? c
 const { moduleGroupsForRole } = usePanelNavigationFlags()
 const moduleGroups = computed(() => moduleGroupsForRole('trainer'))
 
+provideDashboardSections()
+
 function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral' {
   const s = String(bg || '').toLowerCase()
   if (s.includes('red')) return 'error'
@@ -236,44 +238,99 @@ async function rejectPayment(id: string) {
   <PanelPageLayout>
     <DashboardAccountView v-if="isAccountView" />
     <template v-else>
-    <DashboardHero
-      eyebrow="Panel trenera"
-      :title="`Witaj, ${auth.user.value?.username || 'Trenerze'}!`"
-      lead="Najważniejsze moduły, szybkie akcje i rzeczy do zatwierdzenia w jednym miejscu."
+    <PanelCollapsibleSection
+      section-id="hero"
+      title="Powitanie"
       icon="i-lucide-dumbbell"
-      :badges="[
-        { label: `Oczekujące wyniki: ${pendingCount}`, color: pendingCount ? 'warning' : 'neutral' },
-        { label: `Oczekujące składki: ${pendingPaymentsCount}`, color: pendingPaymentsCount ? 'warning' : 'neutral' }
-      ]"
-      :actions="[
-        { label: 'Ustawienia konta', to: accountSettingsPath, icon: 'i-lucide-user-cog', variant: 'outline' }
-      ]"
-    />
-
-    <DashboardMonthlySummary class="mt-8" :metrics="summaryMetrics" />
-
-    <UAlert
-      v-if="pendingAttendanceCount > 0"
-      class="mt-8"
-      icon="i-lucide-user-check"
-      color="warning"
-      variant="subtle"
-      title="Obecności oczekują na weryfikację"
-      :description="`${pendingAttendanceCount} wpisów — zarządzaj na dedykowanej stronie listy obecności (kalendarz + agenda).`"
+      :badge="pendingCount || pendingPaymentsCount ? 'Do zrobienia' : undefined"
+      :default-open="true"
+      class="mt-0"
     >
-      <template #actions>
-        <UButton to="/klub/obecnosc" size="sm" color="primary" variant="soft">
-          Otwórz listę obecności
-        </UButton>
-      </template>
-    </UAlert>
+      <DashboardHero
+        eyebrow="Panel trenera"
+        :title="`Witaj, ${auth.user.value?.username || 'Trenerze'}!`"
+        lead="Najważniejsze moduły, szybkie akcje i rzeczy do zatwierdzenia w jednym miejscu."
+        icon="i-lucide-dumbbell"
+        :badges="[
+          { label: `Oczekujące wyniki: ${pendingCount}`, color: pendingCount ? 'warning' : 'neutral' },
+          { label: `Oczekujące składki: ${pendingPaymentsCount}`, color: pendingPaymentsCount ? 'warning' : 'neutral' }
+        ]"
+        :actions="[
+          { label: 'Ustawienia konta', to: accountSettingsPath, icon: 'i-lucide-user-cog', variant: 'outline' }
+        ]"
+      />
+    </PanelCollapsibleSection>
 
-    <PanelModuleNav
-      :groups="moduleGroups"
-      :tone-from-bg="toneFromBg"
-    />
+    <DashboardSectionsToolbar class="mt-6" />
 
-    <div class="mt-10 grid gap-4 lg:grid-cols-2">
+    <PanelCollapsibleSection
+      section-id="summary"
+      title="Podsumowanie miesiąca"
+      icon="i-lucide-bar-chart-3"
+      :default-open="true"
+      class="mt-6"
+    >
+      <DashboardMonthlySummary :metrics="summaryMetrics" />
+    </PanelCollapsibleSection>
+
+    <PanelCollapsibleSection
+      section-id="klub-hub"
+      title="Strefa klubu"
+      icon="i-lucide-users"
+      :default-open="true"
+      embedded
+      class="mt-6"
+    >
+      <KlubHubSection context="trainer" />
+    </PanelCollapsibleSection>
+
+    <PanelCollapsibleSection
+      v-if="pendingAttendanceCount > 0"
+      section-id="attendance-alert"
+      title="Obecności do weryfikacji"
+      icon="i-lucide-user-check"
+      :badge="String(pendingAttendanceCount)"
+      :default-open="true"
+      class="mt-6"
+    >
+      <UAlert
+        icon="i-lucide-user-check"
+        color="warning"
+        variant="subtle"
+        title="Obecności oczekują na weryfikację"
+        :description="`${pendingAttendanceCount} wpisów — zarządzaj na dedykowanej stronie listy obecności (kalendarz + agenda).`"
+      >
+        <template #actions>
+          <UButton to="/klub/obecnosc" size="sm" color="primary" variant="soft">
+            Otwórz listę obecności
+          </UButton>
+        </template>
+      </UAlert>
+    </PanelCollapsibleSection>
+
+    <PanelCollapsibleSection
+      section-id="modules"
+      title="Moduły panelu"
+      icon="i-lucide-layout-grid"
+      :default-open="true"
+      embedded
+      class="mt-6"
+    >
+      <PanelModuleNav
+        :groups="moduleGroups"
+        :tone-from-bg="toneFromBg"
+      />
+    </PanelCollapsibleSection>
+
+    <PanelCollapsibleSection
+      section-id="urgent"
+      title="Wymaga uwagi"
+      icon="i-lucide-clipboard-clock"
+      :badge="pendingCount || pendingPaymentsCount ? String(pendingCount + pendingPaymentsCount) : undefined"
+      :default-open="true"
+      class="mt-6"
+    >
+    <div class="grid gap-4 lg:grid-cols-2">
       <DashboardUrgentList
         title="Wyniki do zatwierdzenia"
         icon="i-lucide-clipboard-clock"
@@ -336,6 +393,7 @@ async function rejectPayment(id: string) {
         </p>
       </UCard>
     </div>
+    </PanelCollapsibleSection>
 
     </template>
   </PanelPageLayout>

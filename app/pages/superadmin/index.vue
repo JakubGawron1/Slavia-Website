@@ -140,6 +140,8 @@ const moduleGroups = computed(() =>
   cmsNavGroupsFromItems('superadmin', cms.navigation.value, SUPERADMIN_MODULE_GROUPS)
 )
 
+provideDashboardSections()
+
 const summaryMetrics = computed(() => [
   {
     label: 'Konta kadry',
@@ -192,26 +194,63 @@ function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 
   <PanelPageLayout>
     <DashboardAccountView v-if="isAccountView" />
     <template v-else>
-    <DashboardHero
-      eyebrow="Superadministracja"
-      :title="`Witaj, ${auth.user.value?.username || 'Superadminie'}!`"
-      lead="Panel systemowy: role, bezpieczeństwo, narzędzia i szybkie przejścia."
+    <PanelCollapsibleSection
+      section-id="hero"
+      title="Powitanie"
       icon="i-lucide-crown"
-      :badges="[
-        { label: `Konta admin: ${adminsCount}`, color: 'neutral' },
-        { label: `Zawodnicy: ${athletesCount}`, color: 'neutral' }
-      ]"
-      :actions="[
-        { label: 'Ustawienia konta', to: accountSettingsPath, icon: 'i-lucide-user-cog', variant: 'outline' }
-      ]"
-    />
+      :default-open="true"
+    >
+      <DashboardHero
+        eyebrow="Superadministracja"
+        :title="`Witaj, ${auth.user.value?.username || 'Superadminie'}!`"
+        lead="Panel systemowy: role, bezpieczeństwo, narzędzia i szybkie przejścia."
+        icon="i-lucide-crown"
+        :badges="[
+          { label: `Konta admin: ${adminsCount}`, color: 'neutral' },
+          { label: `Zawodnicy: ${athletesCount}`, color: 'neutral' }
+        ]"
+        :actions="[
+          { label: 'Ustawienia konta', to: accountSettingsPath, icon: 'i-lucide-user-cog', variant: 'outline' }
+        ]"
+      />
+    </PanelCollapsibleSection>
 
-    <DashboardMonthlySummary class="mt-8" :metrics="summaryMetrics" />
+    <DashboardSectionsToolbar class="mt-6" />
 
-    <PanelModuleNav
-      :groups="moduleGroups"
-      :tone-from-bg="toneFromBg"
-    />
+    <PanelCollapsibleSection
+      section-id="summary"
+      title="Podsumowanie miesiąca"
+      icon="i-lucide-bar-chart-3"
+      :default-open="true"
+      class="mt-6"
+    >
+      <DashboardMonthlySummary :metrics="summaryMetrics" />
+    </PanelCollapsibleSection>
+
+    <PanelCollapsibleSection
+      section-id="klub-hub"
+      title="Strefa klubu"
+      icon="i-lucide-users"
+      :default-open="true"
+      embedded
+      class="mt-6"
+    >
+      <KlubHubSection context="superadmin" />
+    </PanelCollapsibleSection>
+
+    <PanelCollapsibleSection
+      section-id="modules"
+      title="Moduły panelu"
+      icon="i-lucide-layout-grid"
+      :default-open="true"
+      embedded
+      class="mt-6"
+    >
+      <PanelModuleNav
+        :groups="moduleGroups"
+        :tone-from-bg="toneFromBg"
+      />
+    </PanelCollapsibleSection>
     </template>
   </PanelPageLayout>
 </template>

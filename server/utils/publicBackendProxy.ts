@@ -23,7 +23,6 @@ const PUBLIC_GET_PATTERNS: RegExp[] = [
   /^\/api\/cms\/page\/[^/]+$/,
   /^\/api\/cms\/navigation$/,
   /^\/api\/challenges\/monthly-training-sessions$/,
-  /^\/api\/club\/feed$/,
   /^\/api\/announcements$/
 ]
 

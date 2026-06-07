@@ -13,7 +13,6 @@ export const prerenderRoutes = [
   '/kalkulator-sinclair',
   '/kalkulator-max-pr',
   KLUB_SHARED_ROUTES.wyzwania,
-  KLUB_SHARED_ROUTES.feed,
   '/o-klubie'
 ] as const
 
