@@ -41,7 +41,6 @@ const {
   askDelete,
   cancelDelete,
   confirmDelete,
-  savePlayer,
   tryOpenEditFromQuery
 } = editor
 
