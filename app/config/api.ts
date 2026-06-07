@@ -144,6 +144,11 @@ export const apiRoutes = {
   challenges: {
     monthlyTrainingSessions: '/api/challenges/monthly-training-sessions'
   },
+  aiCoach: {
+    status: '/api/ai/coach/status',
+    chat: '/api/ai/coach/chat',
+    importPlan: '/api/ai/coach/import-plan'
+  },
   payments: {
     my: '/api/payments/my',
     myStatus: '/api/payments/my/status',

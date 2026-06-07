@@ -157,6 +157,13 @@ export const EXPERIMENTAL_FEATURES: ExperimentalFeatureDefinition[] = [
     defaultEnabled: true
   },
   {
+    id: 'gemini_olympic_coach',
+    label: 'Trener AI (Groq / LLaMA) — dwubój olimpijski',
+    description:
+      'Panel czatu z trenerem AI: plany treningowe, technika, suplementacja i regeneracja. Wymaga GROQ_API_KEY na backendzie.',
+    defaultEnabled: true
+  },
+  {
     id: 'mobile_foldable_two_pane',
     label: 'Mobile: układ dwukolumnowy (tablet / składany)',
     description: 'Lista + szczegóły obok siebie w czacie i liście zawodników na szerokim ekranie.',
@@ -184,4 +191,5 @@ export type ExperimentalFeatureId =
   | 'calendar_tablet_compact'
   | 'mobile_local_encryption'
   | 'mobile_sinclair_isolates'
+  | 'gemini_olympic_coach'
   | 'mobile_foldable_two_pane'
