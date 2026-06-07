@@ -1,14 +1,33 @@
 <script setup lang="ts">
 import type { RouteLocationRaw } from 'vue-router'
 
-const props = defineProps<{
-  eyebrow: string
-  title: string
-  lead?: string
-  icon: string
-  badges?: Array<{ label: string, color?: 'primary' | 'neutral' | 'success' | 'warning' | 'error' | 'info' }>
-  actions?: Array<{ label: string, to: RouteLocationRaw, icon?: string, variant?: 'solid' | 'soft' | 'outline' | 'ghost', color?: 'primary' | 'neutral' }>
-}>()
+const props = withDefaults(
+  defineProps<{
+    eyebrow: string
+    title: string
+    lead?: string
+    icon: string
+    badges?: Array<{ label: string, color?: 'primary' | 'neutral' | 'success' | 'warning' | 'error' | 'info' }>
+    actions?: Array<{ label: string, to: RouteLocationRaw, icon?: string, variant?: 'solid' | 'soft' | 'outline' | 'ghost', color?: 'primary' | 'neutral' }>
+    enableCms?: boolean
+    cmsPage?: string
+  }>(),
+  {
+    lead: undefined,
+    badges: undefined,
+    actions: undefined,
+    enableCms: true,
+    cmsPage: undefined
+  }
+)
+
+const cms = useCms()
+
+const resolvedCmsPage = computed(
+  () => props.cmsPage || cms.routePageName.value
+)
+
+const useCmsFields = computed(() => props.enableCms && cms.cmsEnabledOnRoute.value)
 
 const badgeItems = computed(() => props.badges ?? [])
 const actionItems = computed(() => props.actions ?? [])
@@ -21,13 +40,46 @@ const actionItems = computed(() => props.actions ?? [])
       <div class="flex items-start justify-between gap-4">
         <div class="min-w-0">
           <p class="text-[11px] font-black uppercase tracking-[0.25em] text-primary">
-            {{ eyebrow }}
+            <CmsEditable
+              v-if="useCmsFields"
+              :page-name="resolvedCmsPage"
+              field-key="dashboard_eyebrow"
+              type="text"
+              label="Dashboard — odznaka"
+              tag="span"
+              :fallback="eyebrow"
+            />
+            <template v-else>
+              {{ eyebrow }}
+            </template>
           </p>
           <h1 class="mt-2 text-3xl font-black tracking-tight text-highlighted sm:text-4xl">
-            {{ title }}
+            <CmsEditable
+              v-if="useCmsFields"
+              :page-name="resolvedCmsPage"
+              field-key="dashboard_title"
+              type="text"
+              label="Dashboard — tytuł"
+              tag="span"
+              :fallback="title"
+            />
+            <template v-else>
+              {{ title }}
+            </template>
           </h1>
           <p v-if="lead" class="mt-3 max-w-3xl text-sm leading-relaxed text-muted sm:text-base">
-            {{ lead }}
+            <CmsEditable
+              v-if="useCmsFields"
+              :page-name="resolvedCmsPage"
+              field-key="dashboard_lead"
+              type="text"
+              label="Dashboard — lead"
+              tag="span"
+              :fallback="lead"
+            />
+            <template v-else>
+              {{ lead }}
+            </template>
           </p>
         </div>
         <span class="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary/12 text-primary ring-1 ring-primary/20">
@@ -64,4 +116,3 @@ const actionItems = computed(() => props.actions ?? [])
     </div>
   </div>
 </template>
-

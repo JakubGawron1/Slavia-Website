@@ -1,5 +1,5 @@
 <script setup lang="ts">
-export type DevSection = 'overview' | 'tools' | 'ops' | 'map'
+export type DevSection = 'overview' | 'tools' | 'flags' | 'ops' | 'map'
 
 defineProps<{
   modelValue: DevSection
