@@ -483,60 +483,64 @@ function canImportMessage(msg: { role: string, mode: OlympicCoachMode }) {
       <SlaviaModal
         v-model:open="showImportModal"
         title="Import planu AI"
-        description="Gemini przekształci odpowiedź na strukturę planu tygodniowego przypisaną zawodnikowi."
-        modal-class="max-w-lg"
+        description="Trener AI przekształci odpowiedź na strukturę planu tygodniowego przypisaną zawodnikowi."
+        :ui="{ content: 'sm:max-w-lg' }"
       >
-        <div class="space-y-4">
-          <UFormField
-            label="Zawodnik"
-            required
-          >
-            <SlaviaOverlaySelect
-              v-model="importForm.athlete_id"
-              value-key="value"
-              size="lg"
-              class="w-full"
-              :items="athleteItems"
-            />
-          </UFormField>
-          <UFormField label="Tytuł planu">
-            <UInput
-              v-model="importForm.title"
-              size="lg"
-              placeholder="Plan AI — tydzień 1"
-            />
-          </UFormField>
-          <div class="grid gap-4 sm:grid-cols-2">
-            <UFormField label="Tydzień od">
-              <UInput
-                v-model="importForm.week_start"
-                type="date"
-                size="lg"
-              />
-            </UFormField>
-            <UFormField label="Status">
+        <template #body>
+          <div class="slavia-modal-body space-y-4">
+            <UFormField
+              label="Zawodnik"
+              required
+            >
               <SlaviaOverlaySelect
-                v-model="importForm.status"
+                v-model="importForm.athlete_id"
                 value-key="value"
                 size="lg"
                 class="w-full"
-                :items="statusItems"
+                :items="athleteItems"
+              />
+            </UFormField>
+            <UFormField label="Tytuł planu">
+              <UInput
+                v-model="importForm.title"
+                size="lg"
+                placeholder="Plan AI — tydzień 1"
+              />
+            </UFormField>
+            <div class="slavia-form-grid sm:grid-cols-2">
+              <UFormField label="Tydzień od">
+                <UInput
+                  v-model="importForm.week_start"
+                  type="date"
+                  size="lg"
+                />
+              </UFormField>
+              <UFormField label="Status">
+                <SlaviaOverlaySelect
+                  v-model="importForm.status"
+                  value-key="value"
+                  size="lg"
+                  class="w-full"
+                  :items="statusItems"
+                />
+              </UFormField>
+            </div>
+            <UFormField label="Cel tygodnia">
+              <UInput
+                v-model="importForm.goal"
+                size="lg"
+              />
+            </UFormField>
+            <UFormField label="Notatka trenera">
+              <UTextarea
+                v-model="importForm.coach_note"
+                :rows="2"
               />
             </UFormField>
           </div>
-          <UFormField label="Cel tygodnia">
-            <UInput
-              v-model="importForm.goal"
-              size="lg"
-            />
-          </UFormField>
-          <UFormField label="Notatka trenera">
-            <UTextarea
-              v-model="importForm.coach_note"
-              :rows="2"
-            />
-          </UFormField>
-          <div class="flex flex-wrap justify-end gap-2 pt-2">
+        </template>
+        <template #footer>
+          <div class="slavia-form-actions w-full">
             <UButton
               variant="ghost"
               color="neutral"
@@ -554,7 +558,7 @@ function canImportMessage(msg: { role: string, mode: OlympicCoachMode }) {
               Utwórz plan
             </UButton>
           </div>
-        </div>
+        </template>
       </SlaviaModal>
     </template>
   </div>
