@@ -6,7 +6,8 @@ import { useDevSuperadminLogs } from '~/composables/useDevSuperadminLogs'
 import {
   DEV_TOOL_EXTERNAL_DOCS_GROUP,
   DEV_TOOL_ROUTE_SUPPLEMENT,
-  DEV_TOOL_STACK_GROUP
+  DEV_TOOL_STACK_GROUP,
+  DEV_TOOL_SUPERADMIN_GROUP
 } from '~/data/devToolsCatalog'
 import type { ExperimentalFeatureId } from '~/data/experimentalFeaturesCatalog'
 import {
@@ -227,6 +228,27 @@ const featureAdoptionRows = ref<FeatureAdoptionRow[]>([])
 const featureAdoptionLoading = ref(false)
 const cmsBaseConfigured = computed(() => Boolean(String(config.public.cmsBaseUrl || '').trim()))
 
+type AiPublicStatusDto = {
+  enabled?: boolean
+  model?: string | null
+  message?: string | null
+}
+
+const aiPublicStatus = ref<AiPublicStatusDto | null>(null)
+const aiPublicStatusLoading = ref(false)
+
+async function refreshAiPublicStatus() {
+  aiPublicStatusLoading.value = true
+  try {
+    aiPublicStatus.value = await $fetch<AiPublicStatusDto>('/api/ai/public/status')
+  } catch (e) {
+    aiPublicStatus.value = null
+    toast.add({ title: 'Asystent AI (public)', description: getApiErrorMessage(e), color: 'warning' })
+  } finally {
+    aiPublicStatusLoading.value = false
+  }
+}
+
 type GithubMediaStatusDto = {
   repo: string
   branch: string
@@ -345,6 +367,7 @@ const autoRouteGroups = computed(() => {
 const devLinkGroupsCombined = computed(() => {
   const seen = new Set<string>()
   const groups = [
+    DEV_TOOL_SUPERADMIN_GROUP,
     DEV_TOOL_STACK_GROUP,
     ...autoRouteGroups.value,
     ...DEV_TOOL_ROUTE_SUPPLEMENT,
@@ -405,6 +428,7 @@ onMounted(() => {
   void refreshBanUsersCatalog()
   void refreshGithubMediaStatus()
   void refreshFeatureAdoption()
+  void refreshAiPublicStatus()
   void $fetch<{ active_provider: 'leapcell' | 'render', updated_at?: string | null }>('/api/system/backend-provider', {
     headers: auth.token.value ? { Authorization: `Bearer ${auth.token.value}` } : undefined
   })
@@ -728,6 +752,24 @@ async function copyEnvDumpJson() {
   await copyToClipboard(JSON.stringify(buildEnvDump(), null, 2), 'Skopiowano JSON środowiska (bez sekretów)')
 }
 
+async function copyBuildInfoJson() {
+  const payload = {
+    capturedAt: new Date().toISOString(),
+    appVersion: config.public.appVersion ?? null,
+    build: import.meta.dev ? 'development' : 'production',
+    siteUrl: config.public.siteUrl ?? null,
+    apiBase: config.public.apiBase ?? null,
+    apiBaseLeapcell: config.public.apiBaseLeapcell ?? null,
+    apiBaseRender: config.public.apiBaseRender ?? null,
+    cmsBaseUrl: config.public.cmsBaseUrl ?? null,
+    mobileGithubRepo: config.public.mobileGithubRepo ?? null,
+    experimentalKillSwitch: config.public.experimentalKillSwitch || null,
+    backendProvider: backendProvider.activeProvider.value,
+    backendApiBase: backendProvider.activeApiBase.value
+  }
+  await copyToClipboard(JSON.stringify(payload, null, 2), 'Skopiowano metadane buildu (JSON)')
+}
+
 async function copyNavigatorSummary() {
   if (!import.meta.client) {
     return
@@ -997,9 +1039,11 @@ function testSessionStorageRoundtrip() {
 
 async function runApiSmokeTests() {
   const endpoints: { path: string, label: string }[] = [
+    { path: '/api/system/ping', label: 'System ping' },
     { path: '/api/posts', label: 'Blog (lista publiczna)' },
+    { path: '/api/athletes', label: 'Zawodnicy (public)' },
     { path: '/api/competitions', label: 'Zawody' },
-    { path: '/api/competitions/recurring-training-cancellations', label: 'Treningi cykliczne — wyjątki (Pn/Śr/Pt)' },
+    { path: '/api/cms/variables', label: 'CMS — zmienne' },
     { path: '/api/auth/me', label: 'Sesja (/auth/me)' },
     { path: '/api/notifications', label: 'Powiadomienia (skrzynka)' }
   ]
@@ -1143,6 +1187,9 @@ function toastStorageApisAvailability() {
     featureAdoptionRows,
     featureAdoptionLoading,
     cmsBaseConfigured,
+    aiPublicStatus,
+    aiPublicStatusLoading,
+    refreshAiPublicStatus,
     githubMediaStatus,
     githubMediaStatusLoading,
     refreshGithubMediaStatus,
@@ -1192,6 +1239,7 @@ function toastStorageApisAvailability() {
     clearWebStorage,
     unregisterServiceWorkers,
     copyEnvDumpJson,
+    copyBuildInfoJson,
     copyNavigatorSummary,
     copyLocalStorageKeys,
     copyViewportString,
