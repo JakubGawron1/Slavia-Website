@@ -208,7 +208,8 @@ const getEventsForDay = (date: Date): CalendarEvent[] => {
   const comps: CalendarEvent[] = (competitions.value || []).filter((e: Competition) => typeof e?.date === 'string' && e.date.startsWith(dateStr)).map((e: Competition): CalendarEvent => ({
     ...e,
     type: e.external_source ? 'external' : 'competition',
-    external_source: e.external_source || undefined
+    external_source: e.external_source || undefined,
+    club_participates: !!e.club_participates
   }))
 
   return [...getTrainingsForDay(date), ...comps]
@@ -311,7 +312,8 @@ const formState = reactive({
   location: '',
   description: '',
   category: 'club_event',
-  status: 'scheduled'
+  status: 'scheduled',
+  club_participates: false
 })
 const readOnlyEvent = ref(false)
 
@@ -367,6 +369,7 @@ async function openModal(date?: Date, event?: CalendarEvent) {
     formState.description = event.description || ''
     formState.category = event.category || (event.type === 'training' ? 'training' : 'club_event')
     formState.status = event.status || 'scheduled'
+    formState.club_participates = !!event.club_participates
     if (event.external_source || event.type === 'external') {
       editingId.value = event.id
       readOnlyEvent.value = !canManageEvents.value
@@ -395,6 +398,7 @@ async function openModal(date?: Date, event?: CalendarEvent) {
     formState.description = ''
     formState.category = 'club_event'
     formState.status = 'scheduled'
+    formState.club_participates = false
     readOnlyEvent.value = false
     participantIds.value = []
     if (canManageEvents.value) {
@@ -460,7 +464,8 @@ async function saveEvent() {
           location: formState.location,
           description: formState.description,
           category: formState.category,
-          status: formState.status
+          status: formState.status,
+          club_participates: formState.club_participates
         }
       })
       toast.add({
@@ -763,6 +768,12 @@ function handleDayClick(day: Date) {
                 {{ event.time || event.location }}
               </span>
               <span
+                v-if="event.club_participates && event.type !== 'training'"
+                class="mt-0.5 block text-[10px] font-semibold uppercase tracking-wide text-primary/90"
+              >
+                Start klubu
+              </span>
+              <span
                 v-if="event.status && event.status !== 'scheduled'"
                 class="mt-0.5 block text-[10px] font-semibold uppercase tracking-wide opacity-90"
               >
@@ -955,6 +966,28 @@ function handleDayClick(day: Date) {
               </option>
             </SlaviaFormNativeSelect>
           </UFormField>
+          <div
+            v-if="canManageEvents && !isEditingClubRecurringTraining && (editingId == null || !String(editingId).startsWith('training-'))"
+            class="rounded-xl border border-primary/25 bg-primary/5 p-3 space-y-1"
+          >
+            <label class="flex items-center gap-2 text-sm font-medium cursor-pointer">
+              <input
+                v-model="formState.club_participates"
+                type="checkbox"
+                class="rounded border-default"
+              >
+              <span>Klub bierze udział w zawodach</span>
+            </label>
+            <p class="text-xs text-muted pl-6">
+              Bez przypisywania zawodników — wpis liczy się w statystykach na stronie Klub.
+            </p>
+          </div>
+          <div
+            v-else-if="formState.club_participates && bannerEvent?.type !== 'training'"
+            class="rounded-xl border border-primary/25 bg-primary/5 px-3 py-2 text-sm text-primary"
+          >
+            Klub bierze udział w tych zawodach.
+          </div>
           <div
             v-if="canManageEvents && !readOnlyEvent && athletesPickList.length && (editingId == null || !String(editingId).startsWith('training-'))"
             class="rounded-xl border border-default p-3 space-y-2"

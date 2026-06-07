@@ -1,8 +1,8 @@
 import type { RouteLocationRaw } from 'vue-router'
 import type { Athlete, Competition } from '~/types/models'
+import { PUBLIC_ROUTES, KLUB_SHARED_ROUTES } from '~/config/klubRoutes'
 
 type GalleryPhoto = { id: string }
-import { PUBLIC_ROUTES, KLUB_SHARED_ROUTES } from '~/config/klubRoutes'
 
 type BlogPost = { id: string, published?: boolean }
 
@@ -99,11 +99,20 @@ export function useKlubDashboardStats() {
     () => (athletes.value ?? []).filter(a => a.is_active !== false).length
   )
 
-  const upcomingEvents = computed(() => {
+  const clubCompetitions = computed(() =>
+    (competitions.value ?? []).filter(
+      c => !!c.club_participates && c.status !== 'cancelled'
+    )
+  )
+
+  const upcomingClubStarts = computed(() => {
     const today = new Date().toISOString().slice(0, 10)
-    return (competitions.value ?? []).filter(
-      c => (c.date ?? '') >= today && c.status !== 'cancelled'
-    ).length
+    return clubCompetitions.value.filter(c => (c.date ?? '') >= today).length
+  })
+
+  const clubStartsThisYear = computed(() => {
+    const year = new Date().getFullYear().toString()
+    return clubCompetitions.value.filter(c => (c.date ?? '').startsWith(year)).length
   })
 
   const publishedPosts = computed(
@@ -123,11 +132,19 @@ export function useKlubDashboardStats() {
         to: PUBLIC_ROUTES.zawodnicy
       },
       {
-        label: 'Nadchodzące wydarzenia',
-        value: upcomingEvents.value,
+        label: 'Nadchodzące starty klubu',
+        value: upcomingClubStarts.value,
         icon: 'i-lucide-calendar-days',
         tone: 'info',
-        hint: 'Kalendarz klubu',
+        hint: 'Zawody oznaczone w kalendarzu',
+        to: PUBLIC_ROUTES.kalendarz
+      },
+      {
+        label: 'Starty klubu w tym roku',
+        value: clubStartsThisYear.value,
+        icon: 'i-lucide-trophy',
+        tone: 'success',
+        hint: 'Łącznie zaplanowane i rozegrane',
         to: PUBLIC_ROUTES.kalendarz
       },
       {
