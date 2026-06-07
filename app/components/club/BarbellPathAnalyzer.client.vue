@@ -3,6 +3,19 @@ import type { Pose } from '@tensorflow-models/pose-detection'
 import { loadPoseDetector, MODEL_PROGRESS_READY, type PoseDetector } from '~/utils/loadPoseDetector'
 import { buildBiomechanicalFeedback, buildTechniqueMetrics, smoothSamplesForFps, type BarbellSample, type BarbellTechniqueMetrics } from '~/utils/barbellPathAnalysis'
 
+const props = withDefaults(
+  defineProps<{
+    /** Osadzenie w Barbell Lab — ukrywa karty heurystyk (pokazuje je panel lab). */
+    labEmbed?: boolean
+  }>(),
+  { labEmbed: false }
+)
+
+const emit = defineEmits<{
+  analyzed: [payload: { samples: BarbellSample[]; metrics: BarbellTechniqueMetrics; feedback: string[] }]
+  playbackTime: [t: number]
+}>()
+
 const toast = useToast()
 const expPlateTracking = useExperimentalFlag('barbell_plate_tracking')
 const expBodyRefTracking = useExperimentalFlag('barbell_body_reference_tracking')
@@ -647,9 +660,15 @@ async function analyzeVideo() {
     }
 
     analyzedSamples.value = activeLift
-    drawPath(displaySamples.value.length ? displaySamples.value : activeLift)
-    feedback.value = buildBiomechanicalFeedback(displaySamples.value.length ? displaySamples.value : activeLift)
-    metrics.value = buildTechniqueMetrics(displaySamples.value.length ? displaySamples.value : activeLift)
+    const finalSamples = displaySamples.value.length ? displaySamples.value : activeLift
+    drawPath(finalSamples)
+    feedback.value = buildBiomechanicalFeedback(finalSamples)
+    metrics.value = buildTechniqueMetrics(finalSamples)
+    emit('analyzed', {
+      samples: finalSamples,
+      metrics: metrics.value,
+      feedback: feedback.value
+    })
     toast.add({ title: 'Analiza zakończona', color: 'success' })
   } catch (e) {
     console.error(e)
@@ -682,6 +701,9 @@ function onVideoTimeUpdate() {
   rafTimeUpdate = window.requestAnimationFrame(() => {
     rafTimeUpdate = null
     drawPath(displaySamples.value, t)
+    if (props.labEmbed) {
+      emit('playbackTime', t)
+    }
   })
 }
 
@@ -971,7 +993,7 @@ onBeforeUnmount(() => {
     </div>
 
     <UCard
-      v-if="feedback.length"
+      v-if="feedback.length && !labEmbed"
       class="overflow-hidden rounded-3xl border-primary/25 bg-linear-to-br from-primary/8 via-card to-card ring-1 ring-primary/15"
     >
       <div class="space-y-4 p-5 sm:p-6">
@@ -1005,7 +1027,7 @@ onBeforeUnmount(() => {
     </UCard>
 
     <UCard
-      v-if="metrics"
+      v-if="metrics && !labEmbed"
       class="rounded-3xl border-default/60"
     >
       <div class="grid gap-3 sm:grid-cols-5">

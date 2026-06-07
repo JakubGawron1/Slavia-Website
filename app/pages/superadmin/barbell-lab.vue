@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * BARBELL LAB — TESTY ALGORYTMÓW ŚLEDZENIA
+ * BARBELL LAB — benchmark silników + analiza toru z wykresem i AI
  * Dostępne tylko dla superadmina.
  */
 definePageMeta({ middleware: 'superadmin' })
@@ -9,6 +9,21 @@ useSeoMeta({
   title: 'Barbell Lab — Testy śledzenia',
   robots: 'noindex, nofollow'
 })
+
+type LabTab = 'benchmark' | 'path_analyzer'
+const activeTab = ref<LabTab>('path_analyzer')
+
+const BarbellLabPathAnalyzer = defineAsyncComponent({
+  loader: () => import('~/components/club/barbell/BarbellLabPathAnalyzer.client.vue'),
+  loadingComponent: {
+    template: '<div class="flex justify-center py-16"><UIcon name="i-lucide-loader-2" class="size-8 animate-spin text-primary" /></div>'
+  }
+})
+
+const tabItems = [
+  { label: 'Analiza toru + AI', value: 'path_analyzer' as const, icon: 'i-lucide-line-chart' },
+  { label: 'Benchmark silników', value: 'benchmark' as const, icon: 'i-lucide-gauge' }
+]
 
 const toast = useToast()
 
@@ -324,11 +339,27 @@ function drawResults(ctx: CanvasRenderingContext2D, current: {x: number, y: numb
         area="superadmin"
         tone="superadmin"
         eyebrow="Superadmin Experimental Lab"
-        title="Barbell Tracker Benchmark"
+        title="Barbell Lab"
         icon="i-lucide-beaker"
-        description="Porównanie wydajności i dokładności silników śledzenia toru sztangi — wybór biblioteki dla produkcyjnego analizatora."
+        description="Analiza toru sztangi (MoveNet + wykres + Trener AI) oraz porównanie silników śledzenia dla R&D."
       />
 
+      <div class="mb-8 flex flex-wrap gap-2">
+        <UButton
+          v-for="tab in tabItems"
+          :key="tab.value"
+          :icon="tab.icon"
+          :color="activeTab === tab.value ? 'primary' : 'neutral'"
+          :variant="activeTab === tab.value ? 'solid' : 'outline'"
+          @click="activeTab = tab.value"
+        >
+          {{ tab.label }}
+        </UButton>
+      </div>
+
+      <BarbellLabPathAnalyzer v-if="activeTab === 'path_analyzer'" />
+
+      <template v-else>
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <aside class="space-y-6">
           <UCard>
@@ -389,6 +420,7 @@ function drawResults(ctx: CanvasRenderingContext2D, current: {x: number, y: numb
           </UCard>
         </div>
       </div>
+      </template>
     </ClientOnly>
   </PanelPageLayout>
 </template>
