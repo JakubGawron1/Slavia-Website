@@ -4,8 +4,8 @@ import type { ExperimentalFeatureDefinition } from '~/data/experimentalFeaturesC
 
 type ScrollRefTarget = Element | ComponentPublicInstance | null
 
-function bindScrollEl(elRef: Ref<HTMLElement | null>, n: ScrollRefTarget) {
-  elRef.value = n instanceof HTMLElement ? n : null
+function scrollTargetEl(n: ScrollRefTarget): HTMLElement | null {
+  return n instanceof HTMLElement ? n : null
 }
 
 const props = defineProps<{
@@ -61,18 +61,18 @@ function useHorizontalScroll() {
 
   watch(el, () => nextTick(updateEdges))
 
-  return { el, canScrollLeft, canScrollRight, updateEdges, scrollBy }
+  return reactive({ el, canScrollLeft, canScrollRight, updateEdges, scrollBy })
 }
 
 const stableScroll = useHorizontalScroll()
 const experimentScroll = useHorizontalScroll()
 
 function setStableScrollEl(n: ScrollRefTarget) {
-  bindScrollEl(stableScroll.el, n)
+  stableScroll.el = scrollTargetEl(n)
 }
 
 function setExperimentScrollEl(n: ScrollRefTarget) {
-  bindScrollEl(experimentScroll.el, n)
+  experimentScroll.el = scrollTargetEl(n)
 }
 
 watch(
@@ -131,7 +131,7 @@ watch(
             variant="ghost"
             color="neutral"
             icon="i-lucide-chevron-left"
-            :disabled="!stableScroll.canScrollLeft.value"
+            :disabled="!stableScroll.canScrollLeft"
             aria-label="Przewiń stabilne w lewo"
             @click="stableScroll.scrollBy(-scrollStep)"
           />
@@ -140,7 +140,7 @@ watch(
             variant="ghost"
             color="neutral"
             icon="i-lucide-chevron-right"
-            :disabled="!stableScroll.canScrollRight.value"
+            :disabled="!stableScroll.canScrollRight"
             aria-label="Przewiń stabilne w prawo"
             @click="stableScroll.scrollBy(scrollStep)"
           />
@@ -148,12 +148,12 @@ watch(
       </div>
       <div class="dev-flags-scroll-wrap relative mt-2">
         <div
-          v-show="stableScroll.canScrollLeft.value"
+          v-show="stableScroll.canScrollLeft"
           class="dev-flags-scroll-fade dev-flags-scroll-fade--left pointer-events-none"
           aria-hidden="true"
         />
         <div
-          v-show="stableScroll.canScrollRight.value"
+          v-show="stableScroll.canScrollRight"
           class="dev-flags-scroll-fade dev-flags-scroll-fade--right pointer-events-none"
           aria-hidden="true"
         />
@@ -203,7 +203,7 @@ watch(
             variant="ghost"
             color="neutral"
             icon="i-lucide-chevron-left"
-            :disabled="!experimentScroll.canScrollLeft.value"
+            :disabled="!experimentScroll.canScrollLeft"
             aria-label="Przewiń eksperymenty w lewo"
             @click="experimentScroll.scrollBy(-scrollStep)"
           />
@@ -212,7 +212,7 @@ watch(
             variant="ghost"
             color="neutral"
             icon="i-lucide-chevron-right"
-            :disabled="!experimentScroll.canScrollRight.value"
+            :disabled="!experimentScroll.canScrollRight"
             aria-label="Przewiń eksperymenty w prawo"
             @click="experimentScroll.scrollBy(scrollStep)"
           />
@@ -223,12 +223,12 @@ watch(
         class="dev-flags-scroll-wrap relative mt-2"
       >
         <div
-          v-show="experimentScroll.canScrollLeft.value"
+          v-show="experimentScroll.canScrollLeft"
           class="dev-flags-scroll-fade dev-flags-scroll-fade--left pointer-events-none"
           aria-hidden="true"
         />
         <div
-          v-show="experimentScroll.canScrollRight.value"
+          v-show="experimentScroll.canScrollRight"
           class="dev-flags-scroll-fade dev-flags-scroll-fade--right pointer-events-none"
           aria-hidden="true"
         />

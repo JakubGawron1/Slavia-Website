@@ -1295,7 +1295,6 @@ function toastStorageApisAvailability() {
     toastStorageApisAvailability
   }) as DeveloperPageContext
 
-  provide(DEVELOPER_PAGE_KEY, ctx)
   return ctx
 }
 

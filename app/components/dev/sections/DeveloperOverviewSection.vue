@@ -4,8 +4,7 @@ const d = useDeveloperPage()
 
 <template>
   <div class="grid grid-cols-1 gap-3 lg:grid-cols-12 lg:gap-4">
-    <section aria-label="Statystyki i backend" class="contents">
-      <UCard class="rounded-2xl border-default/60 p-4 shadow-sm lg:col-span-12">
+    <UCard class="rounded-2xl border-default/60 p-4 shadow-sm lg:col-span-12" aria-label="Statystyki i backend">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <p class="text-[10px] font-bold uppercase tracking-wider text-muted">
             Statystyki API
@@ -222,7 +221,5 @@ const d = useDeveloperPage()
           </p>
         </div>
       </UCard>
-
-    </section>
   </div>
 </template>
