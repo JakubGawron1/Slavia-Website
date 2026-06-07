@@ -29,8 +29,12 @@ const {
 const draft = ref('')
 const selectedAthleteId = ref('')
 const messagesRef = ref<HTMLElement | null>(null)
+const inputRef = ref<HTMLTextAreaElement | null>(null)
+const shellRef = ref<HTMLElement | null>(null)
 const showImportModal = ref(false)
 const importSourceText = ref('')
+const planSuiteOpen = ref(true)
+const isMobile = ref(false)
 
 const importForm = reactive({
   athlete_id: '',
@@ -70,12 +74,19 @@ const athleteItems = computed(() =>
     .map(a => ({ label: a.full_name, value: a.id }))
 )
 
-const modeItems: { label: string, value: OlympicCoachMode, icon: string }[] = [
-  { label: 'Czat', value: 'chat', icon: 'i-lucide-message-circle' },
-  { label: 'Plan treningowy', value: 'plan', icon: 'i-lucide-clipboard-list' },
-  { label: 'Suplementacja', value: 'supplements', icon: 'i-lucide-pill' },
-  { label: 'Regeneracja', value: 'recovery', icon: 'i-lucide-heart-pulse' }
+const modeItems: { label: string, shortLabel: string, value: OlympicCoachMode, icon: string }[] = [
+  { label: 'Czat', shortLabel: 'Czat', value: 'chat', icon: 'i-lucide-message-circle' },
+  { label: 'Plan treningowy', shortLabel: 'Plan', value: 'plan', icon: 'i-lucide-clipboard-list' },
+  { label: 'Suplementacja', shortLabel: 'Suplem.', value: 'supplements', icon: 'i-lucide-pill' },
+  { label: 'Regeneracja', shortLabel: 'Regen.', value: 'recovery', icon: 'i-lucide-heart-pulse' }
 ]
+
+const modePromptLabels: Record<OlympicCoachMode, string> = {
+  chat: 'Technika',
+  plan: 'Plan tygodnia',
+  supplements: 'Suplementacja',
+  recovery: 'Regeneracja'
+}
 
 const quickPrompts: Record<OlympicCoachMode, string[]> = {
   chat: [
@@ -100,6 +111,30 @@ const quickPrompts: Record<OlympicCoachMode, string[]> = {
   ]
 }
 
+const activeModeItem = computed(() => modeItems.find(m => m.value === mode.value))
+
+const areaLabel = computed(() => (props.area === 'trainer' ? 'Kadra' : 'Zawodnik'))
+
+const { visible: backVisible, target: backTarget, goBack } = useSlaviaNavBack()
+
+const { swipeStyle, backdropOpacity, tracking: swipeTracking } = useEdgeSwipeBack(shellRef, {
+  enabled: isMobile,
+  canSwipe: () => Boolean(coachOn.value) && !showImportModal.value && !statusLoading.value,
+  onBack: goBack
+})
+
+onMounted(() => {
+  if (!import.meta.client) return
+  const mq = window.matchMedia('(max-width: 639px)')
+  const sync = () => {
+    isMobile.value = mq.matches
+    if (mq.matches && messages.value.length > 0) planSuiteOpen.value = false
+  }
+  sync()
+  mq.addEventListener('change', sync)
+  onUnmounted(() => mq.removeEventListener('change', sync))
+})
+
 watch(
   () => messages.value.length,
   async () => {
@@ -109,10 +144,38 @@ watch(
   }
 )
 
+watch(mode, (m) => {
+  if (m === 'plan') {
+    planSuiteOpen.value = !isMobile.value || messages.value.length === 0
+  }
+})
+
+watch(isMobile, (mobile) => {
+  if (!mobile && mode.value === 'plan') {
+    planSuiteOpen.value = true
+  }
+})
+
+function resizeInput() {
+  const el = inputRef.value
+  if (!el) return
+  el.style.height = 'auto'
+  el.style.height = `${Math.min(el.scrollHeight, 128)}px`
+}
+
+function onInputKeydown(e: KeyboardEvent) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault()
+    void submitDraft()
+  }
+}
+
 async function submitDraft() {
   if (!draft.value.trim()) return
   const text = draft.value
   draft.value = ''
+  await nextTick()
+  resizeInput()
   await sendMessage(text, {
     athleteId: isStaff.value && selectedAthleteId.value ? selectedAthleteId.value : undefined,
     includePlanContext: mode.value === 'plan'
@@ -181,10 +244,17 @@ async function confirmImportPlan() {
 function canImportMessage(msg: { role: string, mode: OlympicCoachMode }) {
   return isStaff.value && msg.role === 'assistant' && msg.mode === 'plan'
 }
+
+function truncatePrompt(text: string, max = 72) {
+  return text.length > max ? `${text.slice(0, max)}…` : text
+}
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div
+    class="olympic-coach olympic-coach--page"
+    :class="`olympic-coach--${area}`"
+  >
     <UAlert
       v-if="!coachOn"
       color="warning"
@@ -210,193 +280,365 @@ function canImportMessage(msg: { role: string, mode: OlympicCoachMode }) {
       description="Ustaw GROQ_API_KEY w .env backendu i zrestartuj serwer."
     />
 
-    <UCard
+    <div
       v-else-if="statusLoading"
-      class="slavia-page-card"
+      class="olympic-coach__shell olympic-coach__shell--loading"
     >
-      <div class="flex min-h-[280px] flex-col items-center justify-center gap-3 text-muted">
+      <div class="olympic-coach__loading">
         <UIcon
           name="i-lucide-loader-2"
-          class="size-8 animate-spin"
+          class="size-8 animate-spin text-primary"
         />
-        <p class="text-sm">
-          Łączenie z trenerem AI…
-        </p>
+        <p>Łączenie z trenerem AI…</p>
       </div>
-    </UCard>
+    </div>
 
-    <template v-else-if="coachOn">
+    <div
+      v-else-if="coachOn"
+      class="olympic-coach__swipe-stage"
+      :class="{ 'olympic-coach__swipe-stage--active': swipeTracking || (backdropOpacity ?? 0) > 0 }"
+    >
+      <div
+        class="olympic-coach__swipe-backdrop"
+        aria-hidden="true"
+        :style="{ opacity: backdropOpacity }"
+      >
+        <UIcon
+          name="i-lucide-chevron-left"
+          class="olympic-coach__swipe-backdrop-icon"
+        />
+      </div>
+
+      <div
+        ref="shellRef"
+        class="olympic-coach__shell"
+        :class="{
+          'olympic-coach__shell--swiping': swipeTracking,
+          'olympic-coach__shell--plan': mode === 'plan'
+        }"
+        :style="swipeStyle"
+      >
       <OlympicCoachQuotaStrip
         v-if="quotaMetrics.length"
         :metrics="quotaMetrics"
         :columns="isStaff ? 4 : 2"
-        class="rounded-xl border border-default overflow-hidden"
       />
 
-      <UCard class="slavia-page-card">
-        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p class="text-sm font-semibold text-highlighted">
-              Slavia AI Trener
-            </p>
-            <p class="mt-1 text-xs text-muted">
-              Dwubój olimpijski · plany · suplementacja · regeneracja
-              <span
-                v-if="status?.model"
-                class="font-mono"
-              >({{ status.model }})</span>
-            </p>
-          </div>
-          <div class="flex flex-wrap gap-2">
-            <UButton
-              v-for="item in modeItems"
-              :key="item.value"
-              size="sm"
-              :variant="mode === item.value ? 'solid' : 'outline'"
-              :color="mode === item.value ? 'primary' : 'neutral'"
-              :icon="item.icon"
-              @click="mode = item.value"
+      <header class="olympic-coach__toolbar">
+        <div class="olympic-coach__toolbar-head">
+          <button
+            v-if="isMobile && backVisible"
+            type="button"
+            class="olympic-coach__back-btn"
+            :aria-label="backTarget?.label ?? 'Wróć'"
+            @click="goBack"
+          >
+            <UIcon
+              name="i-lucide-chevron-left"
+              class="size-5"
+            />
+          </button>
+
+          <div class="olympic-coach__meta">
+            <span class="olympic-coach__area-badge hidden sm:inline-flex">{{ areaLabel }}</span>
+            <span class="olympic-coach__badge olympic-coach__badge--live">
+              <UIcon
+                name="i-lucide-sparkles"
+                class="size-3"
+              />
+              Slavia AI
+            </span>
+            <span
+              v-if="status?.model"
+              class="olympic-coach__badge hidden sm:inline-flex"
             >
-              {{ item.label }}
-            </UButton>
+              {{ status.model }}
+            </span>
           </div>
         </div>
 
-        <UFormField
-          v-if="isStaff && athleteItems.length"
-          label="Kontekst zawodnika (opcjonalnie)"
-          description="Kadra: PB i ostatnie check-iny regeneracji trafią do promptu."
-          class="mt-6"
+        <nav
+          class="olympic-coach__modes"
+          aria-label="Tryb rozmowy"
         >
-          <SlaviaOverlaySelect
-            v-model="selectedAthleteId"
-            value-key="value"
-            size="lg"
-            class="w-full max-w-md"
-            :items="[{ label: '— bez profilu —', value: '' }, ...athleteItems]"
-          />
-        </UFormField>
-
-        <div
-          v-if="mode === 'plan'"
-          class="mt-6 grid gap-4 rounded-xl border border-default bg-elevated/40 p-4 sm:grid-cols-2"
-        >
-          <UFormField label="Dni treningowe / tydzień">
-            <UInput
-              v-model.number="planContext.training_days_per_week"
-              type="number"
-              min="2"
-              max="6"
-              size="lg"
-            />
-          </UFormField>
-          <UFormField label="Doświadczenie">
-            <UInput
-              v-model="planContext.experience"
-              placeholder="np. 2 lata dwuboju, junior"
-              size="lg"
-            />
-          </UFormField>
-          <UFormField label="CM rwanie (kg)">
-            <UInput
-              v-model.number="planContext.snatch_max_kg"
-              type="number"
-              step="0.5"
-              size="lg"
-            />
-          </UFormField>
-          <UFormField label="CM podrzut (kg)">
-            <UInput
-              v-model.number="planContext.clean_jerk_max_kg"
-              type="number"
-              step="0.5"
-              size="lg"
-            />
-          </UFormField>
-          <UFormField label="CM przysiad (kg)">
-            <UInput
-              v-model.number="planContext.squat_max_kg"
-              type="number"
-              step="0.5"
-              size="lg"
-            />
-          </UFormField>
-          <UFormField label="Tydzień od (data)">
-            <UInput
-              v-model="planContext.week_start"
-              type="date"
-              size="lg"
-            />
-          </UFormField>
-          <UFormField
-            label="Cel"
-            class="sm:col-span-2"
-          >
-            <UInput
-              v-model="planContext.goal"
-              placeholder="np. poprawa C&J, start za 6 tygodni"
-              size="lg"
-            />
-          </UFormField>
-          <UFormField
-            label="Kontuzje / ograniczenia"
-            class="sm:col-span-2"
-          >
-            <UTextarea
-              v-model="planContext.injuries"
-              :rows="2"
-              placeholder="np. lekki ból nadgarstka przy hang snatch"
-            />
-          </UFormField>
-        </div>
-
-        <div class="mt-4 flex flex-wrap gap-2">
-          <UButton
-            v-for="(prompt, idx) in quickPrompts[mode]"
-            :key="idx"
-            size="xs"
-            variant="soft"
-            color="neutral"
+          <button
+            v-for="item in modeItems"
+            :key="item.value"
+            type="button"
+            class="olympic-coach__mode-btn"
+            :class="{ 'olympic-coach__mode-btn--active': mode === item.value }"
             :disabled="loading"
-            @click="useQuickPrompt(prompt)"
+            @click="mode = item.value"
           >
-            {{ prompt.length > 48 ? `${prompt.slice(0, 48)}…` : prompt }}
-          </UButton>
-        </div>
-      </UCard>
+            <UIcon
+              :name="item.icon"
+              class="size-4 shrink-0"
+            />
+            <span class="hidden sm:inline">{{ item.label }}</span>
+            <span class="sm:hidden">{{ item.shortLabel }}</span>
+          </button>
+        </nav>
+      </header>
 
-      <UCard class="slavia-page-card overflow-hidden">
-        <div
-          ref="messagesRef"
-          class="max-h-[min(52vh,520px)] min-h-[280px] space-y-4 overflow-y-auto p-1"
-        >
-          <PublicEmptyState
-            v-if="messages.length === 0"
-            compact
-            icon="i-lucide-sparkles"
-            title="Zacznij rozmowę z trenerem AI"
-            description="Wybierz tryb, użyj szybkiego promptu lub opisz swój cel treningowy."
+      <div
+        v-if="isStaff && athleteItems.length"
+        class="olympic-coach__context-bar"
+      >
+        <div class="olympic-coach__context-bar-icon">
+          <UIcon
+            name="i-lucide-user-round"
+            class="size-4"
           />
+        </div>
+        <div class="olympic-coach__context-bar-copy">
+          <strong>Kontekst zawodnika</strong>
+          <span>PB i check-iny regeneracji trafią do promptu (opcjonalnie).</span>
+        </div>
+        <SlaviaOverlaySelect
+          v-model="selectedAthleteId"
+          value-key="value"
+          size="lg"
+          class="olympic-coach__context-select"
+          :items="[{ label: '— bez profilu —', value: '' }, ...athleteItems]"
+        />
+      </div>
 
+      <section
+        v-if="mode === 'plan'"
+        class="olympic-coach__plan-suite"
+        :class="{ 'olympic-coach__plan-suite--collapsed': isMobile && !planSuiteOpen }"
+      >
+        <button
+          v-if="isMobile"
+          type="button"
+          class="olympic-coach__plan-suite-toggle"
+          :aria-expanded="planSuiteOpen"
+          @click="planSuiteOpen = !planSuiteOpen"
+        >
+          <div class="olympic-coach__plan-suite-head">
+            <UIcon
+              name="i-lucide-clipboard-list"
+              class="size-5 shrink-0"
+            />
+            <div>
+              <h3>Parametry planu</h3>
+              <p>CM, dni treningowe i cel — AI dopasuje mikrocykl.</p>
+            </div>
+          </div>
+          <UIcon
+            :name="planSuiteOpen ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
+            class="size-5 shrink-0 text-muted"
+          />
+        </button>
+
+        <div
+          v-else
+          class="olympic-coach__plan-suite-static-head"
+        >
+          <div class="olympic-coach__plan-suite-head">
+            <UIcon
+              name="i-lucide-clipboard-list"
+              class="size-5 shrink-0"
+            />
+            <div>
+              <h3>Parametry planu</h3>
+              <p>Obok czatu — bez scrollowania.</p>
+            </div>
+          </div>
+        </div>
+
+        <div
+          v-show="!isMobile || planSuiteOpen"
+          class="olympic-coach__plan-suite-body"
+        >
+          <div class="olympic-coach__plan-block olympic-coach__plan-block--cm">
+            <span class="olympic-coach__plan-block-label">CM (kg)</span>
+            <div class="olympic-coach__plan-cm-grid">
+              <div class="olympic-coach__plan-cm-card">
+                <UIcon
+                  name="i-lucide-dumbbell"
+                  class="size-4"
+                />
+                <label for="oc-snatch">Rwanie</label>
+                <div class="olympic-coach__plan-cm-input-wrap">
+                  <input
+                    id="oc-snatch"
+                    v-model.number="planContext.snatch_max_kg"
+                    type="number"
+                    step="0.5"
+                    inputmode="decimal"
+                    placeholder="—"
+                  >
+                  <span>kg</span>
+                </div>
+              </div>
+              <div class="olympic-coach__plan-cm-card">
+                <UIcon
+                  name="i-lucide-dumbbell"
+                  class="size-4"
+                />
+                <label for="oc-cj">Podrzut</label>
+                <div class="olympic-coach__plan-cm-input-wrap">
+                  <input
+                    id="oc-cj"
+                    v-model.number="planContext.clean_jerk_max_kg"
+                    type="number"
+                    step="0.5"
+                    inputmode="decimal"
+                    placeholder="—"
+                  >
+                  <span>kg</span>
+                </div>
+              </div>
+              <div class="olympic-coach__plan-cm-card">
+                <UIcon
+                  name="i-lucide-dumbbell"
+                  class="size-4"
+                />
+                <label for="oc-sq">Przysiad</label>
+                <div class="olympic-coach__plan-cm-input-wrap">
+                  <input
+                    id="oc-sq"
+                    v-model.number="planContext.squat_max_kg"
+                    type="number"
+                    step="0.5"
+                    inputmode="decimal"
+                    placeholder="—"
+                  >
+                  <span>kg</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="olympic-coach__plan-block olympic-coach__plan-block--profile">
+            <span class="olympic-coach__plan-block-label">Profil</span>
+            <div class="olympic-coach__plan-row">
+              <div class="olympic-coach__plan-field olympic-coach__plan-field--sm">
+                <label for="oc-days">Dni / tydz.</label>
+                <input
+                  id="oc-days"
+                  v-model.number="planContext.training_days_per_week"
+                  class="olympic-coach__plan-input"
+                  type="number"
+                  min="2"
+                  max="6"
+                >
+              </div>
+              <div class="olympic-coach__plan-field olympic-coach__plan-field--grow">
+                <label for="oc-week">Tydzień od</label>
+                <input
+                  id="oc-week"
+                  v-model="planContext.week_start"
+                  class="olympic-coach__plan-input"
+                  type="date"
+                >
+              </div>
+              <div class="olympic-coach__plan-field olympic-coach__plan-field--full">
+                <label for="oc-exp">Doświadczenie</label>
+                <input
+                  id="oc-exp"
+                  v-model="planContext.experience"
+                  class="olympic-coach__plan-input"
+                  type="text"
+                  placeholder="np. 2 lata dwuboju, junior"
+                >
+              </div>
+            </div>
+          </div>
+
+          <div class="olympic-coach__plan-block olympic-coach__plan-block--goal">
+            <span class="olympic-coach__plan-block-label">Cel i ograniczenia</span>
+            <div class="olympic-coach__plan-row">
+              <div class="olympic-coach__plan-field olympic-coach__plan-field--full">
+                <label for="oc-goal">Cel tygodnia</label>
+                <input
+                  id="oc-goal"
+                  v-model="planContext.goal"
+                  class="olympic-coach__plan-input"
+                  type="text"
+                  placeholder="np. poprawa C&J, start za 6 tygodni"
+                >
+              </div>
+              <div class="olympic-coach__plan-field olympic-coach__plan-field--full">
+                <label for="oc-inj">Kontuzje / ograniczenia</label>
+                <textarea
+                  id="oc-inj"
+                  v-model="planContext.injuries"
+                  class="olympic-coach__plan-input olympic-coach__plan-textarea"
+                  rows="2"
+                  placeholder="np. lekki ból nadgarstka przy hang snatch"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="olympic-coach__chat-stack">
+      <div
+        ref="messagesRef"
+        class="olympic-coach__thread"
+      >
+        <div
+          v-if="messages.length === 0"
+          class="olympic-coach__hero"
+        >
+          <div class="olympic-coach__orb">
+            <UIcon
+              name="i-lucide-sparkles"
+              class="size-7 text-white"
+            />
+          </div>
+          <h2 class="olympic-coach__hero-title">
+            Cześć, jestem Twoim trenerem AI
+          </h2>
+          <p class="olympic-coach__hero-sub">
+            {{ activeModeItem?.label ?? 'Czat' }} — dwubój olimpijski, plany, suplementacja i bezpieczna regeneracja.
+          </p>
+
+          <div class="olympic-coach__prompt-grid">
+            <button
+              v-for="(prompt, idx) in quickPrompts[mode]"
+              :key="idx"
+              type="button"
+              class="olympic-coach__prompt-card"
+              :disabled="loading"
+              @click="useQuickPrompt(prompt)"
+            >
+              <span class="olympic-coach__prompt-label">{{ modePromptLabels[mode] }}</span>
+              <span class="olympic-coach__prompt-text">{{ truncatePrompt(prompt) }}</span>
+            </button>
+          </div>
+        </div>
+
+        <template v-else>
           <div
             v-for="msg in messages"
             :key="msg.id"
-            class="flex"
-            :class="msg.role === 'user' ? 'justify-end' : 'justify-start'"
+            class="olympic-coach__row"
+            :class="{ 'olympic-coach__row--user': msg.role === 'user' }"
           >
             <div
-              class="max-w-[92%] rounded-2xl px-4 py-3 text-sm leading-relaxed sm:max-w-[80%]"
-              :class="msg.role === 'user'
-                ? 'bg-primary text-white'
-                : 'border border-default bg-elevated text-highlighted'"
+              class="olympic-coach__avatar"
+              :class="msg.role === 'user' ? 'olympic-coach__avatar--user' : 'olympic-coach__avatar--ai'"
+              aria-hidden="true"
             >
-              <p class="mb-1 text-[10px] font-semibold uppercase tracking-wide opacity-70">
-                {{ msg.role === 'user' ? 'Ty' : 'Slavia AI Trener' }}
+              <UIcon
+                :name="msg.role === 'user' ? 'i-lucide-user' : 'i-lucide-sparkles'"
+                class="size-3.5"
+              />
+            </div>
+            <div
+              class="olympic-coach__bubble"
+              :class="msg.role === 'user' ? 'olympic-coach__bubble--user' : 'olympic-coach__bubble--ai'"
+            >
+              <p class="whitespace-pre-wrap">
+                {{ msg.content }}
               </p>
-              <pre class="whitespace-pre-wrap font-sans">{{ msg.content }}</pre>
               <div
                 v-if="canImportMessage(msg)"
-                class="mt-3 border-t border-default/60 pt-2"
+                class="olympic-coach__bubble-actions"
               >
                 <UButton
                   size="xs"
@@ -411,83 +653,108 @@ function canImportMessage(msg: { role: string, mode: OlympicCoachMode }) {
               </div>
             </div>
           </div>
+        </template>
 
+        <div
+          v-if="loading"
+          class="olympic-coach__typing"
+        >
           <div
-            v-if="loading"
-            class="flex items-center gap-2 text-sm text-muted"
+            class="olympic-coach__avatar olympic-coach__avatar--ai"
+            aria-hidden="true"
           >
             <UIcon
-              name="i-lucide-loader-2"
-              class="size-4 animate-spin"
+              name="i-lucide-sparkles"
+              class="size-3.5"
             />
-            Trener analizuje…
+          </div>
+          <div class="olympic-coach__dots">
+            <span /><span /><span />
+          </div>
+          <span>Trener analizuje…</span>
+        </div>
+      </div>
+
+      <footer class="olympic-coach__composer-wrap">
+        <form
+          class="olympic-coach__composer"
+          @submit.prevent="submitDraft"
+        >
+          <textarea
+            ref="inputRef"
+            v-model="draft"
+            class="olympic-coach__input"
+            rows="1"
+            placeholder="Zadaj pytanie lub poproś o plan…"
+            :disabled="loading || !status?.configured"
+            @input="resizeInput"
+            @keydown="onInputKeydown"
+          />
+          <button
+            type="submit"
+            class="olympic-coach__send"
+            :disabled="!draft.trim() || loading || !status?.configured"
+            aria-label="Wyślij wiadomość"
+          >
+            <UIcon
+              name="i-lucide-arrow-up"
+              class="size-5"
+            />
+          </button>
+        </form>
+
+        <div class="olympic-coach__composer-foot">
+          <p class="olympic-coach__composer-disclaimer">
+            Narzędzie edukacyjne — nie zastępuje diagnozy medycznej ani decyzji trenera klubowego.
+          </p>
+          <div class="olympic-coach__composer-actions">
+            <button
+              type="button"
+              class="olympic-coach__composer-icon-btn"
+              title="Kopiuj ostatnią odpowiedź"
+              :disabled="!messages.some(m => m.role === 'assistant')"
+              @click="copyLastReply"
+            >
+              <UIcon
+                name="i-lucide-copy"
+                class="size-4"
+              />
+            </button>
+            <button
+              type="button"
+              class="olympic-coach__composer-icon-btn"
+              title="Wyczyść rozmowę"
+              :disabled="messages.length === 0 || loading"
+              @click="clearChat"
+            >
+              <UIcon
+                name="i-lucide-trash-2"
+                class="size-4"
+              />
+            </button>
           </div>
         </div>
+      </footer>
+      </div>
+      </div>
+    </div>
 
-        <div class="mt-4 border-t border-default pt-4">
-          <form
-            class="flex flex-col gap-3 sm:flex-row"
-            @submit.prevent="submitDraft"
-          >
-            <UTextarea
-              v-model="draft"
-              :rows="2"
-              autoresize
-              :maxrows="6"
-              class="flex-1"
-              placeholder="Zadaj pytanie o technikę, poproś o plan, suplementację lub regenerację…"
-              :disabled="loading || !status?.configured"
-            />
-            <div class="flex shrink-0 flex-row gap-2 sm:flex-col">
-              <UButton
-                type="submit"
-                color="primary"
-                size="lg"
-                icon="i-lucide-send"
-                :loading="loading"
-                :disabled="!draft.trim() || !status?.configured"
-              >
-                Wyślij
-              </UButton>
-              <UButton
-                type="button"
-                variant="outline"
-                color="neutral"
-                size="lg"
-                icon="i-lucide-copy"
-                :disabled="!messages.some(m => m.role === 'assistant')"
-                @click="copyLastReply"
-              >
-                Kopiuj
-              </UButton>
-              <UButton
-                type="button"
-                variant="ghost"
-                color="neutral"
-                size="lg"
-                icon="i-lucide-trash-2"
-                :disabled="messages.length === 0 || loading"
-                @click="clearChat"
-              >
-                Wyczyść
-              </UButton>
-            </div>
-          </form>
-          <p class="mt-3 text-[11px] leading-relaxed text-muted">
-            Trener AI to narzędzie edukacyjne — nie zastępuje diagnozy medycznej ani decyzji Twojego trenera klubowego.
-            Klucz API Gemini jest przechowywany wyłącznie na backendzie.
-          </p>
-        </div>
-      </UCard>
-
-      <SlaviaModal
-        v-model:open="showImportModal"
-        title="Import planu AI"
-        description="Trener AI przekształci odpowiedź na strukturę planu tygodniowego przypisaną zawodnikowi."
-        :ui="{ content: 'sm:max-w-lg' }"
-      >
-        <template #body>
-          <div class="slavia-modal-body space-y-4">
+    <SlaviaModal
+      v-model:open="showImportModal"
+      title="Import planu AI"
+      description="Odpowiedź zostanie przekształcona w plan tygodniowy przypisany zawodnikowi."
+      :ui="{ content: 'sm:max-w-lg' }"
+    >
+      <template #body>
+        <div class="olympic-coach__import-form">
+          <section class="olympic-coach__import-section">
+            <h4 class="olympic-coach__import-section-title">
+              <UIcon
+                name="i-lucide-user-round"
+                class="size-4"
+              />
+              Przypisanie
+            </h4>
             <UFormField
               label="Zawodnik"
               required
@@ -500,6 +767,16 @@ function canImportMessage(msg: { role: string, mode: OlympicCoachMode }) {
                 :items="athleteItems"
               />
             </UFormField>
+          </section>
+
+          <section class="olympic-coach__import-section">
+            <h4 class="olympic-coach__import-section-title">
+              <UIcon
+                name="i-lucide-calendar-range"
+                class="size-4"
+              />
+              Szczegóły planu
+            </h4>
             <UFormField label="Tytuł planu">
               <UInput
                 v-model="importForm.title"
@@ -507,7 +784,7 @@ function canImportMessage(msg: { role: string, mode: OlympicCoachMode }) {
                 placeholder="Plan AI — tydzień 1"
               />
             </UFormField>
-            <div class="slavia-form-grid sm:grid-cols-2">
+            <div class="slavia-form-grid sm:grid-cols-2 mt-3">
               <UFormField label="Tydzień od">
                 <UInput
                   v-model="importForm.week_start"
@@ -525,41 +802,52 @@ function canImportMessage(msg: { role: string, mode: OlympicCoachMode }) {
                 />
               </UFormField>
             </div>
-            <UFormField label="Cel tygodnia">
+            <UFormField
+              label="Cel tygodnia"
+              class="mt-3"
+            >
               <UInput
                 v-model="importForm.goal"
                 size="lg"
               />
             </UFormField>
-            <UFormField label="Notatka trenera">
-              <UTextarea
-                v-model="importForm.coach_note"
-                :rows="2"
+          </section>
+
+          <section class="olympic-coach__import-section">
+            <h4 class="olympic-coach__import-section-title">
+              <UIcon
+                name="i-lucide-sticky-note"
+                class="size-4"
               />
-            </UFormField>
-          </div>
-        </template>
-        <template #footer>
-          <div class="slavia-form-actions w-full">
-            <UButton
-              variant="ghost"
-              color="neutral"
-              @click="showImportModal = false"
-            >
-              Anuluj
-            </UButton>
-            <UButton
-              color="primary"
-              icon="i-lucide-file-input"
-              :loading="importing"
-              :disabled="!importForm.athlete_id"
-              @click="confirmImportPlan"
-            >
-              Utwórz plan
-            </UButton>
-          </div>
-        </template>
-      </SlaviaModal>
-    </template>
+              Notatka trenera
+            </h4>
+            <UTextarea
+              v-model="importForm.coach_note"
+              :rows="2"
+            />
+          </section>
+        </div>
+      </template>
+      <template #footer>
+        <div class="olympic-coach__import-actions w-full">
+          <UButton
+            variant="ghost"
+            color="neutral"
+            @click="showImportModal = false"
+          >
+            Anuluj
+          </UButton>
+          <UButton
+            color="primary"
+            icon="i-lucide-file-input"
+            :loading="importing"
+            :disabled="!importForm.athlete_id"
+            @click="confirmImportPlan"
+          >
+            Utwórz plan
+          </UButton>
+        </div>
+      </template>
+    </SlaviaModal>
   </div>
 </template>

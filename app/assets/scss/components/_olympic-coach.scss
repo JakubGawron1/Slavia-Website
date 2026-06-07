@@ -2,10 +2,18 @@
 .olympic-coach {
   --olympic-coach-h: min(calc(100dvh - 11rem), 42rem);
   --olympic-coach-glow: color-mix(in oklab, var(--ui-primary) 22%, transparent);
+  min-width: 0;
 }
 
 .olympic-coach--page {
-  --olympic-coach-h: min(calc(100dvh - 10rem), 56rem);
+  @media (max-width: 639px) {
+    --olympic-coach-h: calc(100dvh - 4.5rem);
+    margin-inline: -0.5rem;
+  }
+
+  @media (min-width: 640px) {
+    --olympic-coach-thread-h: min(52vh, 520px);
+  }
 }
 
 .olympic-coach--athlete {
@@ -30,11 +38,55 @@
   background: color-mix(in oklab, var(--ui-bg-muted) 55%, transparent);
 }
 
+.olympic-coach__swipe-stage {
+  position: relative;
+  touch-action: pan-y;
+
+  @media (max-width: 639px) {
+    min-height: var(--olympic-coach-h);
+    max-height: var(--olympic-coach-h);
+    overflow: hidden;
+  }
+
+  @media (min-width: 640px) {
+    overflow: visible;
+  }
+
+  &--active {
+    touch-action: none;
+  }
+}
+
+.olympic-coach__swipe-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: grid;
+  place-items: center start;
+  padding-left: 0.75rem;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in oklab, var(--ui-bg-muted) 88%, var(--ui-primary) 12%) 0%,
+      color-mix(in oklab, var(--ui-bg) 70%, transparent) 55%
+    );
+  transition: opacity 0.12s ease;
+}
+
+.olympic-coach__swipe-backdrop-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: color-mix(in oklab, var(--ui-text-muted) 80%, var(--ui-primary) 20%);
+  transform: translateX(-0.25rem);
+}
+
 .olympic-coach__shell {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
-  min-height: var(--olympic-coach-h);
-  max-height: var(--olympic-coach-h);
   border-radius: var(--slavia-radius-xl);
   border: 1px solid color-mix(in oklab, var(--ui-border) 72%, transparent);
   background:
@@ -42,6 +94,74 @@
     color-mix(in oklab, var(--ui-bg-elevated) 96%, var(--ui-bg-muted));
   box-shadow: var(--slavia-shadow-sm);
   overflow: hidden;
+
+  @media (max-width: 639px) {
+    min-height: var(--olympic-coach-h);
+    max-height: var(--olympic-coach-h);
+    will-change: transform;
+    border-radius: 1.25rem 1.25rem 0 0;
+    border-bottom: none;
+    box-shadow:
+      0 -4px 24px color-mix(in oklab, var(--ui-bg-inverted, #000) 6%, transparent),
+      var(--slavia-shadow-sm);
+  }
+
+  @media (min-width: 640px) {
+    min-height: auto;
+    max-height: none;
+  }
+
+  &--swiping {
+    box-shadow:
+      -12px 0 32px color-mix(in oklab, var(--ui-bg-inverted, #000) 14%, transparent),
+      var(--slavia-shadow-sm);
+  }
+
+  &--loading {
+    align-items: center;
+    justify-content: center;
+    min-height: min(calc(100dvh - 10rem), 42rem);
+  }
+}
+
+.olympic-coach__loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem;
+  font-size: 0.875rem;
+  color: var(--ui-text-muted);
+}
+
+.olympic-coach__back-btn {
+  display: none;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin-right: 0.125rem;
+  border: none;
+  border-radius: 9999px;
+  color: var(--ui-text-highlighted);
+  background: color-mix(in oklab, var(--ui-bg-muted) 65%, transparent);
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+
+  &:active {
+    transform: scale(0.96);
+  }
+
+  @media (max-width: 639px) {
+    display: grid;
+  }
+}
+
+.olympic-coach__toolbar-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
 }
 
 .olympic-coach__toolbar {
@@ -54,6 +174,14 @@
   border-bottom: 1px solid color-mix(in oklab, var(--ui-border) 55%, transparent);
   background: color-mix(in oklab, var(--ui-bg-elevated) 88%, transparent);
   backdrop-filter: blur(10px);
+  flex-shrink: 0;
+
+  @media (max-width: 639px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+    padding: 0.625rem 0.75rem;
+  }
 }
 
 .olympic-coach__modes {
@@ -64,6 +192,19 @@
   border-radius: 9999px;
   border: 1px solid color-mix(in oklab, var(--ui-border) 60%, transparent);
   background: color-mix(in oklab, var(--ui-bg-muted) 65%, transparent);
+
+  @media (max-width: 639px) {
+    flex: 1;
+    min-width: 0;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
 }
 
 .olympic-coach__mode-btn {
@@ -126,10 +267,27 @@
 
 .olympic-coach__thread {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 1rem 1rem 0.5rem;
   scroll-behavior: smooth;
+
+  @media (max-width: 639px) {
+    padding: 0.75rem 0.625rem 0.375rem;
+  }
+
+  @media (min-width: 640px) {
+    flex: none;
+    min-height: 280px;
+    max-height: var(--olympic-coach-thread-h, min(52vh, 520px));
+  }
+}
+
+.olympic-coach__row--user .olympic-coach__bubble {
+  @media (max-width: 639px) {
+    max-width: 92%;
+  }
 }
 
 .olympic-coach__hero {
@@ -137,9 +295,14 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: min(28rem, 52vh);
+  min-height: 280px;
   padding: 1.5rem 0.5rem 2rem;
   text-align: center;
+
+  @media (max-width: 639px) {
+    min-height: min(22rem, 45vh);
+    padding: 1rem 0.25rem 1.5rem;
+  }
 }
 
 .olympic-coach__orb {
@@ -180,6 +343,11 @@
   max-width: 40rem;
   margin-top: 1.75rem;
   text-align: left;
+
+  @media (max-width: 639px) {
+    margin-top: 1.25rem;
+    gap: 0.5rem;
+  }
 
   @media (min-width: 640px) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -266,6 +434,12 @@
   font-size: 0.9375rem;
   line-height: 1.6;
 
+  @media (max-width: 639px) {
+    max-width: min(88%, 20rem);
+    padding: 0.75rem 0.875rem;
+    font-size: 0.875rem;
+  }
+
   &--user {
     color: var(--ui-text-inverted, #fff);
     background: linear-gradient(
@@ -325,10 +499,17 @@
 
 .olympic-coach__composer-wrap {
   flex-shrink: 0;
-  padding: 0.75rem 1rem 1rem;
+  padding: 0.75rem 1rem calc(1rem + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid color-mix(in oklab, var(--ui-border) 55%, transparent);
   background: color-mix(in oklab, var(--ui-bg-elevated) 90%, transparent);
   backdrop-filter: blur(8px);
+
+  @media (max-width: 639px) {
+    padding: 0.625rem 0.75rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+  }
 }
 
 .olympic-coach__composer {
@@ -404,6 +585,47 @@
   padding: 0 0.25rem;
   font-size: 0.6875rem;
   color: var(--ui-text-muted);
+}
+
+.olympic-coach__composer-disclaimer {
+  flex: 1;
+  min-width: 10rem;
+  margin: 0;
+  line-height: 1.4;
+
+  @media (max-width: 639px) {
+    display: none;
+  }
+}
+
+.olympic-coach__composer-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: auto;
+}
+
+.olympic-coach__composer-icon-btn {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 9999px;
+  color: var(--ui-text-muted);
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover:not(:disabled) {
+    color: var(--ui-text-highlighted);
+    background: color-mix(in oklab, var(--ui-bg-muted) 70%, transparent);
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
 }
 
 .olympic-coach__quota {
@@ -566,20 +788,227 @@
   flex: 1;
 }
 
+.olympic-coach__chat-stack {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.olympic-coach__shell--plan {
+  @media (min-width: 640px) {
+    display: grid;
+    grid-template-columns: minmax(15.5rem, 19.5rem) minmax(0, 1fr);
+
+    > .olympic-coach__quota-strip,
+    > .olympic-coach__toolbar,
+    > .olympic-coach__context-bar {
+      grid-column: 1 / -1;
+    }
+
+    > .olympic-coach__plan-suite {
+      grid-column: 1;
+      grid-row: auto;
+      align-self: stretch;
+      max-height: calc(var(--olympic-coach-thread-h, min(52vh, 520px)) + 7.5rem);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      border-bottom: none;
+      border-right: 1px solid color-mix(in oklab, var(--ui-border) 50%, transparent);
+    }
+
+    > .olympic-coach__chat-stack {
+      grid-column: 2;
+      min-height: calc(var(--olympic-coach-thread-h, min(52vh, 520px)) + 7.5rem);
+    }
+
+    .olympic-coach__thread {
+      flex: 1;
+      min-height: 0;
+      max-height: none;
+    }
+  }
+}
+
 /* —— Plan builder —— */
 .olympic-coach__plan-suite {
-  padding: 1rem;
   border-bottom: 1px solid color-mix(in oklab, var(--ui-border) 50%, transparent);
   background:
     radial-gradient(ellipse 70% 80% at 100% 0%, color-mix(in oklab, var(--ui-primary) 8%, transparent), transparent 55%),
     color-mix(in oklab, var(--ui-bg-muted) 55%, var(--ui-bg-elevated));
+  flex-shrink: 0;
+
+  &--collapsed .olympic-coach__plan-suite-body {
+    display: none;
+  }
+}
+
+.olympic-coach__plan-suite-static-head {
+  padding: 0.75rem 1rem 0.5rem;
+  border-bottom: 1px solid color-mix(in oklab, var(--ui-border) 45%, transparent);
+}
+
+.olympic-coach__plan-suite-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+
+  &:hover {
+    background: color-mix(in oklab, var(--ui-primary) 4%, transparent);
+  }
+}
+
+.olympic-coach__plan-suite-body {
+  padding: 0 1rem 1rem;
+}
+
+.olympic-coach__shell--plan .olympic-coach__plan-suite-body {
+  @media (min-width: 640px) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+    padding: 0.625rem 0.75rem 0.75rem;
+  }
+}
+
+.olympic-coach__shell--plan .olympic-coach__plan-block {
+  @media (min-width: 640px) {
+    & + & {
+      margin-top: 0;
+      padding-top: 0.625rem;
+    }
+  }
+}
+
+.olympic-coach__shell--plan .olympic-coach__plan-block-label {
+  @media (min-width: 640px) {
+    margin-bottom: 0.4rem;
+  }
+}
+
+.olympic-coach__shell--plan .olympic-coach__plan-row {
+  @media (min-width: 640px) {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+.olympic-coach__shell--plan .olympic-coach__plan-field--sm,
+.olympic-coach__shell--plan .olympic-coach__plan-field--grow,
+.olympic-coach__shell--plan .olympic-coach__plan-field--full {
+  @media (min-width: 640px) {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+.olympic-coach__shell--plan .olympic-coach__plan-input {
+  @media (min-width: 640px) {
+    padding: 0.5rem 0.625rem;
+    font-size: 0.8125rem;
+  }
+}
+
+.olympic-coach__shell--plan .olympic-coach__plan-textarea {
+  @media (min-width: 640px) {
+    min-height: 3rem;
+  }
+}
+
+.olympic-coach__shell--plan .olympic-coach__plan-cm-grid {
+  @media (min-width: 640px) {
+    grid-template-columns: 1fr;
+    gap: 0.4rem;
+  }
+}
+
+.olympic-coach__shell--plan .olympic-coach__plan-cm-card {
+  @media (min-width: 640px) {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 0.625rem;
+
+    > .size-4 {
+      display: none;
+    }
+
+    > label {
+      flex: 0 0 4.5rem;
+      margin: 0;
+      font-size: 0.625rem;
+    }
+
+    .olympic-coach__plan-cm-input-wrap {
+      flex: 1;
+      min-width: 0;
+
+      input {
+        font-size: 1rem;
+      }
+    }
+  }
+}
+
+/* Mobile: kompaktowy plan bez nadmiarowej wysokości */
+@media (max-width: 639px) {
+  .olympic-coach__plan-suite:not(.olympic-coach__plan-suite--collapsed) .olympic-coach__plan-suite-body {
+    display: grid;
+    gap: 0.625rem;
+    padding: 0 0.75rem 0.75rem;
+  }
+
+  .olympic-coach__plan-suite:not(.olympic-coach__plan-suite--collapsed) .olympic-coach__plan-block + .olympic-coach__plan-block {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+  }
+
+  .olympic-coach__plan-suite:not(.olympic-coach__plan-suite--collapsed) .olympic-coach__plan-cm-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.4rem;
+  }
+
+  .olympic-coach__plan-suite:not(.olympic-coach__plan-suite--collapsed) .olympic-coach__plan-cm-card {
+    padding: 0.5rem 0.4rem 0.45rem;
+
+    > label {
+      font-size: 0.5625rem;
+    }
+
+    .olympic-coach__plan-cm-input-wrap input {
+      font-size: 1rem;
+    }
+  }
+
+  .olympic-coach__plan-suite:not(.olympic-coach__plan-suite--collapsed) .olympic-coach__plan-block--profile .olympic-coach__plan-row {
+    display: grid;
+    grid-template-columns: 4.5rem 1fr;
+    gap: 0.4rem;
+  }
+
+  .olympic-coach__plan-suite:not(.olympic-coach__plan-suite--collapsed) .olympic-coach__plan-block--profile .olympic-coach__plan-field--full {
+    grid-column: 1 / -1;
+  }
+
+  .olympic-coach__plan-suite:not(.olympic-coach__plan-suite--collapsed) .olympic-coach__plan-textarea {
+    min-height: 2.5rem;
+  }
 }
 
 .olympic-coach__plan-suite-head {
   display: flex;
   align-items: flex-start;
   gap: 0.75rem;
-  margin-bottom: 1rem;
 
   > .size-5 {
     margin-top: 0.125rem;
@@ -902,4 +1331,49 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+}
+
+/* —— Strona panelu: więcej miejsca na chat (mobile) —— */
+@media (max-width: 639px) {
+  .olympic-coach-page.slavia-panel-page {
+    padding-top: 0.625rem;
+    padding-bottom: 0;
+  }
+
+  .olympic-coach-page .slavia-page-flow > header {
+    margin-bottom: 0.5rem;
+
+    h1 {
+      margin-top: 0;
+      font-size: 1.25rem;
+    }
+
+    .relative > .min-w-0 > p:first-child,
+    .relative > .min-w-0 > p.text-muted {
+      display: none;
+    }
+
+    .relative > .flex.shrink-0 {
+      display: none;
+    }
+
+    .relative > span.flex.size-9 {
+      display: none;
+    }
+  }
+
+  .olympic-coach__context-bar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0.625rem 0.75rem;
+  }
+
+  .olympic-coach__context-bar-copy {
+    min-width: 0;
+  }
+
+  .olympic-coach__quota-strip {
+    padding: 0.5rem 0.75rem;
+    gap: 0.5rem;
+  }
 }
