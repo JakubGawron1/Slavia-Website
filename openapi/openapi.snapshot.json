@@ -22,6 +22,30 @@
         }
       }
     },
+    "/api/cms/variables": {
+      "get": { "summary": "List CMS variables", "responses": { "200": { "description": "OK" } } }
+    },
+    "/api/cms/variable": {
+      "post": { "summary": "Create CMS variable", "responses": { "201": { "description": "Created" } } }
+    },
+    "/api/cms/variable/{key}": {
+      "put": { "summary": "Update CMS variable", "responses": { "200": { "description": "OK" } } },
+      "delete": { "summary": "Delete CMS variable", "responses": { "204": { "description": "No Content" } } }
+    },
+    "/api/cms/pages": {
+      "get": { "summary": "List CMS pages", "responses": { "200": { "description": "OK" } } }
+    },
+    "/api/cms/page/{name}": {
+      "get": { "summary": "Get CMS page", "responses": { "200": { "description": "OK" } } },
+      "put": { "summary": "Update CMS page", "responses": { "200": { "description": "OK" } } }
+    },
+    "/api/cms/navigation": {
+      "get": { "summary": "List CMS navigation items", "responses": { "200": { "description": "OK" } } },
+      "put": { "summary": "Replace CMS navigation", "responses": { "200": { "description": "OK" } } }
+    },
+    "/api/cms/history": {
+      "get": { "summary": "CMS version history", "responses": { "200": { "description": "OK" } } }
+    },
     "/api/challenges/monthly-training-sessions": {
       "get": {
         "summary": "Leaderboard: liczba wpisów dziennika treningów na zawodnika w miesiącu (community challenge MVP)",
@@ -37,6 +61,54 @@
         "responses": {
           "200": { "description": "OK" },
           "400": { "description": "Nieprawidłowy parametr month" }
+        }
+      }
+    },
+    "/api/ai/coach/status": {
+      "get": {
+        "summary": "Status konfiguracji trenera AI (Groq / LLaMA)",
+        "responses": {
+          "200": { "description": "OK" },
+          "403": { "description": "Brak uprawnień" }
+        }
+      }
+    },
+    "/api/ai/coach/public/status": {
+      "get": {
+        "summary": "Status publicznego asystenta klubu (bez auth)",
+        "responses": {
+          "200": { "description": "OK" }
+        }
+      }
+    },
+    "/api/ai/coach/public/chat": {
+      "post": {
+        "summary": "Czat publiczny — pytania o klub Slavia (bez auth, limit IP)",
+        "responses": {
+          "200": { "description": "OK" },
+          "429": { "description": "Limit wiadomości" },
+          "503": { "description": "Asystent niedostępny" }
+        }
+      }
+    },
+    "/api/ai/coach/chat": {
+      "post": {
+        "summary": "Czat z trenerem AI — dwubój, plany, suplementacja, regeneracja",
+        "responses": {
+          "200": { "description": "OK" },
+          "400": { "description": "Nieprawidłowe żądanie" },
+          "403": { "description": "Brak uprawnień" },
+          "503": { "description": "Brak GROQ_API_KEY" }
+        }
+      }
+    },
+    "/api/ai/coach/import-plan": {
+      "post": {
+        "summary": "Import odpowiedzi AI jako plan treningowy zawodnika",
+        "responses": {
+          "200": { "description": "OK" },
+          "403": { "description": "Brak uprawnień kadry" },
+          "422": { "description": "Błąd parsowania planu" }
         }
       }
     }
