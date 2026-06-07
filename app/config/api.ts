@@ -49,6 +49,9 @@ export const apiRoutes = {
     list: '/api/posts',
     one: (id: string) => `/api/posts/${encodeURIComponent(id)}`
   },
+  club: {
+    feed: '/api/club/feed'
+  },
   announcements: {
     collection: '/api/announcements',
     manage: '/api/announcements/manage',
