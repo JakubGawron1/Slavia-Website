@@ -344,6 +344,30 @@ export default defineNuxtConfig({
 
       pathPrefix: false
 
+    },
+
+    {
+
+      path: '~/components/dev',
+
+      pathPrefix: false
+
+    },
+
+    {
+
+      path: '~/components/dev/sections',
+
+      pathPrefix: false
+
+    },
+
+    {
+
+      path: '~/components/trainer',
+
+      pathPrefix: false
+
     }
 
   ],

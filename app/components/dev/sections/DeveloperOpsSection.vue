@@ -23,12 +23,40 @@ const d = useDeveloperPage()
           <p class="mt-1 text-sm text-muted">
             BFF <code class="font-mono text-xs">/api/ai/public/status</code> → backend coach. Widget na stronach publicznych klubu.
           </p>
-          <div v-if="d.aiPublicStatus" class="mt-2 flex flex-wrap items-center gap-2 text-xs">
+          <div v-if="d.aiPublicStatusLoading && !d.aiPublicStatus" class="mt-2 text-xs text-muted">
+            Ładowanie statusu…
+          </div>
+          <div v-else-if="d.aiPublicStatus" class="mt-2 flex flex-wrap items-center gap-2 text-xs">
             <UBadge size="xs" :color="d.aiPublicStatus.enabled ? 'success' : 'warning'" variant="subtle">
               {{ d.aiPublicStatus.enabled ? 'włączony' : 'wyłączony' }}
             </UBadge>
             <span v-if="d.aiPublicStatus.model" class="font-mono text-muted">model: {{ d.aiPublicStatus.model }}</span>
             <span v-if="d.aiPublicStatus.message" class="text-muted">{{ d.aiPublicStatus.message }}</span>
+          </div>
+        </div>
+
+        <div class="border-t border-default/40 pt-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <p class="text-[10px] font-bold uppercase tracking-wider text-muted">Trener AI (panel)</p>
+            <UButton size="xs" variant="soft" icon="i-lucide-refresh-cw" :loading="d.aiCoachStatusLoading" @click="d.refreshAiCoachStatus">
+              Odśwież
+            </UButton>
+          </div>
+          <p class="mt-1 text-sm text-muted">
+            Backend <code class="font-mono text-xs">/api/ai/coach/status</code> (JWT) — panele
+            <NuxtLink to="/athlete/trener-ai" class="text-primary underline">/athlete/trener-ai</NuxtLink>,
+            <NuxtLink to="/trainer/trener-ai" class="text-primary underline">/trainer/trener-ai</NuxtLink>.
+            Flaga: <code class="font-mono text-xs">gemini_olympic_coach</code>.
+          </p>
+          <div v-if="d.aiCoachStatusLoading && !d.aiCoachStatus" class="mt-2 text-xs text-muted">
+            Ładowanie statusu…
+          </div>
+          <div v-else-if="d.aiCoachStatus" class="mt-2 flex flex-wrap items-center gap-2 text-xs">
+            <UBadge size="xs" :color="d.aiCoachStatus.configured ? 'success' : 'warning'" variant="subtle">
+              {{ d.aiCoachStatus.configured ? 'skonfigurowany' : 'nieskonfigurowany' }}
+            </UBadge>
+            <span v-if="d.aiCoachStatus.model" class="font-mono text-muted">model: {{ d.aiCoachStatus.model }}</span>
+            <span v-if="d.aiCoachStatus.setup_hint" class="text-muted">{{ d.aiCoachStatus.setup_hint }}</span>
           </div>
         </div>
 

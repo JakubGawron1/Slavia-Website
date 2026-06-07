@@ -317,6 +317,54 @@ type GithubMediaStatusDto = {
 const githubMediaStatus = ref<GithubMediaStatusDto | null>(null)
 const githubMediaStatusLoading = ref(false)
 
+type AiPublicStatusDto = {
+  enabled: boolean
+  model: string
+  message?: string
+}
+
+type AiCoachStatusDto = {
+  configured: boolean
+  model: string
+  key_format_ok?: boolean
+  setup_hint?: string | null
+}
+
+const aiPublicStatus = ref<AiPublicStatusDto | null>(null)
+const aiPublicStatusLoading = ref(false)
+const aiCoachStatus = ref<AiCoachStatusDto | null>(null)
+const aiCoachStatusLoading = ref(false)
+
+async function refreshAiPublicStatus() {
+  aiPublicStatusLoading.value = true
+  try {
+    aiPublicStatus.value = await $fetch<AiPublicStatusDto>('/api/ai/public/status')
+  } catch (e) {
+    aiPublicStatus.value = {
+      enabled: false,
+      model: '',
+      message: getApiErrorMessage(e, 'BFF /api/ai/public/status niedostępny')
+    }
+  } finally {
+    aiPublicStatusLoading.value = false
+  }
+}
+
+async function refreshAiCoachStatus() {
+  aiCoachStatusLoading.value = true
+  try {
+    aiCoachStatus.value = await apiFetch<AiCoachStatusDto>(apiRoutes.aiCoach.status)
+  } catch (e) {
+    aiCoachStatus.value = {
+      configured: false,
+      model: 'llama-3.1-70b-versatile',
+      setup_hint: getApiErrorMessage(e, 'GET /api/ai/coach/status niedostępny')
+    }
+  } finally {
+    aiCoachStatusLoading.value = false
+  }
+}
+
 async function refreshGithubMediaStatus() {
   githubMediaStatusLoading.value = true
   try {
@@ -482,6 +530,8 @@ onMounted(() => {
   void refreshGithubMediaStatus()
   void refreshFeatureAdoption()
   void refreshVercelCacheStatus()
+  void refreshAiPublicStatus()
+  void refreshAiCoachStatus()
   void $fetch<{ active_provider: 'leapcell' | 'render', updated_at?: string | null }>('/api/system/backend-provider', {
     headers: auth.token.value ? { Authorization: `Bearer ${auth.token.value}` } : undefined
   })
@@ -1229,6 +1279,12 @@ function toastStorageApisAvailability() {
     githubMediaStatus,
     githubMediaStatusLoading,
     refreshGithubMediaStatus,
+    aiPublicStatus,
+    aiPublicStatusLoading,
+    refreshAiPublicStatus,
+    aiCoachStatus,
+    aiCoachStatusLoading,
+    refreshAiCoachStatus,
     refreshFeatureAdoption,
     enabled,
     permission,

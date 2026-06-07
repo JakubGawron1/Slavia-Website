@@ -15,6 +15,7 @@ const coachOn = useExperimentalFlag('gemini_olympic_coach')
 
 const {
   status,
+  statusLoading,
   messages,
   loading,
   importing,
@@ -99,10 +100,6 @@ const quickPrompts: Record<OlympicCoachMode, string[]> = {
     'Deload tydzień — jak obniżyć objętość bez utraty techniki?'
   ]
 }
-
-onMounted(() => {
-  void refreshStatus()
-})
 
 watch(
   () => messages.value.length,
@@ -214,8 +211,23 @@ function canImportMessage(msg: { role: string, mode: OlympicCoachMode }) {
       description="Ustaw GROQ_API_KEY w .env backendu i zrestartuj serwer."
     />
 
-    <template v-else-if="coachOn && status?.configured">
-      <TrainerOlympicCoachQuotaStrip
+    <UCard
+      v-else-if="statusLoading"
+      class="slavia-page-card"
+    >
+      <div class="flex min-h-[280px] flex-col items-center justify-center gap-3 text-muted">
+        <UIcon
+          name="i-lucide-loader-2"
+          class="size-8 animate-spin"
+        />
+        <p class="text-sm">
+          Łączenie z trenerem AI…
+        </p>
+      </div>
+    </UCard>
+
+    <template v-else-if="coachOn">
+      <OlympicCoachQuotaStrip
         v-if="quotaMetrics.length"
         :metrics="quotaMetrics"
         :columns="isStaff ? 4 : 2"
