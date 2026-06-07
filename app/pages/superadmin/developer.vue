@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { DevSection } from '~/components/dev/DeveloperSectionNav.vue'
-import { setupDeveloperPage } from '~/composables/useDeveloperPage'
+import { DEVELOPER_PAGE_KEY, setupDeveloperPage } from '~/composables/useDeveloperPage'
 
 definePageMeta({ middleware: 'superadmin' })
 
@@ -19,6 +19,7 @@ const devNavItems: { id: DevSection, label: string, icon: string }[] = [
 ]
 
 const d = await setupDeveloperPage()
+provide(DEVELOPER_PAGE_KEY, d)
 </script>
 
 <template>
