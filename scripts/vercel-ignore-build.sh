@@ -6,10 +6,18 @@ set -uo pipefail
 branch="${VERCEL_GIT_COMMIT_REF:-}"
 sha="${VERCEL_GIT_COMMIT_SHA:-}"
 
-echo "[vercel-ignore] branch=${branch:-?} sha=${sha:-?}"
+env_name="${VERCEL_ENV:-}"
+
+echo "[vercel-ignore] branch=${branch:-?} sha=${sha:-?} env=${env_name:-?}"
+
+# main jako preview = duplikat produkcji (np. cksslavia-git-main-…vercel.app)
+if [[ "${branch}" == "main" && "${env_name}" == "preview" ]]; then
+  echo "[vercel-ignore] main preview (duplikat produkcji) → skip"
+  exit 0
+fi
 
 if [[ "${branch}" == "main" ]]; then
-  echo "[vercel-ignore] main → build"
+  echo "[vercel-ignore] main production → build"
   exit 1
 fi
 
