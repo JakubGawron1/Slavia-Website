@@ -1,7 +1,7 @@
 import { apiRoutes } from '~/config/api'
 import { getApiErrorMessage } from '~/composables/useApi'
 
-export type OlympicCoachMode = 'chat' | 'plan' | 'supplements' | 'recovery'
+export type OlympicCoachMode = 'chat' | 'plan' | 'supplements' | 'recovery' | 'barbell_path'
 
 export interface OlympicCoachMessage {
   id: string
