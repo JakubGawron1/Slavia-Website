@@ -40,60 +40,21 @@ const { data: posts, refresh: refreshPublic, pending } = await usePublicLazyFetc
   default: () => [] as BlogPost[]
 })
 
-// Prefetch danych wpisu na hover/focus (limit + debounce), żeby przejście na `/aktualnosci/[slug]` było instant.
-const prefetchedIds = new Set<string>()
-const inFlightIds = new Set<string>()
-const hoverTimers = new Map<string, number>()
-const PREFETCH_DELAY_MS = 140
-const MAX_PREFETCH_IN_FLIGHT = 2
-
-function prefetchPostData(post: BlogPost) {
-  const id = String(post?.id || '')
-  if (!id) return
-  if (prefetchedIds.has(id) || inFlightIds.has(id)) return
-  if (inFlightIds.size >= MAX_PREFETCH_IN_FLIGHT) return
-
-  const key = `aktualnosci-post-public-${id}`
-  const existing = useNuxtData<BlogPost | null>(key).data.value
-  if (existing) {
-    prefetchedIds.add(id)
-    return
-  }
-
-  inFlightIds.add(id)
-  $fetch<BlogPost>(publicApiUrl(`posts/${encodeURIComponent(id)}`))
-    .then((res) => {
-      if (!res) return
-      useNuxtData<BlogPost | null>(key).data.value = res
-      prefetchedIds.add(id)
-    })
-    .catch(() => {
-      // cicho: prefetch ma nie przeszkadzać
-    })
-    .finally(() => {
-      inFlightIds.delete(id)
-    })
-}
+const postPrefetch = createPrefetchScheduler()
 
 function schedulePrefetch(post: BlogPost) {
   const id = String(post?.id || '')
   if (!id) return
-  if (hoverTimers.has(id)) return
-  const t = window.setTimeout(() => {
-    hoverTimers.delete(id)
-    prefetchPostData(post)
-  }, PREFETCH_DELAY_MS)
-  hoverTimers.set(id, t)
+  postPrefetch.schedule(
+    `aktualnosci-post-public-${id}`,
+    () => $fetch<BlogPost>(publicApiUrl(`posts/${encodeURIComponent(id)}`))
+  )
 }
 
 function cancelScheduledPrefetch(post: BlogPost) {
   const id = String(post?.id || '')
   if (!id) return
-  const t = hoverTimers.get(id)
-  if (t != null) {
-    window.clearTimeout(t)
-    hoverTimers.delete(id)
-  }
+  postPrefetch.cancel(`aktualnosci-post-public-${id}`)
 }
 
 async function refreshList() {

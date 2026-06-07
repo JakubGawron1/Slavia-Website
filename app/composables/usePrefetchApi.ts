@@ -52,3 +52,44 @@ export function usePrefetchApi<T>(
     onBlur: cancel
   }
 }
+
+/**
+ * Dynamiczny prefetch (lista wpisów / ranking) — debounce per klucz, zapis do `useNuxtData`.
+ */
+export function createPrefetchScheduler(opts?: { debounceMs?: number, maxConcurrent?: number }) {
+  const debounceMs = opts?.debounceMs ?? 140
+  const maxConcurrent = opts?.maxConcurrent ?? 2
+  const timers = new Map<string, ReturnType<typeof setTimeout>>()
+  let inflight = 0
+
+  function cancel(key: string) {
+    const t = timers.get(key)
+    if (t != null) {
+      clearTimeout(t)
+      timers.delete(key)
+    }
+  }
+
+  function schedule<T>(key: string, fetcher: () => Promise<T>) {
+    if (timers.has(key)) return
+    const existing = useNuxtData<T>(key).data.value
+    if (existing !== undefined && existing !== null) return
+
+    const t = setTimeout(() => {
+      timers.delete(key)
+      if (inflight >= maxConcurrent) return
+      inflight++
+      void fetcher()
+        .then((data) => {
+          useNuxtData<T>(key).data.value = data
+        })
+        .catch(() => {})
+        .finally(() => {
+          inflight--
+        })
+    }, debounceMs)
+    timers.set(key, t)
+  }
+
+  return { schedule, cancel }
+}
