@@ -169,14 +169,7 @@ useHead({
         class="fixed inset-0 z-100 flex flex-col items-center justify-center gap-5 bg-background/96 backdrop-blur-md"
         aria-hidden="true"
       >
-        <img
-          src="/logo.png"
-          alt=""
-          class="h-14 w-auto drop-shadow-lg motion-safe:animate-pulse sm:h-16"
-        >
-        <div class="h-0.5 w-28 overflow-hidden rounded-full bg-muted/40">
-          <div class="slavia-deco-barbell h-full w-full rounded-full bg-primary/80" />
-        </div>
+        <ClubSnatchLoader size="lg" />
       </div>
     </Transition>
     <NuxtLoadingIndicator :color="'var(--ui-primary)'" />
