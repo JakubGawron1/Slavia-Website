@@ -1,6 +1,3 @@
-/** Wersja modułu inline CMS w aplikacji. */
-export const CMS_MODULE_VERSION = '4.0'
-
 export type CmsVariableType = 'text' | 'html' | 'image' | 'number' | 'boolean'
 
 export interface CmsVariable {

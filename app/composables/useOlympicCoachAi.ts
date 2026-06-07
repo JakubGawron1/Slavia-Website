@@ -168,6 +168,7 @@ export function useOlympicCoachAi() {
   const api = useApi()
 
   const status = ref<OlympicCoachStatus | null>(null)
+  const statusLoading = ref(true)
   const messages = ref<OlympicCoachMessage[]>([])
   const loading = ref(false)
   const importing = ref(false)
@@ -186,11 +187,18 @@ export function useOlympicCoachAi() {
   })
 
   async function refreshStatus() {
-    status.value = await api<OlympicCoachStatus>(apiRoutes.aiCoach.status).catch(() => ({
-      configured: false,
-      model: 'llama-3.1-70b-versatile',
-      key_format_ok: false
-    }))
+    statusLoading.value = true
+    try {
+      status.value = await api<OlympicCoachStatus>(apiRoutes.aiCoach.status)
+    } catch {
+      status.value = {
+        configured: false,
+        model: 'llama-3.1-70b-versatile',
+        key_format_ok: false
+      }
+    } finally {
+      statusLoading.value = false
+    }
   }
 
   async function sendMessage(
@@ -287,8 +295,13 @@ export function useOlympicCoachAi() {
     }
   }
 
+  if (import.meta.client) {
+    void refreshStatus()
+  }
+
   return {
     status,
+    statusLoading,
     messages,
     loading,
     importing,

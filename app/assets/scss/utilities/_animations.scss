@@ -131,6 +131,9 @@ html[data-slavia-preset='velvet'] { --slavia-shimmer-accent: #e8b4a0; }
 @media (prefers-reduced-motion: reduce) {
   .animate-page-in {
     animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
   }
 
   .slavia-shimmer {

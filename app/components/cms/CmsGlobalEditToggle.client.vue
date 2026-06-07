@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { CMS_MODULE_VERSION } from '~/types/cms'
-
 const cms = useCms()
+const config = useRuntimeConfig()
+const appReleaseLabel = computed(() => String(config.public.appVersion ?? ''))
 
 onMounted(() => {
   cms.restoreEditModeFromStorage()
@@ -37,7 +37,10 @@ watch(
         <span class="cms-global-edit__label">
           {{ cms.editMode.value ? 'Gotowe' : 'Edytuj' }}
         </span>
-        <span class="cms-global-edit__version">v{{ CMS_MODULE_VERSION }}</span>
+        <span
+          v-if="appReleaseLabel"
+          class="cms-global-edit__version"
+        >{{ appReleaseLabel }}</span>
       </button>
     </div>
   </Teleport>
