@@ -11,6 +11,8 @@ const props = withDefaults(
     icon?: string
     tone?: 'default' | 'superadmin' | 'danger'
     variant?: 'page' | 'hero'
+    enableCms?: boolean
+    cmsPage?: string
   }>(),
   {
     tone: 'default',
@@ -18,9 +20,19 @@ const props = withDefaults(
     area: undefined,
     eyebrow: undefined,
     description: undefined,
-    icon: undefined
+    icon: undefined,
+    enableCms: true,
+    cmsPage: undefined
   }
 )
+
+const cms = useCms()
+
+const resolvedCmsPage = computed(
+  () => props.cmsPage || cms.routePageName.value
+)
+
+const useCmsFields = computed(() => props.enableCms && cms.cmsEnabledOnRoute.value)
 
 const resolvedEyebrow = computed(() => {
   if (props.eyebrow) return props.eyebrow
@@ -52,21 +64,62 @@ const rootClass = computed(() =>
           class="text-[11px] font-black uppercase tracking-[0.22em]"
           :class="[eyebrowClass, variant === 'hero' ? 'slavia-public-hero__eyebrow' : '']"
         >
-          {{ resolvedEyebrow }}
+          <CmsEditable
+            v-if="useCmsFields && eyebrow"
+            :page-name="resolvedCmsPage"
+            field-key="header_eyebrow"
+            type="text"
+            label="Panel — odznaka"
+            tag="span"
+            :fallback="eyebrow"
+          />
+          <CmsEditable
+            v-else-if="useCmsFields && !eyebrow && area"
+            :page-name="resolvedCmsPage"
+            field-key="header_eyebrow"
+            type="text"
+            label="Panel — odznaka"
+            tag="span"
+            :fallback="resolvedEyebrow"
+          />
+          <template v-else>
+            {{ resolvedEyebrow }}
+          </template>
         </p>
         <h1
           class="slavia-display font-bold tracking-tight text-highlighted"
           :class="variant === 'hero' ? 'mt-1 text-xl sm:mt-1.5 sm:text-2xl lg:text-[1.65rem]' : 'mt-1.5 text-2xl sm:text-3xl'"
         >
-          {{ title }}
+          <CmsEditable
+            v-if="useCmsFields"
+            :page-name="resolvedCmsPage"
+            field-key="header_title"
+            type="text"
+            label="Panel — tytuł"
+            tag="span"
+            :fallback="title"
+          />
+          <template v-else>
+            {{ title }}
+          </template>
         </h1>
         <p
           v-if="description || $slots.description"
           class="mt-1.5 max-w-3xl text-sm leading-relaxed text-muted"
         >
-          <slot name="description">
+          <slot v-if="$slots.description" name="description" />
+          <CmsEditable
+            v-else-if="useCmsFields && description"
+            :page-name="resolvedCmsPage"
+            field-key="header_description"
+            type="text"
+            label="Panel — opis"
+            tag="span"
+            :fallback="description"
+          />
+          <template v-else>
             {{ description }}
-          </slot>
+          </template>
         </p>
         <div v-if="$slots.badges" class="mt-2 flex flex-wrap gap-2">
           <slot name="badges" />

@@ -6,7 +6,7 @@ import { sanitizeRichHtml } from '~/utils/sanitizeHtml'
 
 const props = withDefaults(
   defineProps<{
-    pageName: string
+    pageName?: string
     fieldKey: string
     type?: CmsVariableType
     label?: string
@@ -14,6 +14,7 @@ const props = withDefaults(
     tag?: string
   }>(),
   {
+    pageName: undefined,
     type: 'text',
     label: undefined,
     fallback: '',
@@ -31,22 +32,32 @@ const selectedVarKey = ref('')
 const newVarKey = ref('')
 const newVarMode = ref(false)
 
-const displayContent = computed(() => {
-  const raw = cms.getPageField(props.pageName, props.fieldKey, props.fallback)
-  return props.type === 'html' ? raw : raw
-})
-
-const showEditButton = computed(
-  () => cms.canEdit.value && cms.cmsEnabledOnRoute.value
+const resolvedPageName = computed(
+  () => props.pageName || cms.routePageName.value
 )
+
+const isInteractive = computed(
+  () =>
+    cms.canEdit.value
+    && cms.editMode.value
+    && cms.cmsEnabledOnRoute.value
+)
+
+const displayContent = computed(() => {
+  if (cms.editMode.value && cms.canEdit.value) {
+    return cms.getPageFieldRaw(resolvedPageName.value, props.fieldKey, props.fallback)
+  }
+  return cms.getPageField(resolvedPageName.value, props.fieldKey, props.fallback)
+})
 
 watch(editOpen, async (open) => {
   if (!open) return
   errorMsg.value = ''
-  if (!cms.pages.value[props.pageName]) {
-    await cms.fetchPage(props.pageName).catch(() => null)
+  const pageName = resolvedPageName.value
+  if (!cms.pages.value[pageName]) {
+    await cms.fetchPage(pageName).catch(() => null)
   }
-  const field = cms.pages.value[props.pageName]?.fields?.[props.fieldKey]
+  const field = cms.pages.value[pageName]?.fields?.[props.fieldKey]
   draft.value = String(field?.value ?? props.fallback ?? '')
   draftType.value = (field?.type as CmsVariableType) ?? props.type
   selectedVarKey.value = ''
@@ -60,11 +71,25 @@ const variableRefsLabel = computed(() =>
   variableRefs.value.map(k => `{${k}}`).join(', ')
 )
 
+function openEditor() {
+  if (!isInteractive.value) return
+  editOpen.value = true
+}
+
+function onKeydown(e: KeyboardEvent) {
+  if (!isInteractive.value) return
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault()
+    openEditor()
+  }
+}
+
 async function save() {
   saving.value = true
   errorMsg.value = ''
   try {
-    const page = cms.pages.value[props.pageName]
+    const pageName = resolvedPageName.value
+    const page = cms.pages.value[pageName]
     const fields = { ...(page?.fields ?? {}) }
     let value: string | number | boolean = draft.value
     if (draftType.value === 'html') {
@@ -79,7 +104,7 @@ async function save() {
       value,
       label: props.label ?? props.fieldKey
     }
-    await cms.savePage(props.pageName, fields)
+    await cms.savePage(pageName, fields)
     editOpen.value = false
   } catch (e) {
     errorMsg.value = getApiErrorMessage(e)
@@ -110,32 +135,33 @@ function bindExistingVariable(key: string) {
 <template>
   <component
     :is="tag"
-    class="cms-editable group relative"
-    :data-cms-page="pageName"
+    class="cms-editable"
+    :class="{ 'cms-editable--interactive': isInteractive }"
+    :data-cms-page="resolvedPageName"
     :data-cms-field="fieldKey"
+    :role="isInteractive ? 'button' : undefined"
+    :tabindex="isInteractive ? 0 : undefined"
+    @click="openEditor"
+    @keydown="onKeydown"
   >
     <span
-      v-if="type === 'html'"
+      v-if="type === 'html' && !(cms.editMode.value && cms.canEdit.value)"
       v-html="displayContent"
     />
+    <span
+      v-else-if="type === 'html' && cms.editMode.value && cms.canEdit.value"
+      class="whitespace-pre-wrap font-mono text-sm"
+    >
+      {{ displayContent }}
+    </span>
     <template v-else>
       {{ displayContent }}
     </template>
 
-    <button
-      v-if="showEditButton"
-      type="button"
-      class="cms-editable__btn absolute -right-1 -top-1 z-10 flex size-7 items-center justify-center rounded-full border border-primary/30 bg-elevated text-primary opacity-0 shadow-sm transition group-hover:opacity-100 focus:opacity-100"
-      :aria-label="`Edytuj ${label || fieldKey}`"
-      @click="editOpen = true"
-    >
-      <UIcon name="i-lucide-pencil" class="size-3.5" />
-    </button>
-
     <SlaviaModal
       v-model:open="editOpen"
       :title="label || `Edycja: ${fieldKey}`"
-      description="Treść widoczna dla wszystkich użytkowników. Użyj {nazwa_zmiennej} dla danych z bazy."
+      description="Treść widoczna po zapisie. W trybie edycji używaj {nazwa_zmiennej} — podgląd pokazuje surowe odwołania."
       modal-class="max-w-2xl"
     >
       <template #body>
@@ -159,6 +185,7 @@ function bindExistingVariable(key: string) {
               v-model="draft"
               :rows="draftType === 'html' ? 10 : 4"
               class="w-full font-mono text-sm"
+              placeholder="Tekst lub {nazwa_zmiennej}"
             />
             <UInput
               v-else-if="draftType === 'image'"
@@ -200,7 +227,7 @@ function bindExistingVariable(key: string) {
                 color="primary"
                 @click="bindExistingVariable(v.key)"
               >
-                {{ v.key }}
+                {{ '{' + v.key + '}' }}
               </UButton>
               <UButton
                 size="xs"

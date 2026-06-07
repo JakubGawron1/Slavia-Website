@@ -26,4 +26,6 @@
 @use './components/dev-flags' as *;
 @use './components/calendar' as *;
 @use './components/editor-sheet' as *;
+@use './components/cms' as *;
+@use './components/olympic-coach' as *;
 @use './utilities/confetti' as *;

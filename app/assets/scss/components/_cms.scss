@@ -1,0 +1,129 @@
+@use '../abstracts/tokens' as *;
+
+.cms-global-edit {
+  position: fixed;
+  right: max(1rem, env(safe-area-inset-right, 0px));
+  bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+  z-index: 90;
+  pointer-events: none;
+}
+
+.cms-global-edit__fab {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 3rem;
+  padding: 0.65rem 1rem 0.65rem 0.85rem;
+  border-radius: 9999px;
+  border: 1px solid color-mix(in srgb, var(--ui-primary) 35%, transparent);
+  background: color-mix(in srgb, var(--ui-bg) 92%, var(--ui-primary) 8%);
+  color: var(--ui-primary);
+  font-size: 0.8125rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  box-shadow:
+    0 10px 30px color-mix(in srgb, var(--ui-primary) 18%, transparent),
+    0 2px 8px rgb(0 0 0 / 0.12);
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease;
+}
+
+.cms-global-edit__fab:hover {
+  transform: translateY(-1px);
+}
+
+.cms-global-edit--active .cms-global-edit__fab {
+  border-color: color-mix(in srgb, var(--ui-success) 45%, transparent);
+  background: color-mix(in srgb, var(--ui-success) 16%, var(--ui-bg));
+  color: var(--ui-success);
+}
+
+.cms-global-edit__version {
+  font-size: 0.625rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.72;
+}
+
+html.slavia-cms-edit-mode {
+  scroll-padding-bottom: 5rem;
+}
+
+.cms-editable {
+  position: relative;
+}
+
+.cms-editable--interactive {
+  cursor: pointer;
+  border-radius: 0.35rem;
+  outline: 2px dashed color-mix(in srgb, var(--ui-primary) 45%, transparent);
+  outline-offset: 3px;
+  background: color-mix(in srgb, var(--ui-primary) 6%, transparent);
+  transition:
+    outline-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.cms-editable--interactive:hover,
+.cms-editable--interactive:focus-visible {
+  outline-color: var(--ui-primary);
+  background: color-mix(in srgb, var(--ui-primary) 12%, transparent);
+}
+
+.cms-editable__raw-var {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.92em;
+  color: color-mix(in srgb, var(--ui-warning) 70%, var(--ui-text));
+}
+
+.cms-page-bar {
+  position: fixed;
+  left: max(1rem, env(safe-area-inset-left, 0px));
+  bottom: max(5.5rem, calc(env(safe-area-inset-bottom, 0px) + 4.5rem));
+  z-index: 89;
+  width: min(20rem, calc(100vw - 2rem));
+  max-height: min(40vh, 20rem);
+  overflow: auto;
+  padding: 0.75rem;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, var(--ui-primary) 28%, transparent);
+  background: color-mix(in srgb, var(--ui-bg) 94%, var(--ui-primary) 6%);
+  box-shadow: 0 12px 40px rgb(0 0 0 / 0.18);
+}
+
+.cms-page-bar__title {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ui-text-muted);
+}
+
+.cms-page-bar__title code {
+  color: var(--ui-primary);
+}
+
+.cms-page-bar__hint {
+  margin: 0.35rem 0 0.65rem;
+  font-size: 0.6875rem;
+  line-height: 1.45;
+  color: var(--ui-text-muted);
+}
+
+.cms-page-bar__fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.cms-page-bar__new {
+  display: flex;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}

@@ -8,6 +8,7 @@ import type {
   CmsVersionEntry
 } from '~/types/cms'
 import { isCmsExcludedPath } from '~/utils/cmsExcludedRoutes'
+import { cmsRoutePageName } from '~/utils/cmsRoutePage'
 import { interpolateCmsVariables, variablesToMap } from '~/utils/cmsVariables'
 import { sanitizeRichHtml } from '~/utils/sanitizeHtml'
 
@@ -15,6 +16,8 @@ const CMS_VARS_KEY = 'slavia-cms-variables'
 const CMS_PAGES_KEY = 'slavia-cms-pages'
 const CMS_NAV_KEY = 'slavia-cms-navigation'
 const CMS_HYDRATED_KEY = 'slavia-cms-hydrated'
+const CMS_EDIT_MODE_KEY = 'slavia-cms-edit-mode'
+const CMS_EDIT_LS_KEY = 'slavia-cms-edit-mode-v4'
 
 export function useCms() {
   const auth = useAuth()
@@ -25,6 +28,7 @@ export function useCms() {
   const pages = useState<Record<string, CmsPage>>(CMS_PAGES_KEY, () => ({}))
   const navigation = useState<CmsNavigationItem[]>(CMS_NAV_KEY, () => [])
   const hydrated = useState<boolean>(CMS_HYDRATED_KEY, () => false)
+  const editMode = useState<boolean>(CMS_EDIT_MODE_KEY, () => false)
 
   const canEdit = computed(
     () =>
@@ -38,6 +42,13 @@ export function useCms() {
   function resolveContent(raw: string, html = false): string {
     const interpolated = interpolateCmsVariables(raw, variableMap.value)
     return html ? sanitizeRichHtml(interpolated) : interpolated
+  }
+
+  function getPageFieldRaw(pageName: string, fieldKey: string, fallback = ''): string {
+    const page = pages.value[pageName]
+    const val = page?.fields?.[fieldKey]?.value
+    if (val == null) return fallback
+    return String(val)
   }
 
   function getPageField(pageName: string, fieldKey: string, fallback = ''): string {
@@ -67,6 +78,16 @@ export function useCms() {
     const data = await apiFetch<CmsPage>(apiRoutes.cms.page(name))
     pages.value = { ...pages.value, [name]: data }
     return data
+  }
+
+  async function fetchPagePublic(name: string): Promise<CmsPage | null> {
+    try {
+      const data = await $fetch<CmsPage>(publicApiUrl(`cms/page/${encodeURIComponent(name)}`))
+      pages.value = { ...pages.value, [name]: data }
+      return data
+    } catch {
+      return null
+    }
   }
 
   async function fetchNavigation(role?: string): Promise<CmsNavigationItem[]> {
@@ -185,21 +206,69 @@ export function useCms() {
     return apiFetch<CmsVersionEntry[]>(`${apiRoutes.cms.history}${suffix}`)
   }
 
+  const routePageName = computed(() => cmsRoutePageName(route.path as string))
+
   const cmsEnabledOnRoute = computed(() => !isCmsExcludedPath(route.path as string))
+
+  const showGlobalEditToggle = computed(
+    () => canEdit.value && cmsEnabledOnRoute.value
+  )
+
+  function setEditMode(on: boolean) {
+    editMode.value = on
+    if (import.meta.client) {
+      document.documentElement.classList.toggle('slavia-cms-edit-mode', on)
+      try {
+        if (on) localStorage.setItem(CMS_EDIT_LS_KEY, '1')
+        else localStorage.removeItem(CMS_EDIT_LS_KEY)
+      } catch {
+        /* private mode */
+      }
+    }
+  }
+
+  function toggleEditMode() {
+    setEditMode(!editMode.value)
+  }
+
+  function restoreEditModeFromStorage() {
+    if (!import.meta.client || !canEdit.value) return
+    try {
+      if (localStorage.getItem(CMS_EDIT_LS_KEY) === '1') {
+        setEditMode(true)
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+
+  if (import.meta.client) {
+    watch(canEdit, (allowed) => {
+      if (!allowed && editMode.value) setEditMode(false)
+    })
+  }
 
   return {
     variables,
     pages,
     navigation,
     hydrated,
+    editMode,
     canEdit,
     variableMap,
+    routePageName,
     cmsEnabledOnRoute,
+    showGlobalEditToggle,
+    setEditMode,
+    toggleEditMode,
+    restoreEditModeFromStorage,
     resolveContent,
     getPageField,
+    getPageFieldRaw,
     fetchVariables,
     fetchPages,
     fetchPage,
+    fetchPagePublic,
     fetchNavigation,
     hydratePublic,
     saveVariable,
