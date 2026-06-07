@@ -47,6 +47,134 @@
   }
 }
 
+/** Animacja rwania olimpijskiego — splash ładowania aplikacji */
+@keyframes slavia-snatch-barbell {
+  0%,
+  12% {
+    transform: translate(0, 28px) rotate(0deg);
+  }
+  28% {
+    transform: translate(0, 8px) rotate(-2deg);
+  }
+  42% {
+    transform: translate(0, -14px) rotate(1deg);
+  }
+  55% {
+    transform: translate(0, -22px) rotate(0deg);
+  }
+  68% {
+    transform: translate(0, -10px) rotate(0deg);
+  }
+  82%,
+  100% {
+    transform: translate(0, -18px) rotate(0deg);
+  }
+}
+
+@keyframes slavia-snatch-athlete {
+  0%,
+  12% {
+    transform: translate(0, 14px) scaleY(0.92);
+  }
+  28% {
+    transform: translate(0, 6px) scaleY(1);
+  }
+  42% {
+    transform: translate(0, -2px) scaleY(1.02);
+  }
+  55% {
+    transform: translate(0, 10px) scaleY(0.78);
+  }
+  68% {
+    transform: translate(0, 4px) scaleY(0.88);
+  }
+  82%,
+  100% {
+    transform: translate(0, 0) scaleY(1);
+  }
+}
+
+.slavia-snatch-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  user-select: none;
+}
+
+.slavia-snatch-loader--sm .slavia-snatch-loader__svg {
+  width: 5.5rem;
+  height: auto;
+}
+
+.slavia-snatch-loader--md .slavia-snatch-loader__svg {
+  width: 7.5rem;
+  height: auto;
+}
+
+.slavia-snatch-loader--lg .slavia-snatch-loader__svg {
+  width: 9.5rem;
+  height: auto;
+}
+
+.slavia-snatch-loader__svg {
+  overflow: visible;
+  filter: drop-shadow(0 8px 20px color-mix(in oklab, var(--ui-primary, #00c16a) 22%, transparent));
+}
+
+.slavia-snatch-loader__platform {
+  fill: color-mix(in oklab, var(--ui-primary, #00c16a) 18%, var(--ui-bg-muted, #e2e8f0));
+  opacity: 0.55;
+}
+
+.slavia-snatch-loader__body {
+  fill: var(--ui-text-highlighted, #0f172a);
+}
+
+.slavia-snatch-loader__limbs {
+  stroke: var(--ui-text-highlighted, #0f172a);
+}
+
+html.dark .slavia-snatch-loader__body {
+  fill: var(--ui-text-highlighted, #f8fafc);
+}
+
+html.dark .slavia-snatch-loader__limbs {
+  stroke: var(--ui-text-highlighted, #f8fafc);
+}
+
+.slavia-snatch-loader__bar {
+  fill: color-mix(in oklab, var(--ui-text, #334155) 88%, transparent);
+}
+
+.slavia-snatch-loader__plate {
+  fill: color-mix(in oklab, var(--ui-primary, #00c16a) 72%, #1e293b);
+}
+
+.slavia-snatch-loader__plate-inner {
+  fill: color-mix(in oklab, var(--ui-primary, #00c16a) 45%, #64748b);
+}
+
+.slavia-snatch-loader__barbell {
+  transform-box: fill-box;
+  transform-origin: center center;
+  animation: slavia-snatch-barbell 2.1s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+}
+
+.slavia-snatch-loader__athlete {
+  transform-box: fill-box;
+  transform-origin: 60px 52px;
+  animation: slavia-snatch-athlete 2.1s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+}
+
+.slavia-snatch-loader__label {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--ui-primary, #00c16a) 70%, var(--ui-text-muted, #64748b));
+}
+
 .animate-page-in {
   animation: page-rise 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -141,8 +269,14 @@ html[data-slavia-preset='velvet'] { --slavia-shimmer-accent: #e8b4a0; }
   }
 
   .slavia-deco-barbell::after,
-  .slavia-deco-plate {
+  .slavia-deco-plate,
+  .slavia-snatch-loader__barbell,
+  .slavia-snatch-loader__athlete {
     animation: none !important;
+  }
+
+  .slavia-snatch-loader__barbell {
+    transform: translate(0, -12px);
   }
 
   .page-enter-active,
