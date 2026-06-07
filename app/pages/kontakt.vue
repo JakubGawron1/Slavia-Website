@@ -3,6 +3,8 @@ import { getApiErrorMessage } from '~/composables/useApi'
 
 await useCmsPageHydrate('kontakt')
 
+useProvideCmsPageData('kontakt', () => ({}))
+
 useSeoMeta({
   title: 'Kontakt — Slavia Ruda Śląska',
   description:

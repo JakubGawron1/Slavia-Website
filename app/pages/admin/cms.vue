@@ -3,6 +3,7 @@ import type { CmsVariable, CmsVariableType } from '~/types/cms'
 import type { DashboardNavRole } from '~/utils/dashboardNavRole'
 import { apiRoutes } from '~/config/api'
 import { getApiErrorMessage } from '~/composables/useApi'
+import { useCmsVariableList, cmsVariableToken } from '~/composables/useCmsVariableList'
 import { buildUploadFormData } from '~/utils/uploadFormData'
 
 definePageMeta({ middleware: ['auth', 'editor-or-admin'] })
@@ -28,6 +29,14 @@ const newVarType = ref<CmsVariableType>('text')
 const newVarValue = ref('')
 const editPageName = ref('home')
 const editPageFields = ref<Record<string, { type: CmsVariableType, value: string, label: string }>>({})
+
+const { dataVariables: editorDataVariables } = useCmsVariableList(editPageName)
+
+function insertDataVarIntoField(fieldKey: string, varKey: string) {
+  const field = editPageFields.value[fieldKey]
+  if (!field) return
+  field.value = `${field.value}${cmsVariableToken(varKey)}`
+}
 
 async function loadAll() {
   loading.value = true
@@ -232,6 +241,48 @@ watch(editPageName, loadPageEditor)
             class="sm:col-span-2"
             :placeholder="`{zmienna} lub treść — klucz: ${key}`"
           />
+          <div
+            v-if="editorDataVariables.length"
+            class="sm:col-span-4 flex flex-wrap gap-1.5 border-t border-default/60 pt-2"
+          >
+            <span class="w-full text-[10px] font-bold uppercase tracking-wide text-muted">
+              Z bazy ({{ editPageName }})
+            </span>
+            <UButton
+              v-for="item in editorDataVariables"
+              :key="`page-data-${key}-${item.key}`"
+              size="xs"
+              variant="soft"
+              color="info"
+              class="font-mono"
+              :title="`${item.label ?? item.key} · ${item.preview}`"
+              @click="insertDataVarIntoField(String(key), item.key)"
+            >
+              {{ item.token }}
+            </UButton>
+          </div>
+        </div>
+
+        <div
+          v-if="editorDataVariables.length"
+          class="rounded-lg border border-info/25 bg-info/5 p-3 text-sm"
+        >
+          <p class="mb-2 font-semibold text-highlighted">
+            Dostępne zmienne z bazy — {{ editPageName }}
+          </p>
+          <ul class="space-y-1 text-xs text-muted">
+            <li
+              v-for="item in editorDataVariables"
+              :key="`catalog-${item.key}`"
+            >
+              <code class="text-info">{{ item.token }}</code>
+              <span v-if="item.label"> — {{ item.label }}</span>
+              <span class="opacity-80"> · {{ item.preview }}</span>
+            </li>
+          </ul>
+          <p class="mt-2 text-[11px] text-muted">
+            Wartości uzupełniają się na żywo na stronie publicznej. Możesz je też nadpisać w zakładce Zmienne.
+          </p>
         </div>
 
         <div class="flex gap-2">
@@ -264,6 +315,23 @@ watch(editPageName, loadPageEditor)
       class="mt-6"
     >
       <div class="flex flex-col gap-4 p-4 sm:p-6">
+        <div
+          v-if="editorDataVariables.length"
+          class="rounded-lg border border-info/25 bg-info/5 p-3"
+        >
+          <p class="mb-2 text-sm font-semibold">
+            Zmienne z bazy (strona: {{ editPageName }})
+          </p>
+          <CmsVariablePicker
+            :page-name="editPageName"
+            mode="copy"
+            enable-value-edit
+            data-only
+          />
+          <p class="mt-2 text-xs text-muted">
+            Domyślnie wartość pochodzi z API. Nadpisanie zapisuje się w CMS — użyj „Przywróć z bazy”, aby wrócić do danych na żywo.
+          </p>
+        </div>
         <div class="grid gap-3 sm:grid-cols-4">
           <UInput
             v-model="newVarKey"

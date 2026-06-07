@@ -1,26 +1,88 @@
 /** Z app/components/dev/DevExperimentalFlagsPanel.vue — globalne klasy (bez scoped). */
-.dev-flags-scroll-wrap {
-  min-width: 0;
+
+.dev-flags-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
 }
 
-.dev-flags-scroll {
-  scroll-padding-inline: 0.25rem;
+.dev-flags-group-label {
+  margin: 0;
+  font-size: 0.625rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ui-text-muted);
 }
 
-.dev-flags-scroll-fade {
-  position: absolute;
-  top: 0;
-  bottom: 8px;
-  z-index: 1;
-  width: 2.5rem;
+.dev-flags-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-height: 7.5rem;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--ui-border) 70%, transparent);
+  background: color-mix(in srgb, var(--ui-bg) 92%, var(--ui-muted) 8%);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+
+  &--stable {
+    background: color-mix(in srgb, var(--ui-bg) 90%, var(--ui-primary) 4%);
+  }
+
+  &--experiment {
+    border-style: dashed;
+    border-color: color-mix(in srgb, var(--ui-primary) 22%, var(--ui-border));
+  }
+
+  &--on {
+    border-color: color-mix(in srgb, var(--ui-primary) 38%, transparent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--ui-primary) 18%, transparent);
+  }
 }
 
-.dev-flags-scroll-fade--left {
-  left: 0;
-  background: linear-gradient(to right, var(--ui-bg-elevated, var(--ui-bg)) 15%, transparent);
+.dev-flags-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
 
-.dev-flags-scroll-fade--right {
-  right: 0;
-  background: linear-gradient(to left, var(--ui-bg-elevated, var(--ui-bg)) 15%, transparent);
+.dev-flags-card__title {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--ui-text-highlighted);
+}
+
+.dev-flags-card__desc {
+  margin: 0;
+  flex: 1;
+  font-size: 0.6875rem;
+  line-height: 1.45;
+  color: var(--ui-text-muted);
+}
+
+.dev-flags-card__id {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.625rem;
+  color: color-mix(in srgb, var(--ui-text-muted) 85%, transparent);
+  word-break: break-all;
+}
+
+.dev-flags-card__badge {
+  margin: 0;
+  align-self: flex-start;
+  padding: 0.1rem 0.4rem;
+  border-radius: 0.35rem;
+  font-size: 0.5625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ui-warning);
+  background: color-mix(in srgb, var(--ui-warning) 14%, transparent);
 }

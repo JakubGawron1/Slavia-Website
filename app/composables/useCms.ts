@@ -18,6 +18,7 @@ const CMS_NAV_KEY = 'slavia-cms-navigation'
 const CMS_HYDRATED_KEY = 'slavia-cms-hydrated'
 const CMS_EDIT_MODE_KEY = 'slavia-cms-edit-mode'
 const CMS_EDIT_LS_KEY = 'slavia-cms-edit-mode-v4'
+const CMS_PAGE_DATA_KEY = 'slavia-cms-page-data'
 
 export function useCms() {
   const auth = useAuth()
@@ -27,6 +28,10 @@ export function useCms() {
   const variables = useState<CmsVariable[]>(CMS_VARS_KEY, () => [])
   const pages = useState<Record<string, CmsPage>>(CMS_PAGES_KEY, () => ({}))
   const navigation = useState<CmsNavigationItem[]>(CMS_NAV_KEY, () => [])
+  const pageDataVariables = useState<Record<string, Record<string, string>>>(
+    CMS_PAGE_DATA_KEY,
+    () => ({})
+  )
   const hydrated = useState<boolean>(CMS_HYDRATED_KEY, () => false)
   const editMode = useState<boolean>(CMS_EDIT_MODE_KEY, () => false)
 
@@ -37,7 +42,53 @@ export function useCms() {
       )
   )
 
-  const variableMap = computed(() => variablesToMap(variables.value))
+  const routePageName = computed(() => cmsRoutePageName(route.path as string))
+
+  const routePageDataMap = computed(
+    () => pageDataVariables.value[routePageName.value] ?? {}
+  )
+
+  /** Wartość z API jako baza; wpis w cms_variables (inline / panel) ma pierwszeństwo. */
+  function variableMapForPage(pageName: string): Record<string, string> {
+    return {
+      ...(pageDataVariables.value[pageName] ?? {}),
+      ...variablesToMap(variables.value)
+    }
+  }
+
+  const variableMap = computed(() => variableMapForPage(routePageName.value))
+
+  function getLiveVariableValue(key: string, pageName?: string): string {
+    const pn = pageName ?? routePageName.value
+    return pageDataVariables.value[pn]?.[key] ?? ''
+  }
+
+  function isVariableOverridden(key: string): boolean {
+    return variables.value.some(v => v.key === key)
+  }
+
+  async function saveVariableOverride(key: string, value: string) {
+    await saveVariable(key, value, 'text', !isVariableOverridden(key))
+  }
+
+  async function resetVariableOverride(key: string) {
+    if (isVariableOverridden(key)) {
+      await deleteVariable(key)
+    }
+  }
+
+  function setPageDataVariables(pageName: string, vars: Record<string, string>) {
+    pageDataVariables.value = {
+      ...pageDataVariables.value,
+      [pageName]: { ...vars }
+    }
+  }
+
+  function clearPageDataVariables(pageName: string) {
+    if (!(pageName in pageDataVariables.value)) return
+    const { [pageName]: _removed, ...rest } = pageDataVariables.value
+    pageDataVariables.value = rest
+  }
 
   function resolveContent(raw: string, html = false): string {
     const interpolated = interpolateCmsVariables(raw, variableMap.value)
@@ -206,12 +257,12 @@ export function useCms() {
     return apiFetch<CmsVersionEntry[]>(`${apiRoutes.cms.history}${suffix}`)
   }
 
-  const routePageName = computed(() => cmsRoutePageName(route.path as string))
-
   const cmsEnabledOnRoute = computed(() => !isCmsExcludedPath(route.path as string))
 
+  const inlineEditEnabled = useExperimentalFlag('cms_inline_edit')
+
   const showGlobalEditToggle = computed(
-    () => canEdit.value && cmsEnabledOnRoute.value
+    () => canEdit.value && cmsEnabledOnRoute.value && inlineEditEnabled.value
   )
 
   function setEditMode(on: boolean) {
@@ -232,7 +283,7 @@ export function useCms() {
   }
 
   function restoreEditModeFromStorage() {
-    if (!import.meta.client || !canEdit.value) return
+    if (!import.meta.client || !canEdit.value || !inlineEditEnabled.value) return
     try {
       if (localStorage.getItem(CMS_EDIT_LS_KEY) === '1') {
         setEditMode(true)
@@ -246,16 +297,29 @@ export function useCms() {
     watch(canEdit, (allowed) => {
       if (!allowed && editMode.value) setEditMode(false)
     })
+    watch(inlineEditEnabled, (on) => {
+      if (!on && editMode.value) setEditMode(false)
+    })
   }
 
   return {
     variables,
     pages,
     navigation,
+    pageDataVariables,
     hydrated,
     editMode,
     canEdit,
+    inlineEditEnabled,
     variableMap,
+    variableMapForPage,
+    getLiveVariableValue,
+    isVariableOverridden,
+    saveVariableOverride,
+    resetVariableOverride,
+    routePageDataMap,
+    setPageDataVariables,
+    clearPageDataVariables,
     routePageName,
     cmsEnabledOnRoute,
     showGlobalEditToggle,

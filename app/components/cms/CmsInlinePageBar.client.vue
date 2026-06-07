@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { getApiErrorMessage } from '~/composables/useApi'
 import type { CmsPageField, CmsVariableType } from '~/types/cms'
+import { extractVariableRefs } from '~/utils/cmsVariables'
+import { cmsVariableToken } from '~/composables/useCmsVariableList'
 
 const cms = useCms()
 const editOpen = ref(false)
@@ -19,9 +21,20 @@ const pageFields = computed(() => {
   return Object.entries(fields).map(([key, field]) => ({ key, field }))
 })
 
+const pageVariableRefs = computed(() => {
+  const keys = new Set<string>()
+  for (const item of pageFields.value) {
+    for (const key of extractVariableRefs(String(item.field.value ?? ''))) {
+      keys.add(key)
+    }
+  }
+  return [...keys].sort((a, b) => a.localeCompare(b, 'pl'))
+})
+
 const visible = computed(
   () =>
-    cms.editMode.value
+    cms.inlineEditEnabled.value
+    && cms.editMode.value
     && cms.canEdit.value
     && cms.cmsEnabledOnRoute.value
 )
@@ -31,7 +44,9 @@ watch(pageName, () => {
 })
 
 watch(visible, (on) => {
-  if (on) void cms.fetchPage(pageName.value).catch(() => null)
+  if (!on) return
+  void cms.fetchPage(pageName.value).catch(() => null)
+  void cms.fetchVariables().catch(() => null)
 })
 
 function openField(key: string, field?: CmsPageField) {
@@ -51,6 +66,10 @@ function openNewField() {
   showNewField.value = false
   newFieldKey.value = ''
   editOpen.value = true
+}
+
+function insertVariableRef(key: string) {
+  draft.value = `${draft.value}${cmsVariableToken(key)}`
 }
 
 async function saveField() {
@@ -120,12 +139,35 @@ async function saveField() {
           Dodaj
         </UButton>
       </div>
+
+      <div class="cms-page-bar__section">
+        <p class="cms-page-bar__title cms-page-bar__title--section">
+          Zmienne
+        </p>
+        <p class="cms-page-bar__hint">
+          Kliknij <code>{nazwa}</code>, aby skopiować. Ołówek przy zmiennej — edycja wartości inline (nadpisanie zapisuje się w CMS).
+        </p>
+
+        <p
+          v-if="pageVariableRefs.length"
+          class="cms-page-bar__subhint"
+        >
+          Użyte na tej stronie:
+          <span class="font-mono text-primary">{{ pageVariableRefs.map(cmsVariableToken).join(', ') }}</span>
+        </p>
+
+        <CmsVariablePicker
+          :page-name="pageName"
+          mode="copy"
+          :used-keys="pageVariableRefs"
+        />
+      </div>
     </aside>
 
     <SlaviaModal
       v-model:open="editOpen"
       :title="`Edycja: ${activeFieldKey}`"
-      description="Wartość pola na tej stronie. Użyj {nazwa_zmiennej} dla danych globalnych."
+      description="Wartość pola na tej stronie. Użyj {nazwa_zmiennej} — globalne lub z bazy danych."
       modal-class="max-w-xl"
     >
       <template #body>
@@ -152,6 +194,22 @@ async function saveField() {
             />
             <UInput v-else v-model="draft" />
           </UFormField>
+
+          <div
+            v-if="pageName"
+            class="rounded-lg border border-default bg-muted/30 p-3"
+          >
+            <p class="mb-2 text-xs font-bold uppercase tracking-wide text-muted">
+              Wstaw zmienną
+            </p>
+            <CmsVariablePicker
+              :page-name="pageName"
+              mode="insert"
+              show-value-editor
+              @insert="insertVariableRef"
+            />
+          </div>
+
           <p v-if="errorMsg" class="text-sm text-error">
             {{ errorMsg }}
           </p>
