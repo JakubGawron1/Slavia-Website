@@ -330,4 +330,23 @@ scripts/          # openapi check, release-check, split developer page
 
 ## Wersjonowanie
 
-Wersja aplikacji: `package.json` → `version` (obecnie `3.x-dev`). Publiczna wersja buildu: `config/site.ts` → `formatPublicAppVersion`.
+Wersja aplikacji: `package.json` → `version` (obecnie `5.0.0`). Publiczna wersja buildu: `config/site.ts` → `formatPublicAppVersion`.
+
+Po **większych zmianach** (nowy moduł panelu, publiczny endpoint, przełom API) podbij wersję **minor** lub **major** (semver) i zaktualizuj oba repozytoria:
+
+| Krok | Frontend | Backend |
+|------|----------|---------|
+| Wersja | `package.json` → `version` | `Cargo.toml` → `version` |
+| Historia | `CHANGELOG.md` (sekcja `[X.Y.Z]`) | `CHANGELOG.md` |
+| UI admina | `app/pages/admin/changelog.vue` — wpis na górze listy | — |
+| Kontrakt API | `pnpm openapi:snapshot` → `openapi/` + `pnpm openapi:types` | `src/embed/openapi.json` (commit w backendzie **przed** snapshotem) |
+
+**Checklist przed merge / release:**
+
+1. Backend: route w `router.rs`, OpenAPI embed, migracja w `db.rs` jeśli dotyczy.
+2. Frontend: `apiRoutes`, BFF (`server/api/…`) lub whitelist `publicBackendProxy.ts` dla publicznych GET.
+3. Bump wersji + changelog w obu repo (ta sama liczba wersji przy wspólnym wydaniu, np. `5.0.0`).
+4. `pnpm openapi:check` i `pnpm typecheck` lokalnie; opcjonalnie `pnpm release:check`.
+5. Zaktualizuj linię „obecnie X.Y.Z” w tej sekcji.
+
+Wersje **patch** (np. `5.0.1`) — drobne poprawki bez nowych modułów: wystarczy bump w `package.json` / `Cargo.toml` + krótki wpis w `CHANGELOG.md`.
