@@ -21,7 +21,6 @@ const {
   importing,
   mode,
   planContext,
-  refreshStatus,
   sendMessage,
   clearChat,
   importPlanToAthlete

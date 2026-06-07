@@ -10,7 +10,6 @@ const {
   messages,
   loading,
   enabled,
-  model,
   statusLoaded,
   refreshStatus,
   sendMessage,
