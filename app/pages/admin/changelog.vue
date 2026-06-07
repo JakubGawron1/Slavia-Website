@@ -17,6 +17,20 @@ type ChangelogUpdate = {
 
 const updates = [
   {
+    version: 'v5.0.0',
+    date: '7 Czerwiec 2026',
+    title: 'Trener AI (Groq), asystent publiczny i CMS inline',
+    features: [
+      'Trener AI: panele `/trainer/trener-ai` i `/athlete/trener-ai` — czat, plany, suplementacja, regeneracja; kontekst z profilu klubowego (PB, dziennik, wyniki).',
+      'Backend Groq + LLaMA 3.1 70B (`GROQ_API_KEY`); limity klubu z paskami postępu; import planów AI dla kadry.',
+      'Asystent publiczny: przycisk wiadomości (FAB) na stronach publicznych — pytania o klub, link do `/kontakt` przy sprawach indywidualnych.',
+      'CMS: globalny tryb edycji treści (`CmsGlobalEditToggle`, `CmsInlinePageBar`), hydracja tras po nawigacji.',
+      'OpenAPI: snapshot endpointów AI coach; `pnpm openapi:check` w CI.',
+      'Wersja monorepo witryny: **v5.0.0** (`package.json`).'
+    ],
+    type: 'release'
+  },
+  {
     version: 'v3.2.5-dev',
     date: '5 Czerwiec 2026',
     title: 'Kadra, overlay formularzy, OpenAPI CI, Nuxt 4 i smoke E2E',

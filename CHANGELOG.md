@@ -1,5 +1,25 @@
 # Changelog - Slavia Frontend
 
+## [5.0.0] - 2026-06-07
+
+### Trener AI (Groq / LLaMA)
+- **Panel `/trainer/trener-ai` i `/athlete/trener-ai`**: czat, plany mikrocyklu, suplementacja i regeneracja z kontekstem profilu klubowego (PB, dziennik, wyniki, obecności).
+- **Groq + LLaMA 3.1 70B** zamiast Gemini; klucz `GROQ_API_KEY` tylko na backendzie.
+- **Limity klubu**: throttling per użytkownik i globalny klucz; **paski postępu** zużycia (wiadomości dziś/min, importy dla kadry).
+- **Import planów AI** do modułu klubowego (kadra).
+- Flaga eksperymentalna `gemini_olympic_coach` (nazwa historyczna id).
+
+### Asystent publiczny
+- **FAB** (prawy dolny róg) na stronach publicznych — pytania o klub, treningi i dwubój; kierowanie na `/kontakt` przy sprawach indywidualnych.
+- BFF `/api/ai/public/*` → backend `POST /api/ai/coach/public/chat` (limit IP, bez logowania).
+
+### CMS (edycja treści)
+- **Globalny tryb edycji** treści publicznych (`CmsGlobalEditToggle`, pasek `CmsInlinePageBar`).
+- Hydracja tras CMS po nawigacji klienckiej.
+
+### OpenAPI
+- Snapshot i typy dla endpointów Trenera AI (`pnpm openapi:check` w CI).
+
 ## [3.2.5] - 2026-06-05
 
 ### Kadra i formularze
