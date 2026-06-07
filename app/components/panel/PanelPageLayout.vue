@@ -33,6 +33,8 @@ const containerClass = computed(() => {
 
 <template>
   <UContainer :class="containerClass">
-    <slot />
+    <div class="slavia-page-flow">
+      <slot />
+    </div>
   </UContainer>
 </template>

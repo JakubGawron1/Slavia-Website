@@ -181,6 +181,36 @@ html[data-slavia-preset='glass'] .slavia-diary-compose__header {
   box-shadow: var(--slavia-glass-shadow);
 }
 
-.slavia-public-page > :not([aria-hidden='true']) + * {
-  margin-top: 0;
+/**
+ * Spójny rytm pionowy między blokami strony (nagłówek, karty, sekcje).
+ * Zastępuje zerowanie margin-top, które kasowało klasy Tailwind (mt-*) na bezpośrednich dzieciach layoutu.
+ */
+.slavia-page-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: 100%;
+  min-width: 0;
+}
+
+@media (min-width: 640px) {
+  .slavia-page-flow {
+    gap: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .slavia-page-flow {
+    gap: 2rem;
+  }
+}
+
+.slavia-page-flow--tight {
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .slavia-page-flow--tight {
+    gap: 1.25rem;
+  }
 }
