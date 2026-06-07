@@ -23,7 +23,8 @@ export const PUBLIC_BFF_REVALIDATE_PATHS: readonly string[] = [
   '/api/public/results/public-board',
   '/api/public/results/public-board-olympic',
   '/api/public/cms/variables',
-  '/api/public/cms/navigation'
+  '/api/public/cms/navigation',
+  '/api/public/challenges/monthly-training-sessions'
 ]
 
 export const ALL_VERCEL_CACHE_PURGE_PATHS: readonly string[] = [
