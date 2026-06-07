@@ -1,12 +1,16 @@
 <script setup lang="ts">
+import ClubHallOfFameRecordCard, {
+  type ClubHallOfFameRecordCardData
+} from '~/components/club/ClubHallOfFameRecordCard.vue'
+import type { AthleteChartPoint } from '~/components/AthleteProgressChart.vue'
 import { groupPublicBoardByAthlete } from '~/composables/usePublicFetch'
 import type { Athlete } from '~/types/models'
-import { athleteProfilePath } from '~/utils/slug'
 import { sinclairTotal } from '~/utils/sinclair'
 import { effectiveBodyweightKgForSinclair } from '~/utils/sinclairAthlete'
 import {
   approvedCompetitionStarts,
   boardRowToCompetitionResult,
+  buildCompetitionChartHistory,
   cardGender,
   formatWeightCategoryText,
   pickBestCompetitionStart,
@@ -21,7 +25,7 @@ definePageMeta({
 
 useSeoMeta({
   title: 'Rekordy klubu — Hall of Fame',
-  description: 'Najlepsze wyniki zawodników CKS Slavia w podziale na kategorie wagowe i płeć.',
+  description: 'Najlepsze wyniki zawodników CKS Slavia w podziale na kategorie wagowe i płeć — zatwierdzone starty zawodów i wykres progresu.',
   robots: 'index, follow'
 })
 
@@ -53,15 +57,15 @@ type RecordRow = {
   cleanJerk: number
   sinclair: number
   resultDate: string | null
+  chartHistory: AthleteChartPoint[]
+  usesProfileFallback: boolean
 }
 
-function fmtPlDate(iso: string | null | undefined) {
-  if (!iso) return '—'
-  const d = iso.slice(0, 10)
-  if (d.length < 10) return iso
-  const [y, m, day] = d.split('-')
-  return `${day}.${m}.${y}`
-}
+const periodChartHint = computed(() =>
+  period.value === 'year'
+    ? `Wykresy i rekordy — tylko zatwierdzone starty z ${currentYear}.`
+    : 'Wykresy i rekordy — wszystkie zatwierdzone starty zawodów (public board).'
+)
 
 function bucketKey(a: Athlete) {
   const threshold = resolveWeightCategoryThreshold(
@@ -85,7 +89,9 @@ function athleteToRecordRow(
   snatch: number,
   cleanJerk: number,
   total: number,
-  resultDate: string | null
+  resultDate: string | null,
+  chartHistory: AthleteChartPoint[],
+  usesProfileFallback: boolean
 ): RecordRow {
   const threshold = resolveWeightCategoryThreshold(
     a.gender ?? undefined,
@@ -110,7 +116,9 @@ function athleteToRecordRow(
     snatch,
     cleanJerk,
     sinclair: computeSinclair(a, total),
-    resultDate
+    resultDate,
+    chartHistory,
+    usesProfileFallback
   }
 }
 
@@ -123,19 +131,27 @@ function upsertBucket(buckets: Map<string, RecordRow>, key: string, row: RecordR
   }
 }
 
+function chartOptsForPeriod(profileFallback: boolean) {
+  return {
+    year: period.value === 'year' ? currentYear : undefined,
+    profileFallback
+  } as const
+}
+
 const recordBoard = computed(() => {
   const athletes = (athletesRaw.value ?? []).filter(a => a.is_active !== false)
   const athleteMap = new Map(athletes.map(a => [a.id, a]))
   const buckets = new Map<string, RecordRow>()
   const yearPrefix = String(currentYear)
-
   const boardGrouped = groupPublicBoardByAthlete<PublicBoardRow>(publicBoardRaw.value ?? [])
+  let usedBoard = false
 
   for (const [athleteId, rows] of Object.entries(boardGrouped)) {
     const a = athleteMap.get(athleteId)
     if (!a) continue
 
-    const compStarts = approvedCompetitionStarts(rows.map(boardRowToCompetitionResult))
+    const compResults = rows.map(boardRowToCompetitionResult)
+    const compStarts = approvedCompetitionStarts(compResults)
     const candidates = period.value === 'year'
       ? compStarts.filter(r => r.date.startsWith(yearPrefix))
       : compStarts
@@ -143,17 +159,29 @@ const recordBoard = computed(() => {
     const best = pickBestCompetitionStart(candidates)
     if (!best || best.total <= 0) continue
 
+    usedBoard = true
+    const chartHistory = buildCompetitionChartHistory(a, compResults, chartOptsForPeriod(false))
+
     upsertBucket(
       buckets,
       bucketKey(a),
-      athleteToRecordRow(a, best.snatch, best.clean_and_jerk, best.total, best.date.slice(0, 10))
+      athleteToRecordRow(
+        a,
+        best.snatch,
+        best.clean_and_jerk,
+        best.total,
+        best.date.slice(0, 10),
+        chartHistory,
+        false
+      )
     )
   }
 
-  if (buckets.size === 0) {
+  if (!usedBoard) {
     for (const a of athletes) {
       const total = a.total_kg ?? 0
       if (total <= 0) continue
+      const chartHistory = buildCompetitionChartHistory(a, [], chartOptsForPeriod(true))
       upsertBucket(
         buckets,
         bucketKey(a),
@@ -162,7 +190,9 @@ const recordBoard = computed(() => {
           a.best_snatch_kg ?? 0,
           a.best_clean_jerk_kg ?? 0,
           total,
-          null
+          null,
+          chartHistory,
+          true
         )
       )
     }
@@ -181,8 +211,17 @@ const recordBoard = computed(() => {
   })
 })
 
+const usesProfileFallbackBoard = computed(() =>
+  recordBoard.value.length > 0 && recordBoard.value.every(r => r.usesProfileFallback)
+)
+
 const maleRecords = computed(() => recordBoard.value.filter(r => r.gender === 'male'))
 const femaleRecords = computed(() => recordBoard.value.filter(r => r.gender === 'female'))
+
+useProvideCmsPageData('klub-rekordy', () => ({
+  liczba_rekordow: recordBoard.value.length,
+  liczba_zawodnikow: new Set(recordBoard.value.map(r => r.athleteId)).size
+}))
 
 function genderLabel(g: string) {
   if (g === 'male') return 'Mężczyźni'
@@ -195,6 +234,34 @@ function genderSectionIcon(g: string) {
   if (g === 'female') return 'i-lucide-user-round'
   return 'i-lucide-users'
 }
+
+function chartCaption(_row: RecordRow) {
+  if (period.value === 'year') {
+    return `Progres totalu — starty ${currentYear}`
+  }
+  return 'Progres totalu — zawody'
+}
+
+function toRecordCard(row: RecordRow): ClubHallOfFameRecordCardData {
+  return {
+    athleteId: row.athleteId,
+    name: row.name,
+    weightCategoryText: row.weightCategoryText,
+    birthYear: row.birthYear,
+    bodyweight: row.bodyweight,
+    photo: row.photo,
+    tagline: row.tagline,
+    total: row.total,
+    snatch: row.snatch,
+    cleanJerk: row.cleanJerk,
+    sinclair: row.sinclair,
+    resultDate: row.resultDate,
+    chartHistory: row.chartHistory,
+    usesProfileFallback: row.usesProfileFallback,
+    chartCaption: chartCaption(row),
+    chartKey: `${row.athleteId}-${row.weightCategory}-${period.value}`
+  }
+}
 </script>
 
 <template>
@@ -204,7 +271,7 @@ function genderSectionIcon(g: string) {
       eyebrow="Klub"
       icon="i-lucide-trophy"
       title="Hall of Fame — rekordy klubu"
-      description="Najlepsze totale w kategoriach wagowych na podstawie zatwierdzonych wyników zawodów. Zdjęcia i statystyki z profili kadry."
+      description="Najlepsze totale w kategoriach wagowych na podstawie zatwierdzonych wyników zawodów. Filtr roku dotyczy rekordów i wykresów progresu."
       back-to="/zawodnicy"
       back-label="Wróć do kadry"
     >
@@ -228,10 +295,24 @@ function genderSectionIcon(g: string) {
       </template>
     </PublicPageHeader>
 
-    <template v-for="section in [
-      { gender: 'male', rows: maleRecords },
-      { gender: 'female', rows: femaleRecords }
-    ]" :key="section.gender">
+    <UAlert
+      color="info"
+      variant="subtle"
+      icon="i-lucide-info"
+      class="mb-6"
+      :title="period === 'year' ? `Filtr ${currentYear}` : 'Źródło danych'"
+      :description="usesProfileFallbackBoard
+        ? 'Brak startów w public board — tymczasowo pokazujemy PB z profilu kadry (bez dat zawodów).'
+        : periodChartHint"
+    />
+
+    <template
+      v-for="section in [
+        { gender: 'male', rows: maleRecords },
+        { gender: 'female', rows: femaleRecords }
+      ]"
+      :key="section.gender"
+    >
       <section
         v-if="section.rows.length"
         class="slavia-public-section mb-10 last:mb-0"
@@ -251,123 +332,12 @@ function genderSectionIcon(g: string) {
           </div>
         </div>
 
-        <div class="slavia-content-well grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          <UCard
+        <div class="slavia-content-well grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 xl:grid-cols-3 xl:gap-6">
+          <ClubHallOfFameRecordCard
             v-for="row in section.rows"
             :key="`${row.gender}-${row.weightCategory}`"
-            class="group overflow-hidden rounded-2xl border-default/70 shadow-sm ring-1 ring-default/40 transition hover:-translate-y-0.5 hover:ring-primary/30"
-            :ui="{ body: 'p-0' }"
-          >
-            <NuxtLink
-              :to="athleteProfilePath(row.name, row.athleteId)"
-              class="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            >
-              <div class="relative aspect-5/3 overflow-hidden bg-muted/20">
-                <img
-                  :src="row.photo || '/athlete-placeholder.svg'"
-                  :alt="row.name"
-                  width="480"
-                  height="288"
-                  loading="lazy"
-                  decoding="async"
-                  class="h-full w-full object-cover object-top transition duration-300 group-hover:scale-[1.03]"
-                >
-                <div class="absolute inset-0 bg-linear-to-t from-background/95 via-background/20 to-transparent" />
-                <div class="absolute bottom-0 left-0 right-0 p-4">
-                  <UBadge
-                    color="primary"
-                    variant="solid"
-                    size="sm"
-                    class="mb-2 font-bold"
-                  >
-                    Kat. {{ row.weightCategoryText }} kg
-                  </UBadge>
-                  <h3 class="text-lg font-black leading-tight text-highlighted sm:text-xl">
-                    {{ row.name }}
-                  </h3>
-                  <p
-                    v-if="row.birthYear || row.bodyweight"
-                    class="mt-1 text-xs text-muted"
-                  >
-                    <span v-if="row.birthYear">Rocznik {{ row.birthYear }}</span>
-                    <span v-if="row.birthYear && row.bodyweight"> · </span>
-                    <span v-if="row.bodyweight">{{ row.bodyweight }} kg wagi ciała</span>
-                  </p>
-                </div>
-              </div>
-            </NuxtLink>
-
-            <div class="border-t border-default/40 p-4">
-              <p
-                v-if="row.tagline"
-                class="mb-3 line-clamp-2 text-sm leading-relaxed text-muted"
-              >
-                {{ row.tagline }}
-              </p>
-
-              <dl class="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                <div class="rounded-xl bg-primary/10 px-2 py-2.5 text-center">
-                  <dt class="text-[10px] font-bold uppercase tracking-wide text-primary">
-                    Total
-                  </dt>
-                  <dd class="font-mono text-lg font-black tabular-nums text-highlighted">
-                    {{ row.total }}
-                  </dd>
-                  <span class="text-[10px] text-muted">kg</span>
-                </div>
-                <div class="rounded-xl bg-muted/15 px-2 py-2.5 text-center">
-                  <dt class="text-[10px] font-medium uppercase tracking-wide text-muted">
-                    Rwanie
-                  </dt>
-                  <dd class="font-mono text-base font-bold tabular-nums text-highlighted">
-                    {{ row.snatch }}
-                  </dd>
-                  <span class="text-[10px] text-muted">kg</span>
-                </div>
-                <div class="rounded-xl bg-muted/15 px-2 py-2.5 text-center">
-                  <dt class="text-[10px] font-medium uppercase tracking-wide text-muted">
-                    Podrzut
-                  </dt>
-                  <dd class="font-mono text-base font-bold tabular-nums text-highlighted">
-                    {{ row.cleanJerk }}
-                  </dd>
-                  <span class="text-[10px] text-muted">kg</span>
-                </div>
-                <div class="rounded-xl bg-warning/10 px-2 py-2.5 text-center">
-                  <dt class="text-[10px] font-bold uppercase tracking-wide text-warning">
-                    Sinclair
-                  </dt>
-                  <dd class="font-mono text-base font-bold tabular-nums text-highlighted">
-                    {{ row.sinclair || '—' }}
-                  </dd>
-                  <span class="text-[10px] text-muted">pkt</span>
-                </div>
-              </dl>
-
-              <div class="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-muted">
-                <span
-                  v-if="row.resultDate"
-                  class="inline-flex items-center gap-1.5"
-                >
-                  <UIcon name="i-lucide-calendar" class="size-3.5 shrink-0" />
-                  Rekord: {{ fmtPlDate(row.resultDate) }}
-                </span>
-                <span v-else class="italic">
-                  PB z profilu
-                </span>
-                <UButton
-                  size="xs"
-                  variant="link"
-                  color="primary"
-                  :to="athleteProfilePath(row.name, row.athleteId)"
-                  trailing-icon="i-lucide-arrow-right"
-                  class="px-0"
-                >
-                  Profil
-                </UButton>
-              </div>
-            </div>
-          </UCard>
+            :record="toRecordCard(row)"
+          />
         </div>
       </section>
     </template>
