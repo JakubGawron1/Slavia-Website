@@ -1,6 +1,8 @@
 <script setup lang="ts">
 definePageMeta({ middleware: 'athlete-or-trainer' })
 
+useSlaviaPageBack({ to: '/athlete' })
+
 useSeoMeta({
   title: 'Trener AI — asystent treningowy',
   robots: 'noindex, nofollow'
@@ -8,7 +10,10 @@ useSeoMeta({
 </script>
 
 <template>
-  <PanelPageLayout narrow>
+  <PanelPageLayout
+    narrow
+    class="olympic-coach-page"
+  >
     <PanelPageHeader
       area="athlete"
       eyebrow="Trening i progres"
