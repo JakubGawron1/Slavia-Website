@@ -110,10 +110,6 @@ export default defineNuxtConfig({
 
       '/superadmin/**',
 
-      '/profil',
-
-      '/dziennik',
-
       '/klub/obecnosc',
 
       '/klub/czat',
@@ -141,10 +137,6 @@ export default defineNuxtConfig({
       '/admin/**',
 
       '/superadmin/**',
-
-      '/profil',
-
-      '/dziennik',
 
       '/klub/obecnosc',
 

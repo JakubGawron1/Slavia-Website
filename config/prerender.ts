@@ -13,6 +13,7 @@ export const prerenderRoutes = [
   '/kalkulator-sinclair',
   '/kalkulator-max-pr',
   KLUB_SHARED_ROUTES.wyzwania,
+  KLUB_SHARED_ROUTES.feed,
   '/o-klubie'
 ] as const
 
@@ -25,9 +26,6 @@ export const prerenderIgnore = [
   '/admin/**',
   '/superadmin',
   '/superadmin/**',
-  '/profil',
-  '/dziennik',
-  '/dziennik/**',
   '/ogloszenia',
   `${KLUB_SHARED_ROUTES.czat}`,
   `${KLUB_SHARED_ROUTES.obecnosc}`,

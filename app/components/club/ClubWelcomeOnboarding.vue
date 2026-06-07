@@ -10,6 +10,7 @@ import {
 
 const auth = useAuth()
 const route = useRoute()
+const { accountSettingsPath } = useRoleDashboardNav()
 
 const open = ref(false)
 
@@ -76,7 +77,7 @@ watch(
         <ul class="space-y-2.5 text-sm text-highlighted">
           <li class="flex gap-2">
             <UIcon name="i-lucide-check-circle" class="mt-0.5 size-4 shrink-0 text-primary" />
-            <span><NuxtLink class="font-semibold text-primary underline-offset-2 hover:underline" to="/profil" @click="markStepDone('profile')">Uzupełnij profil</NuxtLink> — zdjęcie, dane konta</span>
+            <span><NuxtLink class="font-semibold text-primary underline-offset-2 hover:underline" :to="accountSettingsPath" @click="markStepDone('profile')">Uzupełnij profil</NuxtLink> — zdjęcie, dane konta</span>
           </li>
           <li class="flex gap-2">
             <UIcon name="i-lucide-check-circle" class="mt-0.5 size-4 shrink-0 text-primary" />
@@ -91,7 +92,7 @@ watch(
           <UButton color="neutral" variant="ghost" @click="dismiss('athlete')">
             Nie pokazuj więcej
           </UButton>
-          <UButton to="/profil" @click="open = false">
+          <UButton :to="accountSettingsPath" @click="open = false">
             Przejdź do profilu
           </UButton>
         </div>
@@ -134,7 +135,7 @@ watch(
         <ul class="space-y-2.5 text-sm text-highlighted">
           <li class="flex gap-2">
             <UIcon name="i-lucide-shield-alert" class="mt-0.5 size-4 shrink-0 text-primary" />
-            <span><NuxtLink class="font-semibold text-primary underline-offset-2 hover:underline" to="/superadmin/administratorzy">Konta i role</NuxtLink> — administratorzy, trenerzy, zawodnicy</span>
+            <span><NuxtLink class="font-semibold text-primary underline-offset-2 hover:underline" to="/superadmin/zawodnicy?tab=accounts">Konta i role</NuxtLink> — administratorzy, trenerzy, zawodnicy</span>
           </li>
           <li class="flex gap-2">
             <UIcon name="i-lucide-users" class="mt-0.5 size-4 shrink-0 text-primary" />
