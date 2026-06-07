@@ -1,3 +1,4 @@
+import { PUBLIC_ROUTES } from '~/config/klubRoutes'
 import type { ClubNotification } from '~/types/notifications'
 
 function parsePayload(raw: string | null | undefined): Record<string, string> {
@@ -25,7 +26,7 @@ export function useNotificationLinks() {
     const athleteId = p.athlete_id
 
     if (competitionId) {
-      return '/kalendarz'
+      return PUBLIC_ROUTES.kalendarz
     }
 
     if (
@@ -64,7 +65,7 @@ export function useNotificationLinks() {
     }
 
     if (n.kind === 'announcement_published') {
-      return auth.isLoggedIn.value ? '/ogloszenia' : null
+      return auth.isLoggedIn.value ? PUBLIC_ROUTES.ogloszenia : null
     }
 
     if (

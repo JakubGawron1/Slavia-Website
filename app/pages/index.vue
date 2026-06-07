@@ -7,6 +7,7 @@ import { effectiveBodyweightKgForSinclair } from '~/utils/sinclairAthlete'
 import { athleteProfilePath, blogPostPath } from '~/utils/slug'
 import { resolveCmsMediaUrl } from '~/utils/cmsAssets'
 import { stripHtmlTags } from '~/utils/html'
+import { PUBLIC_ROUTES } from '~/config/klubRoutes'
 
 useSeoMeta({
   title: 'CKS Slavia Ruda Śląska — klub podnoszenia ciężarów',
@@ -198,7 +199,7 @@ interface ClubTool {
 
 const tools: ClubTool[] = [
   {
-    to: '/zawodnicy',
+    to: PUBLIC_ROUTES.zawodnicy,
     label: 'Zawodnicy i wyniki',
     description: 'Pełna lista kadry, ranking Sinclair i tablica startów z zawodów.',
     icon: 'i-lucide-trophy'
@@ -210,7 +211,7 @@ const tools: ClubTool[] = [
     icon: 'i-lucide-calculator'
   },
   {
-    to: '/kalkulator-proporcji',
+    to: PUBLIC_ROUTES.proporcje,
     label: 'Kalkulator proporcji',
     description: '„Złote standardy" relacji między bojami — szybki audyt swoich maxów.',
     icon: 'i-lucide-sliders-horizontal'
@@ -222,13 +223,13 @@ const tools: ClubTool[] = [
     icon: 'i-lucide-dumbbell'
   },
   {
-    to: '/aktualnosci',
+    to: PUBLIC_ROUTES.aktualnosci,
     label: 'Aktualności klubu',
     description: 'Relacje z zawodów, nowinki organizacyjne i życie sekcji.',
     icon: 'i-lucide-newspaper'
   },
   {
-    to: '/galeria',
+    to: PUBLIC_ROUTES.galeria,
     label: 'Galeria',
     description: 'Zdjęcia i filmy z treningów oraz startów na zawodach.',
     icon: 'i-lucide-camera'

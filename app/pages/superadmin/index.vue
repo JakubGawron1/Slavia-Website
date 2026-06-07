@@ -113,7 +113,7 @@ const SUPERADMIN_MODULE_GROUPS: { title: string, items: DashboardModuleLink[] }[
     items: [
       dashboardLink('Starty zawodników', 'Lista startów', 'i-lucide-list-checks', '/trainer/wyniki', 'text-teal-500', 'bg-teal-500/10'),
       dashboardLink('Składki', 'Zatwierdzanie wpłat', 'i-lucide-banknote', '/trainer/skladki', 'text-green-600', 'bg-green-500/10'),
-      dashboardLink('Obecności', 'Weryfikacja', 'i-lucide-user-check', '/attendance', 'text-indigo-600', 'bg-indigo-500/10'),
+      dashboardLink('Obecności', 'Weryfikacja', 'i-lucide-user-check', '/klub/obecnosc', 'text-indigo-600', 'bg-indigo-500/10'),
       dashboardLink('Dzienniki', 'Wpisy treningowe', 'i-lucide-book-marked', '/trainer/dziennik', 'text-cyan-600', 'bg-cyan-500/10'),
       dashboardLink('Plany', 'Monitoring progresu', 'i-lucide-clipboard-list', '/trainer/plany', 'text-emerald-600', 'bg-emerald-500/10'),
       dashboardLink('Regeneracja', 'Check-in zawodników', 'i-lucide-heart-pulse', '/trainer/regeneracja', 'text-rose-600', 'bg-rose-500/10'),
@@ -121,7 +121,7 @@ const SUPERADMIN_MODULE_GROUPS: { title: string, items: DashboardModuleLink[] }[
       dashboardLink('Słownik ćwiczeń', 'Baza do planów', 'i-lucide-library', '/trainer/cwiczenia', 'text-indigo-500', 'bg-indigo-500/10'),
       dashboardLink('Analiza sztangi', 'Wideo i diagnostyka', 'i-lucide-scan-line', '/trainer/analiza-sztangi', 'text-orange-500', 'bg-orange-500/10'),
       dashboardLink('Monitoring', 'Metryki kadry', 'i-lucide-activity', '/trainer/monitoring', 'text-sky-600', 'bg-sky-500/10'),
-      dashboardLink('Czat', 'Wiadomości 1:1', 'i-lucide-messages-square', '/chat', 'text-info', 'bg-info/12')
+      dashboardLink('Czat', 'Wiadomości 1:1', 'i-lucide-messages-square', '/klub/czat', 'text-info', 'bg-info/12')
     ]
   },
   {
@@ -129,7 +129,7 @@ const SUPERADMIN_MODULE_GROUPS: { title: string, items: DashboardModuleLink[] }[
     items: [
       dashboardLink('Ranking zawodników', 'Wyniki publiczne', 'i-lucide-trophy', '/zawodnicy', 'text-yellow-600', 'bg-yellow-500/10'),
       dashboardLink('Wyzwania miesiąca', 'Aktywność', 'i-lucide-flame', '/klub/wyzwania', 'text-orange-600', 'bg-orange-500/10'),
-      dashboardLink('Powiadomienia', 'Alerty', 'i-lucide-bell', '/powiadomienia', 'text-amber-600', 'bg-amber-500/10'),
+      dashboardLink('Powiadomienia', 'Alerty', 'i-lucide-bell', '/klub/powiadomienia', 'text-amber-600', 'bg-amber-500/10'),
       dashboardLink('Proporcje', 'Kalkulator bojów', 'i-lucide-sigma', '/kalkulator-proporcji', 'text-success', 'bg-success/12'),
     ]
   }
@@ -164,7 +164,7 @@ const summaryMetrics = computed(() => [
     label: 'Obecność 30d',
     value: `${avgAttendance.value}%`,
     tone: 'primary' as const,
-    to: '/attendance'
+    to: '/klub/obecnosc'
   },
   {
     label: 'Wyniki oczek.',

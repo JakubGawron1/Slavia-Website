@@ -73,7 +73,7 @@ const d = useDeveloperPage()
           <p class="mt-1 text-sm text-muted">
             Flaga <code>attendance_qr_checkin</code> —
             <NuxtLink to="/athlete/obecnosc-qr" class="text-primary underline">/athlete/obecnosc-qr</NuxtLink>,
-            kadra: <NuxtLink to="/attendance" class="text-primary underline">/attendance</NuxtLink>.
+            kadra: <NuxtLink to="/klub/obecnosc" class="text-primary underline">/klub/obecnosc</NuxtLink>.
           </p>
         </div>
 

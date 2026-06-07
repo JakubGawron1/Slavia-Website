@@ -1,3 +1,5 @@
+import { KLUB_SHARED_ROUTES } from '../app/config/klubRoutes'
+
 export const prerenderRoutes = [
   '/',
   '/zawodnicy',
@@ -10,7 +12,7 @@ export const prerenderRoutes = [
   '/kalkulator-proporcji',
   '/kalkulator-sinclair',
   '/kalkulator-max-pr',
-  '/klub/wyzwania',
+  KLUB_SHARED_ROUTES.wyzwania,
   '/o-klubie'
 ] as const
 
@@ -23,13 +25,13 @@ export const prerenderIgnore = [
   '/admin/**',
   '/superadmin',
   '/superadmin/**',
-  '/chat',
   '/profil',
-  '/attendance',
-  '/powiadomienia',
   '/dziennik',
   '/dziennik/**',
   '/ogloszenia',
+  `${KLUB_SHARED_ROUTES.czat}`,
+  `${KLUB_SHARED_ROUTES.obecnosc}`,
+  `${KLUB_SHARED_ROUTES.powiadomienia}`,
   '/api',
   '/dev-sw.js'
 ] as const
