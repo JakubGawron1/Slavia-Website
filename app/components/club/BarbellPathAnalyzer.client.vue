@@ -2,21 +2,49 @@
 import type { Pose } from '@tensorflow-models/pose-detection'
 import { loadPoseDetector, MODEL_PROGRESS_READY, type PoseDetector } from '~/utils/loadPoseDetector'
 import { buildBiomechanicalFeedback, buildTechniqueMetrics, smoothSamplesForFps, type BarbellSample, type BarbellTechniqueMetrics } from '~/utils/barbellPathAnalysis'
+import { useBarbellPathAi, type BarbellPathTrackingProviderId } from '~/composables/useBarbellPathAi'
+import { captureVideoFrames, pickFrameTimesFromSamples } from '~/utils/barbellVideoFrames'
 
 const props = withDefaults(
   defineProps<{
     /** Osadzenie w Barbell Lab — ukrywa karty heurystyk (pokazuje je panel lab). */
     labEmbed?: boolean
+    /** Po detekcji MoveNet — AI koryguje tor (vision + numeric). */
+    aiRefinePath?: boolean
+    liftType?: 'snatch' | 'clean_jerk' | 'unknown'
+    trackingProvider?: BarbellPathTrackingProviderId
   }>(),
-  { labEmbed: false }
+  {
+    labEmbed: false,
+    aiRefinePath: false,
+    liftType: 'unknown',
+    trackingProvider: 'auto'
+  }
 )
 
 const emit = defineEmits<{
-  analyzed: [payload: { samples: BarbellSample[]; metrics: BarbellTechniqueMetrics; feedback: string[] }]
+  analyzed: [payload: {
+    samples: BarbellSample[]
+    rawSamples: BarbellSample[]
+    metrics: BarbellTechniqueMetrics
+    feedback: string[]
+    pathSource: 'ai' | 'algorithm'
+    refineMeta?: { model: string; provider: string; method: string } | null
+    refineNotes?: string | null
+  }]
   playbackTime: [t: number]
 }>()
 
 const toast = useToast()
+const { refinePath, trackingProvider: trackingProviderRef, lastRefineMeta, refineError, refineNotes: refineNotesRef, refineBlockedReason } = useBarbellPathAi()
+
+watch(
+  () => props.trackingProvider,
+  (v) => {
+    trackingProviderRef.value = v
+  },
+  { immediate: true }
+)
 const expPlateTracking = useExperimentalFlag('barbell_plate_tracking')
 const expBodyRefTracking = useExperimentalFlag('barbell_body_reference_tracking')
 
@@ -34,6 +62,9 @@ const frameProgress = ref({ current: 0, total: 0 })
 const feedback = ref<string[]>([])
 const samplesCount = ref(0)
 const analyzedSamples = ref<BarbellSample[]>([])
+/** Surowy tor z MoveNet — do porównania gdy AI skoryguje ścieżkę. */
+const rawAlgorithmSamples = ref<BarbellSample[]>([])
+const pathSource = ref<'ai' | 'algorithm'>('algorithm')
 const metrics = ref<BarbellTechniqueMetrics | null>(null)
 const stabilizeToHips = ref(true)
 const playbackReady = computed(() => analyzedSamples.value.length >= 2 && !!videoRef.value)
@@ -169,7 +200,11 @@ function videoContentBox(v: HTMLVideoElement) {
   return { x, y: 0, w, h }
 }
 
-function drawPath(samples: BarbellSample[], untilSec?: number) {
+function drawPath(
+  samples: BarbellSample[],
+  untilSec?: number,
+  referenceSamples?: BarbellSample[]
+) {
   const v = videoRef.value
   const c = canvasRef.value
   if (!v || !c || samples.length < 2) {
@@ -184,6 +219,14 @@ function drawPath(samples: BarbellSample[], untilSec?: number) {
     ? Math.min(120, Math.max(12, Math.round((visibleRaw.length - 1) / Math.max(0.001, visibleRaw[visibleRaw.length - 1]!.t - visibleRaw[0]!.t))))
     : 30
   const visible = smoothSamplesForFps(visibleRaw, estimatedFps)
+
+  let refVisible: BarbellSample[] = []
+  if (referenceSamples && referenceSamples.length >= 2) {
+    const refRaw = typeof untilSec === 'number'
+      ? referenceSamples.filter(s => s.t <= untilSec)
+      : referenceSamples
+    refVisible = refRaw.length >= 2 ? smoothSamplesForFps(refRaw, estimatedFps) : []
+  }
 
   resizeCanvasToVideo()
   const ctx = c.getContext('2d')
@@ -204,6 +247,22 @@ function drawPath(samples: BarbellSample[], untilSec?: number) {
   ctx.lineTo(box.x + hip.hipMidX * box.w, box.y + box.h)
   ctx.stroke()
   ctx.setLineDash([])
+
+  if (refVisible.length >= 2) {
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.75)'
+    ctx.lineWidth = 2
+    ctx.setLineDash([4, 5])
+    ctx.beginPath()
+    for (let i = 0; i < refVisible.length; i++) {
+      const pt = refVisible[i]!
+      const x = box.x + pt.barX * box.w
+      const y = box.y + pt.barY * box.h
+      if (i === 0) ctx.moveTo(x, y)
+      else ctx.lineTo(x, y)
+    }
+    ctx.stroke()
+    ctx.setLineDash([])
+  }
 
   ctx.strokeStyle = 'rgba(250, 204, 21, 0.95)'
   ctx.lineWidth = 3
@@ -400,7 +459,17 @@ const displaySamples = computed(() => {
 function redrawNow() {
   const v = videoRef.value
   if (!v || displaySamples.value.length < 2) return
-  drawPath(displaySamples.value, v.currentTime)
+  const ref = pathSource.value === 'ai' && rawAlgorithmSamples.value.length >= 2
+    ? rawAlgorithmSamples.value
+    : undefined
+  drawPath(displaySamples.value, v.currentTime, ref)
+}
+
+function drawPathForDisplay(samples: BarbellSample[], untilSec?: number) {
+  const ref = pathSource.value === 'ai' && rawAlgorithmSamples.value.length >= 2
+    ? rawAlgorithmSamples.value
+    : undefined
+  drawPath(samples, untilSec, ref)
 }
 
 function onCanvasClick(e: MouseEvent) {
@@ -580,6 +649,8 @@ async function analyzeVideo() {
   feedback.value = []
   samplesCount.value = 0
   analyzedSamples.value = []
+  rawAlgorithmSamples.value = []
+  pathSource.value = 'algorithm'
 
   try {
     const det = await ensureDetector((pct) => {
@@ -659,17 +730,74 @@ async function analyzeVideo() {
       return
     }
 
-    analyzedSamples.value = activeLift
-    const finalSamples = displaySamples.value.length ? displaySamples.value : activeLift
-    drawPath(finalSamples)
-    feedback.value = buildBiomechanicalFeedback(finalSamples)
-    metrics.value = buildTechniqueMetrics(finalSamples)
+    rawAlgorithmSamples.value = activeLift.map(s => ({ ...s }))
+    let finalSamples = activeLift
+    pathSource.value = 'algorithm'
+
+    if (props.aiRefinePath) {
+      if (refineBlockedReason.value) {
+        toast.add({
+          title: 'Limit toru AI (free tier)',
+          description: refineBlockedReason.value,
+          color: 'warning'
+        })
+      } else {
+      phaseStep.value = 4
+      busyLabel.value = 'AI — ekstrakcja klatek i korekta toru…'
+      progress.value = Math.max(progress.value, 92)
+      await yieldToBrowser()
+      if (runId !== analysisRunId) return
+
+      try {
+        const frameTimes = pickFrameTimesFromSamples(activeLift, 10)
+        const frames = await captureVideoFrames(v, frameTimes)
+        if (runId !== analysisRunId) return
+
+        const refined = await refinePath({
+          rawSamples: activeLift,
+          frames,
+          liftType: props.liftType
+        })
+
+        if (refined && refined.samples.length >= 4) {
+          finalSamples = refined.samples
+          pathSource.value = 'ai'
+        } else if (refineError.value) {
+          toast.add({
+            title: 'Korekta AI niedostępna',
+            description: refineError.value,
+            color: 'warning'
+          })
+        }
+      } catch (e) {
+        console.warn('[Barbell AI refine]', e)
+        toast.add({
+          title: 'Korekta AI nie powiodła się',
+          description: 'Użyto toru z detekcji MoveNet.',
+          color: 'warning'
+        })
+      }
+      }
+    }
+
+    analyzedSamples.value = finalSamples
+    const display = displaySamples.value.length ? displaySamples.value : finalSamples
+    drawPathForDisplay(display)
+    feedback.value = buildBiomechanicalFeedback(display)
+    metrics.value = buildTechniqueMetrics(display)
     emit('analyzed', {
-      samples: finalSamples,
+      samples: display,
+      rawSamples: rawAlgorithmSamples.value,
       metrics: metrics.value,
-      feedback: feedback.value
+      feedback: feedback.value,
+      pathSource: pathSource.value,
+      refineMeta: lastRefineMeta.value,
+      refineNotes: refineNotesRef.value
     })
-    toast.add({ title: 'Analiza zakończona', color: 'success' })
+    toast.add({
+      title: pathSource.value === 'ai' ? 'Analiza zakończona (tor AI)' : 'Analiza zakończona',
+      color: 'success'
+    })
   } catch (e) {
     console.error(e)
     toast.add({
@@ -700,7 +828,7 @@ function onVideoTimeUpdate() {
   const t = v.currentTime
   rafTimeUpdate = window.requestAnimationFrame(() => {
     rafTimeUpdate = null
-    drawPath(displaySamples.value, t)
+    drawPathForDisplay(displaySamples.value, t)
     if (props.labEmbed) {
       emit('playbackTime', t)
     }
@@ -709,7 +837,7 @@ function onVideoTimeUpdate() {
 
 function onVideoEnded() {
   if (displaySamples.value.length < 2) return
-  drawPath(displaySamples.value)
+  drawPathForDisplay(displaySamples.value)
 }
 
 onMounted(() => {
@@ -910,6 +1038,14 @@ onBeforeUnmount(() => {
             >
               3 · Klatki
             </UBadge>
+            <UBadge
+              v-if="labEmbed && aiRefinePath"
+              :color="phaseStep >= 4 ? 'primary' : 'neutral'"
+              variant="subtle"
+              size="sm"
+            >
+              4 · AI tor
+            </UBadge>
           </div>
           <span
             v-if="phaseStep === 3 && frameProgress.total > 0"
@@ -988,6 +1124,7 @@ onBeforeUnmount(() => {
           class="text-xs text-muted"
         >
           Odtwarzanie rysuje trajektorię w czasie rzeczywistym tylko dla fazy aktywnego podnoszenia (bez odkładania).
+          <span v-if="pathSource === 'ai'"> Szary przerywany = MoveNet, żółty = tor skorygowany przez AI.</span>
         </p>
       </div>
     </div>

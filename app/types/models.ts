@@ -81,6 +81,8 @@ export interface Competition {
   external_source?: string | null
   external_ref?: string | null
   external_url?: string | null
+  /** Klub bierze udział — niezależnie od przypisanych zawodników. */
+  club_participates?: boolean
 }
 
 export type CalendarEvent = {
@@ -96,6 +98,7 @@ export type CalendarEvent = {
   external_source?: string | null
   external_ref?: string | null
   external_url?: string | null
+  club_participates?: boolean
 }
 
 export interface CalendarParticipantBrief {

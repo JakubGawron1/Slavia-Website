@@ -147,7 +147,8 @@ export const apiRoutes = {
   aiCoach: {
     status: '/api/ai/coach/status',
     chat: '/api/ai/coach/chat',
-    importPlan: '/api/ai/coach/import-plan'
+    importPlan: '/api/ai/coach/import-plan',
+    barbellPathRefine: '/api/ai/coach/barbell-path/refine'
   },
   payments: {
     my: '/api/payments/my',

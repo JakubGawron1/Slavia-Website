@@ -4,6 +4,8 @@ import { smoothSamplesForFps, type BarbellSample } from '~/utils/barbellPathAnal
 const props = withDefaults(
   defineProps<{
     samples: BarbellSample[]
+    /** Surowy tor algorytmu (szary) — gdy AI skorygowało ścieżkę. */
+    referenceSamples?: BarbellSample[]
     /** Ogranicza tor do punktów do tego czasu (synchronizacja z odtwarzaniem wideo). */
     untilSec?: number
     hipLine?: boolean
@@ -25,6 +27,22 @@ const displaySamples = computed(() => {
   return smoothSamplesForFps(raw, fps)
 })
 
+const displayReference = computed(() => {
+  const src = props.referenceSamples
+  if (!src || src.length < 2) return []
+  const raw =
+    typeof props.untilSec === 'number'
+      ? src.filter(s => s.t <= props.untilSec!)
+      : src
+  if (raw.length < 2) return []
+  const duration = raw[raw.length - 1]!.t - raw[0]!.t
+  const fps =
+    duration > 0.001
+      ? Math.min(120, Math.max(12, Math.round((raw.length - 1) / duration)))
+      : 30
+  return smoothSamplesForFps(raw, fps)
+})
+
 /** Współrzędne 0–100 (Y rośnie w dół — jak na ekranie). */
 function pt(s: BarbellSample) {
   return { x: s.barX * 100, y: s.barY * 100 }
@@ -32,6 +50,17 @@ function pt(s: BarbellSample) {
 
 const pathD = computed(() => {
   const pts = displaySamples.value
+  if (pts.length < 2) return ''
+  return pts
+    .map((s, i) => {
+      const p = pt(s)
+      return `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`
+    })
+    .join(' ')
+})
+
+const referencePathD = computed(() => {
+  const pts = displayReference.value
   if (pts.length < 2) return ''
   return pts
     .map((s, i) => {
@@ -67,7 +96,7 @@ const hasPath = computed(() => displaySamples.value.length >= 2)
         Tor sztangi (widok 2D)
       </p>
       <p class="text-xs text-muted">
-        Oś X — pozycja w kadrze · Oś Y — wysokość (0 = góra, 100 = dół)
+        Oś X — pozycja · Oś Y — wysokość. Żółty = tor AI, szary przerywany = MoveNet.
       </p>
     </div>
     <div class="aspect-16/10 w-full p-3 sm:p-4">
@@ -106,6 +135,15 @@ const hasPath = computed(() => displaySamples.value.length >= 2)
           stroke="rgba(34,197,94,0.45)"
           stroke-width="0.6"
           stroke-dasharray="2 2"
+        />
+        <path
+          v-if="referencePathD"
+          :d="referencePathD"
+          fill="none"
+          stroke="rgba(148,163,184,0.85)"
+          stroke-width="1"
+          stroke-dasharray="3 3"
+          stroke-linecap="round"
         />
         <path
           :d="pathD"

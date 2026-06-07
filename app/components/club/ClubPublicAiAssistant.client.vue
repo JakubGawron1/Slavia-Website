@@ -29,7 +29,12 @@ const canSend = computed(() => Boolean(draft.value.trim()) && !loading.value && 
 useOverlayDismiss(open)
 
 onMounted(() => {
+  document.documentElement.classList.add('slavia-public-ai-visible')
   void refreshStatus()
+})
+
+onBeforeUnmount(() => {
+  document.documentElement.classList.remove('slavia-public-ai-visible')
 })
 
 watch(open, (v) => {

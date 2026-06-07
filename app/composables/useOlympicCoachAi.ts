@@ -31,6 +31,10 @@ export interface OlympicCoachQuota {
   import_limit_per_day: number
   import_used_this_hour?: number
   import_limit_per_hour?: number
+  barbell_path_used_today?: number
+  barbell_path_limit_per_day?: number
+  barbell_path_used_this_minute?: number
+  barbell_path_limit_per_minute?: number
   applies_to_you?: boolean
 }
 
@@ -100,6 +104,65 @@ export function olympicCoachChatBlockedReason(
     return 'Zbyt wiele wiadomości na minutę — odczekaj chwilę.'
   }
   return null
+}
+
+export function barbellPathRefineBlockedReason(
+  status: OlympicCoachStatus | null | undefined
+): string | null {
+  const q = status?.quota
+  if (!q || q.applies_to_you === false) return null
+  const dayLimit = q.barbell_path_limit_per_day ?? 10
+  const dayUsed = q.barbell_path_used_today ?? 0
+  const minLimit = q.barbell_path_limit_per_minute ?? 2
+  const minUsed = q.barbell_path_used_this_minute ?? 0
+  if (dayUsed >= dayLimit) {
+    return 'Dzienny limit korekty toru AI wyczerpany (free tier). Spróbuj jutro — tor MoveNet nadal działa.'
+  }
+  if (minUsed >= minLimit) {
+    return 'Zbyt wiele analiz toru AI na minutę (max 2) — odczekaj ~60 s.'
+  }
+  return null
+}
+
+export function barbellPathQuotaMetrics(
+  status: OlympicCoachStatus | null | undefined
+): OlympicCoachQuotaMetric[] {
+  const q = status?.quota
+  if (!q || q.applies_to_you === false) return []
+
+  const build = (
+    id: string,
+    label: string,
+    used: number,
+    limit: number
+  ): OlympicCoachQuotaMetric => {
+    const safeLimit = Math.max(limit, 1)
+    const clampedUsed = Math.min(Math.max(used, 0), safeLimit)
+    return {
+      id,
+      label,
+      used: clampedUsed,
+      limit: safeLimit,
+      remaining: Math.max(0, limit - used),
+      percent: Math.min(100, Math.round((clampedUsed / safeLimit) * 100)),
+      tone: quotaTone(used, limit)
+    }
+  }
+
+  return [
+    build(
+      'barbell_path_daily',
+      'Tor AI dziś',
+      q.barbell_path_used_today ?? 0,
+      q.barbell_path_limit_per_day ?? 10
+    ),
+    build(
+      'barbell_path_minute',
+      'Tor AI / min',
+      q.barbell_path_used_this_minute ?? 0,
+      q.barbell_path_limit_per_minute ?? 2
+    )
+  ]
 }
 
 export function olympicCoachImportBlockedReason(
