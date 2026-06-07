@@ -13,6 +13,25 @@ export type VercelCachePurgeSummary = {
   at: string
 }
 
+function isBffPath(path: string): boolean {
+  return path.startsWith('/api/')
+}
+
+/** URL purge — BFF dostaje unikalny query (inny klucz CDN), strony ISR bez. */
+function buildPurgeUrl(origin: string, path: string): string {
+  const normalized = path.startsWith('/') ? path : `/${path}`
+  const base = `${origin}${normalized}`
+  if (!isBffPath(normalized)) {
+    return base
+  }
+  const sep = base.includes('?') ? '&' : '?'
+  return `${base}${sep}_slavia_revalidate=${Date.now()}`
+}
+
+function isPurgeSuccess(status: number): boolean {
+  return (status >= 200 && status < 300) || status === 304
+}
+
 export async function purgeVercelIsrCache(options: {
   origin: string
   bypassToken: string
@@ -23,19 +42,28 @@ export async function purgeVercelIsrCache(options: {
 
   for (const rawPath of options.paths) {
     const path = rawPath.startsWith('/') ? rawPath : `/${rawPath}`
-    const url = `${origin}${path}`
+    const url = buildPurgeUrl(origin, path)
+    const bff = isBffPath(path)
+
     try {
       const res = await fetch(url, {
-        method: 'HEAD',
+        method: 'GET',
         headers: {
           'x-prerender-revalidate': options.bypassToken,
+          Accept: bff ? 'application/json' : 'text/html,*/*',
+          'Cache-Control': 'no-cache',
           'User-Agent': 'Slavia-vercel-cache-purge/1.0'
         },
         redirect: 'follow',
-        signal: AbortSignal.timeout(20_000)
+        signal: AbortSignal.timeout(30_000)
       })
-      const ok = res.ok || res.status === 304
-      results.push({ path, ok, status: res.status })
+      const ok = isPurgeSuccess(res.status)
+      results.push({
+        path,
+        ok,
+        status: res.status,
+        error: ok ? undefined : `HTTP ${res.status}`
+      })
     } catch (e) {
       results.push({
         path,
