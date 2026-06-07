@@ -43,6 +43,30 @@ const showAthleteCompareLink = computed(() => {
   return publicFeaturesMap.value.athleteCompare !== false
 })
 
+const athletePrefetch = createPrefetchScheduler()
+const apiFetch = useApi()
+
+function prefetchAthleteProfile(id?: string | null) {
+  if (!id) return
+  athletePrefetch.schedule(`athlete-detail-${id}`, () =>
+    apiFetch(`/api/athletes/${encodeURIComponent(id)}`).catch(() => null)
+  )
+}
+
+function cancelAthletePrefetch(id?: string | null) {
+  if (!id) return
+  athletePrefetch.cancel(`athlete-detail-${id}`)
+}
+
+function athletePrefetchHandlers(id?: string | null) {
+  return {
+    onPointerenter: () => prefetchAthleteProfile(id),
+    onFocus: () => prefetchAthleteProfile(id),
+    onPointerleave: () => cancelAthletePrefetch(id),
+    onBlur: () => cancelAthletePrefetch(id)
+  }
+}
+
 </script>
 
 <template>
@@ -70,6 +94,7 @@ const showAthleteCompareLink = computed(() => {
         <NuxtLink
           v-if="podium[1]"
           :to="athleteProfilePath(podium[1].name, podium[1].id)"
+          v-bind="athletePrefetchHandlers(podium[1].id)"
           class="order-2 md:order-1 group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-3xl"
         >
           <div class="flex flex-col items-center">
@@ -106,6 +131,7 @@ const showAthleteCompareLink = computed(() => {
         <NuxtLink
           v-if="podium[0]"
           :to="athleteProfilePath(podium[0].name, podium[0].id)"
+          v-bind="athletePrefetchHandlers(podium[0].id)"
           class="order-1 md:order-2 group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-3xl"
         >
           <div class="flex flex-col items-center">
@@ -148,6 +174,7 @@ const showAthleteCompareLink = computed(() => {
         <NuxtLink
           v-if="podium[2]"
           :to="athleteProfilePath(podium[2].name, podium[2].id)"
+          v-bind="athletePrefetchHandlers(podium[2].id)"
           class="order-3 md:order-3 group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-3xl"
         >
           <div class="flex flex-col items-center">
@@ -611,6 +638,7 @@ const showAthleteCompareLink = computed(() => {
           v-for="player in mappedPlayers"
           :key="player.id"
           :to="athleteProfilePath(player.name, player.id)"
+          v-bind="athletePrefetchHandlers(player.id)"
           prefetch
           prefetch-on="interaction"
           class="block"
