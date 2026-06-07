@@ -15,6 +15,7 @@ export const publicBffCache = {
 export function buildRouteRules(devDisableRootIsr: boolean) {
   return {
     '/api/public/**': publicBffCache,
+    '/api/ai/public/**': panelNoStore,
 
     '/': devDisableRootIsr ? { isr: false, prerender: true } : { isr: 600, prerender: true },
     '/zawodnicy': { isr: 900, prerender: true },
