@@ -129,6 +129,98 @@ const d = useDeveloperPage()
             updated_at: {{ d.backendProviderServerUpdatedAt }}
           </p>
         </div>
+        <div class="mt-4 rounded-xl border border-default/60 bg-muted/10 p-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <p class="text-[10px] font-bold uppercase tracking-wider text-muted">
+              Cache Vercel (ISR / BFF)
+            </p>
+            <div class="flex flex-wrap gap-1">
+              <UBadge
+                size="xs"
+                variant="subtle"
+                :color="d.vercelCacheStatus?.configured ? 'success' : 'warning'"
+              >
+                token: {{ d.vercelCacheStatus?.configured ? 'OK' : 'brak' }}
+              </UBadge>
+              <UBadge
+                v-if="d.vercelCacheStatus"
+                size="xs"
+                variant="subtle"
+                color="neutral"
+              >
+                {{ d.vercelCacheStatus.total_path_count }} tras
+              </UBadge>
+            </div>
+          </div>
+          <p class="mt-1 text-[11px] leading-snug text-muted">
+            Wymusza on-demand revalidację stron ISR (np. <code>/zawodnicy/archiwum</code>) i publicznego BFF.
+            Wymaga <code>VERCEL_ISR_BYPASS_TOKEN</code> w env Vercel — po zmianie danych bez czekania na TTL cache.
+          </p>
+          <p
+            v-if="d.vercelCacheStatus?.site_origin"
+            class="mt-1 break-all font-mono text-[10px] text-muted"
+          >
+            origin: {{ d.vercelCacheStatus.site_origin }}
+          </p>
+          <div class="mt-2 flex flex-wrap gap-1">
+            <UButton
+              size="xs"
+              color="warning"
+              icon="i-lucide-refresh-cw"
+              :loading="d.vercelCachePurgeRunning"
+              :disabled="!d.vercelCacheStatus?.configured"
+              @click="d.purgeVercelCache('all')"
+            >
+              Wyczyść cache (wszystko)
+            </UButton>
+            <UButton
+              size="xs"
+              variant="soft"
+              color="neutral"
+              icon="i-lucide-archive"
+              :loading="d.vercelCachePurgeRunning"
+              :disabled="!d.vercelCacheStatus?.configured"
+              @click="d.purgeVercelCache('isr')"
+            >
+              Tylko ISR
+            </UButton>
+            <UButton
+              size="xs"
+              variant="soft"
+              color="neutral"
+              icon="i-lucide-plug"
+              :loading="d.vercelCachePurgeRunning"
+              :disabled="!d.vercelCacheStatus?.configured"
+              @click="d.purgeVercelCache('bff')"
+            >
+              Tylko BFF
+            </UButton>
+            <UButton
+              size="xs"
+              variant="outline"
+              color="neutral"
+              icon="i-lucide-info"
+              :loading="d.vercelCacheStatusLoading"
+              @click="d.refreshVercelCacheStatus()"
+            >
+              Status
+            </UButton>
+          </div>
+          <p
+            v-if="!d.vercelCacheStatus?.configured && d.vercelCacheStatus"
+            class="mt-2 text-[11px] text-warning"
+          >
+            Ustaw <code>VERCEL_ISR_BYPASS_TOKEN</code> w Vercel (Production + Preview) i zrób redeploy frontendu.
+          </p>
+          <p
+            v-if="d.vercelCachePurgeLastResult"
+            class="mt-2 rounded-lg border border-default/40 bg-muted/10 px-3 py-2 text-[11px] font-mono text-muted"
+          >
+            Ostatni purge: {{ d.vercelCachePurgeLastResult.okCount }}/{{ d.vercelCachePurgeLastResult.path_count }} OK
+            · {{ d.vercelCachePurgeLastResult.failCount }} błędów
+            · {{ d.vercelCachePurgeLastResult.at }}
+          </p>
+        </div>
       </UCard>
 
     </section>
