@@ -6,11 +6,11 @@ Zbiór propozycji po przeglądzie kodu (`Slavia-frontend`, typy tras z `api.ts`,
 
 ## Produkt i doświadczenie użytkownika
 
-1. **Onboarding po pierwszym logowaniu** — krótki checklist (profil, rola, pierwszy moduł) z możliwością pominięcia; szczególnie dla roli Athlete przy pierwszym wejściu w panel.
-2. **Eksport rankingu na zebrania / SM** — CSV lub PDF z pozycją, imieniem, Sinclairem, totalem — osobno zawody vs trening jeśli dane są rozróżnialne (`kind`), z nagłówkiem wyjaśniającym kolumny.
-3. **Jedna wyszukiwarka kontekstowa** — skrót z belki: zawodnik, konkurs z kalendarza, wpis aktualności; ograniczona do ról mających dostęp (bez wycieków tras admin-only).
-4. **Spójne „ostatnie miejsce” w długich formularzach** — przy powrocie do modala edycji (np. zawodnik) opcjonalny scroll do pola, którym user się zajmował (localStorage lub hash).
-5. **Publiczny /athlete/[slug]** — wizytówki SEO: strukturalne `JSON-LD` „Person”, automatyczny `og:image` z avatara zawodnika (gdy dostępny).
+1. ~~**Onboarding po pierwszym logowaniu** — krótki checklist (profil, rola, pierwszy moduł) z możliwością pominięcia; szczególnie dla roli Athlete przy pierwszym wejściu w panel.~~ *(wdrożone: `ClubWelcomeOnboarding` + `useOnboardingChecklist` — checklist per portal, pominięcie w localStorage.)*
+2. ~~**Eksport rankingu na zebrania / SM** — CSV lub PDF z pozycją, imieniem, Sinclairem, totalem — osobno zawody vs trening jeśli dane są rozróżnialne (`kind`), z nagłówkiem wyjaśniającym kolumny.~~ *(wdrożone: eksport CSV na `/zawodnicy` — przełącznik zawody/trening, UTF-8; PDF — opcjonalnie dalej.)*
+3. ~~**Jedna wyszukiwarka kontekstowa** — skrót z belki: zawodnik, konkurs z kalendarza, wpis aktualności; ograniczona do ról mających dostęp (bez wycieków tras admin-only).~~ *(wdrożone: `ClubGlobalSearch` w belce — Ctrl/⌘+K, `/`, publiczne API BFF.)*
+4. ~~**Spójne „ostatnie miejsce” w długich formularzach** — przy powrocie do modala edycji (np. zawodnik) opcjonalny scroll do pola, którym user się zajmował (localStorage lub hash).~~ *(wdrożone: `useFormFieldScrollRestore` + `data-form-field` w `SlaviaEditorSheet` / edycja zawodnika.)*
+5. ~~**Publiczny /athlete/[slug]** — wizytówki SEO: strukturalne `JSON-LD` „Person”, automatyczny `og:image` z avatara zawodnika (gdy dostępny).~~ *(wdrożone: `/athlete/[slug]` — `application/ld+json` Person, `og:image` z avatara.)*
 
 ---
 
@@ -31,9 +31,9 @@ Zbiór propozycji po przeglądzie kodu (`Slavia-frontend`, typy tras z `api.ts`,
 
 ## Składki i płatności
 
-16. **Historia „przelewu stałego” w UI** — oś czasu: „auto-składka za 2026-04” z odnośnikiem lub opisem spójnym z `membership_payments`, widoczna dla zawodnika i zsynchronizowana z panelem trenera.
+16. ~~**Historia „przelewu stałego” w UI** — oś czasu: „auto-składka za 2026-04” z odnośnikiem lub opisem spójnym z `membership_payments`, widoczna dla zawodnika i zsynchronizowana z panelem trenera.~~ *(wdrożone: oś czasu auto-składek na `/athlete/skladki` przy `has_standing_order`.)*
 17. **Nadpłata / saldo** — przejrzysty widżet „przeniesione na kolejny miesiąc” przy obecnym flow zatwierdzania wpłat (jeśli logika lub notatki to obsługują — spięcie z UX).
-18. **Powiadomienie przed „10.”** — spójność między `/profil` (lokalnie) a e-mailem / push (jeśli kiedykolwiek dodany centralny dispatcher).
+18. ~~**Powiadomienie przed „10.”** — spójność między `/profil` (lokalnie) a e-mailem / push (jeśli kiedykolwiek dodany centralny dispatcher).~~ *(wdrożone częściowo: baner na panelu zawodnika + ustawienia przypomnienia na `/profil`; e-mail / push — opcjonalnie dalej.)*
 19. ~~**Panel trenera: skrót „kto bez wpłaty za bieżący miesiąc”** — jedna lista filtrowana z `/api/payments/overview` lub statusów (minimalny widok na dashboard lub składkach).~~ *(wdrożone: karta na dashboardzie trenera + link do składek.)*
 
 ---
@@ -73,9 +73,9 @@ Zbiór propozycji po przeglądzie kodu (`Slavia-frontend`, typy tras z `api.ts`,
 ## Backend, dane, DevEx
 
 32. **Indeksy pod listy** — m.in. `(athlete_id, status, …)` dla wyników i płatności miesiąc/status; potwierdzenie przez `EXPLAIN QUERY PLAN`.
-33. **Idempotencja schedulerów** — jawny constraint lub jednoznaczny „UPSERT” przy auto-składce (`standing_order`), metryki w logach („ile pominięto duplikatów”).
+33. ~~**Idempotencja schedulerów** — jawny constraint lub jednoznaczny „UPSERT” przy auto-składce (`standing_order`), metryki w logach („ile pominięto duplikatów”).~~ *(wdrożone: `payments_scheduler` — idempotentny insert + `UNIQUE INDEX (athlete_id, month)` — patrz #54; metryki w `/superadmin/workers`.)*
 34. ~~**Kontrakt API** — OpenAPI z Axum (lub utrzymywane ręcznie) → generacja typów TypeScript w CI (`PaymentStatusResponse` itd.).~~ *(skrypt `pnpm run openapi:types` + plik `app/types/generated/openapi.types.ts` ze `src/embed/openapi.json` backendu; przy rozłącznych repozytoriach regeneracja lokalnie / w monorepo CI.)*
-35. **E2E krytycznych ścieżek** — Playwright: logowanie, zgłoszenie składki, przegląd profilu; rozszerzenie o 2FA i batch approve gdy są już w UI.
+35. ~~**E2E krytycznych ścieżek** — Playwright: logowanie, zgłoszenie składki, przegląd profilu; rozszerzenie o 2FA i batch approve gdy są już w UI.~~ *(wdrożone częściowo: `e2e/smoke.spec.ts` + `smoke-mobile.spec.ts` — trasy publiczne, PWA, ochrona paneli, formularz logowania; pełny flow auth + składka — dalej.)*
 36. **Rate limiting** — domknięcie na kolejnych POST (zagłoszenia, upload, masa operacji kadry) dokumentowane przy endpointach.
 
 ---
@@ -174,7 +174,7 @@ Zbiór propozycji po przeglądzie kodu (`Slavia-frontend`, typy tras z `api.ts`,
 106. **Barbell Acceleration Profile** — szczegółowy wykres przyspieszenia sztangi w poszczególnych fazach ciągu i podrzutu (identyfikacja martwych punktów).
 107. **QR Equipment Guide** — skanowanie kodu QR na maszynie lub gryfie, aby zobaczyć jego historię, wagę oraz wideo z instrukcją techniczną.
 108. ~~**Automatyczne Podsumowanie Roku (Slavia Wrapped)** — generowana na koniec roku interaktywna statystyka dla każdego zawodnika (łączny tonaż, liczba PR-ów, frekwencja).~~ *(wdrożone: `/athlete/wrapped` — starty, tonaż, najlepszy total; frekwencja w rozszerzeniu.)*
-109. **Multi-library Barbell Lab (Superadmin)** — [W REALIZACJI] Zaawansowany poligon do porównywania MediaPipe, TF.js i OpenCV w warunkach rzeczywistych.
+109. ~~**Multi-library Barbell Lab (Superadmin)** — [W REALIZACJI] Zaawansowany poligon do porównywania MediaPipe, TF.js i OpenCV w warunkach rzeczywistych.~~ *(wdrożone: `/superadmin/barbell-lab` — MediaPipe, TF.js BlazePose, OpenCV custom.)*
 110. **Auto-Calibration OpenCV** — automatyczne skalowanie pikseli na metry poprzez wykrywanie standardowej średnicy talerza (450mm) bez udziału użytkownika.
 
 ---
@@ -324,7 +324,7 @@ Uzupełnienie listy 1–210. Numery **211–1000** są ciągłe; kontynuacja w s
 243. **FE — Virt lista (`@tanstack/vue-virtual`) dla długiej listy w `płatności` (>300 wierszy).**
 244. **FE — Tryb kompaktowy tabletkowy dla `panelu admina` — wyższa densyjność bez utraty dotykowych celów.**
 245. **FE — Skróty klawiszowe (⌘/Ctrl) w `importu danych` — udokumentowane w `?` help overlay.**
-246. **FE — Eksport widoku `rankingu` do CSV z nagłówkiem UTF-8 i znacznikiem czasu generacji.**
+246. ~~**FE — Eksport widoku `rankingu` do CSV z nagłówkiem UTF-8 i znacznikiem czasu generacji.**~~ *(wdrożone: patrz #2 — `/zawodnicy`.)*
 247. **FE — Porównanie „przed/po zapisem” w formularzu `galerii` — podświetlenie zmienionych pól.**
 248. **FE — Story / Histoire dla izolowanego komponentu `raportów PDF` — regresje wizualne.**
 249. **FE — Test a11y (axe) dla ścieżki krytycznej `zgłoszeń ćwiczeń dodatkowych` — brak krytycznych violations.**
@@ -1328,10 +1328,10 @@ Priorytety pod **doświadczenie roli**: zawodnik (ZAW), trener (TRE), administra
 ### Zawodnik (Athlete)
 
 2001. **ZAW — Jedno miejsce „Mój tydzień”: plan + starty + składka + czat — bez przeklikiwania modułów.**
-2002. **ZAW — Powiadomienie gdy trener zatwierdzi / odrzuci wynik lub ćwiczenie dodatkowe — z powodem w powiadomieniu.**
+2002. ~~**ZAW — Powiadomienie gdy trener zatwierdzi / odrzuci wynik lub ćwiczenie dodatkowe — z powodem w powiadomieniu.**~~ *(wdrożone: modal kadry z `review_note` + powiadomienia in-app z powodem — `notify_result_rejected` / ćwiczenia dodatkowe.)*
 2003. **ZAW — Eksport „moja karta startów” do PDF (data, miasto, kategoria) — do trenera lub lekarza.**
 2004. **ZAW — Ulubione ćwiczenia w planie — pin na górze listy jednostek.**
-2005. **ZAW — Własny cel sezonu (np. total / Sinclair) z paskiem postępu na dashboardzie zawodnika.**
+2005. ~~**ZAW — Własny cel sezonu (np. total / Sinclair) z paskiem postępu na dashboardzie zawodnika.**~~ *(wdrożone: sekcja „Cel sezonu” na `/athlete` — localStorage, pasek postępu.)*
 2006. **ZAW — Przypomnienie o uzupełnieniu masy ciała przed ważeniem — jeśli w profilu brak aktualnej.**
 2007. **ZAW — Porównanie z średnią klubu w kategorii (anonimowo z agregatu) — motywacja bez nazwisk.**
 2008. **ZAW — Historia wagowań i kategorii — oś czasu dla ważeń oficjalnych i samodzielnych wpisów.**
@@ -1339,7 +1339,7 @@ Priorytety pod **doświadczenie roli**: zawodnik (ZAW), trener (TRE), administra
 2010. **ZAW — Szybki wpis treningu z szablonów (np. „klasyk Śr”: rozgrzewka + rwanie techniczne).**
 2011. **ZAW — Integracja z kalendarzem osobistym — jednym klikiem dodaj start z systemu do Google/Apple Calendar.**
 2012. **ZAW — Badge „trening zrobiony” po potwierdzeniu jednostki planu — mikro-nagroda / streak.**
-2013. **ZAW — Lista kontrolna przedstartowa (sprzęt, dokumenty, waga) — checklist na dzień przed zawodami.**
+2013. ~~**ZAW — Lista kontrolna przedstartowa (sprzęt, dokumenty, waga) — checklist na dzień przed zawodami.**~~ *(wdrożone: checklist 48 h przed startem na `/athlete` — localStorage per data zawodów.)*
 2014. **ZAW — Udostępnij trenerowi link do nagrania techniki (YouTube unlisted / Drive) z poziomu profilu.**
 2015. **ZAW — Statystyki osobiste: ile treningów w miesiącu, średni RPE, dni przerwy.**
 2016. **ZAW — Powiadomienie gdy pojawi się nowy wpis w dzienniku od trenera (notatka do przeczytania).**
@@ -1350,7 +1350,7 @@ Priorytety pod **doświadczenie roli**: zawodnik (ZAW), trener (TRE), administra
 2021. **ZAW — Ulubione filmy techniki z biblioteki klubu — osobista playlista.**
 2022. **ZAW — Status kontuzji / ograniczeń widoczny tylko dla trenera i zawodnika (pole opcjonalne).**
 2023. **ZAW — Porównanie tygodnia z poprzednim: objętość, liczba sesji, najcięższe serie.**
-2024. **ZAW — Jasny komunikat gdy konto ma zaległą składkę — link do historii płatności.**
+2024. ~~**ZAW — Jasny komunikat gdy konto ma zaległą składkę — link do historii płatności.**~~ *(wdrożone: baner zaległości na `/athlete` + alerty na `/athlete/skladki`.)*
 2025. **ZAW — Tryb dyskretny na sali: większe przyciski, mniej tekstu, ekran nie gasnie podczas timera przerwy.**
 2026. **ZAW — Eksport dziennika treningów na miesiąc do CSV dla własnych analiz (Excel).**
 2027. **ZAW — Powiadomienie gdy zmieni się godzina lub miejsce treningu klubowego w kalendarzu.**
