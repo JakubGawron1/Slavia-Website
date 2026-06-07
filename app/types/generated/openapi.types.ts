@@ -377,6 +377,8 @@ export interface paths {
                 query?: {
                     /** @description YYYY-MM, domyślnie bieżący miesiąc (UTC) */
                     month?: string;
+                    /** @description sessions — liczba wpisów dziennika; tonnage — suma kg×powt. z notatek */
+                    metric?: "sessions" | "tonnage";
                 };
                 header?: never;
                 path?: never;
