@@ -4,7 +4,6 @@ import { dashboardLink } from '~/utils/dashboardLink'
 import type { DashboardModuleLink } from '~/utils/dashboardLink'
 
 const KLUB_PUBLIC_TILES: DashboardModuleLink[] = [
-  dashboardLink('Feed klubowy', 'Aktualności + ogłoszenia + kalendarz', 'i-lucide-rss', KLUB_SHARED_ROUTES.feed, 'text-primary', 'bg-primary/12'),
   dashboardLink('Kalendarz klubu', 'Treningi i zawody', 'i-lucide-calendar-days', PUBLIC_ROUTES.kalendarz, 'text-purple-600', 'bg-purple-500/12'),
   dashboardLink('Aktualności', 'Komunikaty klubu', 'i-lucide-newspaper', PUBLIC_ROUTES.aktualnosci, 'text-warning', 'bg-warning/10'),
   dashboardLink('Ranking zawodników', 'Wyniki w klubie', 'i-lucide-trophy', PUBLIC_ROUTES.zawodnicy, 'text-yellow-600', 'bg-yellow-500/12'),

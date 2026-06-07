@@ -137,6 +137,8 @@ async function submitReview() {
 
 const { moduleGroupsForRole } = usePanelNavigationFlags()
 
+provideDashboardSections()
+
 const moduleGroups = computed((): { title: string, items: DashboardModuleLink[] }[] => {
   const adminGroups = moduleGroupsForRole('admin')
   if (isPureAdmin.value) return adminGroups
@@ -197,28 +199,72 @@ function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 
   <PanelPageLayout>
     <DashboardAccountView v-if="isAccountView" />
     <template v-else>
-    <DashboardHero
-      eyebrow="Administracja"
-      :title="`Witaj, ${auth.user.value?.username || 'Adminie'}!`"
-      lead="Szybkie wejścia do modułów i lista rzeczy, które wymagają uwagi."
+    <PanelCollapsibleSection
+      section-id="hero"
+      title="Powitanie"
       icon="i-lucide-shield"
-      :badges="[
-        { label: `Wyniki do zatwierdzenia: ${pendingCount}`, color: pendingCount ? 'warning' : 'neutral' },
-        { label: `Zawodnicy: ${athletesCount}`, color: 'neutral' }
-      ]"
-      :actions="[
-        { label: 'Ustawienia konta', to: accountSettingsPath, icon: 'i-lucide-user-cog', variant: 'outline' }
-      ]"
-    />
+      :default-open="true"
+    >
+      <DashboardHero
+        eyebrow="Administracja"
+        :title="`Witaj, ${auth.user.value?.username || 'Adminie'}!`"
+        lead="Szybkie wejścia do modułów i lista rzeczy, które wymagają uwagi."
+        icon="i-lucide-shield"
+        :badges="[
+          { label: `Wyniki do zatwierdzenia: ${pendingCount}`, color: pendingCount ? 'warning' : 'neutral' },
+          { label: `Zawodnicy: ${athletesCount}`, color: 'neutral' }
+        ]"
+        :actions="[
+          { label: 'Ustawienia konta', to: accountSettingsPath, icon: 'i-lucide-user-cog', variant: 'outline' }
+        ]"
+      />
+    </PanelCollapsibleSection>
 
-    <DashboardMonthlySummary class="mt-8" :metrics="summaryMetrics" />
+    <DashboardSectionsToolbar class="mt-6" />
 
-    <PanelModuleNav
-      :groups="moduleGroups"
-      :tone-from-bg="toneFromBg"
-    />
+    <PanelCollapsibleSection
+      section-id="summary"
+      title="Podsumowanie miesiąca"
+      icon="i-lucide-bar-chart-3"
+      :default-open="true"
+      class="mt-6"
+    >
+      <DashboardMonthlySummary :metrics="summaryMetrics" />
+    </PanelCollapsibleSection>
 
-    <div class="mt-10">
+    <PanelCollapsibleSection
+      section-id="klub-hub"
+      title="Strefa klubu"
+      icon="i-lucide-users"
+      :default-open="true"
+      embedded
+      class="mt-6"
+    >
+      <KlubHubSection context="admin" />
+    </PanelCollapsibleSection>
+
+    <PanelCollapsibleSection
+      section-id="modules"
+      title="Moduły panelu"
+      icon="i-lucide-layout-grid"
+      :default-open="true"
+      embedded
+      class="mt-6"
+    >
+      <PanelModuleNav
+        :groups="moduleGroups"
+        :tone-from-bg="toneFromBg"
+      />
+    </PanelCollapsibleSection>
+
+    <PanelCollapsibleSection
+      section-id="urgent"
+      title="Wyniki do zatwierdzenia"
+      icon="i-lucide-clipboard-clock"
+      :badge="pendingCount ? String(pendingCount) : undefined"
+      :default-open="true"
+      class="mt-6"
+    >
       <DashboardUrgentList
         title="Wyniki do zatwierdzenia"
         icon="i-lucide-clipboard-clock"
@@ -238,7 +284,7 @@ function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 
           <UButton size="sm" variant="soft" icon="i-lucide-refresh-ccw" @click="refreshPending()">Odśwież</UButton>
         </template>
       </DashboardUrgentList>
-    </div>
+    </PanelCollapsibleSection>
     </template>
   </PanelPageLayout>
 

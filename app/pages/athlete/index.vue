@@ -370,15 +370,23 @@ function toggleChecklistItem(id: string) {
   const forDate = preStartEntry.value?.competition?.date
   if (forDate) saveChecklistToStorage(forDate)
 }
+
+provideDashboardSections()
 </script>
 
 <template>
   <PanelPageLayout padding="compact">
     <DashboardAccountView v-if="isAccountView" />
     <template v-else>
-    <!-- Hero dashboard -->
+    <PanelCollapsibleSection
+      section-id="hero"
+      title="Powitanie"
+      icon="i-lucide-user"
+      :default-open="true"
+      class="mb-6"
+    >
     <div
-      class="relative mb-8 overflow-hidden rounded-[1.75rem] border border-primary/20 bg-linear-to-br from-primary/[0.14] via-card to-card shadow-sm ring-1 ring-primary/10 sm:rounded-3xl"
+      class="relative overflow-hidden rounded-[1.75rem] border border-primary/20 bg-linear-to-br from-primary/[0.14] via-card to-card shadow-sm ring-1 ring-primary/10 sm:rounded-3xl"
     >
       <div class="pointer-events-none absolute -right-24 -top-28 size-72 rounded-full bg-primary/25 blur-3xl" />
       <div class="pointer-events-none absolute -bottom-20 -left-16 size-60 rounded-full bg-primary/10 blur-3xl" />
@@ -453,10 +461,20 @@ function toggleChecklistItem(id: string) {
         </div>
       </div>
     </div>
+    </PanelCollapsibleSection>
 
-    <UAlert
+    <DashboardSectionsToolbar class="mb-6" />
+
+    <PanelCollapsibleSection
       v-if="showArchivedAthleteNote"
-      class="mb-6 rounded-2xl"
+      section-id="archived-note"
+      title="Profil w archiwum"
+      icon="i-lucide-ghost"
+      :default-open="true"
+      class="mb-6"
+    >
+    <UAlert
+      class="rounded-2xl"
       color="warning"
       variant="subtle"
       icon="i-lucide-ghost"
@@ -484,9 +502,27 @@ function toggleChecklistItem(id: string) {
         </UButton>
       </template>
     </UAlert>
+    </PanelCollapsibleSection>
+
+    <PanelCollapsibleSection
+      v-if="showPre10PaymentBanner && paymentStatus"
+      section-id="payment-reminder"
+      title="Przypomnienie o składce"
+      icon="i-lucide-banknote"
+      :default-open="true"
+      class="mb-6"
+    >
+    <UAlert
+      color="warning"
+      variant="subtle"
+      title="Zbliża się termin składki (10. dzień miesiąca)"
+      :description="`Nie masz jeszcze zatwierdzonej wpłaty za ${paymentStatus.month}. Zgłoś przelew w składkach — przypomnienie wyłączysz w ustawieniach konta na dole panelu.`"
+    />
+    </PanelCollapsibleSection>
 
     <PanelCollapsibleSection
       v-if="auth.canAccessAthletePortal && athlete"
+      section-id="badges"
       class="mb-6"
       title="Osiągnięcia"
       icon="i-lucide-award"
@@ -495,15 +531,6 @@ function toggleChecklistItem(id: string) {
     >
       <AthleteBadges :athlete="athlete" :present-count="attendanceSummary?.present_count || 0" />
     </PanelCollapsibleSection>
-
-    <UAlert
-      v-if="showPre10PaymentBanner && paymentStatus"
-      class="mt-6"
-      color="warning"
-      variant="subtle"
-      title="Zbliża się termin składki (10. dzień miesiąca)"
-      :description="`Nie masz jeszcze zatwierdzonej wpłaty za ${paymentStatus.month}. Zgłoś przelew w składkach — przypomnienie wyłączysz w ustawieniach konta na dole panelu.`"
-    />
 
     <SlaviaModal
       v-model:open="showOnboarding"
@@ -533,10 +560,15 @@ function toggleChecklistItem(id: string) {
       </template>
     </SlaviaModal>
 
-    <div
+    <PanelCollapsibleSection
       v-if="auth.canAccessAthletePortal && athlete"
-      class="mt-8 space-y-4"
+      section-id="overview"
+      title="Twój przegląd"
+      icon="i-lucide-gauge"
+      :default-open="true"
+      class="mt-6"
     >
+    <div class="space-y-4">
       <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
         <DashboardKpiCard
           size="compact"
@@ -566,13 +598,20 @@ function toggleChecklistItem(id: string) {
         />
       </div>
       <ClubVotingWidget />
-    </div>
 
-    <!-- [2024] Overdue payment alert — prominent full-width banner -->
-    <div
+      <KlubHubSection context="athlete" class="mt-4" />
+    </div>
+    </PanelCollapsibleSection>
+
+    <PanelCollapsibleSection
       v-if="showOverduePaymentAlert && paymentStatus"
+      section-id="payment-overdue"
+      title="Zaległa składka"
+      icon="i-lucide-alert-triangle"
+      :default-open="true"
       class="mt-6"
     >
+    <div>
       <div class="relative overflow-hidden rounded-2xl border-2 border-error/60 bg-error/8 px-5 py-4 shadow-md shadow-error/10 sm:flex sm:items-center sm:justify-between sm:gap-4">
         <div class="pointer-events-none absolute -right-10 -top-10 size-40 rounded-full bg-error/15 blur-3xl" />
         <div class="flex items-start gap-3">
@@ -599,10 +638,11 @@ function toggleChecklistItem(id: string) {
         </UButton>
       </div>
     </div>
+    </PanelCollapsibleSection>
 
-    <!-- [2013] Pre-start checklist (shows 48h before competition) -->
     <PanelCollapsibleSection
       v-if="preStartEntry"
+      section-id="prestart"
       class="mt-6"
       title="Lista przed startem"
       icon="i-lucide-check-square"
@@ -659,9 +699,9 @@ function toggleChecklistItem(id: string) {
       </div>
     </PanelCollapsibleSection>
 
-    <!-- [2005] Season goal with progress bar -->
     <PanelCollapsibleSection
       v-if="auth.canAccessAthletePortal && athlete && isAthleteRole"
+      section-id="season-goal"
       class="mt-6"
       title="Cel sezonu"
       icon="i-lucide-target"
@@ -757,16 +797,24 @@ function toggleChecklistItem(id: string) {
       </div>
     </PanelCollapsibleSection>
 
-    <PanelModuleNav
+    <PanelCollapsibleSection
       v-if="auth.canAccessAthletePortal && athlete"
-      class="mt-8 mb-6"
-      :groups="athleteModuleGroups"
-      :tone-from-bg="toneFromIconBg"
-    />
+      section-id="modules"
+      title="Moduły panelu"
+      icon="i-lucide-layout-grid"
+      :default-open="true"
+      embedded
+      class="mt-6 mb-6"
+    >
+      <PanelModuleNav
+        :groups="athleteModuleGroups"
+        :tone-from-bg="toneFromIconBg"
+      />
+    </PanelCollapsibleSection>
 
-    <!-- Pobierz aplikację mobile -->
     <PanelCollapsibleSection
       v-if="latestRelease"
+      section-id="mobile-app"
       class="mt-6"
       title="Aplikacja mobilna"
       icon="i-lucide-smartphone"

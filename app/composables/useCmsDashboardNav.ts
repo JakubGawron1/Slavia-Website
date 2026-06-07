@@ -65,17 +65,54 @@ export function cmsNavGroupsFromItems(
   return [...byGroup.entries()].map(([title, items]) => ({ title, items }))
 }
 
+/** Zachowuje strukturę grup, zmienia kolejność tylko widocznych na ekranie pozycji. */
+export function applyPartialNavReorder(
+  persistGroups: PanelModuleGroup[],
+  draftGroups: PanelModuleGroup[]
+): PanelModuleGroup[] {
+  const visibleOrder = draftGroups.flatMap(g => g.items.map(i => i.to))
+  const visibleSet = new Set(visibleOrder)
+  const flat = persistGroups.flatMap(g => g.items)
+  const byUrl = new Map(flat.map(i => [i.to, i]))
+
+  const reorderedQueue = visibleOrder
+    .map(url => byUrl.get(url))
+    .filter((item): item is DashboardModuleLink => !!item)
+
+  let queueIndex = 0
+  const reorderedFlat = flat.map((item) => {
+    if (!visibleSet.has(item.to)) return item
+    const next = reorderedQueue[queueIndex]
+    queueIndex += 1
+    return next ?? item
+  })
+
+  let offset = 0
+  return persistGroups.map((group) => {
+    const items = reorderedFlat.slice(offset, offset + group.items.length)
+    offset += group.items.length
+    return { title: group.title, items }
+  })
+}
+
 export function useCmsDashboardNav(
   role: ComputedRef<DashboardNavRole | null>,
-  sourceGroups: ComputedRef<PanelModuleGroup[]>
+  sourceGroups: ComputedRef<PanelModuleGroup[]>,
+  persistGroups?: ComputedRef<PanelModuleGroup[] | null>
 ) {
   const cms = useCms()
 
-  const editMode = ref(false)
+  const localEditMode = ref(false)
   const draftGroups = ref<PanelModuleGroup[]>([])
   const dragSource = ref<{ gi: number, ii: number } | null>(null)
   const saving = ref(false)
   const errorMsg = ref('')
+
+  const canEditNav = computed(() => cms.canEdit.value && !!role.value)
+
+  const editMode = computed(
+    () => (cms.editMode.value && canEditNav.value) || localEditMode.value
+  )
 
   function cloneGroups(src: PanelModuleGroup[]): PanelModuleGroup[] {
     return src.map(g => ({
@@ -84,20 +121,39 @@ export function useCmsDashboardNav(
     }))
   }
 
+  function resetDraft() {
+    draftGroups.value = cloneGroups(sourceGroups.value)
+    dragSource.value = null
+  }
+
   watch(sourceGroups, (g) => {
     if (!editMode.value) draftGroups.value = cloneGroups(g)
   }, { immediate: true, deep: true })
 
+  watch(
+    () => cms.editMode.value,
+    (on, wasOn) => {
+      if (on && canEditNav.value) {
+        resetDraft()
+        errorMsg.value = ''
+        return
+      }
+      if (wasOn && !on) {
+        localEditMode.value = false
+        resetDraft()
+      }
+    }
+  )
+
   function startEdit() {
-    draftGroups.value = cloneGroups(sourceGroups.value)
-    editMode.value = true
+    resetDraft()
+    localEditMode.value = true
     errorMsg.value = ''
   }
 
   function cancelEdit() {
-    editMode.value = false
-    dragSource.value = null
-    draftGroups.value = cloneGroups(sourceGroups.value)
+    localEditMode.value = false
+    resetDraft()
   }
 
   function onDragStart(gi: number, ii: number) {
@@ -126,8 +182,13 @@ export function useCmsDashboardNav(
     saving.value = true
     errorMsg.value = ''
     try {
+      const persist = persistGroups?.value
+      const groupsToPersist = persist?.length
+        ? applyPartialNavReorder(persist, draftGroups.value)
+        : draftGroups.value
+
       const existing = cms.navigation.value.filter(n => n.role !== r)
-      const roleItems = cmsNavItemsFromGroups(draftGroups.value, r)
+      const roleItems = cmsNavItemsFromGroups(groupsToPersist, r)
       const merged = [
         ...existing,
         ...roleItems.map((it, idx) => ({
@@ -136,7 +197,7 @@ export function useCmsDashboardNav(
         }))
       ]
       await cms.saveNavigation(merged)
-      editMode.value = false
+      localEditMode.value = false
     } catch (e) {
       errorMsg.value = getApiErrorMessage(e)
     } finally {
@@ -147,8 +208,6 @@ export function useCmsDashboardNav(
   const displayGroups = computed(() =>
     editMode.value ? draftGroups.value : sourceGroups.value
   )
-
-  const canEditNav = computed(() => cms.canEdit.value && !!role.value)
 
   return {
     displayGroups,
