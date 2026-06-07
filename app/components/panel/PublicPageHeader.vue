@@ -10,6 +10,10 @@ const props = withDefaults(
     variant?: 'default' | 'hero' | 'centered'
     /** Nieco mniejszy hero (np. /zawodnicy). */
     compact?: boolean
+    /** Włącza inline CMS (domyślnie tak — klucz strony z trasy lub cmsPage). */
+    enableCms?: boolean
+    /** Nadpisanie klucza strony CMS (domyślnie z aktualnej trasy). */
+    cmsPage?: string
   }>(),
   {
     eyebrow: undefined,
@@ -19,9 +23,19 @@ const props = withDefaults(
     backTo: undefined,
     variant: 'default',
     backLabel: 'Wróć',
-    compact: false
+    compact: false,
+    enableCms: true,
+    cmsPage: undefined
   }
 )
+
+const cms = useCms()
+
+const resolvedCmsPage = computed(
+  () => props.cmsPage || cms.routePageName.value
+)
+
+const useCmsFields = computed(() => props.enableCms && cms.cmsEnabledOnRoute.value)
 
 const pageBackConfig = computed(() =>
   props.backTo
@@ -127,22 +141,52 @@ const iconWrapClass = computed(() => {
             class="shrink-0"
             :class="compact ? 'size-4 sm:size-5' : 'size-5 sm:size-6'"
           />
-          <slot name="eyebrow">
+          <slot v-if="$slots.eyebrow" name="eyebrow" />
+          <CmsEditable
+            v-else-if="useCmsFields && eyebrow"
+            :page-name="resolvedCmsPage"
+            field-key="header_eyebrow"
+            type="text"
+            label="Nagłówek — odznaka"
+            tag="span"
+            :fallback="eyebrow"
+          />
+          <template v-else>
             {{ eyebrow }}
-          </slot>
+          </template>
         </p>
         <h1 :class="titleClass">
-          <slot name="title">
+          <slot v-if="$slots.title" name="title" />
+          <CmsEditable
+            v-else-if="useCmsFields && title"
+            :page-name="resolvedCmsPage"
+            field-key="header_title"
+            type="text"
+            label="Nagłówek — tytuł"
+            tag="span"
+            :fallback="title"
+          />
+          <template v-else>
             {{ title }}
-          </slot>
+          </template>
         </h1>
         <p
           v-if="description || $slots.description"
           :class="descriptionClass"
         >
-          <slot name="description">
+          <slot v-if="$slots.description" name="description" />
+          <CmsEditable
+            v-else-if="useCmsFields && description"
+            :page-name="resolvedCmsPage"
+            field-key="header_description"
+            type="text"
+            label="Nagłówek — opis"
+            tag="span"
+            :fallback="description"
+          />
+          <template v-else>
             {{ description }}
-          </slot>
+          </template>
         </p>
         <div
           v-if="$slots.badges"

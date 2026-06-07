@@ -157,7 +157,7 @@ watch(editPageName, loadPageEditor)
     <PanelPageHeader
       area="admin"
       title="CMS — treści strony"
-      description="Edycja tekstów, zmiennych i nawigacji paneli. Zmiany widoczne dla wszystkich użytkowników."
+      description="Inline CMS v4.0 — edycja tekstów, zmiennych i nawigacji paneli. Globalny tryb edycji (ołówek) na każdej stronie."
       icon="i-lucide-layout-template"
     />
 
