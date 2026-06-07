@@ -19,6 +19,8 @@ import { apiRoutes } from '~/config/api'
 import type { CompetitionResult } from '~/types/models'
 
 import type { DeveloperPageContext } from '~/composables/developer/types'
+import { buildAutoRouteGroups, routeChipLabel } from '~/composables/developer/routeMapUtils'
+import { useDeveloperVercelCache } from '~/composables/developer/useDeveloperVercelCache'
 
 export type { DeveloperPageContext }
 
@@ -98,81 +100,14 @@ async function runChatPrune() {
   }
 }
 
-type VercelCacheStatus = {
-  configured: boolean
-  on_vercel: boolean
-  site_origin: string
-  isr_path_count: number
-  total_path_count: number
-}
-
-type VercelCachePurgeResult = {
-  origin: string
-  okCount: number
-  failCount: number
-  path_count: number
-  scope: string
-  at: string
-  results: { path: string, ok: boolean, status?: number, error?: string }[]
-}
-
-const vercelCacheStatus = ref<VercelCacheStatus | null>(null)
-const vercelCacheStatusLoading = ref(false)
-const vercelCachePurgeRunning = ref(false)
-const vercelCachePurgeLastResult = ref<VercelCachePurgeResult | null>(null)
-
-async function refreshVercelCacheStatus() {
-  if (!auth.token.value) {
-    return
-  }
-  vercelCacheStatusLoading.value = true
-  try {
-    vercelCacheStatus.value = await $fetch<VercelCacheStatus>('/api/system/vercel-cache/status', {
-      headers: { Authorization: `Bearer ${auth.token.value}` }
-    })
-  } catch (e) {
-    toast.add({
-      title: 'Status cache Vercel niedostępny',
-      description: getApiErrorMessage(e),
-      color: 'warning'
-    })
-  } finally {
-    vercelCacheStatusLoading.value = false
-  }
-}
-
-async function purgeVercelCache(scope: 'all' | 'isr' | 'bff' = 'all') {
-  if (vercelCachePurgeRunning.value) {
-    return
-  }
-  if (!auth.token.value) {
-    toast.add({ title: 'Brak tokenu', description: 'Zaloguj się ponownie.', color: 'warning' })
-    return
-  }
-  vercelCachePurgeRunning.value = true
-  try {
-    const res = await $fetch<VercelCachePurgeResult>('/api/system/vercel-cache/purge', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${auth.token.value}` },
-      body: { scope }
-    })
-    vercelCachePurgeLastResult.value = res
-    toast.add({
-      title: 'Cache Vercel — revalidacja wysłana',
-      description: `${res.okCount}/${res.path_count} tras OK · origin: ${res.origin}`,
-      color: res.failCount > 0 ? 'warning' : 'success'
-    })
-    await refreshVercelCacheStatus()
-  } catch (e) {
-    toast.add({
-      title: 'Nie udało się wyczyścić cache',
-      description: getApiDetailedErrorMessage(e),
-      color: 'error'
-    })
-  } finally {
-    vercelCachePurgeRunning.value = false
-  }
-}
+const {
+  vercelCacheStatus,
+  vercelCacheStatusLoading,
+  vercelCachePurgeRunning,
+  vercelCachePurgeLastResult,
+  refreshVercelCacheStatus,
+  purgeVercelCache
+} = useDeveloperVercelCache()
 
 function refreshDomPresetAttr() {
   if (!import.meta.client) {
@@ -399,72 +334,7 @@ const buildMeta = computed(() => `Środowisko: ${import.meta.dev ? 'development'
 
 const router = useRouter()
 
-function iconForRoute(path: string) {
-  if (path === '/') return 'i-lucide-home'
-  if (path.startsWith('/superadmin')) return 'i-lucide-crown'
-  if (path.startsWith('/admin')) return 'i-lucide-shield'
-  if (path.startsWith('/trainer')) return 'i-lucide-dumbbell'
-  if (path.startsWith('/athlete')) return 'i-lucide-user'
-  if (path.startsWith('/klub/aktualnosci') || path.startsWith('/aktualnosci')) return 'i-lucide-newspaper'
-  if (path.startsWith('/klub/ogloszenia') || path.startsWith('/ogloszenia')) return 'i-lucide-megaphone'
-  if (path.startsWith('/klub/galeria') || path.startsWith('/galeria')) return 'i-lucide-images'
-  if (path.startsWith('/klub/kalendarz') || path.startsWith('/kalendarz')) return 'i-lucide-calendar'
-  if (path.startsWith('/kontakt')) return 'i-lucide-message-square'
-  if (path.startsWith('/logowanie')) return 'i-lucide-log-in'
-  if (path.startsWith('/profil')) return 'i-lucide-user-cog'
-  return 'i-lucide-link'
-}
-
-/** Nuxt / Vue Router — trasy wewnętrzne do podglądu na mapie developera. */
-function isInspectRoute(path: string): boolean {
-  if (!path.startsWith('/')) return false
-  if (path.startsWith('/__')) return false
-  if (path.startsWith('/_nuxt')) return false
-  if (path.includes('pathMatch')) return false
-  return true
-}
-
-/** Grupa alfabetycznie po pierwszym segmencie URL (wspólna skala dla całej aplikacji). */
-function routeMapGroupTitle(path: string): string {
-  if (path === '/') return 'Trasy (auto): /'
-  const seg = path.split('/').filter(Boolean)[0] || 'inne'
-  return `Trasy (auto): /${seg}`
-}
-
-const autoRouteGroups = computed(() => {
-  const records = router.getRoutes().filter(r => isInspectRoute(String(r.path || '')))
-  const descriptionByPath = new Map<string, string>()
-  for (const r of records) {
-    const p = String(r.path || '')
-    if (!descriptionByPath.has(p)) {
-      const named = typeof r.name === 'string' && r.name.trim() ? r.name.trim() : ''
-      descriptionByPath.set(p, named || 'Wygenerowane z routera Nuxt')
-    }
-  }
-  const paths = [...descriptionByPath.keys()].sort((a, b) => a.localeCompare(b, 'pl'))
-
-  const byTitle = new Map<string, Array<{ to: string, label: string, description: string, icon: string }>>()
-  for (const p of paths) {
-    const title = routeMapGroupTitle(p)
-    const link = {
-      to: p,
-      label: p,
-      description: descriptionByPath.get(p) || 'Wygenerowane z routera Nuxt',
-      icon: iconForRoute(p)
-    }
-    const list = byTitle.get(title) || []
-    list.push(link)
-    byTitle.set(title, list)
-  }
-
-  return [...byTitle.entries()]
-    .sort(([a], [b]) => a.localeCompare(b, 'pl'))
-    .map(([title, links]) => ({
-      title,
-      description: 'Lista tras z `router.getRoutes()` (w tym ścieżki z parametrami, np. `:slug`).',
-      links: links.sort((x, y) => x.to.localeCompare(y.to, 'pl'))
-    }))
-})
+const autoRouteGroups = computed(() => buildAutoRouteGroups(router))
 
 const devLinkGroupsCombined = computed(() => {
   const seen = new Set<string>()
@@ -487,14 +357,6 @@ const devLinkGroupsCombined = computed(() => {
     })
     .filter(g => g.links.length > 0)
 })
-
-function routeChipLabel(to: string) {
-  const t = String(to || '')
-  if (!t) return '—'
-  if (t === '/') return '/'
-  const nice = t.replace(/^\/+/, '')
-  return nice.length > 28 ? `${nice.slice(0, 26)}…` : nice
-}
 
 const apiPingMs = ref<number | null>(null)
 const backendProviderSaving = ref(false)

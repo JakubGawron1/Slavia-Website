@@ -44,8 +44,8 @@ const d = useDeveloperPage()
           </div>
           <p class="mt-1 text-sm text-muted">
             Backend <code class="font-mono text-xs">/api/ai/coach/status</code> (JWT) — panele
-            <NuxtLink to="/athlete/trener-ai" class="text-primary underline">/athlete/trener-ai</NuxtLink>,
-            <NuxtLink to="/trainer/trener-ai" class="text-primary underline">/trainer/trener-ai</NuxtLink>.
+            <NuxtLink to="/athlete/ai-coach" class="text-primary underline">/athlete/ai-coach</NuxtLink>,
+            <NuxtLink to="/trainer/ai-coach" class="text-primary underline">/trainer/ai-coach</NuxtLink>.
             Flaga: <code class="font-mono text-xs">gemini_olympic_coach</code>.
           </p>
           <div v-if="d.aiCoachStatusLoading && !d.aiCoachStatus" class="mt-2 text-xs text-muted">
@@ -72,7 +72,7 @@ const d = useDeveloperPage()
           <p class="text-[10px] font-bold uppercase tracking-wider text-muted">QR check-in (WWW)</p>
           <p class="mt-1 text-sm text-muted">
             Flaga <code>attendance_qr_checkin</code> —
-            <NuxtLink to="/athlete/obecnosc-qr" class="text-primary underline">/athlete/obecnosc-qr</NuxtLink>,
+            <NuxtLink to="/klub/obecnosc?view=scan" class="text-primary underline">/klub/obecnosc?view=scan</NuxtLink>,
             kadra: <NuxtLink to="/klub/obecnosc" class="text-primary underline">/klub/obecnosc</NuxtLink>.
           </p>
         </div>
