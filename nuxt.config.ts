@@ -282,6 +282,18 @@ export default defineNuxtConfig({
 
       ignore: [...prerenderIgnore]
 
+    },
+
+    /** On-demand ISR: nagłówek x-prerender-revalidate (panel SuperAdmin → purge cache). */
+
+    vercel: {
+
+      config: {
+
+        bypassToken: process.env.VERCEL_ISR_BYPASS_TOKEN || ''
+
+      }
+
     }
 
   },
@@ -341,6 +353,10 @@ export default defineNuxtConfig({
   runtimeConfig: {
 
     blobReadWriteToken: process.env.BLOB_READ_WRITE_TOKEN || '',
+
+    /** Sekret do wymuszenia revalidacji ISR (Vercel) — tylko server-side. */
+
+    vercelIsrBypassToken: process.env.VERCEL_ISR_BYPASS_TOKEN || '',
 
     githubApiToken: process.env.GITHUB_TOKEN || process.env.GITHUB_API_TOKEN || '',
 
