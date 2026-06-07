@@ -8,6 +8,11 @@
   pointer-events: none;
 }
 
+/* Nad FAB asystenta AI (3.5rem + 0.75rem odstępu) na stronach publicznych */
+html.slavia-public-ai-visible .cms-global-edit {
+  bottom: calc(max(1.25rem, env(safe-area-inset-bottom, 0px)) + 4.25rem);
+}
+
 .cms-global-edit__fab {
   pointer-events: auto;
   display: inline-flex;
@@ -54,6 +59,10 @@ html.slavia-cms-edit-mode {
   scroll-padding-bottom: 5rem;
 }
 
+html.slavia-cms-edit-mode.slavia-public-ai-visible {
+  scroll-padding-bottom: 9.5rem;
+}
+
 .cms-editable {
   position: relative;
 }
@@ -63,16 +72,25 @@ html.slavia-cms-edit-mode {
   border-radius: 0.35rem;
   outline: 2px dashed color-mix(in srgb, var(--ui-primary) 45%, transparent);
   outline-offset: 3px;
-  background: color-mix(in srgb, var(--ui-primary) 6%, transparent);
   transition:
     outline-color 0.15s ease,
     background 0.15s ease;
 }
 
-.cms-editable--interactive:hover,
-.cms-editable--interactive:focus-visible {
+/* Nie nadpisuj gradientu (bg-clip-text + text-transparent) — inaczej tekst znika */
+.cms-editable--interactive:not(.bg-clip-text) {
+  background: color-mix(in srgb, var(--ui-primary) 6%, transparent);
+}
+
+.cms-editable--interactive:not(.bg-clip-text):hover,
+.cms-editable--interactive:not(.bg-clip-text):focus-visible {
   outline-color: var(--ui-primary);
   background: color-mix(in srgb, var(--ui-primary) 12%, transparent);
+}
+
+.cms-editable--interactive.bg-clip-text:hover,
+.cms-editable--interactive.bg-clip-text:focus-visible {
+  outline-color: var(--ui-primary);
 }
 
 .cms-editable__raw-var {
@@ -86,8 +104,8 @@ html.slavia-cms-edit-mode {
   left: max(1rem, env(safe-area-inset-left, 0px));
   bottom: max(5.5rem, calc(env(safe-area-inset-bottom, 0px) + 4.5rem));
   z-index: 89;
-  width: min(20rem, calc(100vw - 2rem));
-  max-height: min(40vh, 20rem);
+  width: min(22rem, calc(100vw - 2rem));
+  max-height: min(62vh, 28rem);
   overflow: auto;
   padding: 0.75rem;
   border-radius: 1rem;
@@ -126,4 +144,96 @@ html.slavia-cms-edit-mode {
   display: flex;
   gap: 0.35rem;
   margin-top: 0.5rem;
+}
+
+.cms-page-bar__section {
+  margin-top: 0.85rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid color-mix(in srgb, var(--ui-border) 55%, transparent);
+}
+
+.cms-page-bar__title--section {
+  margin-top: 0;
+}
+
+.cms-page-bar__subhint {
+  margin: 0 0 0.5rem;
+  font-size: 0.625rem;
+  line-height: 1.45;
+  color: var(--ui-text-muted);
+}
+
+.cms-page-bar__empty {
+  margin: 0;
+  font-size: 0.6875rem;
+  line-height: 1.45;
+  color: var(--ui-text-muted);
+}
+
+.cms-page-bar__variables {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.cms-page-bar__var {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+  width: 100%;
+  padding: 0.45rem 0.55rem;
+  border-radius: 0.55rem;
+  border: 1px solid color-mix(in srgb, var(--ui-border) 70%, transparent);
+  background: color-mix(in srgb, var(--ui-bg) 88%, var(--ui-primary) 4%);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    transform 0.15s ease;
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--ui-primary) 40%, transparent);
+    background: color-mix(in srgb, var(--ui-primary) 10%, var(--ui-bg));
+    transform: translateY(-1px);
+  }
+
+  &--used {
+    border-color: color-mix(in srgb, var(--ui-primary) 35%, transparent);
+    background: color-mix(in srgb, var(--ui-primary) 8%, var(--ui-bg));
+  }
+
+  &--data {
+    border-color: color-mix(in srgb, var(--ui-info) 28%, transparent);
+    background: color-mix(in srgb, var(--ui-info) 6%, var(--ui-bg));
+
+    &:hover {
+      border-color: color-mix(in srgb, var(--ui-info) 45%, transparent);
+      background: color-mix(in srgb, var(--ui-info) 12%, var(--ui-bg));
+    }
+
+    &.cms-page-bar__var--used {
+      border-color: color-mix(in srgb, var(--ui-info) 40%, transparent);
+      background: color-mix(in srgb, var(--ui-info) 10%, var(--ui-bg));
+    }
+
+    .cms-page-bar__var-key {
+      color: var(--ui-info);
+    }
+  }
+}
+
+.cms-page-bar__var-key {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  color: var(--ui-primary);
+}
+
+.cms-page-bar__var-preview {
+  font-size: 0.625rem;
+  line-height: 1.35;
+  color: var(--ui-text-muted);
+  word-break: break-word;
 }

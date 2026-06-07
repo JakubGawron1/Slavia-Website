@@ -1,5 +1,7 @@
 # Slavia Frontend — przewodnik dla agentów i deweloperów
 
+> **Język dokumentu:** polski. Wyjątek — sekcja [Commity Git](#commity-git): szablony wiadomości commitów i przykłady **muszą być po angielsku** (wymóg repozytorium).
+
 Aplikacja Nuxt 4 dla klubu CKS Slavia Ruda Śląska. Frontend współpracuje z backendem Rust (`../Slavia-backend`) i opcjonalnie z aplikacją mobilną (`../Slavia-mobile`).
 
 ## Szybki start
@@ -325,6 +327,64 @@ server/           # BFF routes, public proxy, backend-provider store
 e2e/              # Playwright smoke
 scripts/          # openapi check, release-check, split developer page
 ```
+
+---
+
+## Commity Git
+
+**Twórz commity tylko wtedy, gdy użytkownik o to poprosi.** Nie commituj proaktywnie po zakończeniu zadania.
+
+### Język i format wiadomości *(wymagany angielski)*
+
+Treść commitów w repozytorium jest **wyłącznie po angielsku** — zarówno subject, jak i body.
+
+- **Bez współautorów** — nigdy nie dodawaj `Co-authored-by`, `Signed-off-by` ani podobnych trailerów.
+- **Conventional Commits** — szablon:
+
+  `type(scope): short imperative subject`
+
+  | Element | Zasady |
+  |--------|--------|
+  | `type` | `feat`, `fix`, `refactor`, `perf`, `docs`, `chore` |
+  | `scope` | moduł lub obszar (`klub`, `dashboard`, `openapi`, `cms`, …) — pomiń, jeśli niejasne |
+  | subject | jedna linia, ≤72 znaki, bez kropki na końcu; opisuj **po co** / wpływ na użytkownika |
+  | body | opcjonalnie (drugi `-m`): 1–2 zdania kontekstu; zawijaj ~72 znaki |
+
+**Przykłady (commit message — English only):**
+
+```
+feat(dashboard): add collapsible sections with localStorage persistence
+fix(cms): preserve full role nav when reordering from /klub hub
+refactor(klub): extract KlubPageShell and useAttendancePage composable
+chore(openapi): regenerate types after backend snapshot
+```
+
+### Co commitować
+
+- Jeden logiczny zestaw zmian na commit (funkcja, poprawka lub refaktor — nie mix niepowiązanych plików).
+- Stage tylko pliki z tej zmiany; nigdy `.env`, kluczy ani credentiali.
+- Po zmianie API backendu: najpierw commit embed OpenAPI w backendzie, potem (osobny commit) snapshot `openapi/` + `openapi.types.ts` we frontendzie.
+- Przed commitem nietrywialnych zmian: `pnpm typecheck` (lub odpowiedni check dla zakresu).
+
+### Bezpieczeństwo (agenci)
+
+- **Nie** zmieniaj `git config`, **nie** używaj `--no-verify` ani force-push, chyba że użytkownik wyraźnie poprosi.
+- **Nie** rób `git commit --amend`, chyba że użytkownik chce amend **oraz** ostatni commit jest Twój i nie był pushowany.
+- **Nie** pushuj na remote bez wyraźnej prośby użytkownika.
+
+### Windows (PowerShell)
+
+Heredoc `$(cat <<'EOF' …)` nie działa w PowerShell. Użyj:
+
+```powershell
+git commit -m "feat(scope): subject in English" -m "Optional body in English."
+```
+
+### Workflow po prośbie o commit
+
+1. `git status` + `git diff` — przejrzyj staged i unstaged.
+2. Sformułuj wiadomość **po angielsku**; rozdziel na kilka commitów, jeśli zmiany są niezależne.
+3. `git add` tylko właściwe ścieżki → `git commit` → `git status` (potwierdź czyste drzewo lub oczekiwany remainder).
 
 ---
 

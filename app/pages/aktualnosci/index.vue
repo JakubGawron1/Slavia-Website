@@ -40,6 +40,14 @@ const { data: posts, refresh: refreshPublic, pending } = await usePublicLazyFetc
   default: () => [] as BlogPost[]
 })
 
+const publishedPostsCount = computed(
+  () => (posts.value ?? []).filter(p => p.published !== false).length
+)
+
+useProvideCmsPageData('aktualnosci', () => ({
+  liczba_aktualnosci: publishedPostsCount.value
+}))
+
 const postPrefetch = createPrefetchScheduler()
 
 function schedulePrefetch(post: BlogPost) {

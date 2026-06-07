@@ -28,7 +28,6 @@ const saving = ref(false)
 const errorMsg = ref('')
 const draft = ref('')
 const draftType = ref<CmsVariableType>(props.type)
-const selectedVarKey = ref('')
 const newVarKey = ref('')
 const newVarMode = ref(false)
 
@@ -39,16 +38,15 @@ const resolvedPageName = computed(
 const isInteractive = computed(
   () =>
     cms.canEdit.value
+    && cms.inlineEditEnabled.value
     && cms.editMode.value
     && cms.cmsEnabledOnRoute.value
 )
 
-const displayContent = computed(() => {
-  if (cms.editMode.value && cms.canEdit.value) {
-    return cms.getPageFieldRaw(resolvedPageName.value, props.fieldKey, props.fallback)
-  }
-  return cms.getPageField(resolvedPageName.value, props.fieldKey, props.fallback)
-})
+/** Na stronie zawsze podgląd z interpolacją {zmiennych}; surowe odwołania tylko w modalu edycji. */
+const displayContent = computed(() =>
+  cms.getPageField(resolvedPageName.value, props.fieldKey, props.fallback)
+)
 
 /** Podwójna warstwa: getPageField sanityzuje HTML; tu jawnie przed v-html (DOMPurify). */
 const sanitizedDisplayHtml = computed(() =>
@@ -65,7 +63,6 @@ watch(editOpen, async (open) => {
   const field = cms.pages.value[pageName]?.fields?.[props.fieldKey]
   draft.value = String(field?.value ?? props.fallback ?? '')
   draftType.value = (field?.type as CmsVariableType) ?? props.type
-  selectedVarKey.value = ''
   newVarKey.value = ''
   newVarMode.value = false
 })
@@ -75,6 +72,27 @@ const variableRefs = computed(() => extractVariableRefs(draft.value))
 const variableRefsLabel = computed(() =>
   variableRefs.value.map(k => `{${k}}`).join(', ')
 )
+
+const placeholderKey = computed(() => {
+  if (!isVariablePlaceholder(draft.value)) return ''
+  return draft.value.slice(1, -1)
+})
+
+const placeholderEffective = computed(() => {
+  if (!placeholderKey.value) return ''
+  return cms.variableMapForPage(resolvedPageName.value)[placeholderKey.value] ?? ''
+})
+
+const placeholderLive = computed(() => {
+  if (!placeholderKey.value) return ''
+  return cms.getLiveVariableValue(placeholderKey.value, resolvedPageName.value)
+})
+
+const placeholderIsData = computed(() => {
+  if (!placeholderKey.value) return false
+  return cms.getLiveVariableValue(placeholderKey.value, resolvedPageName.value) !== ''
+    || cms.isVariableOverridden(placeholderKey.value)
+})
 
 function openEditor() {
   if (!isInteractive.value) return
@@ -133,7 +151,6 @@ async function createAndInsertVariable() {
 
 function bindExistingVariable(key: string) {
   draft.value = `{${key}}`
-  selectedVarKey.value = key
 }
 </script>
 
@@ -151,17 +168,11 @@ function bindExistingVariable(key: string) {
   >
     <!-- eslint-disable vue/no-v-html — sanitizeRichHtml (DOMPurify), pola CMS typu html -->
     <span
-      v-if="type === 'html' && !(cms.editMode.value && cms.canEdit.value)"
+      v-if="type === 'html'"
       class="slavia-rich-content"
       v-html="sanitizedDisplayHtml"
     />
     <!-- eslint-enable vue/no-v-html -->
-    <span
-      v-else-if="type === 'html' && cms.editMode.value && cms.canEdit.value"
-      class="whitespace-pre-wrap font-mono text-sm"
-    >
-      {{ displayContent }}
-    </span>
     <template v-else>
       {{ displayContent }}
     </template>
@@ -169,7 +180,7 @@ function bindExistingVariable(key: string) {
     <SlaviaModal
       v-model:open="editOpen"
       :title="label || `Edycja: ${fieldKey}`"
-      description="Treść widoczna po zapisie. W trybie edycji używaj {nazwa_zmiennej} — podgląd pokazuje surowe odwołania."
+      description="Po zapisie na stronie widać wartość {zmiennych}. W modalu edytujesz surowe odwołania."
       modal-class="max-w-2xl"
     >
       <template #body>
@@ -216,36 +227,41 @@ function bindExistingVariable(key: string) {
           </UFormField>
 
           <div
-            v-if="isVariablePlaceholder(draft)"
+            v-if="placeholderKey && !placeholderIsData"
             class="rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-sm text-warning"
           >
-            To pole jest powiązane ze zmienną <code>{{ draft }}</code> — edytuj wartość w panelu CMS → Zmienne.
+            Zmienna globalna <code>{{ draft }}</code> — edytuj wartość poniżej (inline) lub w panelu CMS → Zmienne.
+          </div>
+          <div
+            v-else-if="placeholderKey && placeholderIsData"
+            class="rounded-lg border border-info/30 bg-info/10 px-3 py-2 text-sm text-info"
+          >
+            Zmienna z bazy <code>{{ draft }}</code> — podgląd: <strong>{{ placeholderEffective || '—' }}</strong>.
+            <span v-if="cms.isVariableOverridden(placeholderKey)"> (nadpisane w CMS)</span>
+            <span v-else-if="placeholderLive"> · z API: {{ placeholderLive }}</span>
+            Edytuj wartość w sekcji „Zmienne” poniżej (ołówek) — możesz nadpisać wartość z API.
           </div>
 
           <div class="rounded-lg border border-default bg-muted/30 p-3">
             <p class="mb-2 text-xs font-bold uppercase tracking-wide text-muted">
-              Zmienne CMS
+              Zmienne
             </p>
-            <div class="flex flex-wrap gap-2">
-              <UButton
-                v-for="v in cms.variables.value"
-                :key="v.key"
-                size="xs"
-                :variant="selectedVarKey === v.key ? 'solid' : 'soft'"
-                color="primary"
-                @click="bindExistingVariable(v.key)"
-              >
-                {{ '{' + v.key + '}' }}
-              </UButton>
-              <UButton
-                size="xs"
-                variant="outline"
-                icon="i-lucide-plus"
-                @click="newVarMode = !newVarMode"
-              >
-                Nowa zmienna
-              </UButton>
-            </div>
+            <CmsVariablePicker
+              :page-name="resolvedPageName"
+              mode="insert"
+              show-value-editor
+              :used-keys="variableRefs"
+              @insert="bindExistingVariable"
+            />
+            <UButton
+              size="xs"
+              variant="outline"
+              icon="i-lucide-plus"
+              class="mt-3"
+              @click="newVarMode = !newVarMode"
+            >
+              Nowa zmienna globalna
+            </UButton>
             <div
               v-if="newVarMode"
               class="mt-3 flex gap-2"

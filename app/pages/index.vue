@@ -118,6 +118,21 @@ const stats = computed(() => {
   }
 })
 
+useProvideCmsPageData('home', () => ({
+  liczba_zawodnikow: stats.value.activeCount,
+  liczba_kobiet: stats.value.womenCount,
+  liczba_mezczyzn: stats.value.menCount,
+  najlepszy_sinclair:
+    stats.value.bestSinclair > 0 ? stats.value.bestSinclair.toFixed(1) : '',
+  najciezszy_total:
+    stats.value.heaviestTotal > 0 ? `${stats.value.heaviestTotal} kg` : '',
+  imie_zawodnika: champions.value[0]?.full_name ?? '',
+  sinclair_lidera:
+    champions.value[0]?.sinclair ? String(champions.value[0].sinclair) : '',
+  imie_zawodnika_2: champions.value[1]?.full_name ?? '',
+  imie_zawodnika_3: champions.value[2]?.full_name ?? ''
+}))
+
 function formatPostDate(d?: string | null) {
   if (!d) return ''
   try {
@@ -326,16 +341,15 @@ const trainingDays = [
               tag="span"
               fallback="Sztanga, drużyna,"
             />
-            <span class="bg-linear-to-r from-primary via-amber-500 to-primary bg-clip-text text-transparent">
-              <CmsEditable
-                page-name="home"
-                field-key="hero_title_accent"
-                type="text"
-                label="Akcent tytułu"
-                tag="span"
-                fallback="Slavia."
-              />
-            </span>
+            <CmsEditable
+              page-name="home"
+              field-key="hero_title_accent"
+              type="text"
+              label="Akcent tytułu"
+              tag="span"
+              fallback="Slavia."
+              class="bg-linear-to-r from-primary via-amber-500 to-primary bg-clip-text text-transparent"
+            />
           </h1>
 
           <p class="mt-6 max-w-3xl text-pretty text-base leading-relaxed text-muted sm:text-lg lg:text-xl">

@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import AtheleteCard from '~/components/AtheleteCard.vue'
+import ClubHallOfFameRecordCard from '~/components/club/ClubHallOfFameRecordCard.vue'
 import { athleteProfilePath } from '~/utils/slug'
+import { zawodnikCardToHallRecordCard } from '~/utils/zawodnicyRanking'
 
 const {
   players,
@@ -24,6 +25,14 @@ const {
   downloadRankingCsv,
   canSeeClubTrainingRanking
 } = await useZawodnicyPage()
+
+useProvideCmsPageData('zawodnicy', () => ({
+  liczba_w_rankingu: filteredRankings.value.length,
+  imie_zawodnika: podium.value[0]?.name ?? '',
+  sinclair_lidera: podium.value[0]?.sinclair ? String(podium.value[0].sinclair) : '',
+  imie_zawodnika_2: podium.value[1]?.name ?? '',
+  imie_zawodnika_3: podium.value[2]?.name ?? ''
+}))
 
 useSeoMeta({
   title: 'Zawodnicy i ranking — Slavia Ruda Śląska',
@@ -633,20 +642,17 @@ function athletePrefetchHandlers(id?: string | null) {
         />
         Karty Zawodników
       </h2>
-      <div class="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12 xl:gap-14">
-        <NuxtLink
+      <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 xl:grid-cols-3 xl:gap-6">
+        <div
           v-for="player in mappedPlayers"
           :key="player.id"
-          :to="athleteProfilePath(player.name, player.id)"
           v-bind="athletePrefetchHandlers(player.id)"
-          prefetch
-          prefetch-on="interaction"
           class="block"
         >
-          <AtheleteCard
-            :model-value="player"
+          <ClubHallOfFameRecordCard
+            :record="zawodnikCardToHallRecordCard(player)"
           />
-        </NuxtLink>
+        </div>
       </div>
     </div>
 

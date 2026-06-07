@@ -1,6 +1,8 @@
 <script setup lang="ts">
 await useCmsPageHydrate('o-klubie')
 
+useProvideCmsPageData('o-klubie', () => ({}))
+
 useSeoMeta({
   title: 'O klubie — historia CKS Slavia Ruda Śląska',
   description:

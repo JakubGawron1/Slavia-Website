@@ -6,6 +6,7 @@ import type { SinclairGender } from '~/utils/sinclair'
 import { sinclairTotal } from '~/utils/sinclair'
 import { effectiveBodyweightKgForSinclair } from '~/utils/sinclairAthlete'
 import { parseSlugId } from '~/utils/slug'
+import { cmsRoutePageName } from '~/utils/cmsRoutePage'
 import AthleteProgressChart, { type AthleteChartPoint } from '~/components/AthleteProgressChart.vue'
 import AthleteCombinedChart, { type CombinedChartPoint } from '~/components/AthleteCombinedChart.vue'
 
@@ -462,6 +463,29 @@ const publicStats = computed(() => {
     lastDate: last.date,
     lastLocation: last.location ?? null,
     daysSinceLast
+  }
+})
+
+const cmsAthletePageName = computed(() => cmsRoutePageName(route.path as string))
+
+useProvideCmsPageData(cmsAthletePageName, () => {
+  const a = athlete.value
+  if (!a) return {}
+  const sg = cardGender(a.gender ?? undefined)
+  const eff = effectiveBodyweightKgForSinclair(a)
+  const bestTotal = publicStats.value.bestTotal
+  let bestSinclair = ''
+  if (sg && bestTotal && eff > 0) {
+    bestSinclair = sinclairTotal(bestTotal, eff, sg).toFixed(2)
+  }
+  return {
+    imie_zawodnika: a.full_name,
+    kategoria_wagowa: a.weight_category ?? '',
+    rok_urodzenia: a.birth_year ?? '',
+    plec_zawodnika: a.gender === 'female' ? 'K' : a.gender === 'male' ? 'M' : '',
+    najlepszy_total: bestTotal != null ? `${bestTotal} kg` : '',
+    najlepszy_sinclair: bestSinclair,
+    liczba_startow: publicStats.value.totalStarts
   }
 })
 
