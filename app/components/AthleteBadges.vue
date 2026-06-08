@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import type { Athlete } from '~/types/models'
+import athleteBadgesData from '@slavia/shared/data/athlete-badges.json'
+import { getBadgeLevel, getBadgeProgressPercent } from '@slavia/shared/badge-helpers'
 import { sinclairTotal } from '~/utils/sinclair'
 
 const props = defineProps<{
@@ -29,73 +31,53 @@ const sinclairVal = computed(() => {
   )
 })
 
-const badges = computed<Badge[]>(() => [
-  {
-    id: 'sinclair',
-    label: 'Mistrz Sinclaira',
-    icon: 'i-lucide-award',
-    color: 'amber',
-    current: sinclairVal.value || 0,
-    thresholds: [100, 200, 300, 400],
-    unit: 'pkt',
-    description: 'Punkty Sinclair wyliczane na podstawie masy ciała i wyniku w dwuboju.'
-  },
-  {
-    id: 'total',
-    label: 'Siła Dwuboju',
-    icon: 'i-lucide-dumbbell',
-    color: 'primary',
-    current: props.athlete.total_kg || 0,
-    thresholds: [100, 200, 300, 400],
-    unit: 'kg',
-    description: 'Suma najlepszego rwania i podrzutu.'
-  },
-  {
-    id: 'snatch',
-    label: 'Technika Rwania',
-    icon: 'i-lucide-zap',
-    color: 'emerald',
-    current: props.athlete.best_snatch_kg || 0,
-    thresholds: [50, 90, 100, 120, 150],
-    unit: 'kg',
-    description: 'Twój najlepszy wynik w rwaniu.'
-  },
-  {
-    id: 'cj',
-    label: 'Moc Podrzutu',
-    icon: 'i-lucide-flame',
-    color: 'orange',
-    current: props.athlete.best_clean_jerk_kg || 0,
-    thresholds: [70, 90, 100, 120, 150, 170, 200],
-    unit: 'kg',
-    description: 'Twój najlepszy wynik w podrzucie.'
-  },
-  {
-    id: 'trainings',
-    label: 'Staż w Klubie',
-    icon: 'i-lucide-calendar-days',
-    color: 'blue',
-    current: props.presentCount || 0,
-    thresholds: [10, 50, 100, 250, 500],
-    unit: 'sesji',
-    description: 'Ilość obecności na treningach zarejestrowana w systemie.'
+const badgeIconById: Record<string, { icon: string, color: string }> = {
+  sinclair: { icon: 'i-lucide-award', color: 'amber' },
+  total: { icon: 'i-lucide-dumbbell', color: 'primary' },
+  snatch: { icon: 'i-lucide-zap', color: 'emerald' },
+  cj: { icon: 'i-lucide-flame', color: 'orange' },
+  trainings: { icon: 'i-lucide-calendar-days', color: 'blue' }
+}
+
+function currentForBadge(id: string): number {
+  switch (id) {
+    case 'sinclair':
+      return sinclairVal.value || 0
+    case 'total':
+      return props.athlete.total_kg || 0
+    case 'snatch':
+      return props.athlete.best_snatch_kg || 0
+    case 'cj':
+      return props.athlete.best_clean_jerk_kg || 0
+    case 'trainings':
+      return props.presentCount || 0
+    default:
+      return 0
   }
-])
+}
+
+const badges = computed<Badge[]>(() =>
+  athleteBadgesData.badges.map((meta) => {
+    const ui = badgeIconById[meta.id] ?? { icon: 'i-lucide-star', color: 'neutral' }
+    return {
+      id: meta.id,
+      label: meta.label,
+      icon: ui.icon,
+      color: ui.color,
+      current: currentForBadge(meta.id),
+      thresholds: meta.thresholds,
+      unit: meta.unit,
+      description: meta.description
+    }
+  })
+)
 
 function getLevel(badge: Badge) {
-  let level = 0
-  for (const t of badge.thresholds) {
-    if (badge.current >= t) level++
-  }
-  return level
+  return getBadgeLevel(badge)
 }
 
 function getProgress(badge: Badge) {
-  const level = getLevel(badge)
-  if (level >= badge.thresholds.length) return 100
-  const prev = level === 0 ? 0 : badge.thresholds[level - 1]!
-  const next = badge.thresholds[level]!
-  return Math.min(100, ((badge.current - prev) / (next - prev)) * 100)
+  return getBadgeProgressPercent(badge)
 }
 
 const colorMap: Record<string, string> = {

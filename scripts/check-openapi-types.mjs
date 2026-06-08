@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * Weryfikuje drift typów OpenAPI względem backendu lub commitowanego snapshotu.
- * CI nie wymaga sąsiedniego Slavia-backend — wystarczy openapi/openapi.snapshot.json + .sha256.
+ * Weryfikuje drift typów OpenAPI względem backendu lub Slavia-shared (submodule).
+ * CI nie wymaga sąsiedniego Slavia-backend — wystarczy Slavia-shared/openapi/openapi.json + .sha256.
  */
 import { execSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
@@ -45,22 +45,23 @@ if (!existsSync(OPENAPI_PATHS.generated)) {
 const source = resolveOpenApiSource()
 if (!source) {
   console.error(
-    'Brak źródła OpenAPI (backend ani openapi/openapi.snapshot.json).\n'
-    + 'CI wymaga commitowanego snapshotu — uruchom lokalnie: pnpm openapi:snapshot'
+    'Brak źródła OpenAPI (backend ani Slavia-shared/openapi/openapi.json).\n'
+    + 'CI: git submodule update --init --recursive\n'
+    + 'Lokalnie: pnpm openapi:snapshot (wymaga backendu obok)'
   )
   process.exit(1)
 }
 
-if (source.kind === 'snapshot') {
+if (source.kind === 'shared') {
   const expectedSha = readSnapshotSha()
   if (!expectedSha) {
-    console.error('Brak openapi/openapi.snapshot.sha256 — uruchom: pnpm openapi:snapshot')
+    console.error('Brak Slavia-shared/openapi/openapi.sha256 — uruchom: pnpm openapi:snapshot')
     process.exit(1)
   }
   const actualSha = sha256File(source.path)
   if (actualSha !== expectedSha) {
     console.error(
-      'Hash snapshotu OpenAPI nie zgadza się z openapi/openapi.snapshot.sha256.\n'
+      'Hash snapshotu OpenAPI nie zgadza się z Slavia-shared/openapi/openapi.sha256.\n'
       + `  oczekiwano: ${expectedSha}\n`
       + `  aktualny:   ${actualSha}\n`
       + 'Uruchom: pnpm openapi:snapshot'
@@ -91,7 +92,7 @@ if (before !== after) {
     'Typy OpenAPI są niezsynchronizowane.\n'
     + 'Uruchom lokalnie: pnpm openapi:types\n'
     + 'Jeśli zmienił się backend: pnpm openapi:snapshot && pnpm openapi:types\n'
-    + 'Zacommituj: openapi/ oraz app/types/generated/openapi.types.ts'
+    + 'Zacommituj: Slavia-shared/openapi/ oraz app/types/generated/openapi.types.ts'
   )
   process.exit(1)
 }
