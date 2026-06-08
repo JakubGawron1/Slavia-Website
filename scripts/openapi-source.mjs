@@ -2,19 +2,10 @@ import { createHash } from 'node:crypto'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { resolveSharedRoot } from './resolve-shared-root.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
-
-/** Submodule w repo frontendu (CI / Vercel) lub klon obok (`../Slavia-shared`) lokalnie. */
-function resolveSharedRoot() {
-  const inRepo = resolve(root, 'Slavia-shared')
-  if (existsSync(inRepo)) return inRepo
-  const sibling = resolve(root, '../Slavia-shared')
-  if (existsSync(sibling)) return sibling
-  return inRepo
-}
-
-const sharedRoot = resolveSharedRoot()
+const sharedRoot = resolveSharedRoot(root)
 
 export const OPENAPI_PATHS = {
   backend: resolve(root, '../Slavia-backend/src/embed/openapi.json'),
@@ -25,7 +16,7 @@ export const OPENAPI_PATHS = {
   generated: resolve(root, 'app/types/generated/openapi.types.ts')
 }
 
-/** Backend lokalnie; w CI / Vercel — kanoniczny snapshot w Slavia-shared (submodule). */
+/** Backend lokalnie; w CI / Vercel — snapshot w Slavia-shared (submodule). */
 export function resolveOpenApiSource() {
   if (existsSync(OPENAPI_PATHS.backend)) {
     return { path: OPENAPI_PATHS.backend, kind: 'backend' }
