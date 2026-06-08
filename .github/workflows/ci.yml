@@ -1,6 +1,9 @@
 name: ci
 
-on: push
+on:
+  push:
+  repository_dispatch:
+    types: [slavia-shared-updated]
 
 jobs:
   ci:
@@ -11,6 +14,9 @@ jobs:
         uses: actions/checkout@v6
         with:
           submodules: recursive
+
+      - name: Slavia-shared → latest main
+        run: git submodule update --init --recursive --remote Slavia-shared
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
@@ -46,3 +52,19 @@ jobs:
         env:
           PLAYWRIGHT_START_SERVER: '1'
           CI: 'true'
+
+  vercel-deploy:
+    if: github.event_name == 'repository_dispatch'
+    needs: ci
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Vercel production deploy
+        env:
+          VERCEL_DEPLOY_HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$VERCEL_DEPLOY_HOOK" ]; then
+            echo "VERCEL_DEPLOY_HOOK nie ustawiony — pomijam (ustaw sekret w repo dla auto-deploy na Vercel)."
+            exit 0
+          fi
+          echo "Redeploy Vercel po Slavia-shared @ ${{ github.event.client_payload.shared_sha }}"
+          curl -fsS -X POST "$VERCEL_DEPLOY_HOOK"

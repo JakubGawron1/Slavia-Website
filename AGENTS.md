@@ -20,7 +20,7 @@ pnpm release:check  # pełna walidacja przed release (PowerShell)
 
 **Backend lokalny:** `pnpm smoke:backend` — szybki ping API przed pracą z panelami.
 
-**Submodule shared:** po klonie frontendu uruchom `git submodule update --init --recursive` (Vercel i CI robią to w `installCommand` / checkout).
+**Submodule shared:** po klonie: `git submodule update --init --recursive --remote` (Vercel/CI/ci.yml zawsze ściągają **latest `main`** z `Slavia-shared`). Lokalnie: `pnpm shared:pull`.
 
 ---
 
@@ -30,10 +30,24 @@ Wspólny kontrakt API, katalogi JSON i czysta logika (Sinclair, tor sztangi, PZP
 
 | Gdzie | Ścieżka |
 |-------|---------|
-| W repo frontendu (CI / Vercel) | `Slavia-shared/` — **git submodule** → `github.com/JakubGawron1/Slavia-shared` |
-| Lokalnie obok klonów (opcjonalnie) | `../Slavia-shared` — nadal wykrywane przez skrypty OpenAPI |
-| Paczka npm w `package.json` | `"@slavia/shared": "file:./Slavia-shared"` |
-| Mobile (Flutter) | `slavia_shared` → `path: ../Slavia-shared/dart` w `Slavia-mobile/pubspec.yaml` |
+| **Lokalny dev** | `../Slavia-shared/` — osobny klon repo (pełny folder projektu) |
+| **CI / Vercel** | `Slavia-frontend/Slavia-shared/` — submodule, zawsze **latest `main`** (`--remote`) |
+| Paczka npm (`package.json`) | `"@slavia/shared": "file:./Slavia-shared"` |
+| Import w runtime (`nuxt dev`) | alias → `../Slavia-shared` gdy istnieje (latest z Twojego klonu), inaczej submodule |
+| Mobile (Flutter) | `path: ../Slavia-shared/dart` (CI: shallow clone `main`) |
+
+**Lokalny układ na dysku:**
+
+```
+Desktop/
+  Slavia-shared/          ← tu edytujesz shared; push na main = źródło dla CI
+  Slavia-frontend/
+    Slavia-shared/        ← submodule; pnpm install / shared:pull → latest main
+  Slavia-mobile/
+  Slavia-backend/
+```
+
+Po zmianie w shared: **push na `main` w repo Slavia-shared** — workflow `dispatch-dependents` uruchamia CI w Website i Mobile (`repository_dispatch`). Vercel: sekret `VERCEL_DEPLOY_HOOK` w repo frontendu (Deploy Hook z panelu Vercel).
 
 **Import w Nuxt** (preferuj re-eksporty w `app/utils/` dla stabilnych aliasów `~/utils/…`):
 
@@ -51,9 +65,24 @@ pnpm openapi:types        # generuje app/types/generated/openapi.types.ts
 pnpm openapi:check        # CI: drift + SHA w submodule
 ```
 
-**Zmiana logiki współdzielonej:** edytuj `Slavia-shared/src/logic/` lub `data/`, commit w repo **Slavia-shared**, potem w frontendzie `git submodule update --remote Slavia-shared` i commit nowego wskaźnika submodule.
+**Zmiana logiki współdzielonej:** edytuj `../Slavia-shared` (lub submodule), push na **`main`** w repo Slavia-shared. Nie trzeba commitować wskaźnika submodule w frontendzie — CI/Vercel używają `--remote`.
 
 **Nie przenoś do shared:** composables Nuxt, BFF `server/`, UI, auth, cache — to warstwa platformowa.
+
+### Backend (Rust) — co może korzystać ze shared
+
+Backend **nie importuje** TypeScript — tylko pliki neutralne (JSON). Źródło OpenAPI pozostaje w Rust (`src/embed/openapi.json`); shared jest **lustrem** dla klientów.
+
+| Zasób w shared | Zastosowanie w backendzie | Priorytet |
+|----------------|---------------------------|-----------|
+| `data/theme-presets.json` | Walidacja `ui_theme_preset` (dziś hardcoded `ALLOW_PRESET` w `admins.rs`) | Wysoki |
+| `data/pzpc-weight-classes.json` | Format `weight_category`, seed, ewentualna walidacja przy zapisie zawodnika | Wysoki |
+| `data/athlete-badges.json` | Progi odznak, gdyby API zwracało poziomy server-side | Średni |
+| `test-vectors/sinclair.json` + stałe w JSON | Sinclair po stronie serwera (ranking, walidacja) — dziś tylko klienci | Średni |
+| `data/brand-defaults.json` | CORS / redirect URL w dev — opcjonalnie | Niski |
+| `data/weightlifting-exercises.json` | Tylko kalkulatory UI — **nie** dla API | Nie |
+
+Integracja Rust: `include_str!` / `build.rs` czytający `../Slavia-shared/data/*.json` przy `cargo build`, albo skrypt sync przed CI backendu.
 
 ---
 
