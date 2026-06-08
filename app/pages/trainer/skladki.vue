@@ -1,7 +1,12 @@
 <script setup lang="ts">
+import DashboardKpiCard from '~/components/dashboard/DashboardKpiCard.vue'
+import MembershipStatusColumns from '~/components/payments/MembershipStatusColumns.vue'
+import MembershipYearGrid from '~/components/payments/MembershipYearGrid.vue'
 import type { Athlete, AthletePaymentOverviewRow, PaymentMonthStatusRow, PendingPaymentRow } from '~/types/models'
 import { apiRoutes } from '~/config/api'
 import { getApiErrorMessage } from '~/composables/useApi'
+import { formatPln } from '~/utils/formatCurrency'
+import { membershipYearStats, MONTHLY_FEE_PLN, monthLabelPl } from '~/utils/paymentSemantics'
 
 definePageMeta({ middleware: 'trainer' })
 
@@ -15,13 +20,16 @@ const toast = useToast()
 
 const month = ref(new Date().toISOString().slice(0, 7))
 const currentYear = new Date().getFullYear()
-const currentMonth = new Date().getMonth() + 1
-const canPreviewNextYear = computed(() => currentMonth >= 11)
+const calendarMonth = new Date().getMonth() + 1
+const canPreviewNextYear = computed(() => calendarMonth >= 11)
 const allowedYears = computed(() => (canPreviewNextYear.value ? [currentYear, currentYear + 1] : [currentYear]))
 const year = ref<number>(currentYear)
 const selectedAthleteId = ref<string>('')
 const yearLoading = ref(false)
 const yearRows = ref<PaymentMonthStatusRow[]>([])
+const athleteSearch = ref('')
+const approvingId = ref<string | null>(null)
+const rejectingId = ref<string | null>(null)
 
 const { data: athletes } = await useAsyncData(
   'trainer-athletes-for-fees',
@@ -43,29 +51,6 @@ watch(
   },
   { immediate: true }
 )
-
-const monthLabelPl = (yyyyMm: string) => {
-  const mm = Number.parseInt(String(yyyyMm || '').slice(5, 7), 10)
-  const months = [
-    'Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec',
-    'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień'
-  ]
-  return months[(mm - 1)] || yyyyMm
-}
-
-function rowStatusLabel(r: PaymentMonthStatusRow) {
-  if (r.is_paid) return 'Opłacone'
-  if (r.has_pending) return 'Oczekuje'
-  if (r.is_overdue) return 'Nieopłacone'
-  return 'Brak'
-}
-
-function rowStatusColor(r: PaymentMonthStatusRow) {
-  if (r.is_paid) return 'success'
-  if (r.is_overdue) return 'error'
-  if (r.has_pending) return 'warning'
-  return 'neutral'
-}
 
 async function refreshYearTable() {
   const aid = selectedAthleteId.value
@@ -105,43 +90,55 @@ const { data: pendingPayments, refresh: refreshPending } = await useAsyncData(
 )
 
 const rows = computed(() => (Array.isArray(overview.value) ? overview.value : []))
+const pendingList = computed(() => (Array.isArray(pendingPayments.value) ? pendingPayments.value : []))
 
 const pendingOnly = computed(() => rows.value.filter(r => r.has_pending && !r.has_approved))
 const approvedOnly = computed(() => rows.value.filter(r => r.has_approved))
 const noneOnly = computed(() => rows.value.filter(r => !r.has_pending && !r.has_approved))
 
-/** Mapa id → flaga przelewu stałego, używana do dekoracji ikoną w kartach statusów. */
-const standingOrderById = computed(() => {
-  const map = new Map<string, boolean>()
+const standingOrderIds = computed(() => {
+  const ids = new Set<string>()
   for (const a of athletes.value || []) {
-    if (a.has_standing_order) map.set(a.id, true)
+    if (a.has_standing_order) ids.add(a.id)
   }
-  return map
+  return ids
 })
 
 const standingOrderAthletes = computed(() =>
   (athletes.value || []).filter(a => a.has_standing_order && a.is_active !== false)
 )
 
+const selectedAthlete = computed(() =>
+  (athletes.value || []).find(a => a.id === selectedAthleteId.value) ?? null
+)
+
+const yearStats = computed(() => membershipYearStats(yearRows.value))
+
+const monthOverviewLabel = computed(() => monthLabelPl(month.value))
+
 async function approvePayment(id: string) {
+  approvingId.value = id
   try {
     await apiFetch(apiRoutes.payments.approve(id), { method: 'PATCH' })
     toast.add({ title: 'Zatwierdzono płatność', color: 'success' })
-    await refreshPending()
-    await refreshOverview()
+    await Promise.all([refreshPending(), refreshOverview(), refreshYearTable()])
   } catch (e) {
     toast.add({ title: 'Nie udało się zatwierdzić', description: getApiErrorMessage(e), color: 'error' })
+  } finally {
+    approvingId.value = null
   }
 }
 
 async function rejectPayment(id: string) {
+  rejectingId.value = id
   try {
     await apiFetch(apiRoutes.payments.reject(id), { method: 'PATCH' })
     toast.add({ title: 'Odrzucono zgłoszenie', color: 'success' })
-    await refreshPending()
-    await refreshOverview()
+    await Promise.all([refreshPending(), refreshOverview(), refreshYearTable()])
   } catch (e) {
     toast.add({ title: 'Nie udało się odrzucić', description: getApiErrorMessage(e), color: 'error' })
+  } finally {
+    rejectingId.value = null
   }
 }
 
@@ -153,9 +150,11 @@ const addApprovedPaymentForm = reactive<{
 }>({
   athlete_id: null,
   month: month.value,
-  amount_pln: 50,
+  amount_pln: MONTHLY_FEE_PLN,
   note: ''
 })
+
+const addingApproved = ref(false)
 
 watch(month, (m) => {
   addApprovedPaymentForm.month = m
@@ -173,6 +172,7 @@ watch(
 
 async function createApprovedPayment() {
   if (!addApprovedPaymentForm.athlete_id) return
+  addingApproved.value = true
   try {
     await apiFetch(apiRoutes.payments.createApprovedForAthlete(addApprovedPaymentForm.athlete_id), {
       method: 'POST',
@@ -182,24 +182,36 @@ async function createApprovedPayment() {
         note: addApprovedPaymentForm.note
       }
     })
-    toast.add({ title: 'Dodano płatność', description: 'Kwota zostanie rozbita na miesiące po 50 zł.', color: 'success' })
+    toast.add({
+      title: 'Dodano płatność',
+      description: `Kwota zostanie rozbita na miesiące po ${formatPln(MONTHLY_FEE_PLN)}.`,
+      color: 'success'
+    })
     addApprovedPaymentForm.note = ''
-    await refreshOverview()
+    await Promise.all([refreshOverview(), refreshYearTable()])
   } catch (e) {
     toast.add({ title: 'Nie udało się dodać', description: getApiErrorMessage(e), color: 'error' })
+  } finally {
+    addingApproved.value = false
   }
+}
+
+function selectAthleteFromOverview(athleteId: string) {
+  selectedAthleteId.value = athleteId
+}
+
+function selectMonthFromGrid(m: string) {
+  month.value = m
+  void refreshOverview()
 }
 </script>
 
 <template>
   <PanelPageLayout padding="compact">
-    <PanelPageHeader
-      area="trainer"
-      title="Składki klubowe"
-      icon="i-lucide-banknote"
-    >
+    <PanelPageHeader area="trainer" title="Składki klubowe" icon="i-lucide-banknote">
       <template #description>
-        Widok miesiąca <span class="font-mono font-semibold">{{ month }}</span> — zatwierdzanie przelewów, szybkie wpisy i podgląd roku per zawodnik.
+        Widok <span class="font-semibold text-highlighted">{{ monthOverviewLabel }} {{ month.slice(0, 4) }}</span>
+        — zatwierdzanie przelewów, szybkie wpisy i podgląd roku per zawodnik.
       </template>
       <template #actions>
         <UButton to="/trainer/zawodnicy" variant="soft" color="neutral" size="sm" icon="i-lucide-users">
@@ -208,155 +220,233 @@ async function createApprovedPayment() {
       </template>
     </PanelPageHeader>
 
+    <div class="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <DashboardKpiCard
+        label="Do weryfikacji"
+        :value="pendingList.length"
+        icon="i-lucide-inbox"
+        :tone="pendingList.length ? 'warning' : 'neutral'"
+        hint="Zgłoszenia Pending"
+      />
+      <DashboardKpiCard
+        label="Bez wpłaty"
+        :value="noneOnly.length"
+        icon="i-lucide-circle-off"
+        :tone="noneOnly.length ? 'error' : 'success'"
+        :hint="monthOverviewLabel"
+      />
+      <DashboardKpiCard
+        label="Opłacone"
+        :value="approvedOnly.length"
+        icon="i-lucide-badge-check"
+        tone="success"
+        :hint="monthOverviewLabel"
+      />
+      <DashboardKpiCard
+        label="Przelew stały"
+        :value="standingOrderAthletes.length"
+        icon="i-lucide-repeat"
+        tone="info"
+        hint="Auto-składka co miesiąc"
+      />
+    </div>
+
+    <section
+      v-if="pendingList.length"
+      class="relative mb-6 overflow-hidden rounded-[1.75rem] border border-warning/30 bg-linear-to-br from-warning/14 via-card to-card p-5 shadow-lg ring-1 ring-warning/20 sm:p-6"
+    >
+      <div class="pointer-events-none absolute -right-16 -top-16 size-48 rounded-full bg-warning/20 blur-3xl" />
+      <div class="relative flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div class="min-w-0">
+          <p class="text-[10px] font-black uppercase tracking-[0.2em] text-warning">
+            Kolejka weryfikacji
+          </p>
+          <h2 class="mt-1 text-xl font-black text-highlighted sm:text-2xl">
+            Zgłoszenia do zatwierdzenia
+          </h2>
+          <p class="mt-2 text-sm text-muted">
+            {{ pendingList.length }}
+            {{ pendingList.length === 1 ? 'wpis czeka' : 'wpisów czeka' }}
+            na decyzję kadry.
+          </p>
+        </div>
+        <UButton
+          size="sm"
+          variant="soft"
+          icon="i-lucide-refresh-cw"
+          class="shrink-0"
+          @click="() => { refreshPending(); refreshOverview() }"
+        >
+          Odśwież
+        </UButton>
+      </div>
+
+      <div class="relative mt-5 space-y-3">
+        <div
+          v-for="p in pendingList"
+          :key="p.id"
+          class="flex flex-col gap-3 rounded-2xl border border-default/60 bg-background/80 p-4 shadow-sm backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between"
+        >
+          <div class="min-w-0">
+            <p class="font-bold text-highlighted">{{ p.athlete_name }}</p>
+            <p class="mt-1 text-sm text-muted">
+              <span class="font-medium text-highlighted">{{ monthLabelPl(p.month) }}</span>
+              <span class="font-mono text-xs"> · {{ p.month }}</span>
+              <span v-if="p.amount_pln != null"> · {{ formatPln(p.amount_pln) }}</span>
+            </p>
+            <p v-if="p.note?.trim()" class="mt-1 text-xs text-muted">
+              {{ p.note }}
+            </p>
+          </div>
+          <div class="flex shrink-0 flex-wrap gap-2">
+            <UButton
+              size="sm"
+              icon="i-lucide-check"
+              :loading="approvingId === p.id"
+              @click="approvePayment(p.id)"
+            >
+              Zatwierdź
+            </UButton>
+            <UButton
+              size="sm"
+              color="error"
+              variant="soft"
+              icon="i-lucide-x"
+              :loading="rejectingId === p.id"
+              @click="rejectPayment(p.id)"
+            >
+              Odrzuć
+            </UButton>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <UCard v-else class="slavia-page-card mb-6 border-default/60">
+      <div class="flex items-center gap-3 text-sm text-muted">
+        <UIcon name="i-lucide-inbox" class="size-5 text-success" />
+        Brak zgłoszeń w statusie oczekującym — wszystko zweryfikowane.
+      </div>
+    </UCard>
+
     <UCard class="slavia-page-card mb-6 ring-1 ring-default/30">
-      <div class="grid gap-3 md:grid-cols-12 md:items-end">
-        <UFormField label="Miesiąc" class="md:col-span-3">
+      <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <p class="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
+            Widok miesiąca
+          </p>
+          <h2 class="mt-1 text-lg font-black text-highlighted">
+            {{ monthOverviewLabel }} {{ month.slice(0, 4) }}
+          </h2>
+        </div>
+        <UFormField label="Miesiąc" class="w-full max-w-xs">
           <UInput v-model="month" type="month" class="w-full" @change="() => refreshOverview()" />
         </UFormField>
-        <UFormField label="Dodaj zatwierdzoną płatność" class="md:col-span-4">
+      </div>
+
+      <UFormField label="Szukaj zawodnika" class="mt-4 max-w-md">
+        <UInput v-model="athleteSearch" icon="i-lucide-search" placeholder="Imię i nazwisko…" class="w-full" />
+      </UFormField>
+
+      <div class="mt-4 grid gap-4 lg:grid-cols-3">
+        <MembershipStatusColumns
+          title="Brak wpłaty"
+          :rows="noneOnly"
+          tone="error"
+          badge-label="nieopł."
+          :standing-order-ids="standingOrderIds"
+          :search="athleteSearch"
+          @select-athlete="selectAthleteFromOverview"
+        />
+        <MembershipStatusColumns
+          title="Oczekujące"
+          :rows="pendingOnly"
+          tone="warning"
+          badge-label="pending"
+          :standing-order-ids="standingOrderIds"
+          :search="athleteSearch"
+          @select-athlete="selectAthleteFromOverview"
+        />
+        <MembershipStatusColumns
+          title="Opłacone"
+          :rows="approvedOnly"
+          tone="success"
+          badge-label="ok"
+          :standing-order-ids="standingOrderIds"
+          :search="athleteSearch"
+          @select-athlete="selectAthleteFromOverview"
+        />
+      </div>
+    </UCard>
+
+    <UCard class="slavia-page-card mb-6 ring-1 ring-default/30">
+      <p class="text-[10px] font-black uppercase tracking-[0.2em] text-muted">
+        Szybki wpis
+      </p>
+      <h2 class="mt-1 text-lg font-black text-highlighted">
+        Dodaj zatwierdzoną płatność
+      </h2>
+      <p class="mt-1 text-sm text-muted">
+        Gotówka lub przelew poza systemem — kwota zostanie rozbita po {{ formatPln(MONTHLY_FEE_PLN) }} na kolejne miesiące.
+      </p>
+      <div class="mt-4 grid gap-3 md:grid-cols-12 md:items-end">
+        <UFormField label="Zawodnik" class="md:col-span-4">
           <USelect
             v-model="addApprovedPaymentForm.athlete_id"
             :items="[{ label: 'Wybierz zawodnika', value: null }, ...((athletes || []).map(a => ({ label: a.full_name, value: a.id })))]"
             class="w-full"
           />
         </UFormField>
-        <UFormField label="Kwota (PLN)" description="Domyślnie 50; nadpłata przechodzi na kolejne miesiące." class="md:col-span-3">
+        <UFormField label="Miesiąc" class="md:col-span-3">
+          <UInput v-model="addApprovedPaymentForm.month" type="month" class="w-full" />
+        </UFormField>
+        <UFormField label="Kwota" class="md:col-span-3">
           <UInputNumber v-model="addApprovedPaymentForm.amount_pln" :min="1" :step="1" class="w-full" />
         </UFormField>
         <div class="md:col-span-2">
-          <UButton class="w-full" icon="i-lucide-check" :disabled="!addApprovedPaymentForm.athlete_id" @click="createApprovedPayment">
+          <UButton
+            class="w-full"
+            icon="i-lucide-check"
+            :loading="addingApproved"
+            :disabled="!addApprovedPaymentForm.athlete_id"
+            @click="createApprovedPayment"
+          >
             Dodaj
           </UButton>
         </div>
-        <UFormField label="Opis" description="Opcjonalnie" class="md:col-span-12">
+        <UFormField label="Opis" class="md:col-span-12">
           <UInput v-model="addApprovedPaymentForm.note" placeholder="np. gotówka / przelew" class="w-full" />
         </UFormField>
       </div>
     </UCard>
 
-    <UCard class="mb-6 border-default/70">
-      <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div class="min-w-0">
-          <h2 class="text-lg font-semibold text-highlighted">
-            Składki zawodnika (rok)
-          </h2>
-          <p class="mt-1 text-sm text-muted">
-            Wybierz zawodnika i rok — zobaczysz status 12 miesięcy.
-          </p>
-        </div>
-        <div class="flex flex-wrap items-end gap-2">
-          <UFormField label="Zawodnik" size="xs" class="min-w-64">
-            <USelect
-              v-model="selectedAthleteId"
-              :items="(athletes || []).map(a => ({ label: a.full_name, value: a.id }))"
-              class="w-full"
-            />
-          </UFormField>
-          <UFormField label="Rok" size="xs" class="w-40">
-            <USelect
-              v-if="allowedYears.length > 1"
-              v-model="year"
-              :items="allowedYears.map(y => ({ label: String(y), value: y }))"
-              class="w-full"
-            />
-            <UInput
-              v-else
-              :model-value="String(allowedYears[0])"
-              disabled
-              size="sm"
-              class="w-full"
-            />
-          </UFormField>
-          <UButton size="sm" variant="soft" icon="i-lucide-refresh-cw" :loading="yearLoading" @click="refreshYearTable">
-            Odśwież
-          </UButton>
-        </div>
-      </div>
-
-      <div class="mt-4 overflow-x-auto">
-        <table class="w-full min-w-[720px] text-sm">
-          <thead class="border-b border-default bg-muted/20">
-            <tr>
-              <th class="px-4 py-3 text-left font-semibold text-muted">Miesiąc</th>
-              <th class="px-4 py-3 text-left font-semibold text-muted">Status</th>
-              <th class="px-4 py-3 text-left font-semibold text-muted">Termin</th>
-              <th class="px-4 py-3 text-right font-semibold text-muted">Szybki podgląd</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-default">
-            <tr v-if="yearLoading">
-              <td colspan="4" class="px-4 py-10 text-center text-muted">
-                <UIcon name="i-lucide-loader-2" class="inline size-6 animate-spin" />
-              </td>
-            </tr>
-            <tr v-else-if="yearRows.length === 0">
-              <td colspan="4" class="px-4 py-10 text-center text-muted">
-                Brak danych dla tego roku.
-              </td>
-            </tr>
-            <tr v-for="r in yearRows" v-else :key="r.month" class="hover:bg-muted/10 transition-colors">
-              <td class="px-4 py-3">
-                <span class="font-semibold text-highlighted">{{ monthLabelPl(r.month) }}</span>
-                <span class="ml-2 font-mono text-[11px] text-muted">{{ r.month }}</span>
-              </td>
-              <td class="px-4 py-3">
-                <UBadge :color="rowStatusColor(r)" variant="subtle">
-                  {{ rowStatusLabel(r) }}
-                </UBadge>
-              </td>
-              <td class="px-4 py-3 text-muted font-mono text-[11px]">
-                {{ r.due_date }}
-              </td>
-              <td class="px-4 py-3 text-right">
-                <UButton
-                  size="xs"
-                  variant="outline"
-                  color="neutral"
-                  icon="i-lucide-eye"
-                  @click="month = r.month; refreshOverview()"
-                >
-                  Ustaw miesiąc
-                </UButton>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </UCard>
-
-    <UCard class="mb-6 border-success/30 bg-success/5">
+    <UCard class="slavia-page-card mb-6 border-success/30 bg-linear-to-r from-success/6 to-card">
       <div class="flex flex-wrap items-start justify-between gap-3">
         <div class="flex items-start gap-3">
-          <div class="rounded-full bg-success/15 p-2">
+          <div class="rounded-xl bg-success/15 p-2.5 ring-1 ring-success/25">
             <UIcon name="i-lucide-repeat" class="size-5 text-success" />
           </div>
           <div>
-            <h2 class="text-lg font-semibold text-highlighted">Przelewy stałe</h2>
+            <h2 class="text-lg font-black text-highlighted">Przelewy stałe</h2>
             <p class="text-sm text-muted">
               {{ standingOrderAthletes.length }}
               {{ standingOrderAthletes.length === 1 ? 'zawodnik ma' : 'zawodników ma' }}
-              włączony przelew stały — system <strong>co miesiąc</strong> automatycznie zaznacza
-              im składkę jako opłaconą. Włączasz to w panelu zawodnika.
+              aktywny przelew stały — system co miesiąc automatycznie księguje składkę.
             </p>
           </div>
         </div>
-        <UButton
-          to="/trainer/zawodnicy"
-          size="sm"
-          variant="soft"
-          color="primary"
-          icon="i-lucide-users"
-        >
+        <UButton to="/trainer/zawodnicy" size="sm" variant="soft" color="primary" icon="i-lucide-users">
           Zarządzaj
         </UButton>
       </div>
-      <div v-if="standingOrderAthletes.length > 0" class="mt-4 flex flex-wrap gap-2">
+      <div v-if="standingOrderAthletes.length" class="mt-4 flex flex-wrap gap-2">
         <UBadge
           v-for="a in standingOrderAthletes"
           :key="a.id"
           color="success"
           variant="subtle"
-          class="gap-1"
+          class="cursor-pointer gap-1 transition hover:ring-1 hover:ring-success/40"
+          @click="selectAthleteFromOverview(a.id)"
         >
           <UIcon name="i-lucide-repeat" class="size-3" />
           {{ a.full_name }}
@@ -364,98 +454,37 @@ async function createApprovedPayment() {
       </div>
     </UCard>
 
-    <div class="grid gap-4 lg:grid-cols-3">
-      <UCard class="border-default/70">
-        <div class="flex items-center justify-between gap-2">
-          <h2 class="text-lg font-semibold text-highlighted">Brak wpłaty</h2>
-          <UBadge color="error" variant="subtle">{{ noneOnly.length }}</UBadge>
+    <UCard class="slavia-page-card overflow-hidden ring-1 ring-default/30">
+      <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p class="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
+            Historia zawodnika
+          </p>
+          <h2 class="mt-1 text-lg font-black text-highlighted">
+            {{ selectedAthlete?.full_name || 'Wybierz zawodnika' }}
+          </h2>
+          <p v-if="yearRows.length" class="mt-1 text-sm text-muted">
+            {{ yearStats.paid }} opłacone · {{ yearStats.pending }} oczekuje · {{ yearStats.overdue }} zaległe
+          </p>
         </div>
-        <div class="mt-3 space-y-2">
-          <div v-for="r in noneOnly" :key="r.athlete_id" class="flex items-center justify-between rounded-xl border border-default/60 px-3 py-2">
-            <span class="flex items-center gap-1.5 truncate text-sm text-highlighted">
-              <UIcon
-                v-if="standingOrderById.get(r.athlete_id)"
-                name="i-lucide-repeat"
-                class="size-3.5 shrink-0 text-success"
-              />
-              {{ r.full_name }}
-            </span>
-            <UBadge color="error" variant="subtle" size="xs">nieopł.</UBadge>
-          </div>
-          <p v-if="noneOnly.length === 0" class="text-sm text-muted">Brak.</p>
-        </div>
-      </UCard>
-
-      <UCard class="border-default/70">
-        <div class="flex items-center justify-between gap-2">
-          <h2 class="text-lg font-semibold text-highlighted">Oczekujące</h2>
-          <UBadge color="warning" variant="subtle">{{ pendingOnly.length }}</UBadge>
-        </div>
-        <div class="mt-3 space-y-2">
-          <div v-for="r in pendingOnly" :key="r.athlete_id" class="flex items-center justify-between rounded-xl border border-default/60 px-3 py-2">
-            <span class="flex items-center gap-1.5 truncate text-sm text-highlighted">
-              <UIcon
-                v-if="standingOrderById.get(r.athlete_id)"
-                name="i-lucide-repeat"
-                class="size-3.5 shrink-0 text-success"
-              />
-              {{ r.full_name }}
-            </span>
-            <UBadge color="warning" variant="subtle" size="xs">pending</UBadge>
-          </div>
-          <p v-if="pendingOnly.length === 0" class="text-sm text-muted">Brak.</p>
-        </div>
-      </UCard>
-
-      <UCard class="border-default/70">
-        <div class="flex items-center justify-between gap-2">
-          <h2 class="text-lg font-semibold text-highlighted">Opłacone</h2>
-          <UBadge color="success" variant="subtle">{{ approvedOnly.length }}</UBadge>
-        </div>
-        <div class="mt-3 space-y-2">
-          <div v-for="r in approvedOnly" :key="r.athlete_id" class="flex items-center justify-between rounded-xl border border-default/60 px-3 py-2">
-            <span class="flex items-center gap-1.5 truncate text-sm text-highlighted">
-              <UIcon
-                v-if="standingOrderById.get(r.athlete_id)"
-                name="i-lucide-repeat"
-                class="size-3.5 shrink-0 text-success"
-              />
-              {{ r.full_name }}
-            </span>
-            <UBadge color="success" variant="subtle" size="xs">{{ r.approved_amount_pln }} zł</UBadge>
-          </div>
-          <p v-if="approvedOnly.length === 0" class="text-sm text-muted">Brak.</p>
-        </div>
-      </UCard>
-    </div>
-
-    <div class="mt-8 rounded-2xl border border-default bg-card p-6">
-      <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <h2 class="text-xl font-semibold text-highlighted">Zgłoszenia do weryfikacji</h2>
-        <UButton size="sm" variant="soft" icon="i-lucide-refresh-cw" @click="() => { refreshPending(); refreshOverview() }">
-          Odśwież
-        </UButton>
+        <UFormField label="Zawodnik" class="min-w-64">
+          <USelect
+            v-model="selectedAthleteId"
+            :items="(athletes || []).map(a => ({ label: a.full_name, value: a.id }))"
+            class="w-full"
+          />
+        </UFormField>
       </div>
-      <div v-if="!pendingPayments || pendingPayments.length === 0" class="text-sm text-muted">
-        Brak zgłoszeń w statusie oczekującym.
-      </div>
-      <div v-else class="space-y-3">
-        <div v-for="p in pendingPayments" :key="p.id" class="flex flex-col gap-3 rounded-xl border border-default/60 bg-muted/10 p-4 sm:flex-row sm:items-center sm:justify-between">
-          <div class="min-w-0">
-            <p class="font-medium text-highlighted">{{ p.athlete_name }}</p>
-            <p class="text-sm text-muted">
-              Miesiąc: <span class="font-mono">{{ p.month }}</span>
-              <span v-if="p.amount_pln != null"> · Kwota: <span class="font-mono">{{ p.amount_pln }}</span> PLN</span>
-              <span v-if="p.note && p.note.trim()"> · {{ p.note }}</span>
-            </p>
-          </div>
-          <div class="flex shrink-0 flex-wrap gap-2">
-            <UButton size="sm" icon="i-lucide-check" @click="approvePayment(p.id)">Zatwierdź</UButton>
-            <UButton size="sm" color="error" variant="soft" icon="i-lucide-x" @click="rejectPayment(p.id)">Odrzuć</UButton>
-          </div>
-        </div>
-      </div>
-    </div>
+      <MembershipYearGrid
+        :rows="yearRows"
+        :loading="yearLoading"
+        :year="year"
+        :allowed-years="allowedYears"
+        :selected-month="month"
+        :current-month="new Date().toISOString().slice(0, 7)"
+        @select-month="selectMonthFromGrid"
+        @update:year="year = $event"
+      />
+    </UCard>
   </PanelPageLayout>
 </template>
-
