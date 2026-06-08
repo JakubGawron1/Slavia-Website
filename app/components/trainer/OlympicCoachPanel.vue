@@ -3,6 +3,14 @@ import type { Athlete } from '~/types/models'
 import type { OlympicCoachMode } from '~/composables/useOlympicCoachAi'
 import { olympicCoachQuotaMetrics } from '~/composables/useOlympicCoachAi'
 import { getApiErrorMessage } from '~/composables/useApi'
+import { renderChatMarkdown } from '~/utils/renderChatMarkdown'
+import {
+  buildOlympicCoachAttachment,
+  olympicCoachAttachmentLimit,
+  releaseOlympicCoachAttachmentPreview,
+  type OlympicCoachAttachmentDraft
+} from '~/utils/olympicCoachAttachments'
+import { apiRoutes } from '~/config/api'
 
 const props = defineProps<{
   area: 'trainer' | 'athlete'
@@ -11,7 +19,7 @@ const props = defineProps<{
 const auth = useAuth()
 const api = useApi()
 const toast = useToast()
-const coachOn = useExperimentalFlag('gemini_olympic_coach')
+const coachOn = useExperimentalFlag('olympic_coach')
 
 const {
   status,
@@ -27,6 +35,9 @@ const {
 } = useOlympicCoachAi()
 
 const draft = ref('')
+const pendingAttachments = ref<OlympicCoachAttachmentDraft[]>([])
+const attachmentBusy = ref(false)
+const fileInputRef = ref<HTMLInputElement | null>(null)
 const selectedAthleteId = ref('')
 const messagesRef = ref<HTMLElement | null>(null)
 const inputRef = ref<HTMLTextAreaElement | null>(null)
@@ -35,6 +46,9 @@ const showImportModal = ref(false)
 const importSourceText = ref('')
 const planSuiteOpen = ref(true)
 const isMobile = ref(false)
+const useOwnProfileContext = ref(true)
+
+const ATHLETE_CONTEXT_KEY = 'olympic_coach_use_own_profile'
 
 const importForm = reactive({
   athlete_id: '',
@@ -56,6 +70,8 @@ const isStaff = computed(
   () => auth.isTrainer.value || auth.isAdmin.value || auth.isSuperAdmin.value
 )
 
+const isAthleteView = computed(() => props.area === 'athlete')
+
 const quotaMetrics = computed(() =>
   olympicCoachQuotaMetrics(status.value, { includeImport: isStaff.value })
 )
@@ -64,7 +80,15 @@ const { data: athletes } = await useAsyncData(
   `olympic-coach-athletes-${props.area}`,
   async (): Promise<Athlete[]> => {
     if (!isStaff.value) return []
-    return api<Athlete[]>('/api/athletes/admin').catch(() => [])
+    return api<Athlete[]>(apiRoutes.athletes.listAdmin).catch(() => [])
+  }
+)
+
+const { data: myAthlete } = await useAsyncData(
+  `olympic-coach-my-athlete-${props.area}`,
+  async (): Promise<Athlete | null> => {
+    if (!isAthleteView.value) return null
+    return api<Athlete>(apiRoutes.athletes.me).catch(() => null)
   }
 )
 
@@ -89,7 +113,7 @@ const modePromptLabels: Record<OlympicCoachMode, string> = {
   barbell_path: 'Tor sztangi'
 }
 
-const quickPrompts: Record<OlympicCoachMode, string[]> = {
+const staffQuickPrompts: Record<OlympicCoachMode, string[]> = {
   chat: [
     'Wyjaśnij second pull w rwaniu — na co zwracać uwagę w fazie eksplozywnej?',
     'Jak poprawić złapanie w podrzucie gdy sztanga ucieka do przodu?',
@@ -113,6 +137,58 @@ const quickPrompts: Record<OlympicCoachMode, string[]> = {
   barbell_path: []
 }
 
+const athleteQuickPrompts: Record<OlympicCoachMode, string[]> = {
+  chat: [
+    'Wyjaśnij mi second pull — na co mam zwracać uwagę w fazie eksplozywnej?',
+    'Co poprawić w złapaniu podrzutu, gdy sztanga ucieka do przodu?',
+    'Jakie akcesoria na szybkość po głównym boju na dzisiejszym treningu?'
+  ],
+  plan: [
+    'Zrób mi plan na 4 dni w tym tygodniu — priorytet podrzut i technika rwania.',
+    'Plan techniczny na 3 dni po zawodach (deload + mobility).',
+    'Mikrocykl pod start za 3 tygodnie — ostatni tydzień z taperem.'
+  ],
+  supplements: [
+    'Co suplementować w okresie budowania siły — kreatyna, kofeina, beta-alanina?',
+    'Co ma sens przed porannym treningiem technicznym?',
+    'Suplementy na ścięgna i stawy przy dużej objętości przysiadów.'
+  ],
+  recovery: [
+    'Jak wrócić do rwania po bolesności nadgarstka (2 tyg. przerwy)?',
+    'Regeneracja po przeciążeniu kolana — plan na 10 dni.',
+    'Deload tydzień — jak obniżyć objętość bez utraty techniki?'
+  ],
+  barbell_path: []
+}
+
+const quickPrompts = computed(() =>
+  isAthleteView.value ? athleteQuickPrompts : staffQuickPrompts
+)
+
+const hasLinkedProfile = computed(() => Boolean(myAthlete.value?.id))
+
+const athleteFirstName = computed(() => {
+  const name = myAthlete.value?.full_name?.trim()
+  if (!name) return ''
+  return name.split(/\s+/)[0] ?? name
+})
+
+const athleteContextHint = computed(() => {
+  if (!isAthleteView.value) return ''
+  if (!hasLinkedProfile.value) {
+    return 'Brak powiązanego profilu klubowego — trener odpowie bez Twoich PB i check-inów.'
+  }
+  if (useOwnProfileContext.value) {
+    const pb: string[] = []
+    const a = myAthlete.value
+    if (a?.best_snatch_kg) pb.push(`S ${a.best_snatch_kg} kg`)
+    if (a?.best_clean_jerk_kg) pb.push(`C&J ${a.best_clean_jerk_kg} kg`)
+    const pbLine = pb.length ? ` (${pb.join(', ')})` : ''
+    return `Do promptu trafią Twoje PB i ostatnie check-iny regeneracji${pbLine}.`
+  }
+  return 'Ogólna rozmowa — bez danych z profilu klubowego.'
+})
+
 const activeModeItem = computed(() => modeItems.find(m => m.value === mode.value))
 
 const areaLabel = computed(() => (props.area === 'trainer' ? 'Kadra' : 'Zawodnik'))
@@ -127,6 +203,12 @@ const { swipeStyle, backdropOpacity, tracking: swipeTracking } = useEdgeSwipeBac
 
 onMounted(() => {
   if (!import.meta.client) return
+  if (isAthleteView.value) {
+    const saved = localStorage.getItem(ATHLETE_CONTEXT_KEY)
+    if (saved === '0') useOwnProfileContext.value = false
+    else if (saved === '1') useOwnProfileContext.value = true
+    if (!hasLinkedProfile.value) useOwnProfileContext.value = false
+  }
   const mq = window.matchMedia('(max-width: 639px)')
   const sync = () => {
     isMobile.value = mq.matches
@@ -136,6 +218,28 @@ onMounted(() => {
   mq.addEventListener('change', sync)
   onUnmounted(() => mq.removeEventListener('change', sync))
 })
+
+watch(useOwnProfileContext, (enabled) => {
+  if (!import.meta.client || !isAthleteView.value) return
+  localStorage.setItem(ATHLETE_CONTEXT_KEY, enabled ? '1' : '0')
+})
+
+watch(
+  myAthlete,
+  (athlete) => {
+    if (!athlete || !isAthleteView.value) return
+    if (planContext.snatch_max_kg == null && athlete.best_snatch_kg) {
+      planContext.snatch_max_kg = athlete.best_snatch_kg
+    }
+    if (planContext.clean_jerk_max_kg == null && athlete.best_clean_jerk_kg) {
+      planContext.clean_jerk_max_kg = athlete.best_clean_jerk_kg
+    }
+    if (!planContext.experience?.trim() && athlete.weight_category) {
+      planContext.experience = athlete.weight_category
+    }
+  },
+  { immediate: true }
+)
 
 watch(
   () => messages.value.length,
@@ -172,17 +276,79 @@ function onInputKeydown(e: KeyboardEvent) {
   }
 }
 
+function renderMessageHtml(content: string) {
+  return renderChatMarkdown(content)
+}
+
+function attachmentIcon(kind: OlympicCoachAttachmentDraft['kind']) {
+  if (kind === 'image') return 'i-lucide-image'
+  if (kind === 'video') return 'i-lucide-video'
+  return 'i-lucide-file-text'
+}
+
+function openAttachmentPicker() {
+  fileInputRef.value?.click()
+}
+
+async function onAttachmentFilesSelected(event: Event) {
+  const input = event.target as HTMLInputElement
+  const files = Array.from(input.files ?? [])
+  input.value = ''
+  if (!files.length) return
+
+  const remaining = olympicCoachAttachmentLimit() - pendingAttachments.value.length
+  if (remaining <= 0) {
+    toast.add({ title: `Maks. ${olympicCoachAttachmentLimit()} załączników na wiadomość`, color: 'warning' })
+    return
+  }
+
+  attachmentBusy.value = true
+  try {
+    for (const file of files.slice(0, remaining)) {
+      const draftAttachment = await buildOlympicCoachAttachment(file)
+      pendingAttachments.value.push(draftAttachment)
+    }
+  } catch (e) {
+    toast.add({
+      title: 'Nie udało się dodać pliku',
+      description: e instanceof Error ? e.message : 'Spróbuj innego formatu',
+      color: 'error'
+    })
+  } finally {
+    attachmentBusy.value = false
+  }
+}
+
+function removePendingAttachment(id: string) {
+  const idx = pendingAttachments.value.findIndex(a => a.id === id)
+  if (idx < 0) return
+  const [removed] = pendingAttachments.value.splice(idx, 1)
+  if (removed) releaseOlympicCoachAttachmentPreview(removed)
+}
+
 async function submitDraft() {
-  if (!draft.value.trim()) return
+  if (!draft.value.trim() && pendingAttachments.value.length === 0) return
   const text = draft.value
+  const attachments = [...pendingAttachments.value]
   draft.value = ''
+  pendingAttachments.value = []
   await nextTick()
   resizeInput()
   await sendMessage(text, {
     athleteId: isStaff.value && selectedAthleteId.value ? selectedAthleteId.value : undefined,
-    includePlanContext: mode.value === 'plan'
+    useAthleteContext: isAthleteView.value
+      ? useOwnProfileContext.value && hasLinkedProfile.value
+      : undefined,
+    includePlanContext: mode.value === 'plan',
+    attachments
   })
 }
+
+onUnmounted(() => {
+  for (const a of pendingAttachments.value) {
+    releaseOlympicCoachAttachmentPreview(a)
+  }
+})
 
 async function useQuickPrompt(prompt: string) {
   draft.value = prompt
@@ -264,7 +430,7 @@ function truncatePrompt(text: string, max = 72) {
       title="Trener AI wyłączony"
     >
       Moduł jest wyłączony flagą
-      <span class="font-mono text-[11px]">gemini_olympic_coach</span>
+      <span class="font-mono text-[11px]">olympic_coach</span>
       — włącz w
       <NuxtLink
         to="/superadmin/developer"
@@ -316,7 +482,8 @@ function truncatePrompt(text: string, max = 72) {
         class="olympic-coach__shell"
         :class="{
           'olympic-coach__shell--swiping': swipeTracking,
-          'olympic-coach__shell--plan': mode === 'plan'
+          'olympic-coach__shell--plan': mode === 'plan',
+          'olympic-coach__shell--athlete': isAthleteView
         }"
         :style="swipeStyle"
       >
@@ -383,8 +550,60 @@ function truncatePrompt(text: string, max = 72) {
       </header>
 
       <div
-        v-if="isStaff && athleteItems.length"
-        class="olympic-coach__context-bar"
+        v-if="isAthleteView"
+        class="olympic-coach__context-bar olympic-coach__context-bar--athlete"
+      >
+        <div class="olympic-coach__context-bar-icon olympic-coach__context-bar-icon--athlete">
+          <UIcon
+            :name="useOwnProfileContext && hasLinkedProfile ? 'i-lucide-user-check' : 'i-lucide-message-square'"
+            class="size-4"
+          />
+        </div>
+        <div class="olympic-coach__context-bar-copy">
+          <strong>
+            {{ hasLinkedProfile && myAthlete?.full_name
+              ? myAthlete.full_name
+              : 'Twój kontekst rozmowy' }}
+          </strong>
+          <span>{{ athleteContextHint }}</span>
+        </div>
+        <div
+          class="olympic-coach__context-segment"
+          role="group"
+          aria-label="Kontekst profilu"
+        >
+          <button
+            type="button"
+            class="olympic-coach__context-segment-btn"
+            :class="{ 'olympic-coach__context-segment-btn--active': useOwnProfileContext }"
+            :disabled="!hasLinkedProfile || loading"
+            @click="useOwnProfileContext = true"
+          >
+            <UIcon
+              name="i-lucide-user-round"
+              class="size-3.5 shrink-0"
+            />
+            Mój profil
+          </button>
+          <button
+            type="button"
+            class="olympic-coach__context-segment-btn"
+            :class="{ 'olympic-coach__context-segment-btn--active': !useOwnProfileContext }"
+            :disabled="loading"
+            @click="useOwnProfileContext = false"
+          >
+            <UIcon
+              name="i-lucide-message-circle-off"
+              class="size-3.5 shrink-0"
+            />
+            Bez kontekstu
+          </button>
+        </div>
+      </div>
+
+      <div
+        v-else-if="isStaff && athleteItems.length"
+        class="olympic-coach__context-bar olympic-coach__context-bar--staff"
       >
         <div class="olympic-coach__context-bar-icon">
           <UIcon
@@ -408,7 +627,10 @@ function truncatePrompt(text: string, max = 72) {
       <section
         v-if="mode === 'plan'"
         class="olympic-coach__plan-suite"
-        :class="{ 'olympic-coach__plan-suite--collapsed': isMobile && !planSuiteOpen }"
+        :class="{
+          'olympic-coach__plan-suite--collapsed': isMobile && !planSuiteOpen,
+          'olympic-coach__plan-suite--athlete': isAthleteView
+        }"
       >
         <button
           v-if="isMobile"
@@ -581,10 +803,12 @@ function truncatePrompt(text: string, max = 72) {
       <div
         ref="messagesRef"
         class="olympic-coach__thread"
+        :class="{ 'olympic-coach__thread--athlete': isAthleteView }"
       >
         <div
           v-if="messages.length === 0"
           class="olympic-coach__hero"
+          :class="{ 'olympic-coach__hero--athlete': isAthleteView }"
         >
           <div class="olympic-coach__orb">
             <UIcon
@@ -593,10 +817,20 @@ function truncatePrompt(text: string, max = 72) {
             />
           </div>
           <h2 class="olympic-coach__hero-title">
-            Cześć, jestem Twoim trenerem AI
+            <template v-if="isAthleteView && athleteFirstName">
+              Cześć, {{ athleteFirstName }}!
+            </template>
+            <template v-else>
+              Cześć — tu Twój trener z platformy
+            </template>
           </h2>
           <p class="olympic-coach__hero-sub">
-            {{ activeModeItem?.label ?? 'Czat' }} — dwubój olimpijski, plany, suplementacja i bezpieczna regeneracja.
+            <template v-if="isAthleteView">
+              {{ activeModeItem?.label ?? 'Czat' }} — Twój asystent na hali: technika, plany, suplementacja i regeneracja. Konkretnie i po Twojej stronie.
+            </template>
+            <template v-else>
+              {{ activeModeItem?.label ?? 'Czat' }} — technika, plany, suplementacja i regeneracja. Konkretnie, po ludzku, czasem z żartem o sztandze.
+            </template>
           </p>
 
           <div class="olympic-coach__prompt-grid">
@@ -635,9 +869,38 @@ function truncatePrompt(text: string, max = 72) {
               class="olympic-coach__bubble"
               :class="msg.role === 'user' ? 'olympic-coach__bubble--user' : 'olympic-coach__bubble--ai'"
             >
-              <p class="whitespace-pre-wrap">
-                {{ msg.content }}
-              </p>
+              <div
+                v-if="msg.attachments?.length"
+                class="olympic-coach__msg-attachments"
+              >
+                <span
+                  v-for="att in msg.attachments"
+                  :key="att.id"
+                  class="olympic-coach__msg-attachment"
+                >
+                  <img
+                    v-if="att.previewUrl && att.kind === 'image'"
+                    :src="att.previewUrl"
+                    :alt="att.name"
+                  >
+                  <span
+                    v-else
+                    class="olympic-coach__attachment-thumb"
+                    aria-hidden="true"
+                  >
+                    <UIcon
+                      :name="attachmentIcon(att.kind)"
+                      class="size-3.5"
+                    />
+                  </span>
+                  <span class="truncate">{{ att.name }}</span>
+                </span>
+              </div>
+              <!-- eslint-disable vue/no-v-html — renderChatMarkdown (DOMPurify) -->
+              <div
+                class="olympic-coach__bubble-md"
+                v-html="renderMessageHtml(msg.content)"
+              />
               <div
                 v-if="canImportMessage(msg)"
                 class="olympic-coach__bubble-actions"
@@ -677,17 +940,81 @@ function truncatePrompt(text: string, max = 72) {
         </div>
       </div>
 
-      <footer class="olympic-coach__composer-wrap">
+      <footer
+        class="olympic-coach__composer-wrap"
+        :class="{ 'olympic-coach__composer-wrap--athlete': isAthleteView }"
+      >
+        <div
+          v-if="pendingAttachments.length"
+          class="olympic-coach__composer-attachments"
+        >
+          <span
+            v-for="att in pendingAttachments"
+            :key="att.id"
+            class="olympic-coach__composer-attachment"
+          >
+            <img
+              v-if="att.previewUrl && att.kind === 'image'"
+              :src="att.previewUrl"
+              :alt="att.name"
+            >
+            <span
+              v-else
+              class="olympic-coach__attachment-thumb"
+              aria-hidden="true"
+            >
+              <UIcon
+                :name="attachmentIcon(att.kind)"
+                class="size-3.5"
+              />
+            </span>
+            <span class="olympic-coach__attachment-name">{{ att.name }}</span>
+            <button
+              type="button"
+              class="olympic-coach__attachment-remove"
+              aria-label="Usuń załącznik"
+              @click="removePendingAttachment(att.id)"
+            >
+              <UIcon
+                name="i-lucide-x"
+                class="size-3.5"
+              />
+            </button>
+          </span>
+        </div>
         <form
           class="olympic-coach__composer"
           @submit.prevent="submitDraft"
         >
+          <input
+            ref="fileInputRef"
+            type="file"
+            class="sr-only"
+            accept="image/*,video/*,.txt,.md,.csv,.json,.log,.xml,.yaml,.yml,text/plain,text/csv,application/json"
+            multiple
+            @change="onAttachmentFilesSelected"
+          >
+          <button
+            type="button"
+            class="olympic-coach__attach-btn"
+            :class="{ 'olympic-coach__attach-btn--active': pendingAttachments.length > 0 }"
+            :disabled="loading || attachmentBusy || !status?.configured || pendingAttachments.length >= olympicCoachAttachmentLimit()"
+            aria-label="Dodaj zdjęcie, wideo lub plik"
+            title="Zdjęcie, wideo lub plik tekstowy"
+            @click="openAttachmentPicker"
+          >
+            <UIcon
+              :name="attachmentBusy ? 'i-lucide-loader-2' : 'i-lucide-paperclip'"
+              class="size-5"
+              :class="{ 'animate-spin': attachmentBusy }"
+            />
+          </button>
           <textarea
             ref="inputRef"
             v-model="draft"
             class="olympic-coach__input"
             rows="1"
-            placeholder="Zadaj pytanie lub poproś o plan…"
+            placeholder="Zadaj pytanie, dołącz zdjęcie lub wideo…"
             :disabled="loading || !status?.configured"
             @input="resizeInput"
             @keydown="onInputKeydown"
@@ -695,7 +1022,7 @@ function truncatePrompt(text: string, max = 72) {
           <button
             type="submit"
             class="olympic-coach__send"
-            :disabled="!draft.trim() || loading || !status?.configured"
+            :disabled="(!draft.trim() && !pendingAttachments.length) || loading || !status?.configured"
             aria-label="Wyślij wiadomość"
           >
             <UIcon
@@ -707,7 +1034,12 @@ function truncatePrompt(text: string, max = 72) {
 
         <div class="olympic-coach__composer-foot">
           <p class="olympic-coach__composer-disclaimer">
-            Narzędzie edukacyjne — nie zastępuje diagnozy medycznej ani decyzji trenera klubowego.
+            <template v-if="pendingAttachments.length">
+              {{ pendingAttachments.length }} załącznik(ów) — zdjęcie, wideo lub plik tekstowy.
+            </template>
+            <template v-else>
+              Narzędzie edukacyjne — nie zastępuje diagnozy medycznej ani decyzji trenera klubowego.
+            </template>
           </p>
           <div class="olympic-coach__composer-actions">
             <button

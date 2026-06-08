@@ -47,12 +47,7 @@ export const BARBELL_PATH_TRACKING_PROVIDERS: BarbellPathTrackingProviderMeta[] 
     id: 'auto',
     label: 'Auto (vision → numeric)',
     description:
-      'Gemini vision jeśli GEMINI_API_KEY, inaczej Groq vision z klatek, fallback numeryczny.'
-  },
-  {
-    id: 'gemini_vision',
-    label: 'Gemini Flash (vision)',
-    description: 'Wymaga GEMINI_API_KEY na backendzie — śledzenie gryfu z klatek JPEG.'
+      'Groq vision z klatek wideo, gdy są dostępne — w przeciwnym razie korekta numeryczna.'
   },
   {
     id: 'groq_vision',

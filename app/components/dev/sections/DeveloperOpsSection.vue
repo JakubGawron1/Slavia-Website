@@ -36,28 +36,65 @@ const d = useDeveloperPage()
         </div>
 
         <div class="border-t border-default/40 pt-4">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <p class="text-[10px] font-bold uppercase tracking-wider text-muted">Trener AI (panel)</p>
-            <UButton size="xs" variant="soft" icon="i-lucide-refresh-cw" :loading="d.aiCoachStatusLoading" @click="d.refreshAiCoachStatus">
-              Odśwież
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div class="min-w-0">
+              <p class="text-[10px] font-bold uppercase tracking-wider text-muted">
+                Trener AI (panel)
+              </p>
+              <p class="mt-1 text-sm text-muted">
+                <code class="font-mono text-xs">/api/ai/coach/*</code> — panele
+                <NuxtLink
+                  to="/athlete/ai-coach"
+                  class="text-primary underline"
+                >zawodnik</NuxtLink>
+                ·
+                <NuxtLink
+                  to="/trainer/ai-coach"
+                  class="text-primary underline"
+                >kadra</NuxtLink>
+                · flaga <code class="font-mono text-xs">olympic_coach</code>
+              </p>
+            </div>
+            <UButton
+              size="xs"
+              variant="soft"
+              icon="i-lucide-refresh-cw"
+              :loading="d.aiCoachStatusLoading"
+              @click="d.refreshAiCoachStatus"
+            >
+              Status API
             </UButton>
           </div>
-          <p class="mt-1 text-sm text-muted">
-            Backend <code class="font-mono text-xs">/api/ai/coach/status</code> (JWT) — panele
-            <NuxtLink to="/athlete/ai-coach" class="text-primary underline">/athlete/ai-coach</NuxtLink>,
-            <NuxtLink to="/trainer/ai-coach" class="text-primary underline">/trainer/ai-coach</NuxtLink>.
-            Flaga: <code class="font-mono text-xs">gemini_olympic_coach</code>.
-          </p>
-          <div v-if="d.aiCoachStatusLoading && !d.aiCoachStatus" class="mt-2 text-xs text-muted">
+          <div
+            v-if="d.aiCoachStatusLoading && !d.aiCoachStatus"
+            class="mt-3 text-xs text-muted"
+          >
             Ładowanie statusu…
           </div>
-          <div v-else-if="d.aiCoachStatus" class="mt-2 flex flex-wrap items-center gap-2 text-xs">
-            <UBadge size="xs" :color="d.aiCoachStatus.configured ? 'success' : 'warning'" variant="subtle">
-              {{ d.aiCoachStatus.configured ? 'skonfigurowany' : 'nieskonfigurowany' }}
+          <div
+            v-else-if="d.aiCoachStatus"
+            class="mt-3 flex flex-wrap items-center gap-2"
+          >
+            <UBadge
+              size="xs"
+              :color="d.aiCoachStatus.configured ? 'success' : 'warning'"
+              variant="subtle"
+            >
+              {{ d.aiCoachStatus.configured ? 'Groq skonfigurowany' : 'Brak GROQ_API_KEY' }}
             </UBadge>
-            <span v-if="d.aiCoachStatus.model" class="font-mono text-muted">model: {{ d.aiCoachStatus.model }}</span>
-            <span v-if="d.aiCoachStatus.setup_hint" class="text-muted">{{ d.aiCoachStatus.setup_hint }}</span>
+            <span
+              v-if="d.aiCoachStatus.model"
+              class="rounded-full border border-default/50 bg-muted/15 px-2 py-0.5 font-mono text-[11px] text-muted"
+            >
+              {{ d.aiCoachStatus.model }}
+            </span>
+            <span
+              v-if="d.aiCoachStatus.setup_hint"
+              class="text-xs text-muted"
+            >{{ d.aiCoachStatus.setup_hint }}</span>
           </div>
+
+          <DeveloperAiCoachSettings />
         </div>
 
         <div class="border-t border-default/40 pt-4">

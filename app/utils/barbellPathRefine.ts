@@ -1,7 +1,7 @@
 import type { BarbellSample } from '~/utils/barbellPathAnalysis'
 import type { BarbellVideoFrame } from '~/utils/barbellVideoFrames'
 
-export type BarbellPathRefineProvider = 'auto' | 'groq_numeric' | 'groq_vision' | 'gemini_vision'
+export type BarbellPathRefineProvider = 'auto' | 'groq_numeric' | 'groq_vision'
 
 export interface BarbellPathRefineRequest {
   rawSamples: BarbellSample[]
