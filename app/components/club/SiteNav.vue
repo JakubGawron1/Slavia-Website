@@ -120,7 +120,7 @@ const items = computed(() => {
 
   if (showTrainerPanel) {
     adminLinks.push({ label: 'Składki klubowe', to: '/trainer/skladki', icon: 'i-lucide-banknote' })
-    adminLinks.push({ label: 'Ćwiczenia kadry', to: '/trainer/exercises', icon: 'i-lucide-clipboard-list' })
+    adminLinks.push({ label: 'Inne ćwiczenia', to: '/trainer/cwiczenia', icon: 'i-lucide-bar-chart-3' })
   }
 
   pushLink(accountLinks, {

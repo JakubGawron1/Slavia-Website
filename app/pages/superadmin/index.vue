@@ -117,8 +117,7 @@ const SUPERADMIN_MODULE_GROUPS: { title: string, items: DashboardModuleLink[] }[
       dashboardLink('Dzienniki', 'Wpisy treningowe', 'i-lucide-book-marked', '/trainer/dziennik', 'text-cyan-600', 'bg-cyan-500/10'),
       dashboardLink('Plany', 'Monitoring progresu', 'i-lucide-clipboard-list', '/trainer/plany', 'text-emerald-600', 'bg-emerald-500/10'),
       dashboardLink('Regeneracja', 'Check-in zawodników', 'i-lucide-heart-pulse', '/trainer/regeneracja', 'text-rose-600', 'bg-rose-500/10'),
-      dashboardLink('Inne ćwiczenia', 'Ranking siłowy', 'i-lucide-bar-chart-3', '/trainer/exercises', 'text-lime-600', 'bg-lime-500/10'),
-      dashboardLink('Słownik ćwiczeń', 'Baza do planów', 'i-lucide-library', '/trainer/cwiczenia-slownik', 'text-indigo-500', 'bg-indigo-500/10'),
+      dashboardLink('Inne ćwiczenia', 'Ranking, weryfikacja i słownik', 'i-lucide-bar-chart-3', '/trainer/cwiczenia', 'text-lime-600', 'bg-lime-500/10'),
       dashboardLink('Analiza sztangi', 'Wideo i diagnostyka', 'i-lucide-scan-line', '/trainer/analiza-sztangi', 'text-orange-500', 'bg-orange-500/10'),
       dashboardLink('Monitoring', 'Metryki kadry', 'i-lucide-activity', '/trainer/monitoring', 'text-sky-600', 'bg-sky-500/10'),
       dashboardLink('Czat', 'Wiadomości 1:1', 'i-lucide-messages-square', '/klub/czat', 'text-info', 'bg-info/12')
