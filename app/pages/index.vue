@@ -656,6 +656,7 @@ const trainingDays = [
     <section class="relative py-12 lg:py-20">
       <UContainer>
         <ClubHistoryTimeline
+          page-name="o-klubie"
           :limit="4"
           compact
           heading-id="home-club-history-heading"
