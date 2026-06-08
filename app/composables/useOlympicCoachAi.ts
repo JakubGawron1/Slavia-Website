@@ -1,5 +1,6 @@
 import { apiRoutes } from '~/config/api'
 import { getApiErrorMessage } from '~/composables/useApi'
+import type { OlympicCoachAttachmentDraft, OlympicCoachAttachmentPayload } from '~/utils/olympicCoachAttachments'
 
 export type OlympicCoachMode = 'chat' | 'plan' | 'supplements' | 'recovery' | 'barbell_path'
 
@@ -8,6 +9,7 @@ export interface OlympicCoachMessage {
   role: 'user' | 'assistant'
   content: string
   mode: OlympicCoachMode
+  attachments?: OlympicCoachAttachmentDraft[]
 }
 
 export interface OlympicCoachPlanContext {
@@ -268,21 +270,29 @@ export function useOlympicCoachAi() {
     text: string,
     options?: {
       athleteId?: string
+      /** Zawodnik: własny profil klubowy w prompcie (kadra ignoruje to pole). */
+      useAthleteContext?: boolean
       modeOverride?: OlympicCoachMode
       includePlanContext?: boolean
+      attachments?: OlympicCoachAttachmentDraft[]
     }
   ) {
     const trimmed = text.trim().slice(0, MAX_MESSAGE_LEN)
-    if (!trimmed || loading.value) return null
+    const attachmentDrafts = options?.attachments ?? []
+    if ((!trimmed && attachmentDrafts.length === 0) || loading.value) return null
 
     if (olympicCoachChatBlockedReason(status.value)) return null
 
     const activeMode = options?.modeOverride ?? mode.value
+    const userContent = trimmed || (attachmentDrafts.length
+      ? 'Przeanalizuj załączone pliki.'
+      : '')
     messages.value.push({
       id: crypto.randomUUID(),
       role: 'user',
-      content: trimmed,
-      mode: activeMode
+      content: userContent,
+      mode: activeMode,
+      attachments: attachmentDrafts.length ? [...attachmentDrafts] : undefined
     })
     loading.value = true
 
@@ -290,19 +300,36 @@ export function useOlympicCoachAi() {
       const history = messages.value
         .slice(0, -1)
         .slice(-MAX_HISTORY)
-        .map(m => ({
-          role: m.role === 'assistant' ? 'assistant' : 'user',
-          content: m.content
-        }))
+        .map((m) => {
+          let content = m.content
+          if (m.role === 'user' && m.attachments?.length) {
+            const names = m.attachments.map(a => a.name).join(', ')
+            content = `${content}\n[Załączniki: ${names}]`
+          }
+          return {
+            role: m.role === 'assistant' ? 'assistant' : 'user',
+            content
+          }
+        })
+
+      const apiAttachments: OlympicCoachAttachmentPayload[] = attachmentDrafts.flatMap(d => d.payload)
 
       const body: Record<string, unknown> = {
-        message: trimmed,
+        message: userContent,
         mode: activeMode,
         history
       }
 
+      if (apiAttachments.length > 0) {
+        body.attachments = apiAttachments
+      }
+
       if (options?.athleteId) {
         body.athlete_id = options.athleteId
+      }
+
+      if (options?.useAthleteContext !== undefined) {
+        body.use_athlete_context = options.useAthleteContext
       }
 
       if (options?.includePlanContext && activeMode === 'plan') {

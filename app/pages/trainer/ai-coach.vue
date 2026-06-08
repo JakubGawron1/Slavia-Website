@@ -19,7 +19,7 @@ useSeoMeta({
       eyebrow="Narzędzia AI"
       title="Trener AI"
       icon="i-lucide-sparkles"
-      description="Lokalny asystent Gemini: dwubój w fazie eksplozywnej, generowanie planów, suplementacja i plany regeneracyjne."
+      description="Asystent Groq (LLaMA): dwubój w fazie eksplozywnej, generowanie planów, suplementacja i plany regeneracyjne."
     >
       <template #actions>
         <UButton

@@ -1,0 +1,339 @@
+/* DevTools — konfiguracja Trenera AI (SuperAdmin) */
+
+.dev-ai-coach {
+  --dev-ai-glow: color-mix(in oklab, var(--ui-primary) 18%, #a78bfa 12%);
+  margin-top: 1rem;
+  border-radius: var(--slavia-radius-xl, 1rem);
+  border: 1px solid color-mix(in oklab, var(--ui-primary) 22%, var(--ui-border));
+  background:
+    radial-gradient(ellipse 90% 60% at 0% -20%, var(--dev-ai-glow), transparent 55%),
+    color-mix(in oklab, var(--ui-bg-elevated) 96%, var(--ui-bg-muted));
+  box-shadow:
+    0 1px 0 color-mix(in oklab, #fff 6%, transparent) inset,
+    var(--slavia-shadow-sm, 0 4px 24px color-mix(in oklab, #000 6%, transparent));
+  overflow: hidden;
+}
+
+.dev-ai-coach__hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.125rem 1.25rem 0.875rem;
+  border-bottom: 1px solid color-mix(in oklab, var(--ui-border) 55%, transparent);
+}
+
+.dev-ai-coach__hero-icon {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  color: #fff;
+  background: linear-gradient(
+    145deg,
+    color-mix(in oklab, var(--ui-primary) 80%, #7c3aed),
+    color-mix(in oklab, var(--ui-primary) 50%, #06b6d4)
+  );
+  box-shadow: 0 6px 20px color-mix(in oklab, var(--ui-primary) 25%, transparent);
+}
+
+.dev-ai-coach__hero-copy {
+  flex: 1;
+  min-width: 12rem;
+}
+
+.dev-ai-coach__hero-title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ui-text-highlighted);
+}
+
+.dev-ai-coach__hero-sub {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--ui-text-muted);
+}
+
+.dev-ai-coach__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.6875rem;
+  color: var(--ui-text-muted);
+  background: color-mix(in oklab, var(--ui-bg-muted) 35%, transparent);
+  border-bottom: 1px solid color-mix(in oklab, var(--ui-border) 45%, transparent);
+}
+
+.dev-ai-coach__meta-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  background: color-mix(in oklab, var(--ui-bg-elevated) 80%, transparent);
+  border: 1px solid color-mix(in oklab, var(--ui-border) 50%, transparent);
+}
+
+.dev-ai-coach__tabs {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.5rem 1rem 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.dev-ai-coach__tab {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-radius: 0.65rem 0.65rem 0 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ui-text-muted);
+  background: transparent;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+
+  &:hover {
+    color: var(--ui-text-highlighted);
+    background: color-mix(in oklab, var(--ui-bg-muted) 50%, transparent);
+  }
+
+  &--active {
+    color: var(--ui-primary);
+    background: color-mix(in oklab, var(--ui-bg-elevated) 92%, var(--ui-bg-muted));
+    box-shadow: 0 -1px 0 color-mix(in oklab, var(--ui-primary) 35%, transparent) inset;
+  }
+}
+
+.dev-ai-coach__panel {
+  padding: 1.125rem 1.25rem 1.25rem;
+  min-height: 12rem;
+}
+
+.dev-ai-coach__panel-intro {
+  margin-bottom: 1rem;
+  padding: 0.75rem 0.875rem;
+  border-radius: var(--slavia-radius-lg, 0.75rem);
+  font-size: 0.75rem;
+  line-height: 1.55;
+  color: var(--ui-text-muted);
+  background: color-mix(in oklab, var(--ui-bg-muted) 45%, transparent);
+  border: 1px solid color-mix(in oklab, var(--ui-border) 45%, transparent);
+}
+
+.dev-ai-coach__field-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.dev-ai-coach__textarea {
+  font-family: ui-monospace, 'Cascadia Code', monospace;
+  font-size: 0.75rem;
+  line-height: 1.55;
+}
+
+.dev-ai-coach__preview {
+  border-radius: var(--slavia-radius-lg, 0.75rem);
+  border: 1px solid color-mix(in oklab, var(--ui-border) 55%, transparent);
+  background: color-mix(in oklab, var(--ui-bg-muted) 30%, transparent);
+  overflow: hidden;
+}
+
+.dev-ai-coach__preview-toggle {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.625rem 0.875rem;
+  border: none;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ui-text-highlighted);
+  background: color-mix(in oklab, var(--ui-bg-muted) 40%, transparent);
+  cursor: pointer;
+
+  &:hover {
+    background: color-mix(in oklab, var(--ui-bg-muted) 65%, transparent);
+  }
+}
+
+.dev-ai-coach__preview-body {
+  max-height: 11rem;
+  overflow: auto;
+  padding: 0.75rem 0.875rem;
+  font-family: ui-monospace, monospace;
+  font-size: 0.6875rem;
+  line-height: 1.55;
+  color: var(--ui-text-muted);
+  white-space: pre-wrap;
+}
+
+.dev-ai-coach__temp-grid {
+  display: grid;
+  gap: 1rem;
+
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.dev-ai-coach__temp-card {
+  padding: 0.875rem 1rem;
+  border-radius: var(--slavia-radius-lg, 0.75rem);
+  border: 1px solid color-mix(in oklab, var(--ui-border) 55%, transparent);
+  background: color-mix(in oklab, var(--ui-bg-elevated) 90%, var(--ui-bg-muted));
+}
+
+.dev-ai-coach__temp-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.dev-ai-coach__temp-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ui-text-highlighted);
+}
+
+.dev-ai-coach__temp-default {
+  font-size: 0.625rem;
+  color: var(--ui-text-muted);
+}
+
+.dev-ai-coach__temp-value {
+  font-family: ui-monospace, monospace;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--ui-primary);
+}
+
+.dev-ai-coach__range {
+  width: 100%;
+  height: 0.35rem;
+  appearance: none;
+  border-radius: 9999px;
+  background: color-mix(in oklab, var(--ui-border) 70%, transparent);
+  cursor: pointer;
+
+  &::-webkit-slider-thumb {
+    appearance: none;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 9999px;
+    border: 2px solid #fff;
+    background: var(--ui-primary);
+    box-shadow: 0 2px 8px color-mix(in oklab, var(--ui-primary) 35%, transparent);
+  }
+
+  &::-moz-range-thumb {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 9999px;
+    border: 2px solid #fff;
+    background: var(--ui-primary);
+    box-shadow: 0 2px 8px color-mix(in oklab, var(--ui-primary) 35%, transparent);
+  }
+}
+
+.dev-ai-coach__mode-grid {
+  display: grid;
+  gap: 0.875rem;
+
+  .dev-ai-coach__panel-intro {
+    grid-column: 1 / -1;
+  }
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.dev-ai-coach__mode-card {
+  padding: 0.75rem;
+  border-radius: var(--slavia-radius-lg, 0.75rem);
+  border: 1px solid color-mix(in oklab, var(--ui-border) 50%, transparent);
+  background: color-mix(in oklab, var(--ui-bg-muted) 25%, transparent);
+}
+
+.dev-ai-coach__mode-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--ui-primary) 75%, var(--ui-text-muted));
+}
+
+.dev-ai-coach__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0.875rem 1.25rem;
+  border-top: 1px solid color-mix(in oklab, var(--ui-border) 55%, transparent);
+  background: color-mix(in oklab, var(--ui-bg-elevated) 85%, var(--ui-bg-muted));
+  backdrop-filter: blur(8px);
+
+  @media (max-width: 639px) {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+  }
+}
+
+.dev-ai-coach__dirty {
+  margin-right: auto;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: color-mix(in oklab, var(--ui-warning, #f59e0b) 85%, var(--ui-text-muted));
+}
+
+.dev-ai-coach__skeleton {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1.25rem;
+}
+
+.dev-ai-coach__skeleton-line {
+  height: 0.75rem;
+  border-radius: 0.35rem;
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklab, var(--ui-bg-muted) 80%, transparent) 0%,
+    color-mix(in oklab, var(--ui-bg-muted) 40%, transparent) 50%,
+    color-mix(in oklab, var(--ui-bg-muted) 80%, transparent) 100%
+  );
+  background-size: 200% 100%;
+  animation: dev-ai-coach-shimmer 1.2s ease-in-out infinite;
+
+  &--lg {
+    height: 5rem;
+  }
+}
+
+@keyframes dev-ai-coach-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
