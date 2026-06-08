@@ -48,6 +48,10 @@ const devDisableRootIsr = !isProd
 
 export default defineNuxtConfig({
 
+  build: {
+    transpile: ['@slavia/shared']
+  },
+
   compatibilityDate: '2026-05-09',
 
   future: {

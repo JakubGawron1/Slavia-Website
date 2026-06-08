@@ -2,7 +2,7 @@
 
 > **Język dokumentu:** polski. Wyjątek — sekcja [Commity Git](#commity-git): szablony wiadomości commitów i przykłady **muszą być po angielsku** (wymóg repozytorium).
 
-Aplikacja Nuxt 4 dla klubu CKS Slavia Ruda Śląska. Frontend współpracuje z backendem Rust (`../Slavia-backend`) i opcjonalnie z aplikacją mobilną (`../Slavia-mobile`).
+Aplikacja Nuxt 4 dla klubu CKS Slavia Ruda Śląska. Frontend współpracuje z backendem Rust (`../Slavia-backend`), paczką współdzieloną (`../Slavia-shared` → `@slavia/shared`) i opcjonalnie z aplikacją mobilną (`../Slavia-mobile`).
 
 ## Szybki start
 
@@ -19,6 +19,41 @@ pnpm release:check  # pełna walidacja przed release (PowerShell)
 **Env:** `.env` → `NUXT_PUBLIC_API_BASE_URL` (bez końcowego slasha). Opcjonalnie `NUXT_PUBLIC_API_BASE_URL_LEAPCELL` / `_RENDER` dla dual-provider.
 
 **Backend lokalny:** `pnpm smoke:backend` — szybki ping API przed pracą z panelami.
+
+**Submodule shared:** po klonie frontendu uruchom `git submodule update --init --recursive` (Vercel i CI robią to w `installCommand` / checkout).
+
+---
+
+## Slavia-shared (`@slavia/shared`)
+
+Wspólny kontrakt API, katalogi JSON i czysta logika (Sinclair, tor sztangi, PZPC, proporcje, odznaki) dla **WWW** i **Flutter**.
+
+| Gdzie | Ścieżka |
+|-------|---------|
+| W repo frontendu (CI / Vercel) | `Slavia-shared/` — **git submodule** → `github.com/JakubGawron1/Slavia-shared` |
+| Lokalnie obok klonów (opcjonalnie) | `../Slavia-shared` — nadal wykrywane przez skrypty OpenAPI |
+| Paczka npm w `package.json` | `"@slavia/shared": "file:./Slavia-shared"` |
+| Mobile (Flutter) | `slavia_shared` → `path: ../Slavia-shared/dart` w `Slavia-mobile/pubspec.yaml` |
+
+**Import w Nuxt** (preferuj re-eksporty w `app/utils/` dla stabilnych aliasów `~/utils/…`):
+
+```ts
+import { sinclairTotal } from '@slavia/shared/sinclair'
+import themePresets from '@slavia/shared/data/theme-presets.json'
+```
+
+**Skrypty:**
+
+```bash
+pnpm shared:test          # vitest w Slavia-shared
+pnpm openapi:snapshot       # backend → Slavia-shared/openapi/
+pnpm openapi:types        # generuje app/types/generated/openapi.types.ts
+pnpm openapi:check        # CI: drift + SHA w submodule
+```
+
+**Zmiana logiki współdzielonej:** edytuj `Slavia-shared/src/logic/` lub `data/`, commit w repo **Slavia-shared**, potem w frontendzie `git submodule update --remote Slavia-shared` i commit nowego wskaźnika submodule.
+
+**Nie przenoś do shared:** composables Nuxt, BFF `server/`, UI, auth, cache — to warstwa platformowa.
 
 ---
 
@@ -112,8 +147,8 @@ TensorFlow, kamera, QR, edytor WYSIWYG, podgląd viewportu — wszystko co wymag
 
 ## Typy API i kontrakt z backendem
 
-1. **Snapshot (po zmianie backendu):** `pnpm openapi:snapshot` → commit `openapi/` + generated
-2. **Generuj:** `pnpm openapi:types` (backend lokalnie lub `openapi/openapi.snapshot.json` w CI)
+1. **Snapshot (po zmianie backendu):** `pnpm openapi:snapshot` → commit `Slavia-shared/openapi/` + generated
+2. **Generuj:** `pnpm openapi:types` (backend lokalnie lub `Slavia-shared/openapi/openapi.json` w CI)
 3. **Sprawdź drift:** `pnpm openapi:check` (fail w CI przy braku snapshotu lub rozjechanych typach)
 4. **Most typów:** `app/types/api.ts` — aliasy domenowe; stopniowa migracja z `models.ts` do OpenAPI
 5. **Ścieżki REST:** `app/config/api.ts` — trzymaj spójnie z `router.rs` w backendzie
@@ -363,7 +398,7 @@ chore(openapi): regenerate types after backend snapshot
 
 - Jeden logiczny zestaw zmian na commit (funkcja, poprawka lub refaktor — nie mix niepowiązanych plików).
 - Stage tylko pliki z tej zmiany; nigdy `.env`, kluczy ani credentiali.
-- Po zmianie API backendu: najpierw commit embed OpenAPI w backendzie, potem (osobny commit) snapshot `openapi/` + `openapi.types.ts` we frontendzie.
+- Po zmianie API backendu: najpierw commit embed OpenAPI w backendzie, potem snapshot w **Slavia-shared** + `openapi.types.ts` we frontendzie.
 - Przed commitem nietrywialnych zmian: `pnpm typecheck` (lub odpowiedni check dla zakresu).
 
 ### Bezpieczeństwo (agenci)
@@ -399,7 +434,7 @@ Po **większych zmianach** (nowy moduł panelu, publiczny endpoint, przełom API
 | Wersja | `package.json` → `version` | `Cargo.toml` → `version` |
 | Historia | `CHANGELOG.md` (sekcja `[X.Y.Z]`) | `CHANGELOG.md` |
 | UI admina | `app/pages/admin/changelog.vue` — wpis na górze listy | — |
-| Kontrakt API | `pnpm openapi:snapshot` → `openapi/` + `pnpm openapi:types` | `src/embed/openapi.json` (commit w backendzie **przed** snapshotem) |
+| Kontrakt API | `pnpm openapi:snapshot` → `Slavia-shared/openapi/` + `pnpm openapi:types` | `src/embed/openapi.json` (commit w backendzie **przed** snapshotem) |
 
 **Checklist przed merge / release:**
 

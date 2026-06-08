@@ -12,7 +12,7 @@ if (!source) {
     'Brak źródła OpenAPI.\n'
     + '  — lokalnie: sklonuj Slavia-backend obok frontendu, lub\n'
     + '  — uruchom: pnpm openapi:snapshot (wymaga backendu), lub\n'
-    + '  — zacommituj openapi/openapi.snapshot.json w repozytorium.'
+    + '  — zainicjuj submodule: git submodule update --init --recursive'
   )
   process.exit(1)
 }
