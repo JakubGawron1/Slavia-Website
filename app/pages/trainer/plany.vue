@@ -3,6 +3,7 @@ import type { Athlete, TrainingPlan, TrainingPlanItem } from '~/types/models'
 import { apiRoutes } from '~/config/api'
 import { getApiErrorMessage } from '~/composables/useApi'
 import { trainerDiaryAthletePath } from '~/utils/slug'
+import { formatPlanPeriod } from '~/utils/trainingPlanSchedule'
 
 definePageMeta({ middleware: 'trainer' })
 
@@ -30,6 +31,7 @@ const editingMeta = reactive<{
   title: string
   goal: string
   week_start: string
+  duration_weeks: number
   status: TrainingPlan['status']
   coach_note: string
 }>({
@@ -37,6 +39,7 @@ const editingMeta = reactive<{
   title: '',
   goal: '',
   week_start: new Date().toISOString().slice(0, 10),
+  duration_weeks: 1,
   status: 'planned',
   coach_note: ''
 })
@@ -45,6 +48,7 @@ const form = reactive({
   title: '',
   goal: '',
   week_start: new Date().toISOString().slice(0, 10),
+  duration_weeks: 1,
   status: 'planned',
   coach_note: ''
 })
@@ -73,6 +77,7 @@ async function createPlan() {
         title: form.title,
         goal: form.goal || null,
         week_start: form.week_start,
+        duration_weeks: form.duration_weeks,
         status: form.status,
         coach_note: form.coach_note || null
       }
@@ -109,6 +114,7 @@ function openEditMeta(plan: TrainingPlan) {
   editingMeta.title = plan.title
   editingMeta.goal = plan.goal || ''
   editingMeta.week_start = plan.week_start
+  editingMeta.duration_weeks = plan.duration_weeks ?? 1
   editingMeta.status = plan.status
   editingMeta.coach_note = plan.coach_note || ''
   showEditMetaModal.value = true
@@ -124,6 +130,7 @@ async function savePlanMeta() {
         title: editingMeta.title.trim(),
         goal: editingMeta.goal.trim() || null,
         week_start: editingMeta.week_start,
+        duration_weeks: editingMeta.duration_weeks,
         status: editingMeta.status,
         coach_note: editingMeta.coach_note.trim() || null
       }
@@ -150,6 +157,7 @@ async function duplicatePlan(plan: TrainingPlan) {
         title: `${plan.title} (kopia)`,
         goal: plan.goal || null,
         week_start: plan.week_start,
+        duration_weeks: plan.duration_weeks ?? 1,
         status: plan.status,
         coach_note: plan.coach_note || null
       }
@@ -158,6 +166,7 @@ async function duplicatePlan(plan: TrainingPlan) {
       method: 'PUT',
       body: {
         items: (items || []).map(i => ({
+          week_number: i.week_number ?? 1,
           day_of_week: i.day_of_week,
           exercise_id: i.exercise_id ?? null,
           custom_exercise_name: i.custom_exercise_name ?? '',
@@ -188,6 +197,8 @@ const selectedAthleteMeta = computed(() => {
   if (!id || id === NO_ATHLETE) return null
   return (athletes.value || []).find(a => a.id === id) ?? null
 })
+
+const editingPlan = computed(() => plans.value.find(p => p.id === editingPlanId.value) ?? null)
 
 const planVsDiaryHref = computed(() => {
   const a = selectedAthleteMeta.value
@@ -270,9 +281,12 @@ function diaryEntryForPlanHref(plan: TrainingPlan) {
               <UInput v-model="form.title" placeholder="Wpisz nazwę planu..." size="xl" icon="i-lucide-heading" class="font-bold" />
             </UFormField>
             
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
               <UFormField label="Data rozpoczęcia">
                 <UInput v-model="form.week_start" type="date" size="xl" icon="i-lucide-calendar" />
+              </UFormField>
+              <UFormField label="Czas trwania (tygodnie)" help="1–52 tygodnie mikrocyklu">
+                <UInput v-model.number="form.duration_weeks" type="number" :min="1" :max="52" size="xl" icon="i-lucide-calendar-range" />
               </UFormField>
               <UFormField label="Status">
                 <SlaviaSheetSelect
@@ -329,9 +343,12 @@ function diaryEntryForPlanHref(plan: TrainingPlan) {
           <UFormField label="Tytuł" required>
             <UInput v-model="editingMeta.title" size="xl" class="font-bold" />
           </UFormField>
-          <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div class="grid grid-cols-1 gap-5 sm:grid-cols-3">
             <UFormField label="Data rozpoczęcia">
               <UInput v-model="editingMeta.week_start" type="date" size="xl" />
+            </UFormField>
+            <UFormField label="Czas trwania (tygodnie)">
+              <UInput v-model.number="editingMeta.duration_weeks" type="number" :min="1" :max="52" size="xl" />
             </UFormField>
             <UFormField label="Status">
               <SlaviaSheetSelect
@@ -379,7 +396,10 @@ function diaryEntryForPlanHref(plan: TrainingPlan) {
         <div class="h-6 w-px bg-default mx-2" />
         <h2 class="text-xl font-black text-highlighted">Edycja jednostek planu</h2>
       </div>
-      <TrainerTrainingPlanBuilder :plan-id="editingPlanId" />
+      <TrainerTrainingPlanBuilder
+        :plan-id="editingPlanId"
+        :duration-weeks="editingPlan?.duration_weeks ?? 1"
+      />
     </div>
 
     <div v-else class="space-y-4">
@@ -398,7 +418,7 @@ function diaryEntryForPlanHref(plan: TrainingPlan) {
                 <UBadge :color="p.status === 'active' ? 'success' : 'neutral'" variant="soft" class="rounded-lg font-black uppercase text-[9px] tracking-widest">
                   {{ p.status }}
                 </UBadge>
-                <span class="text-xs text-muted font-bold tabular-nums">od {{ p.week_start }}</span>
+                <span class="text-xs text-muted font-bold tabular-nums">{{ formatPlanPeriod(p) }}</span>
               </div>
               <h3 class="text-xl font-black text-highlighted group-hover:text-primary transition-colors">{{ p.title }}</h3>
               <p v-if="p.goal" class="mt-2 text-sm text-muted line-clamp-2">{{ p.goal }}</p>

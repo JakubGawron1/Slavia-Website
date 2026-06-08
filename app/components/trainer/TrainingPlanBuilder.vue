@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import type { Exercise, TrainingPlanItem } from '~/types/models'
 import { apiRoutes } from '~/config/api'
+import {
+  TRAINING_PLAN_DAYS,
+  weekLabels
+} from '~/utils/trainingPlanSchedule'
 
 const props = defineProps<{
   planId: string
+  durationWeeks?: number
 }>()
 
 const apiFetch = useApi()
@@ -11,8 +16,9 @@ const toast = useToast()
 
 type EditableTrainingPlanItem = Omit<
   TrainingPlanItem,
-  'exercise_id' | 'custom_exercise_name' | 'sets' | 'reps' | 'intensity_percent' | 'weight_kg' | 'notes'
+  'exercise_id' | 'custom_exercise_name' | 'sets' | 'reps' | 'intensity_percent' | 'weight_kg' | 'notes' | 'week_number'
 > & {
+  week_number: number
   exercise_id?: string
   custom_exercise_name: string
   sets?: number
@@ -27,6 +33,11 @@ const exercises = ref<Exercise[]>([])
 const loading = ref(false)
 const saving = ref(false)
 const editingIds = ref(new Set<string>())
+const activeWeekNumber = ref(1)
+
+const durationWeeks = computed(() => Math.min(52, Math.max(1, props.durationWeeks ?? 1)))
+const weeks = computed(() => weekLabels(durationWeeks.value))
+const days = TRAINING_PLAN_DAYS
 
 function isEditing(id: string) {
   return editingIds.value.has(id)
@@ -39,16 +50,6 @@ function toggleEdit(id: string) {
   editingIds.value = next
 }
 
-const days = [
-  { id: 1, name: 'Poniedziałek', icon: 'i-lucide-calendar-1' },
-  { id: 2, name: 'Wtorek', icon: 'i-lucide-calendar-2' },
-  { id: 3, name: 'Środa', icon: 'i-lucide-calendar-3' },
-  { id: 4, name: 'Czwartek', icon: 'i-lucide-calendar-4' },
-  { id: 5, name: 'Piątek', icon: 'i-lucide-calendar-5' },
-  { id: 6, name: 'Sobota', icon: 'i-lucide-calendar-6' },
-  { id: 7, name: 'Niedziela', icon: 'i-lucide-calendar-7' }
-]
-
 async function loadData() {
   loading.value = true
   try {
@@ -56,9 +57,9 @@ async function loadData() {
       apiFetch<TrainingPlanItem[]>(apiRoutes.trainingPlans.items(props.planId)).catch(() => []),
       apiFetch<Exercise[]>(apiRoutes.exercises.list).catch(() => [])
     ])
-    // Nuxt UI inputy nie lubią `null` w v-model; normalizujemy na `undefined` / ''.
     items.value = (fetchedItems || []).map(i => ({
       ...i,
+      week_number: i.week_number ?? 1,
       exercise_id: i.exercise_id ?? undefined,
       custom_exercise_name: i.custom_exercise_name ?? '',
       sets: i.sets ?? undefined,
@@ -69,17 +70,21 @@ async function loadData() {
     })) as EditableTrainingPlanItem[]
     exercises.value = fetchedExercises
     editingIds.value = new Set()
+    if (activeWeekNumber.value > durationWeeks.value) {
+      activeWeekNumber.value = 1
+    }
   } finally {
     loading.value = false
   }
 }
 
 function addItem(dayId: number) {
-  const dayItems = items.value.filter(i => i.day_of_week === dayId)
+  const dayItems = getItemsForDay(dayId)
   const id = `temp-${Date.now()}`
   const newItem: EditableTrainingPlanItem = {
     id,
     plan_id: props.planId,
+    week_number: activeWeekNumber.value,
     day_of_week: dayId,
     exercise_id: undefined,
     custom_exercise_name: '',
@@ -108,9 +113,9 @@ function moveItem(id: string, direction: 'up' | 'down') {
   const index = items.value.findIndex(i => i.id === id)
   if (index === -1) return
   const item = items.value[index]!
-  const sameDay = items.value.filter(i => i.day_of_week === item.day_of_week).sort((a, b) => a.sort_order - b.sort_order)
+  const sameDay = getItemsForDay(item.day_of_week)
   const currentIdxInDay = sameDay.findIndex(i => i.id === id)
-  
+
   if (direction === 'up' && currentIdxInDay > 0) {
     const prev = sameDay[currentIdxInDay - 1]
     if (!prev) return
@@ -133,6 +138,7 @@ async function saveItems() {
       method: 'PUT',
       body: {
         items: items.value.map(i => ({
+          week_number: i.week_number,
           day_of_week: i.day_of_week,
           exercise_id: i.exercise_id,
           custom_exercise_name: i.custom_exercise_name,
@@ -156,7 +162,9 @@ async function saveItems() {
 }
 
 function getItemsForDay(dayId: number) {
-  return items.value.filter(i => i.day_of_week === dayId).sort((a, b) => a.sort_order - b.sort_order)
+  return items.value
+    .filter(i => i.week_number === activeWeekNumber.value && i.day_of_week === dayId)
+    .sort((a, b) => a.sort_order - b.sort_order)
 }
 
 onMounted(() => {
@@ -177,28 +185,53 @@ const exerciseOptions = computed(() => {
       <UIcon name="i-lucide-loader-2" class="size-10 animate-spin text-primary" />
       <p class="font-medium">Wczytywanie struktury planu...</p>
     </div>
-    
+
     <template v-else>
-      <div 
-        v-for="(day, dIdx) in days" 
-        :key="day.id" 
+      <div
+        v-if="durationWeeks > 1"
+        class="rounded-3xl border border-default bg-card/40 p-3 sm:p-4"
+      >
+        <p class="mb-2 px-1 text-[10px] font-black uppercase tracking-widest text-muted">Tydzień mikrocyklu</p>
+        <div class="flex flex-wrap gap-2">
+          <button
+            v-for="w in weeks"
+            :key="w.id"
+            type="button"
+            class="inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-xs font-black uppercase tracking-wider transition-colors"
+            :class="activeWeekNumber === w.id
+              ? 'border-primary/35 bg-primary/10 text-primary'
+              : 'border-default/70 bg-background/60 text-muted hover:bg-muted/15 hover:text-highlighted'"
+            @click="activeWeekNumber = w.id"
+          >
+            {{ w.label }}
+          </button>
+        </div>
+      </div>
+
+      <div
+        v-for="(day, dIdx) in days"
+        :key="day.id"
         class="animate-page-in"
         :style="{ animationDelay: `${dIdx * 50}ms` }"
       >
         <div class="group relative rounded-3xl border border-default bg-card/40 backdrop-blur-sm overflow-hidden transition-all hover:bg-card/60">
-          <!-- Day Header -->
           <div class="flex items-center justify-between p-4 lg:px-6 lg:py-5 border-b border-default/50">
             <div class="flex items-center gap-3">
               <div class="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                <UIcon :name="day.icon || 'i-lucide-calendar'" class="size-6" />
+                <UIcon name="i-lucide-calendar" class="size-6" />
               </div>
-              <h3 class="text-xl font-black text-highlighted tracking-tight">{{ day.name }}</h3>
+              <div>
+                <h3 class="text-xl font-black text-highlighted tracking-tight">{{ day.name }}</h3>
+                <p v-if="durationWeeks > 1" class="text-[10px] font-bold uppercase tracking-widest text-muted">
+                  Tydzień {{ activeWeekNumber }}
+                </p>
+              </div>
             </div>
-            
-            <UButton 
-              size="sm" 
-              icon="i-lucide-plus" 
-              variant="soft" 
+
+            <UButton
+              size="sm"
+              icon="i-lucide-plus"
+              variant="soft"
               color="primary"
               class="rounded-full px-4 font-bold"
               @click="addItem(day.id)"
@@ -207,40 +240,37 @@ const exerciseOptions = computed(() => {
             </UButton>
           </div>
 
-          <!-- Items List -->
           <div class="p-4 lg:p-6 space-y-4">
-            <TransitionGroup 
-              name="list" 
-              tag="div" 
+            <TransitionGroup
+              name="list"
+              tag="div"
               class="space-y-4"
             >
-              <div 
-                v-for="(item, idx) in getItemsForDay(day.id)" 
-                :key="item.id" 
+              <div
+                v-for="(item, idx) in getItemsForDay(day.id)"
+                :key="item.id"
                 class="group/row relative flex flex-col gap-4 rounded-2xl border border-default bg-card p-4 shadow-sm transition-all hover:border-primary/30 sm:flex-row sm:items-center sm:p-5"
               >
-                <!-- Reorder Controls (Always Visible) -->
                 <div class="flex items-center justify-between sm:flex-col sm:justify-center gap-1 shrink-0">
-                  <UButton 
-                    size="xs" 
-                    variant="ghost" 
-                    icon="i-lucide-chevron-up" 
+                  <UButton
+                    size="xs"
+                    variant="ghost"
+                    icon="i-lucide-chevron-up"
                     :disabled="idx === 0"
                     class="rounded-lg"
                     @click="moveItem(item.id, 'up')"
                   />
                   <span class="text-[10px] font-black text-muted sm:hidden">POZYCJA {{ idx + 1 }}</span>
-                  <UButton 
-                    size="xs" 
-                    variant="ghost" 
-                    icon="i-lucide-chevron-down" 
+                  <UButton
+                    size="xs"
+                    variant="ghost"
+                    icon="i-lucide-chevron-down"
                     :disabled="idx === getItemsForDay(day.id).length - 1"
                     class="rounded-lg"
                     @click="moveItem(item.id, 'down')"
                   />
                 </div>
 
-                <!-- PREVIEW MODE -->
                 <div v-if="!isEditing(item.id)" class="flex-1 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
                   <div class="flex-1">
                     <h4 class="text-lg font-black text-highlighted leading-tight">
@@ -253,32 +283,30 @@ const exerciseOptions = computed(() => {
                       <span v-if="item.notes" class="text-[10px] italic text-muted border-l border-default pl-2 ml-1">{{ item.notes }}</span>
                     </div>
                   </div>
-                  
+
                   <div class="flex items-center gap-2">
-                    <UButton 
-                      size="sm" 
-                      variant="soft" 
-                      color="neutral" 
-                      icon="i-lucide-pencil" 
+                    <UButton
+                      size="sm"
+                      variant="soft"
+                      color="neutral"
+                      icon="i-lucide-pencil"
                       class="rounded-xl opacity-0 group-hover/row:opacity-100 transition-opacity"
                       @click="toggleEdit(item.id)"
                     >
                       Edytuj
                     </UButton>
-                    <UButton 
-                      size="sm" 
-                      icon="i-lucide-trash-2" 
-                      color="error" 
-                      variant="ghost" 
+                    <UButton
+                      size="sm"
+                      icon="i-lucide-trash-2"
+                      color="error"
+                      variant="ghost"
                       class="rounded-xl opacity-0 group-hover/row:opacity-100 transition-opacity"
                       @click="removeItem(item.id)"
                     />
                   </div>
                 </div>
 
-                <!-- EDIT MODE -->
                 <template v-else>
-                  <!-- Exercise Select -->
                   <div class="flex-1 space-y-2">
                     <USelect
                       v-model="item.exercise_id"
@@ -287,17 +315,16 @@ const exerciseOptions = computed(() => {
                       class="w-full font-bold"
                       size="lg"
                     />
-                    <UInput 
-                      v-if="!item.exercise_id" 
-                      v-model="item.custom_exercise_name" 
-                      placeholder="Wpisz nazwę własną..." 
+                    <UInput
+                      v-if="!item.exercise_id"
+                      v-model="item.custom_exercise_name"
+                      placeholder="Wpisz nazwę własną..."
                       size="md"
                       variant="soft"
                       class="font-medium"
                     />
                   </div>
 
-                  <!-- Parameters Grid -->
                   <div class="grid grid-cols-2 gap-3 sm:flex sm:items-center sm:gap-4 bg-default/5 p-3 rounded-xl border border-default/50">
                     <div class="flex flex-col gap-1">
                       <span class="text-[9px] font-black text-muted uppercase ml-1">Serie x Powt.</span>
@@ -307,7 +334,7 @@ const exerciseOptions = computed(() => {
                         <UInput v-model.number="item.reps" type="number" placeholder="P" class="w-16" size="sm" />
                       </div>
                     </div>
-                    
+
                     <div class="flex flex-col gap-1">
                       <span class="text-[9px] font-black text-muted uppercase ml-1">Ciężar @ Intens.</span>
                       <div class="flex items-center gap-1">
@@ -318,30 +345,29 @@ const exerciseOptions = computed(() => {
                     </div>
                   </div>
 
-                  <!-- Notes & Save & Delete -->
                   <div class="flex items-center gap-2 pt-2 border-t border-default/30 sm:pt-0 sm:border-0">
-                    <UInput 
-                      v-model="item.notes" 
-                      placeholder="Wskazówki..." 
-                      class="flex-1 sm:w-32 lg:w-48" 
+                    <UInput
+                      v-model="item.notes"
+                      placeholder="Wskazówki..."
+                      class="flex-1 sm:w-32 lg:w-48"
                       size="md"
                       variant="ghost"
                       icon="i-lucide-message-square"
                     />
                     <div class="flex items-center gap-1">
-                      <UButton 
-                        size="md" 
-                        icon="i-lucide-check" 
-                        color="success" 
-                        variant="soft" 
+                      <UButton
+                        size="md"
+                        icon="i-lucide-check"
+                        color="success"
+                        variant="soft"
                         class="rounded-xl"
                         @click="toggleEdit(item.id)"
                       />
-                      <UButton 
-                        size="md" 
-                        icon="i-lucide-trash-2" 
-                        color="error" 
-                        variant="ghost" 
+                      <UButton
+                        size="md"
+                        icon="i-lucide-trash-2"
+                        color="error"
+                        variant="ghost"
                         class="rounded-xl hover:bg-error/10"
                         @click="removeItem(item.id)"
                       />
@@ -360,14 +386,15 @@ const exerciseOptions = computed(() => {
         </div>
       </div>
 
-      <!-- Footer Action -->
       <div class="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex animate-page-in [animation-delay:500ms]">
         <div class="p-1.5 rounded-full bg-background/80 backdrop-blur-md border border-default shadow-2xl flex items-center gap-2">
-          <p class="px-4 text-xs font-black text-muted uppercase hidden sm:block">Plan tygodniowy</p>
-          <UButton 
-            size="xl" 
-            color="primary" 
-            icon="i-lucide-save" 
+          <p class="px-4 text-xs font-black text-muted uppercase hidden sm:block">
+            {{ durationWeeks > 1 ? `Plan ${durationWeeks}-tygodniowy` : 'Plan tygodniowy' }}
+          </p>
+          <UButton
+            size="xl"
+            color="primary"
+            icon="i-lucide-save"
             class="rounded-full px-8 font-black shadow-lg shadow-primary/30 transition-transform active:scale-95"
             :loading="saving"
             @click="saveItems"
@@ -379,4 +406,3 @@ const exerciseOptions = computed(() => {
     </template>
   </div>
 </template>
-
