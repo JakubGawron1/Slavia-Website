@@ -1,18 +1,15 @@
 <script setup lang="ts">
+import type { RouteLocationRaw } from 'vue-router'
+
 /**
- * Punkt „ideas”: jedna wyszukiwarka z belki — zawodnicy (dane jak na publicznej liście), zawody, aktualności.
- * Wyniki ograniczone do publicznego API (bez adresów wyłącznie administracyjnych).
+ * Jedna wyszukiwarka z belki — strony klubu, treść CMS, zawodnicy, wydarzenia,
+ * aktualności oraz moduły paneli z podziałem na role (zawodnik / trener / admin / SA).
  */
-import { publicApiUrl } from '~/composables/usePublicFetch'
-import type { Athlete, Competition } from '~/types/models'
-import { blogPostPath, slugify, athleteProfilePath } from '~/utils/slug'
-
-type BlogBrief = { id: string, title: string }
-
+const auth = useAuth()
 const open = ref(false)
 const searchTerm = ref('')
-const paletteLoading = ref(false)
-type CmdItem = Record<string, unknown>
+
+const { loading, paletteGroups, loadIndex, pickSearchItem, registerCloseHandler } = useGlobalSearchIndex()
 
 const fuseOverride = computed(() => ({
   fuseOptions: {
@@ -20,76 +17,37 @@ const fuseOverride = computed(() => ({
     threshold: 0.28,
     keys: ['label', 'suffix', 'description']
   },
-  resultLimit: 36
+  resultLimit: 64
 }))
 
-const athleteItems = shallowRef<CmdItem[]>([])
-const competitionItems = shallowRef<CmdItem[]>([])
-const postItems = shallowRef<CmdItem[]>([])
-
-async function loadIndex() {
-  paletteLoading.value = true
-  try {
-    const [athletes, comps, posts] = await Promise.all([
-      $fetch<Athlete[]>(publicApiUrl('athletes')).catch(() => []),
-      $fetch<Competition[]>(publicApiUrl('competitions')).catch(() => []),
-      $fetch<BlogBrief[]>(publicApiUrl('posts')).catch(() => [])
-    ])
-
-    athleteItems.value = (Array.isArray(athletes) ? athletes : []).map((a) => {
-      const label = String(a.full_name || '').trim() || 'Zawodnik'
-      const desc = ['Zawodnik', a.profile_tagline || a.weight_category || ''].filter(Boolean).join(' · ')
-      const suffix = `${label} ${a.weight_category ?? ''}`
-      return {
-        id: `a-${a.id}`,
-        label,
-        description: desc,
-        suffix,
-        icon: 'i-lucide-user',
-        to: athleteProfilePath(label, a.id),
-        onSelect: () => {
-          open.value = false
-        }
-      }
-    })
-
-    competitionItems.value = (Array.isArray(comps) ? comps : []).map((c) => {
-      const ds = typeof c.date === 'string' ? c.date.slice(0, 10) : ''
-      const label = String(c.title || '').trim() || 'Wydarzenie'
-      const loc = String(c.location || '').trim()
-      const desc = [ds, loc].filter(Boolean).join(' · ')
-      const suffix = `${label} ${ds} ${loc}`.trim()
-      return {
-        id: `c-${c.id}`,
-        label,
-        description: desc || 'Kalendarz',
-        suffix,
-        icon: 'i-lucide-calendar',
-        to: '/kalendarz',
-        onSelect: () => {
-          open.value = false
-        }
-      }
-    })
-
-    postItems.value = (Array.isArray(posts) ? posts : []).map((p) => {
-      const label = String(p.title || '').trim() || 'Aktualność'
-      const slug = slugify(label)
-      return {
-        id: `p-${p.id}`,
-        label,
-        description: 'Aktualność',
-        suffix: label,
-        icon: 'i-lucide-newspaper',
-        to: blogPostPath(slug, p.id),
-        onSelect: () => {
-          open.value = false
-        }
-      }
-    })
-  } finally {
-    paletteLoading.value = false
+const searchDescription = computed(() => {
+  const parts = ['strony klubu', 'zawodnicy', 'kalendarz', 'aktualności']
+  if (auth.isLoggedIn.value) {
+    parts.push('ogłoszenia', 'moduły panelu')
   }
+  return `${parts.join(', ')} — wyniki dopasowane do Twoich ról.`
+})
+
+function closePalette() {
+  open.value = false
+  searchTerm.value = ''
+}
+
+registerCloseHandler(closePalette)
+
+type PaletteRow = {
+  id?: string
+  to?: RouteLocationRaw
+  label?: string
+  description?: string
+  icon?: string
+  labelHtml?: string
+  disabled?: boolean
+}
+
+function onPickRow(item: PaletteRow) {
+  if (item.disabled) return
+  pickSearchItem({ id: item.id, to: item.to })
 }
 
 defineShortcuts({
@@ -105,32 +63,12 @@ defineShortcuts({
       open.value = !open.value
     }
   },
-  /** Poza polami INPUT/TEXTAREA/contentEditable — nie koliduje z wpisywaniem „/”. */
   '/': {
     handler: () => {
       open.value = !open.value
     }
   }
 })
-
-const groups = computed(() => {
-  const g: Array<{ id: string, label: string, items: CmdItem[] }> = []
-  if (athleteItems.value.length) {
-    g.push({ id: 'athletes', label: 'Zawodnicy', items: [...athleteItems.value] })
-  }
-  if (competitionItems.value.length) {
-    g.push({ id: 'competitions', label: 'Kalendarz (zawody / wydarzenia)', items: [...competitionItems.value] })
-  }
-  if (postItems.value.length) {
-    g.push({ id: 'posts', label: 'Aktualności', items: [...postItems.value] })
-  }
-  return g
-})
-
-function onPaletteSelect() {
-  open.value = false
-  searchTerm.value = ''
-}
 
 function onCommandPaletteOpen(v: boolean) {
   open.value = v
@@ -157,25 +95,61 @@ watch(open, (v) => {
     <SlaviaModal
       v-model:open="open"
       title="Szukaj"
-      description="Zawodnicy, kalendarz i aktualności — tylko publicznie dostępne dane."
+      :description="searchDescription"
       :dismissible="true"
       :ui="{ content: 'sm:max-w-xl' }"
     >
       <template #body>
         <UCommandPalette
           v-model:search-term="searchTerm"
-          :loading="paletteLoading"
-          :groups="groups"
+          :loading="loading"
+          :groups="paletteGroups"
           :fuse="fuseOverride"
           :close="false"
           icon="i-lucide-search"
-          placeholder="Szukaj po nazwie, dacie, miejscu…"
+          placeholder="Szukaj stron, modułów, zawodników, treści…"
           :input="{ fixed: true }"
           class="max-h-[min(70vh,520px)]"
           preserve-group-order
-          @update:model-value="onPaletteSelect"
+          @update:model-value="pickSearchItem"
           @update:open="onCommandPaletteOpen"
-        />
+        >
+          <template #item="{ item }">
+            <div
+              class="flex w-full min-w-0 cursor-pointer items-center gap-3 text-left"
+              @click.stop.prevent="onPickRow(item)"
+            >
+              <UIcon
+                v-if="item.icon"
+                :name="item.icon"
+                class="size-5 shrink-0 text-muted"
+              />
+              <div class="min-w-0 flex-1">
+                <div
+                  v-if="item.labelHtml"
+                  class="truncate text-sm font-medium text-highlighted"
+                  v-html="item.labelHtml"
+                />
+                <div
+                  v-else
+                  class="truncate text-sm font-medium text-highlighted"
+                >
+                  {{ item.label }}
+                </div>
+                <div
+                  v-if="item.description"
+                  class="truncate text-xs text-muted"
+                >
+                  {{ item.description }}
+                </div>
+              </div>
+              <UIcon
+                name="i-lucide-arrow-right"
+                class="size-4 shrink-0 text-muted/70"
+              />
+            </div>
+          </template>
+        </UCommandPalette>
       </template>
     </SlaviaModal>
   </div>
