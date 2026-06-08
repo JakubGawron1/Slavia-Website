@@ -368,6 +368,14 @@ export default defineNuxtConfig({
 
       pathPrefix: false
 
+    },
+
+    {
+
+      path: '~/components/exercises',
+
+      pathPrefix: false
+
     }
 
   ],

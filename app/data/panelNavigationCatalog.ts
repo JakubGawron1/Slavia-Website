@@ -64,7 +64,7 @@ export const PANEL_NAV_MODULES: PanelNavModuleDef[] = [
   mod('athlete', 'wyzwania', 'Klub i narzędzia', 'Wyzwania miesiąca', 'Ranking aktywności', 'i-lucide-flame', KLUB_SHARED_ROUTES.wyzwania, 'text-orange-600', 'bg-orange-500/12'),
   mod('athlete', 'ranking', 'Klub i narzędzia', 'Ranking zawodników', 'Wyniki w klubie', 'i-lucide-trophy', PUBLIC_ROUTES.zawodnicy, 'text-yellow-600', 'bg-yellow-500/12'),
   mod('athlete', 'analiza_sztangi', 'Klub i narzędzia', 'Tor sztangi', 'Analiza nagrania', 'i-lucide-scan-line', '/athlete/analiza-sztangi', 'text-orange-600', 'bg-orange-500/12', true),
-  mod('athlete', 'exercises', 'Klub i narzędzia', 'Inne ćwiczenia', 'Przysiad, wycisk, martwy', 'i-lucide-bar-chart-3', '/athlete/exercises', 'text-warning', 'bg-warning/10', true),
+  mod('athlete', 'exercises', 'Trening i progres', 'Inne ćwiczenia', 'Siła poza dwubojem — zgłoszenia i ranking', 'i-lucide-bar-chart-3', '/athlete/exercises', 'text-warning', 'bg-warning/10', true),
   mod('athlete', 'proporcje', 'Klub i narzędzia', 'Proporcje (ratio)', 'Kalkulator bojów', 'i-lucide-sigma', PUBLIC_ROUTES.proporcje, 'text-success', 'bg-success/12'),
 
   // —— Trener ——
@@ -85,8 +85,7 @@ export const PANEL_NAV_MODULES: PanelNavModuleDef[] = [
   mod('trainer', 'ranking', 'Klub i treści', 'Ranking zawodników', 'Publiczne wyniki', 'i-lucide-trophy', PUBLIC_ROUTES.zawodnicy, 'text-yellow-600', 'bg-yellow-500/10'),
   mod('trainer', 'powiadomienia', 'Klub i treści', 'Powiadomienia', 'Alerty systemowe', 'i-lucide-bell', KLUB_SHARED_ROUTES.powiadomienia, 'text-amber-600', 'bg-amber-500/10', true),
   mod('trainer', 'analiza_sztangi', 'Narzędzia', 'Analiza toru sztangi', 'Wideo i diagnostyka', 'i-lucide-scan-line', '/trainer/analiza-sztangi', 'text-orange-500', 'bg-orange-500/10', true),
-  mod('trainer', 'exercises', 'Narzędzia', 'Inne ćwiczenia', 'Ranking siłowy', 'i-lucide-bar-chart-3', '/trainer/exercises', 'text-lime-600', 'bg-lime-500/10', true),
-  mod('trainer', 'cwiczenia', 'Narzędzia', 'Słownik ćwiczeń', 'Baza do planów', 'i-lucide-library', '/trainer/cwiczenia-slownik', 'text-indigo-500', 'bg-indigo-500/10', true),
+  mod('trainer', 'cwiczenia', 'Narzędzia', 'Inne ćwiczenia', 'Ranking, weryfikacja i słownik', 'i-lucide-bar-chart-3', '/trainer/cwiczenia', 'text-lime-600', 'bg-lime-500/10', true),
   mod('trainer', 'proporcje', 'Narzędzia', 'Proporcje (ratio)', 'Kalkulator bojów', 'i-lucide-sigma', PUBLIC_ROUTES.proporcje, 'text-success', 'bg-success/12'),
 
   // —— Admin ——
