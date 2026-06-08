@@ -162,6 +162,7 @@ export interface Exercise {
 export interface TrainingPlanItem {
   id: string
   plan_id: string
+  week_number?: number
   day_of_week: number
   exercise_id?: string | null
   custom_exercise_name?: string | null
@@ -180,6 +181,7 @@ export interface TrainingPlan {
   title: string
   goal?: string | null
   week_start: string
+  duration_weeks?: number
   status: 'planned' | 'active' | 'completed' | 'paused'
   coach_note?: string | null
   athlete_note?: string | null

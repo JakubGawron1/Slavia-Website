@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import type { TrainingPlan, TrainingPlanItem, TrainingLogEntry } from '~/types/models'
 import { apiRoutes } from '~/config/api'
+import {
+  TRAINING_PLAN_DAYS,
+  dateForPlanSlot,
+  filterPlanItems,
+  planDurationWeeks,
+  weekLabels
+} from '~/utils/trainingPlanSchedule'
 
 const props = defineProps<{
   athleteId: string
@@ -13,6 +20,7 @@ const selectedPlanId = ref<string | undefined>(undefined)
 const planItems = ref<TrainingPlanItem[]>([])
 const logs = ref<TrainingLogEntry[]>([])
 const loading = ref(false)
+const activeWeekNumber = ref(1)
 
 async function loadPlans() {
   plans.value = await apiFetch<TrainingPlan[]>(apiRoutes.trainingPlans.athlete(props.athleteId)).catch(() => [])
@@ -34,14 +42,15 @@ async function loadComparison() {
     planItems.value = items
     
     if (plan) {
-      const start = new Date(plan.week_start)
+      const start = new Date(`${plan.week_start.slice(0, 10)}T00:00:00`)
       const end = new Date(start)
-      end.setDate(end.getDate() + 7)
-      
-      logs.value = allLogs.filter(l => {
-        const d = new Date(l.session_date)
+      end.setDate(end.getDate() + planDurationWeeks(plan) * 7)
+
+      logs.value = allLogs.filter((l) => {
+        const d = new Date(`${l.session_date.slice(0, 10)}T00:00:00`)
         return d >= start && d < end
       })
+      activeWeekNumber.value = 1
     }
   } finally {
     loading.value = false
@@ -54,29 +63,20 @@ onMounted(() => {
   loadPlans()
 })
 
-const days = [
-  { id: 1, name: 'Poniedziałek', icon: 'i-lucide-calendar-1' },
-  { id: 2, name: 'Wtorek', icon: 'i-lucide-calendar-2' },
-  { id: 3, name: 'Środa', icon: 'i-lucide-calendar-3' },
-  { id: 4, name: 'Czwartek', icon: 'i-lucide-calendar-4' },
-  { id: 5, name: 'Piątek', icon: 'i-lucide-calendar-5' },
-  { id: 6, name: 'Sobota', icon: 'i-lucide-calendar-6' },
-  { id: 7, name: 'Niedziela', icon: 'i-lucide-calendar-7' }
-]
+const days = TRAINING_PLAN_DAYS.map(d => ({ ...d, icon: 'i-lucide-calendar' }))
+
+const selectedPlan = computed(() => plans.value.find(p => p.id === selectedPlanId.value) ?? null)
+const durationWeeks = computed(() => selectedPlan.value ? planDurationWeeks(selectedPlan.value) : 1)
 
 function getItemsForDay(dayId: number) {
-  return planItems.value.filter(i => i.day_of_week === dayId).sort((a, b) => a.sort_order - b.sort_order)
+  return filterPlanItems(planItems.value, activeWeekNumber.value, dayId)
 }
 
 function getLogsForDay(dayId: number) {
-  if (!selectedPlanId.value) return []
-  const plan = plans.value.find(p => p.id === selectedPlanId.value)
+  const plan = selectedPlan.value
   if (!plan) return []
-  const start = new Date(plan.week_start)
-  const targetDate = new Date(start)
-  targetDate.setDate(targetDate.getDate() + (dayId - 1))
-  const targetStr = targetDate.toISOString().slice(0, 10)
-  
+  const targetStr = dateForPlanSlot(plan, activeWeekNumber.value, dayId)
+  if (!targetStr) return []
   return logs.value.filter(l => l.session_date.startsWith(targetStr))
 }
 </script>
@@ -124,6 +124,26 @@ function getLogsForDay(dayId: number) {
     </div>
 
     <div v-else class="space-y-12">
+      <div
+        v-if="durationWeeks > 1"
+        class="rounded-3xl border border-default bg-card/40 p-4"
+      >
+        <div class="flex flex-wrap gap-2">
+          <button
+            v-for="w in weekLabels(durationWeeks)"
+            :key="w.id"
+            type="button"
+            class="inline-flex items-center rounded-2xl border px-4 py-2 text-xs font-black uppercase tracking-wider transition-colors"
+            :class="activeWeekNumber === w.id
+              ? 'border-primary/35 bg-primary/10 text-primary'
+              : 'border-default/70 text-muted hover:bg-muted/15'"
+            @click="activeWeekNumber = w.id"
+          >
+            {{ w.label }}
+          </button>
+        </div>
+      </div>
+
       <div 
         v-for="(day, dIdx) in days" 
         :key="day.id" 

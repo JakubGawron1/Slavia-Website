@@ -3,6 +3,7 @@ import type { Athlete, TrainingLogEntry, TrainingPlan, TrainingPlanItem } from '
 import { getApiErrorMessage } from '~/composables/useApi'
 import { stripHtmlTags } from '~/utils/html'
 import { sanitizeRichHtml } from '~/utils/sanitizeHtml'
+import { filterPlanItems, weekNumberForSessionDate } from '~/utils/trainingPlanSchedule'
 
 definePageMeta({
   middleware: 'athlete-dziennik',
@@ -191,7 +192,11 @@ const dayOfWeek = computed(() => {
   return day === 0 ? 7 : day
 })
 
-const itemsForDay = computed(() => planItems.value.filter(i => i.day_of_week === dayOfWeek.value).sort((a, b) => a.sort_order - b.sort_order))
+const itemsForDay = computed(() => {
+  if (!activePlan.value) return []
+  const weekNumber = weekNumberForSessionDate(activePlan.value, form.session_date)
+  return filterPlanItems(planItems.value, weekNumber, dayOfWeek.value)
+})
 
 const days = [
   { id: 1, name: 'Poniedziałek' },
