@@ -10,7 +10,11 @@ const props = withDefaults(
     untilSec?: number
     hipLine?: boolean
   }>(),
-  { hipLine: true }
+  {
+    hipLine: true,
+    referenceSamples: undefined,
+    untilSec: undefined
+  }
 )
 
 const displaySamples = computed(() => {

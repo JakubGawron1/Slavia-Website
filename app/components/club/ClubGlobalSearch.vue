@@ -41,7 +41,6 @@ type PaletteRow = {
   label?: string
   description?: string
   icon?: string
-  labelHtml?: string
   disabled?: boolean
 }
 
@@ -125,15 +124,7 @@ watch(open, (v) => {
                 class="size-5 shrink-0 text-muted"
               />
               <div class="min-w-0 flex-1">
-                <div
-                  v-if="item.labelHtml"
-                  class="truncate text-sm font-medium text-highlighted"
-                  v-html="item.labelHtml"
-                />
-                <div
-                  v-else
-                  class="truncate text-sm font-medium text-highlighted"
-                >
+                <div class="truncate text-sm font-medium text-highlighted">
                   {{ item.label }}
                 </div>
                 <div
