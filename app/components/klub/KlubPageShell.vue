@@ -15,7 +15,13 @@ const props = withDefaults(
   }>(),
   {
     icon: 'i-lucide-users',
-    eyebrow: 'Klub'
+    eyebrow: 'Klub',
+    title: undefined,
+    description: undefined,
+    staffTitle: undefined,
+    staffDescription: undefined,
+    athleteTitle: undefined,
+    athleteDescription: undefined
   }
 )
 
