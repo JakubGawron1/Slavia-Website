@@ -81,7 +81,8 @@ const { data: athletes } = await useAsyncData(
   async (): Promise<Athlete[]> => {
     if (!isStaff.value) return []
     return api<Athlete[]>(apiRoutes.athletes.listAdmin).catch(() => [])
-  }
+  },
+  { lazy: true, default: () => [] }
 )
 
 const { data: myAthlete } = await useAsyncData(
@@ -89,7 +90,8 @@ const { data: myAthlete } = await useAsyncData(
   async (): Promise<Athlete | null> => {
     if (!isAthleteView.value) return null
     return api<Athlete>(apiRoutes.athletes.me).catch(() => null)
-  }
+  },
+  { lazy: true, default: () => null }
 )
 
 const athleteItems = computed(() =>

@@ -32,4 +32,9 @@ try {
   }
 }
 
-Write-Host "Smoke OK: publiczne endpointy działają, a /api/system/metrics wymaga autoryzacji."
+$r4 = Invoke-WebRequest -Uri "$BaseUrl/api/ai/coach/public/status" -UseBasicParsing -TimeoutSec 15
+if ($r4.StatusCode -ne 200) {
+  throw "GET /api/ai/coach/public/status zwróciło $($r4.StatusCode)"
+}
+
+Write-Host "Smoke OK: publiczne endpointy działają, AI public status OK, /api/system/metrics wymaga autoryzacji."
