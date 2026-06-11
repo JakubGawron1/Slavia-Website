@@ -40,16 +40,57 @@ test.describe('smoke publiczne', () => {
   })
 
   test('porównanie zawodników — lista przez BFF', async ({ page }) => {
+    const athletesRes = page.waitForResponse(
+      (r) => r.url().includes('/api/public/athletes') && r.ok(),
+      { timeout: 30_000 }
+    )
     const res = await page.goto('/zawodnicy/porownanie', gotoOpts)
     expect(res?.ok()).toBeTruthy()
+    await athletesRes
     await expect(page.getByText(/Porównanie zawodników/i).first()).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByText(/Ładowanie listy/i)).toBeHidden({ timeout: 20_000 })
+    const roster = page.locator('label').filter({ has: page.locator('input[type="checkbox"]') })
+    const count = await roster.count()
+    if (count > 0) {
+      await expect(roster.first()).toBeVisible()
+    }
   })
 
   test('kontakt — formularz widoczny', async ({ page }) => {
     const res = await page.goto('/kontakt', gotoOpts)
     expect(res?.ok()).toBeTruthy()
     await expect(page.getByText(/Wyślij wiadomość/i).first()).toBeVisible()
-    await expect(page.locator('input[name="website"]')).toHaveCount(1)
+    const honeypot = page.locator('input[name="website"]')
+    await expect(honeypot).toHaveCount(1)
+    await expect(honeypot).toHaveAttribute('aria-hidden', 'true')
+  })
+
+  test('kontakt — wysyłka przez BFF /api/contact', async ({ page }) => {
+    await page.route('**/api/contact', async (route) => {
+      if (route.request().method() === 'POST') {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ ok: true })
+        })
+      } else {
+        await route.continue()
+      }
+    })
+    await page.goto('/kontakt', gotoOpts)
+    await page.getByLabel(/Imię i nazwisko/i).fill('Smoke E2E')
+    await page.getByLabel(/^E-mail/i).fill('smoke@example.com')
+    await page.getByLabel(/^Wiadomość/i).fill('Test wiadomości smoke')
+    const postReq = page.waitForRequest(
+      (r) => r.url().includes('/api/contact') && r.method() === 'POST'
+    )
+    await page.getByRole('button', { name: 'Wyślij' }).click()
+    const req = await postReq
+    const body = req.postDataJSON() as { name?: string, email?: string, website?: string }
+    expect(body.name).toBe('Smoke E2E')
+    expect(body.email).toBe('smoke@example.com')
+    expect(body.website ?? '').toBe('')
+    await expect(page.getByText(/Wiadomość wysłana/i)).toBeVisible({ timeout: 10_000 })
   })
 
   test('ogloszenia (CSR) ładują shell strony', async ({ page }) => {
@@ -97,6 +138,16 @@ test.describe('ochrona tras', () => {
     await page.goto('/athlete/ai-coach', gotoOpts)
     await page.waitForURL(/\/logowanie/, { timeout: 20_000 })
   })
+
+  test('Trener AI (kadra) wymaga logowania', async ({ page }) => {
+    await page.goto('/trainer/ai-coach', gotoOpts)
+    await page.waitForURL(/\/logowanie/, { timeout: 20_000 })
+  })
+
+  test('składki zawodnika wymagają logowania', async ({ page }) => {
+    await page.goto('/athlete/skladki', gotoOpts)
+    await page.waitForURL(/\/logowanie/, { timeout: 20_000 })
+  })
 })
 
 test.describe('AI coach smoke', () => {
@@ -105,5 +156,11 @@ test.describe('AI coach smoke', () => {
     expect(res.ok()).toBeTruthy()
     const body = await res.json() as { available?: boolean, reason?: string }
     expect(typeof body.available).toBe('boolean')
+  })
+
+  test('strona Trener AI ładuje shell po przekierowaniu na logowanie', async ({ page }) => {
+    await page.goto('/trainer/ai-coach', gotoOpts)
+    await page.waitForURL(/\/logowanie/, { timeout: 20_000 })
+    await expect(page.getByText(/logowanie|zaloguj/i).first()).toBeVisible()
   })
 })

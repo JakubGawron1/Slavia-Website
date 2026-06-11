@@ -12,9 +12,9 @@
 | Warstwa | Ocena | Największy problem |
 |---------|-------|-------------------|
 | **Frontend WWW** | Dobra funkcjonalnie, słaba testowalność | 0 Vitest, 11 testów E2E; 8+ monolitów >800 linii; antywzorce BFF (`kontakt.vue`, `porownanie.vue`) |
-| **Backend Rust** | Bogaty API (~140 endpointów), słaby kontrakt | OpenAPI: **16/140 tras**; `RequireTrainerOrHigher` bez Admin; throttle in-memory |
+| **Backend Rust** | Bogaty API (~140 endpointów), kontrakt OpenAPI | OpenAPI: **143 tras** + schemas; distributed throttle ✅ |
 | **Mobile Flutter** | Solidny core, luki parity **zawodnik/trener** | Brak składek UI, Trenera AI, bana; legacy ekrany Admin/SA do usunięcia; monolit `api_service.dart` ~1400 ln |
-| **Slavia-shared** | Dobre centrum TS | Dart bez PZPC/proporcji; PZPC JSON≠TS; backend nie czyta JSON katalogów |
+| **Slavia-shared** | Dobre centrum TS | Dart bez PZPC/proporcji; PZPC JSON=TS ✅; 8 plików Vitest |
 | **Trener AI / MD** | Happy path OK | Parser MD niepełny; ACL `athlete_id`; limity wideo FE≠BE |
 
 **Szacunek backlogu:** **~450+ actionable items** (poniżej pogrupowane + §13 per-plik).
@@ -22,7 +22,7 @@
 **Metryki jakości (przejście 4):**
 - Frontend: **54 pliki** z `.catch(() => [])` / `null` — ciche błędy API
 - Backend routes: **~52** `unwrap`/`expect` w 8 plikach (ryzyko panic w prod)
-- Frontend Vitest: **0** · E2E: **11** · Mobile widget test: **1 martwy**
+- Frontend Vitest: **23 testy** · E2E: **11** · Mobile widget test: **1 smoke**
 - OpenAPI: **143/~143** tras `/api/*` w embed (+ generator)
 
 **Top 10 P0 (cały ekosystem):**
@@ -871,4 +871,4 @@ Dart: sinclair, badges, brand, catalogs (partial).
 
 ---
 
-*Ostatnia aktualizacja: 2026-06-11 · Fala 0 zamknięta (SEC-4/6/10/12 BE, backup authenticated); Fale 1–4 wg tabel.*
+*Ostatnia aktualizacja: 2026-06-11 · Fala 1 zamknięta: OpenAPI generator (143 tras), shared testy (33), PZPC TS←JSON, release:check BFF AI healthcheck.*
