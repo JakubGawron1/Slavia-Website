@@ -3,7 +3,7 @@
 > **Data:** 2026-06-08 · **Przejścia audytu:** 4 (AI → ekosystem → per-moduł → metryki jakości)  
 > **Repozytoria:** `Slavia-frontend`, `Slavia-backend`, `Slavia-mobile`, `Slavia-shared`  
 > **Status:** analiza **wyczerpana** — §12 + §13; dalsze punkty = nowe funkcje lub margines.  
-> **Implementacja 2026-06-11:** Fala 0 (bezpieczeństwo BE) + Fala 1 (frontend: BFF, Vitest, antywzorce) — wykonane pozycje oznaczone **✅** w tabelach.
+> **Implementacja 2026-06-11:** Fala 0 + **Fala 1 kompletna** (OpenAPI 143 tras, Vitest/shared, PZPC, BFF); Fale 2–4 — **✅** w tabelach; **⏸** = odłożone.
 
 ---
 
@@ -23,19 +23,19 @@
 - Frontend: **54 pliki** z `.catch(() => [])` / `null` — ciche błędy API
 - Backend routes: **~52** `unwrap`/`expect` w 8 plikach (ryzyko panic w prod)
 - Frontend Vitest: **0** · E2E: **11** · Mobile widget test: **1 martwy**
-- OpenAPI: **16/~140** tras w embed
+- OpenAPI: **143/~143** tras `/api/*` w embed (+ generator)
 
 **Top 10 P0 (cały ekosystem):**
 1. ✅ Backend ACL `athlete_id` w AI coach (PII) — trener tylko przy wątku czatu
 2. ✅ Limity załączników wideo FE→BE (max 8 payloadów, 2 klatki/wideo)
 3. ✅ Backend `RequireTrainerOrHigher` — dodać Admin
-4. OpenAPI embed — pełna specyfikacja + schemas
-5. ✅ `reset_database` — guard na Turso/produkcji (backup DB — do review)
+4. ✅ OpenAPI embed — 143 tras `/api/*` + `components.schemas` + Bearer (generator z `router.rs`)
+5. ✅ `reset_database` guard + backup DB review (authenticated Cloudinary, bez public URL)
 6. ✅ Chat `open_thread` — weryfikacja pary athlete/trainer + uczestnictwo
 7. ✅ Mobile — ekran bana + składki
 8. ✅ Frontend — Vitest + testy `renderChatMarkdown` (9 cases)
 9. Mobile — Trener AI / parity paneli zawodnik+trener (nie Admin/SA)
-10. ✅ theme-presets w backendzie z JSON; PZPC — pozostałe
+10. ✅ theme-presets w backendzie z JSON; PZPC TS←JSON + testy parity
 
 ---
 
@@ -84,12 +84,12 @@
 |----|-------|------------|
 | FE-PUB1 | `/` `index.vue` (~1010 ln) | Wydzielić composable; lazy sekcje; E2E asercje treści |
 | FE-PUB2 | `/zawodnicy` | Testy `zawodnicyRanking.ts`; `<caption>` tabel; deep-link porównania |
-| FE-PUB3 | `/zawodnicy/porownanie` | ✅ Fix BFF; brak E2E |
+| FE-PUB3 ✅ | `/zawodnicy/porownanie` | Fix BFF + E2E smoke (lista BFF) |
 | FE-PUB4 | `/aktualnosci/*` | E2E; `useFormDirtyGuard` w edycji; testy `sanitizeHtml` |
 | FE-PUB5 | `/galeria` | Lightbox a11y (focus trap); `loading="lazy"`; E2E mobile overflow |
 | FE-PUB6 | `/kalendarz` (~1085 ln) | `usePublicCalendarPage`; `aria-label` na komórkach; E2E klik dnia |
 | FE-PUB7 | Kalkulatory | E2E mimo prerender; `USelect` mobile z-index |
-| FE-PUB8 | `/kontakt` | ✅ BFF `server/api/contact.post.ts` + honeypot; brak E2E |
+| FE-PUB8 ✅ | `/kontakt` | BFF + honeypot + E2E smoke (formularz, POST BFF) |
 | FE-PUB9 | `/ogloszenia` | Stan błędu API; `renderSimpleMarkdown` vs `renderChatMarkdown` — unify |
 | FE-PUB10 | `/o-klubie` CMS | E2E; fallback offline przy prerender |
 | FE-PUB11 | `/klub/rekordy` | Agregacja do utils + testy; URL query dla `period` |
@@ -171,7 +171,7 @@
 | FE-BFF1 ✅ | `/api/ai/public/**` | `server/utils/publicAiRateLimit.ts` w `ai/public/chat.post.ts` |
 | FE-BFF2 ✅ | `status.get.ts` | Graceful fallback (`/api/ai/public/status`) |
 | FE-BFF3 ✅ | `smoke-backend.ps1` | Ping `/api/ai/coach/public/status` |
-| FE-BFF4 | `release:check` | Opcjonalny AI healthcheck |
+| FE-BFF4 ✅ | `release:check` | Opcjonalny BFF AI healthcheck (`SLAVIA_BFF_URL`) |
 | FE-BFF5 ✅ | `OlympicCoachPanel` | `lazy: true` na `useAsyncData` |
 
 ---
@@ -184,14 +184,14 @@
 
 | ID | Ulepszenie | Plik |
 |----|------------|------|
-| BE-G1 | Pełna OpenAPI (~140 tras) | `src/embed/openapi.json` |
-| BE-G2 | `components.schemas` + Bearer security | j.w. |
-| BE-G3 | Wersja OpenAPI = `Cargo.toml` (5.1.0) | j.w. |
+| BE-G1 ✅ | OpenAPI 143 tras `/api/*` (generator `scripts/generate-openapi.mjs`) | `src/embed/openapi.json` |
+| BE-G2 ✅ | `components.schemas` + Bearer security | j.w. |
+| BE-G3 ✅ | Wersja OpenAPI = `Cargo.toml` (5.1.0) | j.w. |
 | BE-G4 | CI: embed ≠ router → fail | `.github/workflows/` |
 | BE-G5 ✅ | **`RequireTrainerOrHigher` + Admin** | `src/middleware/auth.rs` |
 | BE-G6 ✅ | Distributed throttle (SQLite/Turso MVP) | `distributed_throttle.rs` + `rate_limit_hits` |
 | BE-G7 | IP throttle login + contact | `src/router.rs` |
-| BE-G8 | JWT: odrzuć start bez secret na prod | `src/main.rs` |
+| BE-G8 ✅ | JWT: odrzuć start bez secret na prod | `production_guards.rs` + `main.rs` |
 | BE-G9 | Security headers (HSTS, X-Frame-Options) | `src/router.rs` |
 | BE-G10 | CORS: nie `Any` przy pustej liście | `src/lib.rs` |
 | BE-G11 | Prometheus / OpenTelemetry | `src/state.rs` |
@@ -280,7 +280,7 @@
 | BE-DB2 | Indeks `athletes(user_id)` |
 | BE-DB3 | FK / ON DELETE gdzie brakuje |
 | BE-UP1 | Whitelist MIME upload |
-| BE-SYS1 | **Backup DB na Cloudinary — ryzyko wycieku** | `system_logs.rs` |
+| BE-SYS1 ✅ | **Backup DB na Cloudinary** — authenticated, bez public URL, audit | `system_logs.rs` |
 | BE-SYS2 | Cache invalidation po mutacji competitions |
 | BE-IMP1 | Trasa import 410 — usunąć lub przywrócić |
 
@@ -302,7 +302,7 @@
 | MOB-A2 | Rozbić `api_service.dart` na moduły + `ApiClient` | `lib/services/` |
 | MOB-A3 ✅ | **Ekran bana** (`isBanned`) | `banned_screen.dart` + `main.dart` |
 | MOB-A4 | Globalny handler 401 na każdym requeście |
-| MOB-A5 | `go_router` + deep linki | `lib/main.dart` |
+| MOB-A5 ✅ | `go_router` + deep linki | fundament: `app_router.dart`; pełne FCM/deeplinki → Fala 3 (`docs/fcm-go-router-roadmap.md`) |
 | MOB-A6 | Feature flags `panel_nav_*` z API — **tylko** moduły zawodnik/trener (`panel_nav_athlete_*`, `panel_nav_trainer_*`); ignoruj admin/SA |
 | MOB-A7 | Usunąć/podłączyć `offline_attendance_service.dart` |
 | MOB-A8 | `cached_network_image` — użyć lub usunąć z pubspec |
@@ -344,7 +344,7 @@
 |----|-------|------------|
 | MOB-S1 | `login_screen` | Rate-limit feedback; username memory |
 | MOB-S2 | `dashboard_page` (~1100) | Split; kafelki składki + AI; pull-to-refresh |
-| MOB-S3 | `chat_screen` | **Auto-refresh**; ✅ `plainChatMarkdown`; layout wątków |
+| MOB-S3 ✅ | `chat_screen` | Auto-refresh 8s; `ChatMarkdownText` (parity `markdownInline`); layout wątków |
 | MOB-S4 | `notification_screen` | Deep link; FCM zamiast poll 30s |
 | MOB-S5 | `attendance_qr_scan` | Debounce; offline queue |
 | MOB-S6 | `calendar_screen` | Widok miesiąca; intent kalendarz systemowy |
@@ -388,16 +388,16 @@
 | ID | Ulepszenie | Ścieżka |
 |----|------------|---------|
 | SH-1 ✅ | Backend `ALLOW_PRESET` ← `theme-presets.json` | `src/embed/theme-presets.json` + `theme_presets.rs` |
-| SH-2 | PZPC: TS czyta JSON nie hardcode | `src/logic/pzpcWeightCategories.ts` |
+| SH-2 ✅ | PZPC: TS czyta JSON nie hardcode | `src/logic/pzpcWeightCategories.ts` |
 | SH-3 ✅ | Test parity PZPC JSON↔TS | `tests/pzpc-catalog-parity.test.ts` |
 | SH-4 | Dart odznaki z JSON nie const | `dart/lib/athlete_badge_catalog.dart` |
 | SH-5 | `sinclairAthlete` w Dart | `dart/lib/sinclair_athlete.dart` |
 | SH-6 | Proporcje w Dart z TS | usuń duplikat mobile |
 | SH-7 | Więcej wektorów barbell | `test-vectors/barbell-path.json` |
-| SH-8 | Testy `badgeHelpers`, `weightliftingRatios` | `tests/` |
+| SH-8 ✅ | Testy `badgeHelpers`, `weightliftingRatios` | `tests/` |
 | SH-9 | CI `npm test` w repo shared | `.github/workflows/ci.yml` |
 | SH-10 | `pnpm shared:test` w CI frontendu | `Slavia-frontend/ci.yml` |
-| SH-11 | Test `openapi.sha256` | `tests/openapi-snapshot.test.ts` |
+| SH-11 ✅ | Test `openapi.sha256` | `tests/openapi-snapshot.test.ts` |
 | SH-12 | Sync assert `dart/assets/` === `data/` | `scripts/sync-dart-assets.mjs` |
 | SH-13 | Seed PZPC backend z shared JSON | `Slavia-backend/db.rs` |
 | SH-14 | `weightlifting-exercises.json` — brak snatch/C&J | extract script |
@@ -453,9 +453,9 @@
 
 | ID | Temat | WWW | BE | Mobile | Shared |
 |----|-------|-----|----|----|--------|
-| X-1 | OpenAPI drift | types generated | 16/140 tras | brak | lustro+SHA |
-| X-2 | Theme presets | `useSlaviaAppearance` | hardcode ALLOW_PRESET | hardcode 13 | JSON |
-| X-3 | PZPC kategorie | re-export TS | TEXT w DB | brak | JSON≠TS |
+| X-1 ✅ | OpenAPI drift | types generated | 143 tras + schemas | brak | lustro+SHA |
+| X-2 ✅ | Theme presets | `useSlaviaAppearance` | JSON embed | hardcode 13 | JSON |
+| X-3 ✅ | PZPC kategorie | re-export TS←JSON | TEXT w DB | brak | JSON=TS |
 | X-4 | Sinclair/proporcje | re-export | brak server rank | duplikaty | TS+Dart partial |
 | X-5 | Składki | pełny UI | API OK | **API bez UI** | — |
 | X-6 | Trener AI | pełny | Groq | **brak** | — |
@@ -492,15 +492,15 @@
 | SEC-1 ✅ | ACL athlete_id AI | BE |
 | SEC-2 ✅ | Chat open_thread | BE |
 | SEC-3 ✅ | reset_database guard | BE |
-| SEC-4 | Backup DB public URL | BE |
+| SEC-4 ✅ | Backup DB public URL | BE — `DbBackupResponse` bez URL |
 | SEC-5 ✅ | Contact spam | BE (rate limit IP) |
-| SEC-6 | JWT secret prod | BE |
+| SEC-6 ✅ | JWT secret prod | BE — fail start przy Turso + słaby secret |
 | SEC-7 ✅ | Załączniki wideo limit | FE+BE |
 | SEC-8 ✅ | kontakt.vue direct API | FE → BFF |
-| SEC-9 | Mobile ban screen | Mobile |
-| SEC-10 | Throttle multi-instance | BE |
-| SEC-11 | Certificate pinning doc | Mobile |
-| SEC-12 | RODO — logi bez treści AI | BE+FE |
+| SEC-9 ✅ | Mobile ban screen | Mobile |
+| SEC-10 ✅ | Throttle multi-instance | BE — auto przy Turso (`distributed_throttle`) |
+| SEC-11 | Certificate pinning doc | Mobile — odłożone (dokumentacja) |
+| SEC-12 ✅ | RODO — logi bez treści AI | BE (policy + TraceLayer bez body); FE error plugin — odłożone |
 
 ---
 
@@ -545,26 +545,26 @@
 2. ✅ FE+BE: limity załączników wideo
 3. ✅ BE: RequireTrainerOrHigher + Admin
 4. ✅ Mobile: ekran bana
-5. BE: backup DB review
+5. ✅ BE: backup DB review
 
 ### Fala 1 — kontrakt i testy (1 tydzień)
 
-6. OpenAPI pełne + schemas
+6. ✅ OpenAPI 143 tras + schemas + Bearer (`generate-openapi.mjs`)
 7. ✅ Vitest: renderChatMarkdown + sanitizeHtml (16); shared:test w CI
 8. ✅ FE: BFF kontakt; fix porownanie/kalendarz public fetch
 9. ✅ Mobile: payment screen; fix widget test
-10. ✅ theme-presets w backend (embed JSON); PZPC parity test — pozostałe
+10. ✅ theme-presets w backend (embed JSON); PZPC TS←JSON + parity testy
 
 ### Fala 2 — UX parity i jakość (2 tygodnie)
 
-11. ✅ MD w ClubPublicAiAssistant (+ mobile chat — pozostałe)
+11. ✅ MD w ClubPublicAiAssistant + mobile chat (`ChatMarkdownText`, auto-refresh)
 12. ✅ FE: quota toast AI przy limicie; error bubbles; smart scroll — częściowo
 13. ✅ Mobile: Trener AI (`ai_coach_screen.dart` + API)
 13b. ✅ Mobile: **MOB-DEPREC1–3** — ekrany, API, `BrowserPanelScreen`
 14. ✅ FE: `useMembershipPaymentsPage` unify
 15. ✅ Parser MD: HR, tabele fallback, `__bold__`, `~~strike~~`
 16. ✅ BE: paginacja (results, chat, attendance, training-log)
-17. Mobile: FCM / go_router
+17. ✅ Mobile: FCM / go_router — fundament (`app_router`, `FcmService` stub); pełny push → `docs/fcm-go-router-roadmap.md`
 
 ### Fala 3 — architektura (3–4 tygodnie)
 
@@ -576,11 +576,11 @@
 
 ### Fala 4 — strategiczne (backlog)
 
-23. ✅ SSE stub (`GET /api/ai/coach/stream` + BFF) — pełny streaming LLM w backlogu
-24. ✅ Flutter: `PublicRankingScreen`, `ClubChallengesScreen` (bez Admin/SA)
-25. i18n — odłożone (duży zakres)
-26. Biblioteka MD (`marked`) — odłożone; `renderChatMarkdown` + shared `markdownInline` wystarczają
-27. ✅ Server-side Sinclair (`sinclair.rs`, `GET /api/athletes/ranking/sinclair`, wektory embed)
+23. ✅ SSE stub + consumer (`probeOlympicCoachStream`, `streamMode` w `useOlympicCoachAi`) — pełny streaming LLM w backlogu
+24. ✅ Flutter: `PublicRankingScreen`, `ClubChallengesScreen`, nawigacja w `club_hub` + `more_hub` (podium, refresh)
+25. ⏸ i18n — odłożone; prep: `config/i18n.ts`, `docs/i18n-deferred.md`
+26. ⏸ Biblioteka MD (`marked`) — odłożone; werdykt: `docs/markdown-stack.md`, shared `markdownInline`
+27. ✅ Server-side Sinclair — BFF whitelist, `/zawodnicy` korzysta z `athletes/ranking/sinclair` przy braku filtrów
 
 ---
 
@@ -658,7 +658,7 @@ Każdy plik tras backendu, ekran Flutter i kluczowy moduł WWW — skrótowa lis
 | `cms.rs` | Sekrety w vars; paginacja history |
 | `cms_status.rs` | Health dla GitHub CMS |
 | `feature_flags.rs` | Admin+ dla globalnych flag |
-| `system_logs.rs` | **Backup DB na Cloudinary** — P0; worker metrics API |
+| `system_logs.rs` | ✅ Backup DB — authenticated Cloudinary; worker metrics API |
 | `mobile_releases.rs` | Weryfikacja checksum APK; semver |
 | `upload.rs` | MIME whitelist; virus scan opcja |
 | `import.rs` | Trasa 410 — usuń martwy kod |
@@ -796,7 +796,7 @@ Każdy plik tras backendu, ekran Flutter i kluczowy moduł WWW — skrótowa lis
 | MD-13 | D | ✅ Vitest 9 cases (start); `markdownInline.ts` shared — docelowo 40+ |
 | MD-14 | V | Copy button na `<pre>`; zebra tables |
 | MD-15 ✅ | X | `scope="col"` na `<th>` |
-| MD-16 | — | Użyć w: OlympicCoach, ClubPublicAi, mobile chat, Barbell interpret |
+| MD-16 ✅ | — | OlympicCoach, ClubPublicAi, mobile chat (`ChatMarkdownText`); Barbell interpret — backlog |
 
 ---
 
@@ -860,15 +860,15 @@ Dart: sinclair, badges, brand, catalogs (partial).
 | Monolity Vue >800 ln | **10+** | <3 |
 | Backend route files | 39 | — |
 | `unwrap`/`expect` w routes | **~52** | 0 w handlerach |
-| OpenAPI tras w embed | **16** | ~140 |
+| OpenAPI tras w embed | **143** | ~140 |
 | Vitest frontend | **2 pliki / 16 testów** | 50+ plików utils |
 | E2E Playwright | **11** | 40+ krytycznych tras |
 | Mobile ekrany | ~35 (~30 docelowo) | parity **zawodnik/trener** + publiczne; bez Admin/SA |
 | Mobile widget tests | **1 smoke (BannedScreen)** | 10+ smoke |
-| Shared Vitest pliki | 3 | 10+ |
+| Shared Vitest pliki | **8** | 10+ |
 | Flagi eksperymentalne | 22 | dokumentowane w AGENTS |
 | Moduły panel nav | ~40 | test gate regresji |
 
 ---
 
-*Ostatnia aktualizacja: 2026-06-11 · Implementacja Fali 0–1 (frontend BFF/Vitest, BE security) + korekta zakresu mobile.*
+*Ostatnia aktualizacja: 2026-06-11 · Fala 0 zamknięta (SEC-4/6/10/12 BE, backup authenticated); Fale 1–4 wg tabel.*
