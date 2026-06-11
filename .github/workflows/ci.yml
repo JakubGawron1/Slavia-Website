@@ -33,6 +33,12 @@ jobs:
       - name: OpenAPI types drift check
         run: pnpm run openapi:check
 
+      - name: Unit tests (Vitest)
+        run: pnpm run test
+
+      - name: Slavia-shared tests
+        run: pnpm run shared:test
+
       - name: Lint
         run: pnpm run lint
 

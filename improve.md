@@ -32,10 +32,10 @@
 4. OpenAPI embed — pełna specyfikacja + schemas
 5. ✅ `reset_database` — guard na Turso/produkcji (backup DB — do review)
 6. ✅ Chat `open_thread` — weryfikacja pary athlete/trainer + uczestnictwo
-7. Mobile — ekran bana + składki (API już jest)
+7. ✅ Mobile — ekran bana + składki
 8. ✅ Frontend — Vitest + testy `renderChatMarkdown` (9 cases)
 9. Mobile — Trener AI / parity paneli zawodnik+trener (nie Admin/SA)
-10. Shared — PZPC i theme-presets w backendzie z JSON
+10. ✅ theme-presets w backendzie z JSON; PZPC — pozostałe
 
 ---
 
@@ -298,9 +298,9 @@
 
 | ID | Ulepszenie | Plik |
 |----|------------|------|
-| MOB-A1 | **Przepisać `widget_test.dart`** | `test/widget_test.dart` |
+| MOB-A1 ✅ | **Przepisać `widget_test.dart`** | smoke `BannedScreen` |
 | MOB-A2 | Rozbić `api_service.dart` na moduły + `ApiClient` | `lib/services/` |
-| MOB-A3 | **Ekran bana** (`isBanned`) | `lib/main.dart` |
+| MOB-A3 ✅ | **Ekran bana** (`isBanned`) | `banned_screen.dart` + `main.dart` |
 | MOB-A4 | Globalny handler 401 na każdym requeście |
 | MOB-A5 | `go_router` + deep linki | `lib/main.dart` |
 | MOB-A6 | Feature flags `panel_nav_*` z API — **tylko** moduły zawodnik/trener (`panel_nav_athlete_*`, `panel_nav_trainer_*`); ignoruj admin/SA |
@@ -313,7 +313,7 @@
 
 | ID | Akcja | Pliki / obszar |
 |----|-------|----------------|
-| MOB-DEPREC1 | **Usunąć ekrany** admin/SA + wpisy w hubach | `superadmin_athlete_manager_screen.dart`, `user_management_screen.dart`, `audit_log_screen.dart`, `announcements_manage_screen.dart`; sekcje „Administracja” / „SuperAdministracja” w `more_hub_screen.dart`, `calculators_page.dart` |
+| MOB-DEPREC1 | **Usunąć ekrany** admin/SA + wpisy w hubach | ✅ sekcja Administracja w `more_hub_screen.dart`; pliki ekranów — do usunięcia |
 | MOB-DEPREC2 | **Wyciąć metody API** SuperAdmin z `api_service.dart` | audit logs, CRUD `/api/admins`, CRUD ogłoszeń admin-only — po usunięciu ekranów |
 | MOB-DEPREC3 | **UX konta Admin/SA** bez panelu mobile | Komunikat „użyj panelu w przeglądarce” lub widok trenera/zawodnika, jeśli użytkownik ma tę rolę kadry — bez nowych ekranów administracyjnych |
 
@@ -323,9 +323,9 @@
 
 | Moduł WWW | Priorytet | ID |
 |-----------|-----------|-----|
-| **Składki** (API jest!) | **Wysoki** | MOB-P1 |
+| **Składki** (API jest!) | **Wysoki** | MOB-P1 ✅ |
 | **Trener AI** | **Wysoki** | MOB-P2 |
-| Strona `/banned` | Wysoki | MOB-P3 |
+| Strona `/banned` | Wysoki | MOB-P3 ✅ |
 | Wyzwania miesiąca | Średni | MOB-P4 |
 | Ranking publiczny `/zawodnicy` | Średni | MOB-P5 |
 | Inne ćwiczenia | Średni | MOB-P6 |
@@ -387,7 +387,7 @@
 
 | ID | Ulepszenie | Ścieżka |
 |----|------------|---------|
-| SH-1 | Backend `ALLOW_PRESET` ← `theme-presets.json` | `Slavia-backend/admins.rs` |
+| SH-1 ✅ | Backend `ALLOW_PRESET` ← `theme-presets.json` | `src/embed/theme-presets.json` + `theme_presets.rs` |
 | SH-2 | PZPC: TS czyta JSON nie hardcode | `src/logic/pzpcWeightCategories.ts` |
 | SH-3 | Test parity PZPC JSON↔TS | `tests/pzpc-catalog-parity.test.ts` |
 | SH-4 | Dart odznaki z JSON nie const | `dart/lib/athlete_badge_catalog.dart` |
@@ -417,7 +417,7 @@
 | ID | Problem |
 |----|---------|
 | AI-K1 | Parser MD niepełny vs output LLM |
-| AI-K2 | `ClubPublicAiAssistant` — plain text, brak MD |
+| AI-K2 ✅ | `ClubPublicAiAssistant` — `renderChatMarkdown` |
 | AI-K3 ✅ | Załączniki wideo — max 2 klatki, 8 payloadów łącznie |
 | AI-K4 ✅ | ACL `athlete_id` BE |
 | AI-K5 | ✅ Vitest `renderChatMarkdown` (9); brak E2E |
@@ -437,7 +437,7 @@
 | ID | Problem |
 |----|---------|
 | AI-U1 | Monolit ~1188 ln |
-| AI-U2 | Quota bez toasta |
+| AI-U2 ✅ | Quota toast przy limicie |
 | AI-U3 | `experience = weight_category` bug |
 | AI-U4 | Blob memory leak w historii |
 | AI-U5 | Smart scroll |
@@ -544,23 +544,23 @@
 1. ✅ BE: ACL athlete_id, chat open_thread, contact rate limit, reset_database guard
 2. ✅ FE+BE: limity załączników wideo
 3. ✅ BE: RequireTrainerOrHigher + Admin
-4. Mobile: ekran bana
+4. ✅ Mobile: ekran bana
 5. BE: backup DB review
 
 ### Fala 1 — kontrakt i testy (1 tydzień)
 
 6. OpenAPI pełne + schemas
-7. ✅ Vitest: renderChatMarkdown (9 cases); `sanitizeHtml`, shared:test w CI — pozostałe
+7. ✅ Vitest: renderChatMarkdown + sanitizeHtml (16); shared:test w CI
 8. ✅ FE: BFF kontakt; fix porownanie/kalendarz public fetch
-9. Mobile: payment screen; fix widget test
-10. Shared: PZPC parity test; theme-presets w backend
+9. ✅ Mobile: payment screen; fix widget test
+10. ✅ theme-presets w backend (embed JSON); PZPC parity test — pozostałe
 
 ### Fala 2 — UX parity i jakość (2 tygodnie)
 
-11. MD w ClubPublicAiAssistant + mobile chat
-12. FE: quota toast AI; error bubbles; smart scroll
+11. ✅ MD w ClubPublicAiAssistant (+ mobile chat — pozostałe)
+12. ✅ FE: quota toast AI przy limicie; error bubbles; smart scroll — częściowo
 13. Mobile: Trener AI (WebView lub native) — bez modułów Admin/SA
-13b. Mobile: **MOB-DEPREC1–3** — usunięcie legacy admin/SA z Fluttera
+13b. Mobile: **MOB-DEPREC1** ✅ hub admin usunięty; **MOB-DEPREC2–3** — pozostałe
 14. FE: useMembershipPaymentsPage unify
 15. Parser MD: ####, HR, tabele fallback
 16. BE: paginacja (results, chat, attendance, training-log)
@@ -861,10 +861,10 @@ Dart: sinclair, badges, brand, catalogs (partial).
 | Backend route files | 39 | — |
 | `unwrap`/`expect` w routes | **~52** | 0 w handlerach |
 | OpenAPI tras w embed | **16** | ~140 |
-| Vitest frontend | **1 plik / 9 testów** | 50+ plików utils |
+| Vitest frontend | **2 pliki / 16 testów** | 50+ plików utils |
 | E2E Playwright | **11** | 40+ krytycznych tras |
 | Mobile ekrany | ~35 (~30 docelowo) | parity **zawodnik/trener** + publiczne; bez Admin/SA |
-| Mobile widget tests | **1 (martwy)** | 10+ smoke |
+| Mobile widget tests | **1 smoke (BannedScreen)** | 10+ smoke |
 | Shared Vitest pliki | 3 | 10+ |
 | Flagi eksperymentalne | 22 | dokumentowane w AGENTS |
 | Moduły panel nav | ~40 | test gate regresji |

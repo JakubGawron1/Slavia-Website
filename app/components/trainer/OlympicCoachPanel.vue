@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Athlete } from '~/types/models'
 import type { OlympicCoachMode } from '~/composables/useOlympicCoachAi'
-import { olympicCoachQuotaMetrics } from '~/composables/useOlympicCoachAi'
+import { olympicCoachChatBlockedReason, olympicCoachQuotaMetrics } from '~/composables/useOlympicCoachAi'
 import { getApiErrorMessage } from '~/composables/useApi'
 import { renderChatMarkdown } from '~/utils/renderChatMarkdown'
 import {
@@ -328,6 +328,11 @@ function removePendingAttachment(id: string) {
 
 async function submitDraft() {
   if (!draft.value.trim() && pendingAttachments.value.length === 0) return
+  const blocked = olympicCoachChatBlockedReason(status.value)
+  if (blocked) {
+    toast.add({ title: 'Limit trenera AI', description: blocked, color: 'warning' })
+    return
+  }
   const text = draft.value
   const attachments = [...pendingAttachments.value]
   draft.value = ''
