@@ -9,7 +9,8 @@ Aplikacja Nuxt 4 dla klubu CKS Slavia Ruda Śląska. Frontend współpracuje z b
 ```bash
 pnpm install
 pnpm dev          # http://localhost:3000
-pnpm lint         # ESLint
+pnpm lint         # ESLint (m.in. zakaz v-html poza komponentami safe-html)
+pnpm test         # Vitest (sanitizeHtml, renderChatMarkdown, ranking)
 pnpm typecheck    # vue-tsc przez Nuxt
 pnpm build        # produkcja (wymaga ~8 GB RAM — skrypt ustawia max-old-space-size)
 pnpm test:e2e     # Playwright (lokalnie: PLAYWRIGHT_START_SERVER=1)
@@ -103,16 +104,11 @@ Aplikacja mobilna obsługuje **wyłącznie** role **Zawodnik** (`Athlete`) i **T
 
 **Dla agentów:** nowe moduły panelu admin/superadmin we frontendzie Nuxt **nie wymagają** odpowiednika w Flutterze. W backlogu mobile nie planuj „parity” z `/admin` ani `/superadmin`.
 
-### Legacy do usunięcia (mobile)
+### Mobile — stan po deprecacji admin/SA (2026)
 
-W kodzie Flutter nadal są ślady paneli administracyjnych (do wyczyszczenia w przyszłości):
+Ekrany administracyjne **usunięte** z Fluttera (`MOB-DEPREC1–2`). Konto **tylko** Admin/SuperAdmin (bez roli Athlete/Trainer) → `BrowserPanelScreen` („użyj panelu WWW”). Parity zawodnik/trener: m.in. `AiCoachScreen`, `MembershipPaymentsScreen`, `BannedScreen`, ranking/wyzwania publiczne, `go_router` + roadmap FCM w `docs/fcm-go-router-roadmap.md`.
 
-- `superadmin_athlete_manager_screen.dart`, `user_management_screen.dart`, `audit_log_screen.dart`
-- `announcements_manage_screen.dart` (CRUD ogłoszeń — rola Admin na WWW)
-- Sekcje „Administracja” / „SuperAdministracja” w `more_hub_screen.dart`, `calculators_page.dart`
-- Metody w `api_service.dart` pod SuperAdmin (audit, CRUD adminów)
-
-Po usunięciu: konto Admin/SuperAdmin na mobile powinno widzieć trenera/zawodnika tam, gdzie ma przypisaną rolę kadry, albo komunikat „użyj panelu w przeglądarce” — bez ekranów administracyjnych.
+**Nie dodawaj** z powrotem ekranów `/admin/**` / `/superadmin/**` na mobile.
 
 ### Wyjątek: endpointy „admin” używane przez trenera
 
@@ -196,10 +192,33 @@ Globalne nadpisania slotów UI: `app/app.config.ts` (kolory primary=green, z-ind
 | `SlaviaSheetSelect` | Alias `SlaviaOverlaySelect` w editor sheet |
 | `SlaviaOverlaySelect` | USelect z portalem (sheet → body) — sheety i modale |
 | `SlaviaFormNativeSelect` | Natywny `<select>` gdy Nuxt UI select zawodzi na mobile |
+| `SlaviaSafeHtml` | **Jedyny** sposób na rich HTML z API/CMS/edytora (TipTap) — wewnętrznie `sanitizeRichHtml` |
+| `SlaviaSimpleMarkdown` | Lekki MD (ogłoszenia) — `renderSimpleMarkdown` + DOMPurify |
+| `SlaviaChatMarkdown` | Odpowiedzi Trenera AI / publiczny asystent — `renderChatMarkdown` + DOMPurify |
+
+Komponenty w `app/components/ui/` rejestrują się **bez** prefiksu `Ui` — wpis `pathPrefix: false` w `nuxt.config.ts` (po zmianie configu: restart `pnpm dev`).
 
 **Nie używaj `UModal`** dla ciężkich formularzy — historyczne problemy z focusem i z-index.
 
 **Editor sheet:** ustaw `scroll-restore-key` + `data-form-field` na polach → `useFormFieldScrollRestore` przywraca pozycję scrolla po zamknięciu selecta/modala.
+
+### Bezpieczeństwo XSS i HTML
+
+**Zasada:** w szablonach **nigdy** nie używaj `v-html` bezpośrednio — ESLint (`vue/no-v-html: error`) blokuje to w CI. Dozwolone wyłącznie trzy komponenty w `app/components/ui/` (whitelist w `eslint.config.js`).
+
+| Komponent | Util / sanityzacja | Typ treści |
+|-----------|-------------------|------------|
+| `SlaviaSafeHtml` | `~/utils/sanitizeRichHtml.ts` (DOMPurify, hooki img/style/link) | CMS, aktualności, dziennik, plany |
+| `SlaviaSimpleMarkdown` | `~/utils/renderSimpleMarkdown.ts` | Ogłoszenia klubowe |
+| `SlaviaChatMarkdown` | `~/utils/renderChatMarkdown.ts` + `@slavia/shared/markdown-inline` | Trener AI, czat publiczny |
+
+Przy **zapisie** do API (formularze) nadal wywołuj `sanitizeRichHtml` przed POST/PATCH — komponenty sanityzują tylko **wyświetlanie** (defense in depth przy podwójnej sanityzacji jest OK).
+
+Testy regresji: `app/utils/sanitizeHtml.test.ts`, `renderChatMarkdown.test.ts` — uruchamiane przez `pnpm test`.
+
+**Nagłówki HTTP** (clickjacking, MIME sniffing): `config/securityHeaders.ts` — dołączane do wszystkich tras w `config/routeRules.ts` (`/**` + `panelNoStore` / `publicBffCache` przez `withSecurityHeaders`).
+
+**BFF:** formularz kontaktu → `server/api/contact.post.ts` (honeypot); publiczny czat AI → rate limit w `server/utils/publicAiRateLimit.ts`.
 
 ### Pliki `.client.vue`
 TensorFlow, kamera, QR, edytor WYSIWYG, podgląd viewportu — wszystko co wymaga `window` / WebGL / `navigator`.
@@ -215,11 +234,12 @@ TensorFlow, kamera, QR, edytor WYSIWYG, podgląd viewportu — wszystko co wymag
 
 ## Typy API i kontrakt z backendem
 
-1. **Snapshot (po zmianie backendu):** `pnpm openapi:snapshot` → commit `Slavia-shared/openapi/` + generated
-2. **Generuj:** `pnpm openapi:types` (backend lokalnie lub `Slavia-shared/openapi/openapi.json` w CI)
-3. **Sprawdź drift:** `pnpm openapi:check` (fail w CI przy braku snapshotu lub rozjechanych typach)
-4. **Most typów:** `app/types/api.ts` — aliasy domenowe; stopniowa migracja z `models.ts` do OpenAPI
-5. **Ścieżki REST:** `app/config/api.ts` — trzymaj spójnie z `router.rs` w backendzie
+1. **Generuj embed (backend):** `cd ../Slavia-backend && node scripts/generate-openapi.mjs` → `src/embed/openapi.json` (~140 tras z `router.rs`)
+2. **Snapshot (po zmianie backendu):** `pnpm openapi:snapshot` → commit `Slavia-shared/openapi/` + generated
+3. **Generuj typy:** `pnpm openapi:types` (backend lokalnie lub `Slavia-shared/openapi/openapi.json` w CI)
+4. **Sprawdź drift:** `pnpm openapi:check` (fail w CI przy braku snapshotu lub rozjechanych typach)
+5. **Most typów:** `app/types/api.ts` — aliasy domenowe; stopniowa migracja z `models.ts` do OpenAPI
+6. **Ścieżki REST:** `app/config/api.ts` — trzymaj spójnie z `router.rs` w backendzie
 
 **Nowy endpoint backendu → frontend:**
 1. Rust route + wpis w OpenAPI embed
@@ -289,6 +309,8 @@ TensorFlow, kamera, QR, edytor WYSIWYG, podgląd viewportu — wszystko co wymag
 | `useOverlaySelectPortal` | portal selectów (sheet / modal / body) |
 | `useFormDirtyGuard` | ostrzeżenie przed zamknięciem z niezapisanymi zmianami |
 | `useClubContentAdmin` | aktualności, ogłoszenia, galeria (admin) |
+| `useMembershipPaymentsPage` | wspólna logika `athlete/skladki` + `trainer/skladki` |
+| `useAthletePublicProfilePage` / `useAthletePublicProfileCharts` | refaktor `athlete/[slug].vue` |
 | `useNotifications` / `useNotificationLinks` | powiadomienia in-app |
 
 ---
@@ -298,8 +320,10 @@ TensorFlow, kamera, QR, edytor WYSIWYG, podgląd viewportu — wszystko co wymag
 | Plik | Odpowiedzialność |
 |------|------------------|
 | `nuxt.config.ts` | moduły, runtimeConfig, import reguł z `config/` |
-| `config/routeRules.ts` | ISR vs CSR, cache-control paneli i BFF |
+| `config/routeRules.ts` | ISR vs CSR, cache-control paneli i BFF, nagłówki bezpieczeństwa |
+| `config/securityHeaders.ts` | `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy` |
 | `config/prerender.ts` | trasy SSG, ignore |
+| `improve.md` | audyt techniczny i backlog fal 0–4 (✅ = zrobione) |
 | `config/site.ts` | URL produkcyjny, wersja z package.json |
 | `config/pwa.ts` | manifest PWA |
 | `app/config/api.ts` | kanoniczne ścieżki REST |
@@ -312,7 +336,7 @@ TensorFlow, kamera, QR, edytor WYSIWYG, podgląd viewportu — wszystko co wymag
 
 Kolejność w `.github/workflows/ci.yml`:
 
-`openapi:check` → `lint` → `typecheck` → `build` → Playwright smoke
+`openapi:check` → `lint` → `pnpm test` (Vitest) → `shared:test` → `typecheck` → `build` → Playwright smoke
 
 Lokalnie pełny check: `pnpm release:check`.
 
@@ -410,6 +434,8 @@ Po zwykłym starcie (bez `REBUILD_DB`) backend uruchamia też `sync_all_athletes
 | Logika biznesowa w `.vue` >200 linii | composable w `app/composables/` |
 | Style inline zamiast tokenów | SCSS + Tailwind utility classes |
 | Commit `openapi.types.ts` bez regeneracji | `pnpm openapi:types` po zmianie backendu |
+| `v-html` w `.vue` / surowy HTML z API | `SlaviaSafeHtml` / `SlaviaChatMarkdown` / `SlaviaSimpleMarkdown` |
+| `$fetch` na `/api/contact` z klienta | BFF `server/api/contact.post.ts` + honeypot w formularzu |
 
 ---
 
@@ -417,7 +443,7 @@ Po zwykłym starcie (bez `REBUILD_DB`) backend uruchamia też `sync_all_athletes
 
 ```
 app/
-  components/     # UI — club/, panel/, athlete/, trainer/, dev/
+  components/     # UI — club/, panel/, ui/ (safe-html), trainer/, dev/
   composables/    # logika współdzielona
   data/           # katalogi statyczne (nawigacja, kategorie wagowe, flagi)
   middleware/     # ochrona tras
