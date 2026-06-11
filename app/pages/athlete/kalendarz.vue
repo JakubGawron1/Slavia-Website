@@ -14,7 +14,6 @@ import {
   getDay
 } from 'date-fns'
 import { pl } from 'date-fns/locale'
-import { apiRoutes } from '~/config/api'
 import type { AthleteCalendarDayEvent, Competition, MyCalendarEntry, RecurringTrainingSession } from '~/types/models'
 import { generateIcsContent, downloadIcs } from '~/utils/ics'
 
@@ -26,14 +25,9 @@ useSeoMeta({
 })
 
 const apiFetch = useApi()
-const runtimeConfig = useRuntimeConfig()
 
-function publicCalendarApiBase() {
-  return String(runtimeConfig.public.apiBase || '').replace(/\/$/, '')
-}
-
-const { data: clubTrainingOverrides } = await useLazyFetch<RecurringTrainingSession[]>(
-  () => `${publicCalendarApiBase()}${apiRoutes.competitions.recurringTrainingCancellations}`,
+const { data: clubTrainingOverrides } = await usePublicLazyFetch<RecurringTrainingSession[]>(
+  'competitions/recurring-training-cancellations',
   {
     key: 'athlete-recurring-training-sessions',
     default: () => [],
@@ -58,14 +52,11 @@ const { data: myData } = await useAsyncData(
   { default: () => ({ entries: [] }) }
 )
 
-const { data: allCompetitions } = await useLazyFetch<Competition[]>(
-  () => `${publicCalendarApiBase()}${apiRoutes.competitions.collection}`,
-  {
-    key: 'athlete-all-competitions',
-    default: () => [],
-    server: false
-  }
-)
+const { data: allCompetitions } = await usePublicLazyFetch<Competition[]>('competitions', {
+  key: 'athlete-all-competitions',
+  default: () => [],
+  server: false
+})
 
 const filterOnlyMine = ref(true)
 const filterCategory = ref('all')

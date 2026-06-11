@@ -7,17 +7,10 @@ definePageMeta({
   backLabel: 'Wróć do listy i rankingu'
 })
 
-const config = useRuntimeConfig()
-const base = computed(() => String(config.public.apiBase || '').replace(/\/$/, ''))
-
-const { data: playersRaw, pending } = await useLazyFetch<AthleteModel[]>(
-  () => `${base.value}/api/athletes`,
-  {
-    key: 'compare-athletes-list',
-    default: () => [] as AthleteModel[],
-    server: true
-  }
-)
+const { data: playersRaw, pending } = await usePublicLazyFetch<AthleteModel[]>('athletes', {
+  key: 'compare-athletes-list',
+  default: () => [] as AthleteModel[]
+})
 
 const players = computed(() => playersRaw.value ?? [])
 
