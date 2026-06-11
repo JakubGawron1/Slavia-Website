@@ -2,6 +2,7 @@
 import { format, parseISO } from 'date-fns'
 import { pl } from 'date-fns/locale'
 import { getApiErrorMessage } from '~/composables/useApi'
+import { apiRoutes } from '~/config/api'
 
 definePageMeta({ middleware: 'admin' })
 
@@ -33,10 +34,10 @@ const unreadCount = computed(() => (messages.value || []).filter(m => !m.is_read
 
 async function markRead(id: string, is_read: boolean) {
   try {
-    await apiFetch(`/api/contact/manage/${encodeURIComponent(id)}`, {
+    await apiFetch(apiRoutes.contact.manageOne(id), {
       method: 'PATCH',
       body: { is_read }
-    })
+    } as Parameters<typeof apiFetch>[1])
     await refresh()
   } catch (e) {
     toast.add({
@@ -50,7 +51,7 @@ async function markRead(id: string, is_read: boolean) {
 async function remove(id: string) {
   if (!confirm('Usunąć wiadomość na stałe?')) return
   try {
-    await apiFetch(`/api/contact/manage/${encodeURIComponent(id)}`, { method: 'DELETE' })
+    await apiFetch(apiRoutes.contact.manageOne(id), { method: 'DELETE' } as Parameters<typeof apiFetch>[1])
     toast.add({ title: 'Usunięto', color: 'success' })
     await refresh()
   } catch (e) {
