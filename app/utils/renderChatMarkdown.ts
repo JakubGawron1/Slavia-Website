@@ -1,5 +1,5 @@
 import DOMPurify from 'isomorphic-dompurify'
-import { escapeMarkdownHtml, renderMarkdownInline } from '@slavia/shared'
+import { escapeMarkdownHtml, renderMarkdownInline } from '@slavia/shared/markdown-inline'
 
 const escapeHtml = escapeMarkdownHtml
 const renderInlineMarkdown = renderMarkdownInline
