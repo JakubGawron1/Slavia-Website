@@ -185,7 +185,7 @@ useSeoMeta({
       description="Przelicznik na okres 2025–2028 — porównywanie wyników zawodników o różnej masie ciała (dwubój: rwanie + podrzut)."
     />
 
-    <div class="slavia-content-well mx-auto flex w-full max-w-5xl flex-col gap-8">
+    <div class="slavia-content-well slavia-public-section mx-auto flex w-full max-w-5xl flex-col gap-8">
     <UAlert
       v-if="profileWarning"
       color="warning"
@@ -197,7 +197,7 @@ useSeoMeta({
     />
 
       <div class="grid w-full gap-8 lg:grid-cols-5">
-        <UCard class="border-default/80 shadow-sm lg:col-span-2">
+        <UCard class="slavia-page-card slavia-public-card slavia-public-card--flat lg:col-span-2">
           <template #header>
             <h2 class="text-lg font-semibold text-highlighted">
               Dane
@@ -251,7 +251,7 @@ useSeoMeta({
         </UCard>
 
         <UCard
-          class="border-primary/20 bg-linear-to-br from-primary/5 to-transparent shadow-md lg:col-span-3"
+          class="slavia-page-card slavia-public-card slavia-public-card--glass border-primary/20 bg-linear-to-br from-primary/5 to-transparent lg:col-span-3"
           :ui="{ body: 'flex flex-col justify-center min-h-[280px]' }"
         >
           <template #header>

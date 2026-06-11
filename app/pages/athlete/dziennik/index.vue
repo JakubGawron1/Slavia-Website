@@ -13,6 +13,7 @@ useSeoMeta({
 const apiFetch = useApi()
 const toast = useToast()
 const auth = useAuth()
+const rolePreviewState = useRolePreviewState()
 
 const redagujBase = '/athlete/dziennik/redaguj'
 
@@ -82,7 +83,7 @@ async function removeEntry(e: TrainingLogEntry) {
     >
       <template #actions>
         <UButton
-          v-if="meAthlete"
+          v-if="meAthlete && !rolePreviewState.isReadOnly.value"
           :to="redagujBase"
           color="primary"
           icon="i-lucide-maximize-2"
@@ -108,16 +109,22 @@ async function removeEntry(e: TrainingLogEntry) {
       </template>
     </PanelPageHeader>
 
-    <div
+    <UAlert
+      v-if="rolePreviewState.isReadOnly.value"
+      class="mb-4"
+      color="warning"
+      variant="subtle"
+      icon="i-lucide-eye"
+      title="Podgląd read-only"
+      description="Wpisy dziennika są widoczne — dodawanie, edycja i usuwanie są wyłączone."
+    />
+
+    <PanelLoadingState
       v-if="pending"
-      class="flex items-center gap-2 py-12 text-muted"
-    >
-      <UIcon
-        name="i-lucide-loader-2"
-        class="size-6 animate-spin"
-      />
-      Ładowanie…
-    </div>
+      variant="list"
+      :count="4"
+      label="Ładowanie dziennika…"
+    />
 
     <UAlert
       v-else-if="!meAthlete"
@@ -128,9 +135,11 @@ async function removeEntry(e: TrainingLogEntry) {
     />
 
     <template v-else>
-      <h2 class="mb-4 text-xl font-bold text-highlighted">
-        Historia wpisów
-      </h2>
+      <PanelPageSection
+        title="Historia wpisów"
+        icon="i-lucide-history"
+        :description="entries.length ? `${entries.length} wpisów w dzienniku` : undefined"
+      />
 
       <PublicEmptyState
         v-if="entries.length === 0"
@@ -138,7 +147,12 @@ async function removeEntry(e: TrainingLogEntry) {
         title="Brak wpisów w dzienniku"
         description="Dodaj pierwszą jednostkę lub poczekaj na notatkę od trenera."
       >
-        <UButton :to="redagujBase" color="primary" icon="i-lucide-plus">
+        <UButton
+          v-if="!rolePreviewState.isReadOnly.value"
+          :to="redagujBase"
+          color="primary"
+          icon="i-lucide-plus"
+        >
           Dodaj pierwszą jednostkę
         </UButton>
       </PublicEmptyState>
@@ -150,7 +164,7 @@ async function removeEntry(e: TrainingLogEntry) {
         <UCard
           v-for="e in entries"
           :key="e.id"
-          class="overflow-hidden"
+          class="slavia-page-card overflow-hidden transition-all duration-200 hover:-translate-y-0.5"
         >
           <div class="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5">
             <div class="min-w-0 flex-1 space-y-2">
@@ -183,7 +197,7 @@ async function removeEntry(e: TrainingLogEntry) {
               </p>
             </div>
             <div class="flex shrink-0 gap-1 sm:flex-col">
-              <template v-if="isEntryMine(e)">
+              <template v-if="isEntryMine(e) && !rolePreviewState.isReadOnly.value">
                 <UButton
                   size="xs"
                   variant="soft"

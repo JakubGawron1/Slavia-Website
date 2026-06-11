@@ -63,9 +63,12 @@ const filteredAndSearched = computed(() => {
       </template>
     </PanelPageHeader>
 
-    <UCard class="slavia-page-card mb-5">
-      <div class="grid gap-3 md:grid-cols-12 md:items-center">
-        <div class="flex flex-wrap gap-2 md:col-span-8">
+    <PanelDataToolbar
+      :summary="`Widoczne: ${filteredAndSearched.length}${search.trim() ? ` · filtr: „${search.trim()}”` : ''}`"
+      sticky
+    >
+      <template #filters>
+        <div class="flex flex-wrap gap-2">
           <UButton
             size="sm"
             :variant="filter === 'all' ? 'solid' : 'outline'"
@@ -98,33 +101,29 @@ const filteredAndSearched = computed(() => {
             Regeneracja
           </UButton>
         </div>
+        <UInput
+          v-model="search"
+          size="lg"
+          icon="i-lucide-search"
+          placeholder="Szukaj w tytule i szczegółach…"
+          class="w-full sm:max-w-xs"
+        />
+      </template>
+    </PanelDataToolbar>
 
-        <div class="md:col-span-4">
-          <UInput
-            v-model="search"
-            size="lg"
-            icon="i-lucide-search"
-            placeholder="Szukaj w tytule i szczegółach…"
-            class="w-full"
-          />
-        </div>
-      </div>
-    </UCard>
+    <PanelLoadingState
+      v-if="pending"
+      label="Ładowanie feedu…"
+    />
 
-    <div class="mb-3 flex items-center justify-between gap-2 text-xs text-muted">
-      <span>
-        Widoczne: <span class="font-mono font-bold text-highlighted">{{ filteredAndSearched.length }}</span>
-      </span>
-      <span v-if="search.trim()">
-        Filtr tekstu: <span class="font-mono">{{ search.trim() }}</span>
-      </span>
-    </div>
-
-    <div class="space-y-3">
+    <div
+      v-else
+      class="space-y-3"
+    >
       <UCard
         v-for="(e, idx) in filteredAndSearched"
         :key="`${e.source}-${e.at}-${idx}`"
-        class="overflow-hidden"
+        class="slavia-page-card overflow-hidden transition-all duration-200 hover:-translate-y-0.5"
         :ui="{ body: 'p-0' }"
       >
         <div class="grid gap-3 p-4 sm:p-5">
@@ -151,21 +150,17 @@ const filteredAndSearched = computed(() => {
         </div>
       </UCard>
 
-      <UAlert
+      <SlaviaEmptyState
         v-if="filteredAndSearched.length === 0 && (events?.length || 0) > 0"
         icon="i-lucide-search-x"
         title="Brak wyników"
         description="Nie znaleziono zdarzeń dla wybranych filtrów."
-        color="neutral"
-        variant="subtle"
       />
-      <UAlert
-        v-else-if="filteredAndSearched.length === 0 && (events?.length || 0) === 0 && !pending"
+      <SlaviaEmptyState
+        v-else-if="filteredAndSearched.length === 0"
         icon="i-lucide-inbox"
         title="Brak zdarzeń"
         description="System nie zwrócił żadnych wpisów do feedu."
-        color="neutral"
-        variant="subtle"
       />
     </div>
   </PanelPageLayout>

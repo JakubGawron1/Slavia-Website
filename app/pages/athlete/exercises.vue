@@ -8,6 +8,7 @@ definePageMeta({
 })
 
 const auth = useAuth()
+const rolePreviewState = useRolePreviewState()
 const { fetchBoard } = useExercisesBoard()
 const apiFetch = useApi()
 const toast = useToast()
@@ -78,6 +79,10 @@ async function submitExerciseResult(payload: { value: number, performed_at: stri
   }
 }
 
+async function refreshAll() {
+  await Promise.all([refreshMySubmissions(), refreshBoard()])
+}
+
 useSeoMeta({
   title: 'Inne ćwiczenia — Zawodnik',
   robots: 'noindex, nofollow'
@@ -91,7 +96,27 @@ useSeoMeta({
       title="Inne ćwiczenia"
       icon="i-lucide-bar-chart-3"
       description="Przysiad, wycisk, martwy i inne boje siłowe — osobno od startów w rwaniu i podrzucie. Zgłoś wynik, śledź status i porównaj się z kadrą."
-    />
+    >
+      <template #actions>
+        <UButton
+          to="/athlete"
+          variant="soft"
+          color="neutral"
+          size="sm"
+          icon="i-lucide-layout-dashboard"
+        >
+          Panel
+        </UButton>
+        <UButton
+          variant="soft"
+          icon="i-lucide-refresh-ccw"
+          :loading="myPending || boardPending"
+          @click="() => void refreshAll()"
+        >
+          Odśwież
+        </UButton>
+      </template>
+    </PanelPageHeader>
 
     <UAlert
       v-if="!canOpen"
@@ -102,6 +127,15 @@ useSeoMeta({
     />
 
     <div v-else class="space-y-6">
+      <UAlert
+        v-if="rolePreviewState.isReadOnly.value"
+        color="warning"
+        variant="subtle"
+        icon="i-lucide-eye"
+        title="Podgląd read-only"
+        description="Ranking i historia zgłoszeń są widoczne — dodawanie wyników jest wyłączone."
+      />
+
       <OtherExercisesRankingCard
         :exercise-items="exerciseItems"
         :selected-exercise-id="selectedExerciseId"
@@ -112,6 +146,7 @@ useSeoMeta({
       />
 
       <OtherExercisesSubmitCard
+        v-if="!rolePreviewState.isReadOnly.value"
         ref="submitCardRef"
         :exercise-items="exerciseItems"
         :selected-exercise-id="selectedExerciseId"

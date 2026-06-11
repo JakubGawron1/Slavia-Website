@@ -6,11 +6,12 @@ definePageMeta({ middleware: 'auth' })
 
 const apiFetch = useApi()
 const auth = useAuth()
+const rolePreviewState = useRolePreviewState()
 
 const year = new Date().getFullYear()
 
 const { data: bundle } = await useAsyncData('athlete-wrapped', async () => {
-  if (!auth.isAthlete.value && !auth.isSuperAdmin.value) {
+  if (!rolePreviewState.viewingAthletePortal.value) {
     return { athlete: null as Athlete | null, results: [] as CompetitionResult[] }
   }
   const athlete = await apiFetch<Athlete | null>('/api/athletes/me').catch(() => null)
@@ -65,10 +66,21 @@ useSeoMeta({
       <template #description>
         {{ athleteLabel }} — podsumowanie sezonu {{ year }} (wyniki zatwierdzone).
       </template>
+      <template #actions>
+        <UButton
+          to="/athlete"
+          variant="soft"
+          color="neutral"
+          size="sm"
+          icon="i-lucide-layout-dashboard"
+        >
+          Panel
+        </UButton>
+      </template>
     </PanelPageHeader>
 
     <UAlert
-      v-if="!auth.isAthlete.value"
+      v-if="!rolePreviewState.viewingAthletePortal.value"
       icon="i-lucide-info"
       color="warning"
       variant="subtle"
@@ -77,13 +89,23 @@ useSeoMeta({
       class="rounded-2xl"
     />
 
+    <UAlert
+      v-else-if="rolePreviewState.isReadOnly.value"
+      class="mb-4 rounded-2xl"
+      color="warning"
+      variant="subtle"
+      icon="i-lucide-eye"
+      title="Podgląd read-only"
+      description="Podsumowanie sezonu wybranego zawodnika — tylko do odczytu."
+    />
+
     <PanelPageSection
-      v-else
+      v-if="rolePreviewState.viewingAthletePortal.value"
       title="Twoje liczby"
       description="Starty, tonaż i najlepszy total w bieżącym roku kalendarzowym."
       icon="i-lucide-trophy"
     >
-      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <PanelDashboardGrid variant="kpi">
         <DashboardKpiCard
           label="Starty (zatwierdzone)"
           :value="stats.starts"
@@ -109,7 +131,7 @@ useSeoMeta({
           tone="info"
           hint="Wyniki na poziomie najlepszego totalu"
         />
-      </div>
+      </PanelDashboardGrid>
     </PanelPageSection>
 
     <div class="mt-8 flex flex-wrap justify-center gap-3">

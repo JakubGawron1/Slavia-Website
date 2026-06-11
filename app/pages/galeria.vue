@@ -211,6 +211,10 @@ const sortedPhotos = computed(() => {
     return String(b.created_at).localeCompare(String(a.created_at))
   })
 })
+
+const publishedPhotosCount = computed(
+  () => sortedPhotos.value.filter(p => p.published !== false).length
+)
 </script>
 
 <template>
@@ -286,29 +290,38 @@ const sortedPhotos = computed(() => {
       </template>
     </PublicEmptyState>
 
-    <div
+    <PanelDataToolbar
       v-if="showManageActions && sortedPhotos.length > 0"
-      class="mb-6 flex flex-wrap items-center justify-center gap-2 sm:justify-end"
+      :summary="`${publishedPhotosCount} publicznych · ${sortedPhotos.length} w albumie`"
+      sticky
+      class="mb-6"
     >
-      <UButton
-        icon="i-lucide-image-plus"
-        color="primary"
-        size="lg"
-        class="min-h-11 w-full shrink-0 justify-center font-semibold sm:w-auto"
-        @click="openCreate"
-      >
-        Dodaj zdjęcie
-      </UButton>
-    </div>
+      <template #meta>
+        <UBadge color="neutral" variant="subtle" size="sm">
+          Galeria klubu
+        </UBadge>
+      </template>
+      <template #actions>
+        <UButton
+          icon="i-lucide-image-plus"
+          color="primary"
+          size="lg"
+          class="min-h-11 w-full shrink-0 justify-center font-semibold sm:w-auto"
+          @click="openCreate"
+        >
+          Dodaj zdjęcie
+        </UButton>
+      </template>
+    </PanelDataToolbar>
 
     <div
       v-if="sortedPhotos.length > 0"
-      class="columns-1 gap-5 sm:columns-2 sm:gap-6 lg:columns-3"
+      class="slavia-public-masonry"
     >
       <figure
         v-for="p in sortedPhotos"
         :key="p.id"
-        class="group slavia-page-card mb-5 break-inside-avoid overflow-hidden transition-all duration-300 hover:border-primary/30 hover:shadow-md sm:mb-6"
+        class="group slavia-public-card slavia-page-card mb-5 break-inside-avoid overflow-hidden sm:mb-6"
       >
         <div class="relative">
           <img

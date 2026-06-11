@@ -53,8 +53,8 @@ const rootClass = computed(() => {
   }
   if (props.variant === 'centered') {
     return props.compact
-      ? 'mb-6 px-1 text-center sm:mb-7 md:mb-8'
-      : 'mb-10 px-1 text-center md:mb-14'
+      ? 'mb-4 px-1 text-center sm:mb-5 md:mb-6'
+      : 'mb-8 px-1 text-center md:mb-10'
   }
   return 'mb-8 flex flex-col gap-4 sm:mb-10 md:flex-row md:items-end md:justify-between'
 })
@@ -63,7 +63,7 @@ const titleClass = computed(() => {
   const display = 'slavia-display'
   if (props.variant === 'centered') {
     if (props.compact) {
-      return `${display} mt-2 text-2xl font-black uppercase italic tracking-tighter text-highlighted sm:mt-4 sm:text-4xl md:text-5xl lg:text-6xl`
+      return `${display} mt-1.5 text-xl font-black uppercase italic tracking-tighter text-highlighted sm:mt-2 sm:text-3xl md:text-4xl lg:text-[2.75rem]`
     }
     return `${display} mt-4 text-4xl font-black uppercase italic tracking-tighter text-highlighted sm:mt-6 sm:text-6xl md:text-7xl lg:text-8xl`
   }
@@ -92,12 +92,12 @@ const eyebrowClass = computed(() => {
 const descriptionClass = computed(() => {
   if (props.variant === 'centered') {
     if (props.compact) {
-      return 'mx-auto mt-2 max-w-2xl px-2 text-xs font-medium leading-relaxed text-muted/85 sm:mt-3 sm:text-sm'
+      return 'mx-auto mt-1.5 max-w-2xl px-2 text-xs font-medium leading-snug text-muted/85 sm:mt-2 sm:text-sm'
     }
     return 'mx-auto mt-4 max-w-2xl px-2 text-base font-medium leading-relaxed text-muted/85 sm:mt-6 sm:text-xl'
   }
   if (props.variant === 'hero') {
-    return 'mt-2 max-w-2xl text-sm leading-relaxed text-muted sm:text-[0.9375rem]'
+    return 'slavia-public-lead mt-2 max-w-2xl'
   }
   return 'mt-2 max-w-2xl text-sm leading-relaxed text-muted sm:text-base'
 })

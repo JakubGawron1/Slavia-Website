@@ -31,12 +31,12 @@ defineProps<{
       <slot name="actions" />
     </div>
 
-    <div
+    <SlaviaEmptyState
       v-if="items.length === 0"
-      class="rounded-xl border border-dashed border-default/70 bg-muted/10 px-4 py-10 text-center text-sm text-muted"
-    >
-      {{ emptyText }}
-    </div>
+      icon="i-lucide-inbox"
+      :title="emptyText"
+      compact
+    />
 
     <div v-else class="space-y-2.5">
       <div

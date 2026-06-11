@@ -27,43 +27,48 @@ function genderLabel(g?: string | null) {
 
 <template>
   <div class="space-y-4">
-    <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-      <UFormField label="Szukaj" class="min-w-0 flex-1 sm:max-w-xs">
-        <UInput
-          :model-value="searchQuery"
-          icon="i-lucide-search"
-          placeholder="Nazwisko lub imię…"
-          size="lg"
-          class="w-full"
-          @update:model-value="emit('update:searchQuery', String($event ?? ''))"
-        />
-      </UFormField>
-      <UFormField label="Status" class="w-full sm:w-40">
-        <SlaviaOverlaySelect
-          :model-value="filterActive"
-          :items="activeFilterItems"
-          value-key="value"
-          size="lg"
-          class="w-full"
-          @update:model-value="emit('update:filterActive', $event as 'all' | 'active' | 'inactive')"
-        />
-      </UFormField>
-      <UFormField label="Płeć" class="w-full sm:w-40">
-        <SlaviaOverlaySelect
-          :model-value="filterGender"
-          :items="genderFilterItems"
-          value-key="value"
-          size="lg"
-          class="w-full"
-          @update:model-value="emit('update:filterGender', $event as 'all' | 'male' | 'female')"
-        />
-      </UFormField>
-    </div>
+    <PanelDataToolbar :summary="loading ? undefined : `${players.length} zawodników w widoku`">
+      <template #filters>
+        <UFormField label="Szukaj" class="min-w-0 flex-1 sm:max-w-xs">
+          <UInput
+            :model-value="searchQuery"
+            icon="i-lucide-search"
+            placeholder="Nazwisko lub imię…"
+            size="lg"
+            class="w-full"
+            @update:model-value="emit('update:searchQuery', String($event ?? ''))"
+          />
+        </UFormField>
+        <UFormField label="Status" class="w-full sm:w-40">
+          <SlaviaOverlaySelect
+            :model-value="filterActive"
+            :items="activeFilterItems"
+            value-key="value"
+            size="lg"
+            class="w-full"
+            @update:model-value="emit('update:filterActive', $event as 'all' | 'active' | 'inactive')"
+          />
+        </UFormField>
+        <UFormField label="Płeć" class="w-full sm:w-40">
+          <SlaviaOverlaySelect
+            :model-value="filterGender"
+            :items="genderFilterItems"
+            value-key="value"
+            size="lg"
+            class="w-full"
+            @update:model-value="emit('update:filterGender', $event as 'all' | 'male' | 'female')"
+          />
+        </UFormField>
+      </template>
+    </PanelDataToolbar>
 
-    <UCard :ui="{ body: 'p-0' }">
-      <div class="hidden overflow-x-auto md:block">
+    <UCard
+      class="overflow-hidden rounded-2xl border-default/70 ring-1 ring-default/20"
+      :ui="{ body: 'p-0' }"
+    >
+      <div class="hidden overflow-x-auto md:block slavia-data-table">
         <table class="w-full min-w-[720px] text-sm">
-          <thead class="border-b border-default bg-muted/30">
+          <thead>
             <tr>
               <th class="px-4 py-3 text-left font-semibold text-muted">Zawodnik</th>
               <th class="px-4 py-3 text-center font-semibold text-muted">Rok ur.</th>
@@ -174,12 +179,14 @@ function genderLabel(g?: string | null) {
         </UCard>
       </div>
 
-      <div
+      <SlaviaEmptyState
         v-if="!loading && players.length === 0"
-        class="px-4 py-10 text-center text-muted"
-      >
-        Brak zawodników pasujących do filtrów.
-      </div>
+        compact
+        icon="i-lucide-users"
+        title="Brak wyników"
+        description="Zmień filtry lub dodaj nowego zawodnika."
+        class="px-4 py-6"
+      />
     </UCard>
   </div>
 </template>

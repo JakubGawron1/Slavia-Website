@@ -342,27 +342,24 @@ function drawResults(ctx: CanvasRenderingContext2D, current: {x: number, y: numb
         title="Barbell Lab"
         icon="i-lucide-beaker"
         description="Analiza toru sztangi (MoveNet + wykres + Trener AI) oraz porównanie silników śledzenia dla R&D."
+        :breadcrumbs="[
+          { label: 'SuperAdmin', to: '/superadmin', icon: 'i-lucide-shield-check' },
+          { label: 'Barbell Lab', icon: 'i-lucide-beaker' }
+        ]"
       />
 
-      <div class="mb-8 flex flex-wrap gap-2">
-        <UButton
-          v-for="tab in tabItems"
-          :key="tab.value"
-          :icon="tab.icon"
-          :color="activeTab === tab.value ? 'primary' : 'neutral'"
-          :variant="activeTab === tab.value ? 'solid' : 'outline'"
-          @click="activeTab = tab.value"
-        >
-          {{ tab.label }}
-        </UButton>
-      </div>
+      <UTabs
+        v-model="activeTab"
+        :items="tabItems"
+        class="slavia-panel-tab-strip mb-8"
+      />
 
       <BarbellLabPathAnalyzer v-if="activeTab === 'path_analyzer'" />
 
       <template v-else>
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <aside class="space-y-6">
-          <UCard>
+          <UCard class="overflow-hidden rounded-2xl border-default/70 ring-1 ring-default/20">
             <template #header><h3 class="font-bold">Konfiguracja testu</h3></template>
             <div class="space-y-4">
               <UFormField label="Wybierz silnik">
@@ -375,11 +372,8 @@ function drawResults(ctx: CanvasRenderingContext2D, current: {x: number, y: numb
               <UButton block color="primary" :loading="isProcessing" :disabled="!clipUrl" @click="runAnalysis">Uruchom benchmark</UButton>
             </div>
           </UCard>
-          <UCard v-if="isProcessing" class="bg-primary/5 border-primary/20">
-            <div class="flex items-center gap-3">
-              <UIcon name="i-lucide-loader-2" class="size-5 animate-spin text-primary" />
-              <span class="text-sm font-medium">Analizowanie klatek...</span>
-            </div>
+          <UCard v-if="isProcessing" class="overflow-hidden rounded-2xl border-primary/25 bg-primary/5 ring-1 ring-primary/20">
+            <PanelLoadingState compact label="Analizowanie klatek…" />
           </UCard>
         </aside>
 
@@ -392,11 +386,16 @@ function drawResults(ctx: CanvasRenderingContext2D, current: {x: number, y: numb
               <p class="text-sm">Brak wgranego materiału</p>
             </div>
           </div>
-          <UCard>
+          <UCard class="overflow-hidden rounded-2xl border-default/70 ring-1 ring-default/20">
             <template #header><h3 class="font-bold">Wyniki i metryki</h3></template>
             <div class="text-sm text-muted">
-              <p v-if="results.length === 0">Uruchom analizę, aby zobaczyć porównanie.</p>
-              <div v-else class="space-y-6">
+              <SlaviaEmptyState
+                v-if="results.length === 0"
+                icon="i-lucide-gauge"
+                title="Brak wyników benchmarku"
+                description="Wgraj wideo i uruchom analizę, aby zobaczyć porównanie silników."
+              />
+              <div v-else-if="results.length" class="space-y-6">
                 <div v-for="res in results" :key="res.method" class="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div class="p-3 rounded-xl bg-muted/20 border border-default">
                     <p class="text-[10px] uppercase font-bold text-muted mb-1">Silnik</p>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { PanelBreadcrumbItem } from '~/components/panel/PanelBreadcrumb.vue'
 import type { PanelArea } from '~/composables/useSlaviaPanelArea'
 import { panelEyebrow } from '~/composables/useSlaviaPanelArea'
 
@@ -13,6 +14,8 @@ const props = withDefaults(
     variant?: 'page' | 'hero'
     enableCms?: boolean
     cmsPage?: string
+    /** Opcjonalna ścieżka nad tytułem (np. Panel → Moduł) */
+    breadcrumbs?: PanelBreadcrumbItem[]
   }>(),
   {
     tone: 'default',
@@ -22,7 +25,8 @@ const props = withDefaults(
     description: undefined,
     icon: undefined,
     enableCms: true,
-    cmsPage: undefined
+    cmsPage: undefined,
+    breadcrumbs: undefined
   }
 )
 
@@ -48,7 +52,7 @@ const eyebrowClass = computed(() => {
 const rootClass = computed(() =>
   props.variant === 'hero'
     ? 'slavia-public-hero'
-    : 'mb-6 sm:mb-8'
+    : 'mb-5 sm:mb-6'
 )
 </script>
 
@@ -57,8 +61,24 @@ const rootClass = computed(() =>
     v-slavia-reveal="'fade-up'"
     :class="rootClass"
   >
-    <div class="relative flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-      <div class="min-w-0 flex-1">
+    <PanelBreadcrumb
+      v-if="breadcrumbs?.length"
+      :items="breadcrumbs"
+    />
+    <div class="relative flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+      <div class="flex min-w-0 flex-1 items-start gap-3">
+        <span
+          v-if="icon"
+          class="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl ring-1 sm:hidden"
+          :class="
+            tone === 'superadmin'
+              ? 'bg-error/12 text-error ring-error/20'
+              : 'bg-primary/10 text-primary ring-primary/20'
+          "
+        >
+          <UIcon :name="icon" class="size-5" />
+        </span>
+        <div class="min-w-0 flex-1">
         <p
           v-if="resolvedEyebrow"
           class="text-[11px] font-black uppercase tracking-[0.22em]"
@@ -124,25 +144,27 @@ const rootClass = computed(() =>
         <div v-if="$slots.badges" class="mt-2 flex flex-wrap gap-2">
           <slot name="badges" />
         </div>
+        </div>
       </div>
 
-      <span
-        v-if="icon"
-        class="flex size-9 shrink-0 items-center justify-center rounded-xl ring-1"
-        :class="
-          tone === 'superadmin'
-            ? 'bg-error/12 text-error ring-error/20'
-            : 'bg-primary/10 text-primary ring-primary/20'
-        "
-      >
-        <UIcon :name="icon" class="size-4" />
-      </span>
-
-      <div
-        v-if="$slots.actions"
-        class="flex shrink-0 flex-wrap gap-2 sm:justify-end"
-      >
-        <slot name="actions" />
+      <div class="flex shrink-0 flex-wrap items-center gap-2 sm:justify-end">
+        <span
+          v-if="icon"
+          class="hidden size-10 items-center justify-center rounded-xl ring-1 sm:flex"
+          :class="
+            tone === 'superadmin'
+              ? 'bg-error/12 text-error ring-error/20'
+              : 'bg-primary/10 text-primary ring-primary/20'
+          "
+        >
+          <UIcon :name="icon" class="size-5" />
+        </span>
+        <div
+          v-if="$slots.actions"
+          class="flex flex-wrap gap-2"
+        >
+          <slot name="actions" />
+        </div>
       </div>
     </div>
   </header>

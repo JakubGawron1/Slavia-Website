@@ -9,16 +9,27 @@ export type PanelModuleGroup = {
   items: DashboardModuleLink[]
 }
 
-const props = defineProps<{
-  groups: PanelModuleGroup[]
-  toneFromBg?: (bg?: string) => 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral'
-  /** Opcjonalny override roli; domyślnie wykrywana z trasy (`/admin`, `/trainer`, …). */
-  navRole?: PanelNavRole | 'superadmin'
-  /** Pełna nawigacja roli do zapisu — gdy `groups` to podzbiór (np. `/klub`). */
-  persistGroups?: PanelModuleGroup[]
-}>()
+const props = withDefaults(
+  defineProps<{
+    groups: PanelModuleGroup[]
+    toneFromBg?: (bg?: string) => 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral'
+    /** Opcjonalny override roli; domyślnie wykrywana z trasy (`/admin`, `/trainer`, …). */
+    navRole?: PanelNavRole | 'superadmin'
+    /** Pełna nawigacja roli do zapisu — gdy `groups` to podzbiór (np. `/klub`). */
+    persistGroups?: PanelModuleGroup[]
+    /** Kafelki (premium) lub lista wierszy */
+    layout?: 'grid' | 'list'
+  }>(),
+  {
+    layout: 'grid',
+    toneFromBg: undefined,
+    navRole: undefined,
+    persistGroups: undefined
+  }
+)
 
 const auth = useAuth()
+const panelNav = usePanelNavigationFlags()
 const { availableDashboards } = useRoleDashboardNav()
 const { syncing: syncingMobile, syncMobileReleases } = useMobileReleaseSync()
 const route = useRoute()
@@ -85,11 +96,16 @@ function roleTabClass(area: string, active: boolean) {
   if (active) return ROLE_TAB_ACTIVE[area] ?? ROLE_TAB_ACTIVE.admin
   return 'text-muted hover:bg-muted/15 hover:text-highlighted'
 }
+
+function isModuleDisabled(link: DashboardModuleLink): boolean {
+  if (!auth.isSuperAdmin.value || !link.panelNavId) return false
+  return !panelNav.rawIsEnabled(link.panelNavId)
+}
 </script>
 
 <template>
   <section class="slavia-panel-section" aria-label="Moduły panelu">
-    <div class="overflow-hidden rounded-2xl border border-default/60 bg-card/80 shadow-sm ring-1 ring-default/20 backdrop-blur-sm">
+    <div class="slavia-panel-module-shell">
       <div
         v-if="showNavToolbar"
         class="flex flex-wrap items-center gap-2 border-b border-default/50 bg-muted/6 p-2.5 sm:p-3"
@@ -192,7 +208,12 @@ function roleTabClass(area: string, active: boolean) {
           <h3 class="mb-2.5 px-1 text-[10px] font-black uppercase tracking-[0.22em] text-muted">
             {{ group.title }}
           </h3>
-          <ul class="grid grid-cols-1 gap-0.5 sm:grid-cols-2 sm:gap-1">
+          <ul
+            class="gap-2"
+            :class="layout === 'grid'
+              ? 'grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3'
+              : 'grid grid-cols-1 sm:grid-cols-2 sm:gap-1'"
+          >
             <li
               v-for="(link, index) in group.items"
               :key="`${group.title}-${link.to}-${index}`"
@@ -211,7 +232,18 @@ function roleTabClass(area: string, active: boolean) {
                 <UIcon name="i-lucide-grip-vertical" class="size-4 shrink-0 text-muted" />
                 <span class="truncate text-xs font-bold text-highlighted">{{ link.title }}</span>
               </div>
+              <DashboardModuleCard
+                v-if="layout === 'grid' && !cmsEditMode"
+                :title="link.title"
+                :description="link.description"
+                :icon="link.icon"
+                :to="link.to"
+                :tone="resolveTone(link)"
+                :icon-wrapper-class="`${link.bg} ${link.color}`"
+                :disabled="isModuleDisabled(link)"
+              />
               <DashboardModuleRow
+                v-else
                 :title="link.title"
                 :description="link.description"
                 :icon="link.icon"

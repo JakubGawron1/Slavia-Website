@@ -25,6 +25,7 @@ useSeoMeta({
 })
 
 const apiFetch = useApi()
+const rolePreviewState = useRolePreviewState()
 
 const { data: clubTrainingOverrides } = await usePublicLazyFetch<RecurringTrainingSession[]>(
   'competitions/recurring-training-cancellations',
@@ -294,11 +295,24 @@ function onAgendaSelect(day: Date, ev: { key: string }) {
       description="Treningi klubowe (Pn, Śr, Pt) oraz przypisane starty. Status treningu jest ten sam co w kalendarzu klubu."
     >
       <template #actions>
-        <UButton to="/kalendarz" variant="soft" color="neutral" icon="i-lucide-calendar-days">
-          Pełny kalendarz klubu
+        <UButton to="/athlete" variant="soft" color="neutral" size="sm" icon="i-lucide-layout-dashboard">
+          Panel
+        </UButton>
+        <UButton to="/kalendarz" variant="soft" color="primary" size="sm" icon="i-lucide-calendar-days">
+          Kalendarz klubu
         </UButton>
       </template>
     </PanelPageHeader>
+
+    <UAlert
+      v-if="rolePreviewState.isReadOnly.value"
+      class="mb-4"
+      color="warning"
+      variant="subtle"
+      icon="i-lucide-eye"
+      title="Podgląd read-only"
+      description="Kalendarz startów i treningów wybranego zawodnika — tylko do odczytu."
+    />
 
     <div class="slavia-content-well flex flex-col gap-6 sm:gap-8">
     <div class="flex flex-wrap items-center justify-between gap-4">

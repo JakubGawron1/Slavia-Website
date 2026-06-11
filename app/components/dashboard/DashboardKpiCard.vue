@@ -41,9 +41,9 @@ const iconClass = computed(() => {
     class="block h-full min-h-0 focus:outline-none"
   >
     <UCard
-      class="h-full min-h-0 rounded-2xl border-default/70 shadow-sm ring-1 ring-default/30 transition-colors"
+      class="h-full min-h-0 rounded-2xl border-default/70 shadow-sm ring-1 ring-default/30 transition-all duration-200"
       :class="[
-        to ? 'cursor-pointer hover:bg-muted/10' : '',
+        to ? 'cursor-pointer hover:-translate-y-0.5 hover:border-primary/25 hover:bg-muted/10 hover:shadow-md' : '',
         size === 'compact' ? 'p-0' : ''
       ]"
       :ui="size === 'compact' ? { body: 'p-3 sm:p-3.5' } : undefined"

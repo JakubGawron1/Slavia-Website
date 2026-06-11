@@ -178,6 +178,7 @@ useHead({
       class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-200 focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-sm focus:font-bold focus:text-white focus:ring-2 focus:ring-offset-2 focus:ring-white"
     >Przejdź do treści</a>
     <ClubWelcomeOnboarding />
+    <SuperadminRolePreviewBanner />
     <DevViewportPreview v-if="devViewportIframePreviewOn" />
     <!-- Bez overflow-x na tym wrapperze: html/body już mają clip — podwójny clip ucinał obramowania / końcówki belki nawigacji (np. „Aktualności”). -->
     <div class="relative z-1 transition-opacity duration-300 ease-out min-w-0 opacity-100">

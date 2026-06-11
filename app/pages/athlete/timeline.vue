@@ -10,6 +10,7 @@ type TimelineItem = {
 }
 
 const apiFetch = useApi()
+const rolePreviewState = useRolePreviewState()
 
 const { data: me } = await useAsyncData('athlete-timeline-me', () => apiFetch<{ id: string }>('/api/athletes/me').catch(() => null))
 
@@ -44,43 +45,66 @@ useSeoMeta({
       description="Oś czasu: wyniki, obecności i wpisy dziennika."
     >
       <template #actions>
-        <UButton variant="soft" icon="i-lucide-refresh-cw" @click="() => void refresh()">Odśwież</UButton>
+        <UButton
+          to="/athlete"
+          variant="soft"
+          color="neutral"
+          size="sm"
+          icon="i-lucide-layout-dashboard"
+        >
+          Panel
+        </UButton>
+        <UButton
+          variant="soft"
+          icon="i-lucide-refresh-cw"
+          :loading="pending"
+          @click="() => void refresh()"
+        >
+          Odśwież
+        </UButton>
       </template>
     </PanelPageHeader>
 
-    <div v-if="pending" class="space-y-3">
-      <div class="rounded-2xl border border-default/60 bg-card px-4 py-3">
-        <div class="flex items-center gap-2">
-          <SlaviaShimmerText width="4.5rem" height="0.85rem" />
-          <SlaviaShimmerText width="7.5rem" height="0.85rem" />
-        </div>
-        <div class="mt-2 space-y-2">
-          <SlaviaShimmerText block width="68%" height="0.95rem" />
-          <SlaviaShimmerText block width="92%" height="0.85rem" />
-        </div>
-      </div>
-      <div class="rounded-2xl border border-default/60 bg-card px-4 py-3">
-        <div class="flex items-center gap-2">
-          <SlaviaShimmerText width="5.25rem" height="0.85rem" />
-          <SlaviaShimmerText width="6.75rem" height="0.85rem" />
-        </div>
-        <div class="mt-2 space-y-2">
-          <SlaviaShimmerText block width="74%" height="0.95rem" />
-          <SlaviaShimmerText block width="88%" height="0.85rem" />
-        </div>
-      </div>
-    </div>
+    <UAlert
+      v-if="rolePreviewState.isReadOnly.value"
+      class="mb-4"
+      color="warning"
+      variant="subtle"
+      icon="i-lucide-eye"
+      title="Podgląd read-only"
+      description="Oś czasu zawodnika — tylko do odczytu."
+    />
 
-    <div v-else class="space-y-3">
-      <div v-for="i in items" :key="`${i.kind}-${i.id}-${i.at}`" class="rounded-2xl border border-default/60 bg-card px-4 py-3">
-        <div class="flex flex-wrap items-center gap-2 text-xs">
-          <UBadge size="xs" variant="subtle" color="primary">{{ kindLabel(i.kind) }}</UBadge>
-          <span class="font-mono text-muted">{{ i.at }}</span>
+    <PanelLoadingState
+      v-if="pending"
+      label="Ładowanie historii…"
+    />
+
+    <SlaviaEmptyState
+      v-else-if="!(items || []).length"
+      icon="i-lucide-timeline"
+      title="Brak wpisów historii"
+      description="Gdy pojawią się wyniki, obecności lub wpisy dziennika, zobaczysz je tutaj na osi czasu."
+    />
+
+    <div
+      v-else
+      class="space-y-3"
+    >
+      <UCard
+        v-for="i in items"
+        :key="`${i.kind}-${i.id}-${i.at}`"
+        class="slavia-page-card overflow-hidden transition-all duration-200 hover:-translate-y-0.5"
+      >
+        <div class="px-4 py-3 sm:px-5 sm:py-4">
+          <div class="flex flex-wrap items-center gap-2 text-xs">
+            <UBadge size="xs" variant="subtle" color="primary">{{ kindLabel(i.kind) }}</UBadge>
+            <span class="font-mono text-muted">{{ i.at }}</span>
+          </div>
+          <p class="mt-1 font-semibold text-highlighted">{{ i.title }}</p>
+          <p class="mt-1 text-sm text-muted">{{ i.detail }}</p>
         </div>
-        <p class="mt-1 font-semibold text-highlighted">{{ i.title }}</p>
-        <p class="mt-1 text-sm text-muted">{{ i.detail }}</p>
-      </div>
-      <p v-if="(items || []).length === 0" class="text-sm text-muted">Brak wpisów historii.</p>
+      </UCard>
     </div>
   </PanelPageLayout>
 </template>

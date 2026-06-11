@@ -84,14 +84,14 @@ function fmtKg(n: number | null) {
 
     <div
       v-slavia-reveal="'fade-up'"
-      class="slavia-content-well mx-auto flex w-full max-w-5xl flex-col gap-8"
+      class="slavia-content-well slavia-public-section mx-auto flex w-full max-w-5xl flex-col gap-8"
     >
       <div
         v-slavia-reveal="'fade-up'"
         :data-slavia-reveal-delay="60"
         class="grid w-full gap-8 lg:grid-cols-5"
       >
-        <UCard class="slavia-page-card lg:col-span-2">
+        <UCard class="slavia-page-card slavia-public-card slavia-public-card--flat lg:col-span-2">
           <template #header>
             <div
               v-slavia-reveal="'fade-left'"
@@ -166,7 +166,7 @@ function fmtKg(n: number | null) {
         </UCard>
 
         <UCard
-          class="slavia-page-card border-primary/20 bg-linear-to-br from-primary/6 via-card to-card lg:col-span-3"
+          class="slavia-page-card slavia-public-card slavia-public-card--glass border-primary/20 bg-linear-to-br from-primary/6 via-card to-card lg:col-span-3"
         >
           <template #header>
             <div v-slavia-reveal="'fade-right'">

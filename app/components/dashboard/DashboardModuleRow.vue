@@ -26,12 +26,22 @@ const iconWrapClass = computed(() => {
   if (custom) return `${custom} ring-1 ring-inset ring-current/10`
   return iconBgClass.value
 })
+
+const route = useRoute()
+
+const isActive = computed(() => {
+  if (!props.to || props.to === '#') return false
+  if (route.path === props.to) return true
+  return route.path.startsWith(`${props.to}/`)
+})
 </script>
 
 <template>
   <NuxtLink
     :to="to"
-    class="group flex min-h-11 items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 transition duration-200 hover:border-primary/20 hover:bg-primary/6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+    class="slavia-panel-nav-link group flex min-h-11 items-center gap-3 px-3 py-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+    :class="isActive ? 'slavia-panel-nav-link--active' : ''"
+    :aria-current="isActive ? 'page' : undefined"
   >
     <span
       class="flex size-9 shrink-0 items-center justify-center rounded-lg"
@@ -40,7 +50,7 @@ const iconWrapClass = computed(() => {
       <UIcon :name="icon" class="size-4" />
     </span>
     <span class="min-w-0 flex-1">
-      <span class="block truncate text-sm font-bold text-highlighted transition-colors group-hover:text-primary">
+      <span class="slavia-panel-nav-link__title block truncate text-sm font-bold text-highlighted transition-colors group-hover:text-primary">
         {{ title }}
       </span>
       <span class="block truncate text-xs text-muted">

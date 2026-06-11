@@ -16,7 +16,7 @@ const navPreReleaseBadge = computed(() => {
 
 <template>
   <header
-    class="sticky top-0 z-50 border-b border-default/45 bg-background/88 shadow-sm backdrop-blur-xl supports-backdrop-filter:bg-background/72 dark:border-default/35 dark:bg-background/82 dark:shadow-md dark:shadow-black/20"
+    class="slavia-site-header sticky top-0 z-50"
   >
     <!-- Belka: wstecz + marka | linki (środek, przewijane) | narzędzia + akcje. Bez overflow-hidden — clip na html/body wystarczy. -->
     <div class="mx-auto flex w-full max-w-[1440px] items-center gap-1.5 px-3 py-2 sm:gap-2 sm:px-4 sm:py-2.5 lg:min-h-[3.75rem] lg:gap-2.5 lg:px-6 lg:py-0 xl:gap-3 xl:px-8">

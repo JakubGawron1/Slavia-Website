@@ -102,7 +102,7 @@ useSeoMeta({
 
       <div
         v-else-if="archivedPlayers.length > 0"
-        class="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12 xl:gap-14"
+        class="slavia-public-grid slavia-public-grid--2 slavia-public-grid--stagger"
       >
         <NuxtLink
           v-for="player in archivedPlayers"

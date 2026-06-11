@@ -95,6 +95,10 @@ function formatDateTime(iso?: string) {
       title="Logi systemowe"
       icon="i-lucide-history"
       description="Historia zmian w systemie: zatwierdzanie płatności, edycja zawodników, logowania i inne operacje administracyjne."
+      :breadcrumbs="[
+        { label: 'SuperAdmin', to: '/superadmin', icon: 'i-lucide-shield-check' },
+        { label: 'Logi audytu', icon: 'i-lucide-history' }
+      ]"
     >
       <template #actions>
         <UButton
@@ -110,30 +114,64 @@ function formatDateTime(iso?: string) {
       </template>
     </PanelPageHeader>
 
-    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center">
-      <UInput
-        v-model="q"
-        icon="i-lucide-search"
-        placeholder="Szukaj w akcjach, szczegółach..."
-        class="w-full sm:max-w-xs"
-        size="lg"
-      />
-      <USelect
-        v-model="selectedCategory"
-        placeholder="Wszystkie kategorie"
-        :items="[{ label: 'Wszystkie kategorie', value: null }, ...categories]"
-        class="w-full sm:max-w-[200px]"
-        size="lg"
-      />
-    </div>
+    <PanelLoadingState
+      v-if="pending"
+      label="Wczytywanie logów audytu…"
+    />
 
-    <UCard class="overflow-hidden border-default/60 shadow-sm" :ui="{ body: 'p-0' }">
-      <UTable
-        :data="filteredLogs"
-        :columns="columns"
-        :loading="pending"
-        class="w-full"
+    <template v-else>
+      <PanelDataToolbar
+        v-if="logs?.length"
+        :summary="`${filteredLogs.length} z ${logs.length} wpisów`"
+        sticky
       >
+        <template #filters>
+          <UFormField label="Szukaj" class="w-full sm:w-72">
+            <UInput
+              v-model="q"
+              icon="i-lucide-search"
+              placeholder="Akcja, szczegóły, aktor…"
+              size="lg"
+              class="w-full"
+            />
+          </UFormField>
+          <UFormField label="Kategoria" class="w-full sm:w-52">
+            <USelect
+              v-model="selectedCategory"
+              placeholder="Wszystkie kategorie"
+              :items="[{ label: 'Wszystkie kategorie', value: null }, ...categories]"
+              size="lg"
+              class="w-full"
+            />
+          </UFormField>
+        </template>
+      </PanelDataToolbar>
+
+      <SlaviaEmptyState
+        v-if="!logs?.length"
+        icon="i-lucide-database"
+        title="Brak logów audytu"
+        description="Gdy w systemie pojawią się operacje administracyjne, wpisy zostaną zapisane tutaj."
+      />
+
+      <SlaviaEmptyState
+        v-else-if="!filteredLogs.length"
+        icon="i-lucide-filter-x"
+        title="Brak wyników"
+        description="Zmień filtr kategorii lub wpisz inną frazę wyszukiwania."
+      />
+
+      <UCard
+        v-else
+        class="overflow-hidden rounded-2xl border-default/70 shadow-sm ring-1 ring-default/20"
+        :ui="{ body: 'p-0' }"
+      >
+        <div class="slavia-data-table overflow-x-auto">
+          <UTable
+            :data="filteredLogs"
+            :columns="columns"
+            class="w-full"
+          >
         <template #created_at-cell="{ row }">
           <span class="whitespace-nowrap text-xs tabular-nums text-muted">
             {{ formatDateTime(row.original.created_at) }}
@@ -183,12 +221,9 @@ function formatDateTime(iso?: string) {
           </UPopover>
           <span v-else class="text-muted">—</span>
         </template>
-      </UTable>
-
-      <div v-if="!filteredLogs.length && !pending" class="flex flex-col items-center justify-center py-20 text-center">
-        <UIcon name="i-lucide-database-zap" class="mb-4 size-12 text-muted/30" />
-        <p class="text-muted">Nie znaleziono logów spełniających kryteria.</p>
-      </div>
-    </UCard>
+          </UTable>
+        </div>
+      </UCard>
+    </template>
   </PanelPageLayout>
 </template>

@@ -352,7 +352,7 @@ const trainingDays = [
             />
           </h1>
 
-          <p class="mt-6 max-w-3xl text-pretty text-base leading-relaxed text-muted sm:text-lg lg:text-xl">
+          <p class="slavia-public-lead mt-6 max-w-3xl text-pretty sm:text-lg lg:text-xl">
             <CmsEditable
               page-name="home"
               field-key="hero_subtitle"
@@ -416,55 +416,58 @@ const trainingDays = [
         </div>
 
         <!-- Pasek statystyk klubu -->
-        <div class="mt-14 grid gap-3 rounded-3xl border border-default/60 bg-elevated/75 p-5 shadow-sm ring-1 ring-default/30 backdrop-blur-sm dark:bg-card/95 sm:p-6 lg:mt-20 lg:grid-cols-4">
-          <div class="flex flex-col items-start gap-1 rounded-2xl bg-primary/5 p-5 ring-1 ring-primary/15 lg:items-center lg:text-center">
-            <div class="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-primary">
+        <div
+          v-slavia-reveal="'fade-up'"
+          class="slavia-public-kpi-band"
+        >
+          <div class="slavia-public-kpi bg-primary/5 ring-1 ring-primary/15">
+            <div class="slavia-public-kpi__label text-primary">
               <UIcon name="i-lucide-users" class="size-4" />
               Aktywni zawodnicy
             </div>
-            <p class="font-mono text-3xl font-black text-highlighted tabular-nums sm:text-4xl">
+            <p class="slavia-public-kpi__value">
               {{ stats.activeCount }}
             </p>
-            <p class="text-xs text-muted">
+            <p class="slavia-public-kpi__hint">
               w tym {{ stats.womenCount }} K · {{ stats.menCount }} M
             </p>
           </div>
 
-          <div class="flex flex-col items-start gap-1 rounded-2xl bg-amber-500/5 p-5 ring-1 ring-amber-500/15 lg:items-center lg:text-center">
-            <div class="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-amber-600 dark:text-amber-400">
+          <div class="slavia-public-kpi bg-amber-500/5 ring-1 ring-amber-500/15">
+            <div class="slavia-public-kpi__label text-amber-600 dark:text-amber-400">
               <UIcon name="i-lucide-trophy" class="size-4" />
               Najlepszy Sinclair
             </div>
-            <p class="font-mono text-3xl font-black text-highlighted tabular-nums sm:text-4xl">
+            <p class="slavia-public-kpi__value">
               {{ stats.bestSinclair > 0 ? stats.bestSinclair.toFixed(1) : '—' }}
             </p>
-            <p class="text-xs text-muted">
+            <p class="slavia-public-kpi__hint">
               w klubie (2025–2028)
             </p>
           </div>
 
-          <div class="flex flex-col items-start gap-1 rounded-2xl bg-info/6 p-5 ring-1 ring-info/20 lg:items-center lg:text-center">
-            <div class="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-info">
+          <div class="slavia-public-kpi bg-info/6 ring-1 ring-info/20">
+            <div class="slavia-public-kpi__label text-info">
               <UIcon name="i-lucide-dumbbell" class="size-4" />
               Najwyższa suma
             </div>
-            <p class="font-mono text-3xl font-black text-highlighted tabular-nums sm:text-4xl">
+            <p class="slavia-public-kpi__value">
               {{ stats.heaviestTotal > 0 ? `${stats.heaviestTotal} kg` : '—' }}
             </p>
-            <p class="text-xs text-muted">
+            <p class="slavia-public-kpi__hint">
               klubowy rekord PB
             </p>
           </div>
 
-          <div class="flex flex-col items-start gap-1 rounded-2xl bg-success/6 p-5 ring-1 ring-success/20 lg:items-center lg:text-center">
-            <div class="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-success">
+          <div class="slavia-public-kpi bg-success/6 ring-1 ring-success/20">
+            <div class="slavia-public-kpi__label text-success">
               <UIcon name="i-lucide-calendar-days" class="size-4" />
               Treningi
             </div>
-            <p class="font-mono text-3xl font-black text-highlighted tabular-nums sm:text-4xl">
+            <p class="slavia-public-kpi__value">
               3×
             </p>
-            <p class="text-xs text-muted">
+            <p class="slavia-public-kpi__hint">
               w tygodniu, Pon–Śr–Pt
             </p>
           </div>
@@ -473,16 +476,16 @@ const trainingDays = [
     </section>
 
     <!-- TRZY FILARY -->
-    <section class="relative py-12 lg:py-20">
+    <section class="slavia-public-section slavia-public-section--band">
       <UContainer>
-        <div class="mx-auto mb-10 max-w-3xl text-center lg:mb-14">
-          <p class="mb-3 text-[11px] font-black uppercase tracking-[0.25em] text-primary">
+        <PublicSectionHead>
+          <template #eyebrow>
             <CmsEditable page-name="home" field-key="pillars_eyebrow" type="text" label="Filary — odznaka" fallback="Kim jesteśmy" />
-          </p>
-          <h2 class="text-balance text-3xl font-black uppercase italic leading-tight tracking-tight text-highlighted sm:text-4xl lg:text-5xl">
+          </template>
+          <template #title>
             <CmsEditable page-name="home" field-key="pillars_title" type="text" label="Filary — tytuł" tag="span" fallback="Sport, ludzie i zdrowy progres" />
-          </h2>
-          <p class="mt-4 text-pretty text-base leading-relaxed text-muted lg:text-lg">
+          </template>
+          <template #lead>
             <CmsEditable
               page-name="home"
               field-key="pillars_subtitle"
@@ -491,20 +494,20 @@ const trainingDays = [
               tag="span"
               fallback="Slavia to nie tylko medalowe nazwiska — to przede wszystkim ludzie, codzienna praca i bezpieczna nauka techniki, która ma służyć zdrowiu na lata."
             />
-          </p>
-        </div>
+          </template>
+        </PublicSectionHead>
 
-        <div class="grid gap-5 md:grid-cols-3">
-          <div class="group relative overflow-hidden rounded-3xl border border-default/60 bg-linear-to-br from-card via-card to-primary/5 p-6 shadow-sm ring-1 ring-default/30 transition-all hover:-translate-y-1 hover:shadow-xl hover:ring-primary/30 lg:p-8">
-            <div class="pointer-events-none absolute -right-10 -top-10 size-40 rounded-full bg-primary/8 blur-2xl transition-all group-hover:bg-primary/15" />
+        <div class="slavia-public-grid slavia-public-grid--stagger">
+          <div class="slavia-public-feature-card bg-linear-to-br from-card via-card to-primary/5 ring-1 ring-default/30 hover:ring-primary/30">
+            <div class="slavia-public-feature-card__glow bg-primary/8 group-hover:bg-primary/15" />
             <div class="relative">
-              <div class="mb-5 inline-flex size-12 items-center justify-center rounded-2xl bg-primary/12 text-primary ring-1 ring-primary/25">
+              <div class="slavia-public-feature-card__icon bg-primary/12 text-primary ring-1 ring-primary/25">
                 <UIcon name="i-lucide-users-round" class="size-6" />
               </div>
               <h3 class="text-xl font-black text-highlighted">
                 <CmsEditable page-name="home" field-key="pillar_community_title" type="text" label="Filar 1 — tytuł" tag="span" fallback="Społeczność" />
               </h3>
-              <p class="mt-3 text-sm leading-relaxed text-muted">
+              <p class="mt-3 slavia-public-lead">
                 <CmsEditable
                   page-name="home"
                   field-key="pillar_community_text"
@@ -517,16 +520,16 @@ const trainingDays = [
             </div>
           </div>
 
-          <div class="group relative overflow-hidden rounded-3xl border border-default/60 bg-linear-to-br from-card via-card to-amber-500/5 p-6 shadow-sm ring-1 ring-default/30 transition-all hover:-translate-y-1 hover:shadow-xl hover:ring-amber-500/30 lg:p-8">
-            <div class="pointer-events-none absolute -right-10 -top-10 size-40 rounded-full bg-amber-500/10 blur-2xl transition-all group-hover:bg-amber-500/20" />
+          <div class="slavia-public-feature-card bg-linear-to-br from-card via-card to-amber-500/5 ring-1 ring-default/30 hover:ring-amber-500/30">
+            <div class="slavia-public-feature-card__glow bg-amber-500/10" />
             <div class="relative">
-              <div class="mb-5 inline-flex size-12 items-center justify-center rounded-2xl bg-amber-500/12 text-amber-600 ring-1 ring-amber-500/30 dark:text-amber-400">
+              <div class="slavia-public-feature-card__icon bg-amber-500/12 text-amber-600 ring-1 ring-amber-500/30 dark:text-amber-400">
                 <UIcon name="i-lucide-medal" class="size-6" />
               </div>
               <h3 class="text-xl font-black text-highlighted">
                 <CmsEditable page-name="home" field-key="pillar_sport_title" type="text" label="Filar 2 — tytuł" tag="span" fallback="Sport i rozwój" />
               </h3>
-              <p class="mt-3 text-sm leading-relaxed text-muted">
+              <p class="mt-3 slavia-public-lead">
                 <CmsEditable
                   page-name="home"
                   field-key="pillar_sport_text"
@@ -539,16 +542,16 @@ const trainingDays = [
             </div>
           </div>
 
-          <div class="group relative overflow-hidden rounded-3xl border border-default/60 bg-linear-to-br from-card via-card to-success/5 p-6 shadow-sm ring-1 ring-default/30 transition-all hover:-translate-y-1 hover:shadow-xl hover:ring-success/30 lg:p-8">
-            <div class="pointer-events-none absolute -right-10 -top-10 size-40 rounded-full bg-success/12 blur-2xl transition-all group-hover:bg-success/22" />
+          <div class="slavia-public-feature-card bg-linear-to-br from-card via-card to-success/5 ring-1 ring-default/30 hover:ring-success/30">
+            <div class="slavia-public-feature-card__glow bg-success/12" />
             <div class="relative">
-              <div class="mb-5 inline-flex size-12 items-center justify-center rounded-2xl bg-success/12 text-success ring-1 ring-success/30">
+              <div class="slavia-public-feature-card__icon bg-success/12 text-success ring-1 ring-success/30">
                 <UIcon name="i-lucide-heart-pulse" class="size-6" />
               </div>
               <h3 class="text-xl font-black text-highlighted">
                 <CmsEditable page-name="home" field-key="pillar_health_title" type="text" label="Filar 3 — tytuł" tag="span" fallback="Zdrowy trening" />
               </h3>
-              <p class="mt-3 text-sm leading-relaxed text-muted">
+              <p class="mt-3 slavia-public-lead">
                 <CmsEditable
                   page-name="home"
                   field-key="pillar_health_text"
@@ -567,20 +570,15 @@ const trainingDays = [
     <!-- MISTRZOWIE KLUBU - top 3 Sinclair -->
     <section
       v-if="champions.length > 0"
-      class="relative py-12 lg:py-20"
+      class="slavia-public-section slavia-public-section--band"
     >
       <UContainer>
-        <div class="mx-auto mb-10 max-w-3xl text-center lg:mb-14">
-          <p class="mb-3 text-[11px] font-black uppercase tracking-[0.25em] text-amber-600 dark:text-amber-400">
-            Mistrzowie klubu
-          </p>
-          <h2 class="text-balance text-3xl font-black uppercase italic leading-tight tracking-tight text-highlighted sm:text-4xl lg:text-5xl">
-            Top {{ champions.length }} Sinclair
-          </h2>
-          <p class="mt-4 text-pretty text-base leading-relaxed text-muted lg:text-lg">
-            Aktualne podium klubowe według punktów Sinclair (wzór IWF 2025–2028) — niezależne od kategorii wagowej i płci.
-          </p>
-        </div>
+        <PublicSectionHead
+          eyebrow="Mistrzowie klubu"
+          eyebrow-accent="amber"
+          :title="`Top ${champions.length} Sinclair`"
+          lead="Aktualne podium klubowe według punktów Sinclair (wzór IWF 2025–2028) — niezależne od kategorii wagowej i płci."
+        />
 
         <div class="mx-auto grid max-w-5xl gap-4 sm:grid-cols-3 sm:items-end sm:gap-6">
           <NuxtLink
@@ -637,7 +635,7 @@ const trainingDays = [
           </NuxtLink>
         </div>
 
-        <div class="mt-10 flex justify-center">
+        <div class="slavia-public-section-cta">
           <UButton
             to="/zawodnicy"
             size="lg"
@@ -653,7 +651,7 @@ const trainingDays = [
     </section>
 
     <!-- HISTORIA KLUBU -->
-    <section class="relative py-12 lg:py-20">
+    <section class="slavia-public-section slavia-public-section--band">
       <UContainer>
         <ClubHistoryTimeline
           page-name="o-klubie"
@@ -661,7 +659,7 @@ const trainingDays = [
           compact
           heading-id="home-club-history-heading"
         />
-        <div class="mt-10 flex justify-center">
+        <div class="slavia-public-section-cta">
           <UButton
             to="/o-klubie"
             size="lg"
@@ -677,20 +675,13 @@ const trainingDays = [
     </section>
 
     <!-- GRUPY TRENINGOWE -->
-    <section class="relative py-12 lg:py-20">
+    <section class="slavia-public-section slavia-public-section--band">
       <UContainer>
-        <div class="mx-auto mb-10 max-w-3xl text-center lg:mb-14">
-          <p class="mb-3 text-[11px] font-black uppercase tracking-[0.25em] text-primary">
-            Co Cię czeka na sali
-          </p>
-          <h2 class="text-balance text-3xl font-black uppercase italic leading-tight tracking-tight text-highlighted sm:text-4xl lg:text-5xl">
-            Trzy grupy, jeden klub
-          </h2>
-          <p class="mt-4 text-pretty text-base leading-relaxed text-muted lg:text-lg">
-            Niezależnie od tego czy masz 11 czy 41 lat — znajdziemy dla Ciebie miejsce. Trenujemy razem na sali, ale plan
-            zawsze jest dopasowany do możliwości i celów.
-          </p>
-        </div>
+        <PublicSectionHead
+          eyebrow="Co Cię czeka na sali"
+          title="Trzy grupy, jeden klub"
+          lead="Niezależnie od tego czy masz 11 czy 41 lat — znajdziemy dla Ciebie miejsce. Trenujemy razem na sali, ale plan zawsze jest dopasowany do możliwości i celów."
+        />
 
         <div class="grid gap-5 md:grid-cols-3">
           <div
@@ -731,45 +722,42 @@ const trainingDays = [
     <!-- AKTUALNOŚCI -->
     <section
       v-if="latestPosts.length > 0"
-      class="relative py-12 lg:py-20"
+      class="slavia-public-section slavia-public-section--band"
     >
       <UContainer>
-        <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between lg:mb-12">
-          <div class="min-w-0">
-            <p class="mb-3 text-[11px] font-black uppercase tracking-[0.25em] text-primary">
-              Z życia klubu
-            </p>
-            <h2 class="text-balance text-3xl font-black uppercase italic leading-tight tracking-tight text-highlighted sm:text-4xl lg:text-5xl">
-              Najnowsze aktualności
-            </h2>
-          </div>
-          <UButton
-            to="/aktualnosci"
-            color="neutral"
-            variant="outline"
-            trailing-icon="i-lucide-arrow-right"
-            size="md"
-            class="self-start font-bold sm:self-auto"
-          >
-            Wszystkie wpisy
-          </UButton>
-        </div>
+        <PublicSectionHead
+          split
+          eyebrow="Z życia klubu"
+          title="Najnowsze aktualności"
+        >
+          <template #actions>
+            <UButton
+              to="/aktualnosci"
+              color="neutral"
+              variant="outline"
+              trailing-icon="i-lucide-arrow-right"
+              size="md"
+              class="font-bold"
+            >
+              Wszystkie wpisy
+            </UButton>
+          </template>
+        </PublicSectionHead>
 
-        <div class="grid gap-5 md:grid-cols-3">
+        <div class="slavia-public-grid slavia-public-grid--stagger">
           <NuxtLink
             v-for="p in latestPosts"
             :key="p.id"
             :to="blogPostPath(p.title, p.id)"
-            class="group flex flex-col overflow-hidden rounded-3xl border border-default/60 bg-card shadow-sm ring-1 ring-default/30 transition-all hover:-translate-y-1 hover:shadow-xl hover:ring-primary/30"
+            class="slavia-public-card slavia-public-card--glass bg-card ring-1 ring-default/30"
           >
-            <div class="aspect-16/10 w-full overflow-hidden bg-muted/30">
+            <div class="slavia-public-card__media">
               <img
                 v-if="p.image_url"
                 :src="postImageSrc(p.image_url)"
                 :alt="p.title"
                 width="640"
                 height="400"
-                class="size-full object-cover transition-transform duration-500 group-hover:scale-105"
                 loading="lazy"
                 decoding="async"
               >
@@ -780,20 +768,20 @@ const trainingDays = [
                 <UIcon name="i-lucide-newspaper" class="size-12 text-primary/40" />
               </div>
             </div>
-            <div class="flex flex-1 flex-col p-5">
-              <p class="text-[11px] font-bold uppercase tracking-wider text-muted">
+            <div class="slavia-public-card__body">
+              <p class="slavia-public-meta text-muted">
                 {{ formatPostDate(p.created_at) }}
               </p>
-              <h3 class="mt-2 text-lg font-black leading-tight text-highlighted group-hover:text-primary">
+              <h3 class="slavia-public-card__title mt-2">
                 {{ p.title }}
               </h3>
-              <p class="mt-3 line-clamp-3 text-sm leading-relaxed text-muted">
+              <p class="mt-3 line-clamp-3 slavia-public-lead">
                 {{ postExcerpt(p) }}
               </p>
-              <div class="mt-5 flex items-center gap-2 text-sm font-bold text-primary">
+              <span class="slavia-public-card__link">
                 Czytaj dalej
-                <UIcon name="i-lucide-arrow-right" class="size-4 transition-transform group-hover:translate-x-1" />
-              </div>
+                <UIcon name="i-lucide-arrow-right" class="size-4" />
+              </span>
             </div>
           </NuxtLink>
         </div>
@@ -801,16 +789,16 @@ const trainingDays = [
     </section>
 
     <!-- NARZĘDZIA KLUBU -->
-    <section class="relative py-12 lg:py-20">
+    <section class="slavia-public-section slavia-public-section--band">
       <UContainer>
-        <div class="mx-auto mb-10 max-w-3xl text-center lg:mb-14">
-          <p class="mb-3 text-[11px] font-black uppercase tracking-[0.25em] text-primary">
+        <PublicSectionHead>
+          <template #eyebrow>
             <CmsEditable page-name="home" field-key="tools_eyebrow" type="text" label="Narzędzia — odznaka" fallback="Narzędzia" />
-          </p>
-          <h2 class="text-balance text-3xl font-black uppercase italic leading-tight tracking-tight text-highlighted sm:text-4xl lg:text-5xl">
+          </template>
+          <template #title>
             <CmsEditable page-name="home" field-key="tools_title" type="text" label="Narzędzia — tytuł" tag="span" fallback="Wszystko w jednym miejscu" />
-          </h2>
-          <p class="mt-4 text-pretty text-base leading-relaxed text-muted lg:text-lg">
+          </template>
+          <template #lead>
             <CmsEditable
               page-name="home"
               field-key="tools_subtitle"
@@ -819,15 +807,15 @@ const trainingDays = [
               tag="span"
               fallback="Ranking Sinclair, kalkulatory, blog, galeria i kontakt — żeby trenować mądrzej i być na bieżąco z życiem klubu."
             />
-          </p>
-        </div>
+          </template>
+        </PublicSectionHead>
 
-        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="slavia-public-grid slavia-public-grid--tools slavia-public-grid--stagger">
           <NuxtLink
             v-for="t in tools"
             :key="t.to"
             :to="t.to"
-            class="group relative flex items-start gap-4 rounded-2xl border border-default/60 bg-card p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg"
+            class="slavia-public-card slavia-public-card--glass group relative flex flex-row items-start gap-4 bg-card p-5 ring-1 ring-default/30"
           >
             <span class="inline-flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20 transition-colors group-hover:bg-primary/20">
               <UIcon :name="t.icon" class="size-6" />
@@ -942,17 +930,13 @@ const trainingDays = [
     </section>
 
     <!-- FAQ -->
-    <section class="relative py-12 lg:py-20">
+    <section class="slavia-public-section slavia-public-section--band">
       <UContainer>
         <div class="mx-auto max-w-3xl">
-          <div class="mb-10 text-center lg:mb-14">
-            <p class="mb-3 text-[11px] font-black uppercase tracking-[0.25em] text-primary">
-              Najczęstsze pytania
-            </p>
-            <h2 class="text-balance text-3xl font-black uppercase italic leading-tight tracking-tight text-highlighted sm:text-4xl lg:text-5xl">
-              Zanim przyjdziesz po raz pierwszy
-            </h2>
-          </div>
+          <PublicSectionHead
+            eyebrow="Najczęstsze pytania"
+            title="Zanim przyjdziesz po raz pierwszy"
+          />
 
           <UAccordion
             :items="faq.map(f => ({ label: f.q, content: f.a }))"

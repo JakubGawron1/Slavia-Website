@@ -193,7 +193,15 @@ function selectMonthFromGrid(m: string) {
 
 <template>
   <PanelPageLayout padding="compact">
-    <PanelPageHeader area="trainer" title="Składki klubowe" icon="i-lucide-banknote">
+    <PanelPageHeader
+      area="trainer"
+      title="Składki klubowe"
+      icon="i-lucide-banknote"
+      :breadcrumbs="[
+        { label: 'Panel trenera', to: '/trainer', icon: 'i-lucide-dumbbell' },
+        { label: 'Składki klubowe', icon: 'i-lucide-banknote' }
+      ]"
+    >
       <template #description>
         Widok <span class="font-semibold text-highlighted">{{ monthOverviewLabel }} {{ month.slice(0, 4) }}</span>
         — zatwierdzanie przelewów, szybkie wpisy i podgląd roku per zawodnik.
@@ -205,7 +213,7 @@ function selectMonthFromGrid(m: string) {
       </template>
     </PanelPageHeader>
 
-    <div class="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <PanelDashboardGrid variant="kpi" class="mb-6">
       <DashboardKpiCard
         label="Do weryfikacji"
         :value="pendingList.length"
@@ -234,7 +242,7 @@ function selectMonthFromGrid(m: string) {
         tone="info"
         hint="Auto-składka co miesiąc"
       />
-    </div>
+    </PanelDashboardGrid>
 
     <section
       v-if="pendingList.length"

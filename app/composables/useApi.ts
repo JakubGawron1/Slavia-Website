@@ -1,16 +1,25 @@
-import type { FetchError } from 'ofetch'
+import type { FetchError, FetchOptions } from 'ofetch'
+import { rewriteRolePreviewApiUrl } from '~/utils/rolePreviewApiRewrite'
 
 export function useApi() {
   const auth = useAuth()
   const expBanRedirect = useExperimentalFlag('ban_redirect_on_403')
 
-  return $fetch.create({
+  const rolePreview = useRolePreviewState()
+  const toast = useToast()
+
+  const client = $fetch.create({
     async onRequest({ options }) {
       options.baseURL = auth.apiBase.value
-      // Ochrona przed „wiszącymi” requestami, które w praktyce wyglądają jak zawieszona nawigacja.
-      // ofetch obsługuje timeout (ms) — ustawiamy domyślny, jeśli caller nie podał własnego.
-      // Dla FormData (uploady na Cloudinary) zwiększamy timeout — duże zdjęcia/filmy
-      // potrafią przesyłać się znacznie dłużej niż zwykły JSON request.
+      const method = String(options.method || 'GET').toUpperCase()
+      if (rolePreview.isReadOnly.value && method !== 'GET' && method !== 'HEAD') {
+        toast.add({
+          title: 'Podgląd read-only',
+          description: 'Zakończ symulację roli, aby zapisywać zmiany.',
+          color: 'warning'
+        })
+        throw new Error('ROLE_PREVIEW_READONLY')
+      }
       if (typeof options.timeout !== 'number') {
         options.timeout = options.body instanceof FormData ? 120_000 : 20_000
       }
@@ -18,10 +27,12 @@ export function useApi() {
       if (auth.token.value) {
         headers.set('Authorization', `Bearer ${auth.token.value}`)
       }
+      if (rolePreview.isActive.value && rolePreview.state.value?.targetUserId) {
+        headers.set('X-Slavia-Role-Preview', rolePreview.state.value.targetUserId)
+      }
       if (!headers.has('Accept')) {
         headers.set('Accept', 'application/json')
       }
-      /** Multipart: granica musi ustawić przeglądarka — nie wysyłaj application/json. */
       if (options.body instanceof FormData) {
         headers.delete('Content-Type')
       }
@@ -35,8 +46,6 @@ export function useApi() {
         auth.logout()
       }
       if (response?.status === 403) {
-        // Jeśli backend blokuje konto (ban), przekieruj na /banned.
-        // Nie rób tego dla SuperAdmin (konta super mają być odporne na flagę is_banned).
         if (expBanRedirect.value && !auth.isSuperAdmin.value) {
           queueMicrotask(() => {
             void navigateTo('/banned')
@@ -45,6 +54,15 @@ export function useApi() {
       }
     }
   })
+
+  return <T>(url: string, opts?: FetchOptions) => {
+    const method = String(opts?.method || 'GET')
+    const rewritten = rewriteRolePreviewApiUrl(url, method, rolePreview.state.value, {
+      isActive: rolePreview.isActive.value,
+      isAthletePreview: rolePreview.isAthletePreview.value
+    })
+    return client<T>(rewritten, opts as Parameters<typeof client>[1])
+  }
 }
 
 export function getApiErrorMessage(e: unknown, fallback = 'Wystąpił błąd.') {

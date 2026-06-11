@@ -589,7 +589,7 @@ function handleDayClick(day: Date) {
       description="Harmonogram treningów i startów klubowych."
     />
 
-    <div class="slavia-content-well mx-auto flex w-full max-w-7xl flex-col gap-8 sm:gap-10">
+    <div class="slavia-content-well slavia-public-section mx-auto flex w-full max-w-7xl flex-col gap-8 sm:gap-10">
     <div class="slavia-toolbar flex flex-col gap-4">
       <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
       <div class="flex flex-wrap items-center justify-center gap-2 md:justify-start">

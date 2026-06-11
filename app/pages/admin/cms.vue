@@ -170,43 +170,35 @@ watch(editPageName, loadPageEditor)
       icon="i-lucide-layout-template"
     />
 
-    <div class="mt-6 flex flex-wrap gap-2">
-      <UButton
-        :variant="tab === 'pages' ? 'solid' : 'soft'"
-        @click="tab = 'pages'"
-      >
-        Strony
-      </UButton>
-      <UButton
-        :variant="tab === 'variables' ? 'solid' : 'soft'"
-        @click="tab = 'variables'"
-      >
-        Zmienne
-      </UButton>
-      <UButton
-        :variant="tab === 'navigation' ? 'solid' : 'soft'"
-        @click="tab = 'navigation'"
-      >
-        Nawigacja
-      </UButton>
-      <UButton
-        :variant="tab === 'history' ? 'solid' : 'soft'"
-        @click="tab = 'history'"
-      >
-        Historia
-      </UButton>
-    </div>
+    <UTabs
+      v-model="tab"
+      :items="[
+        { label: 'Strony', value: 'pages', icon: 'i-lucide-file-text' },
+        { label: 'Zmienne', value: 'variables', icon: 'i-lucide-braces' },
+        { label: 'Nawigacja', value: 'navigation', icon: 'i-lucide-layout-grid' },
+        { label: 'Historia', value: 'history', icon: 'i-lucide-history' }
+      ]"
+      class="slavia-panel-tab-strip sticky top-[calc(var(--ui-header-height,4rem)+0.5rem)] z-20 mt-6"
+    />
 
-    <p
+    <UAlert
       v-if="errorMsg"
-      class="mt-4 text-sm text-error"
-    >
-      {{ errorMsg }}
-    </p>
+      color="error"
+      variant="subtle"
+      icon="i-lucide-alert-circle"
+      class="mt-4 rounded-2xl"
+      :title="errorMsg"
+    />
+
+    <PanelLoadingState
+      v-if="loading"
+      class="mt-6"
+      label="Wczytywanie CMS…"
+    />
 
     <UCard
-      v-if="tab === 'pages'"
-      class="mt-6"
+      v-else-if="tab === 'pages'"
+      class="mt-6 overflow-hidden rounded-2xl border-default/70 ring-1 ring-default/20"
     >
       <div class="flex flex-col gap-4 p-4 sm:p-6">
         <UFormField label="Nazwa strony (slug)">
@@ -312,7 +304,7 @@ watch(editPageName, loadPageEditor)
 
     <UCard
       v-else-if="tab === 'variables'"
-      class="mt-6"
+      class="mt-6 overflow-hidden rounded-2xl border-default/70 ring-1 ring-default/20"
     >
       <div class="flex flex-col gap-4 p-4 sm:p-6">
         <div
@@ -452,7 +444,7 @@ watch(editPageName, loadPageEditor)
 
     <UCard
       v-else-if="tab === 'navigation'"
-      class="mt-6"
+      class="mt-6 overflow-hidden rounded-2xl border-default/70 ring-1 ring-default/20"
     >
       <div class="p-4 sm:p-6">
         <UFormField
@@ -475,9 +467,9 @@ watch(editPageName, loadPageEditor)
 
     <UCard
       v-else
-      class="mt-6"
+      class="mt-6 overflow-hidden rounded-2xl border-default/70 ring-1 ring-default/20"
     >
-      <div class="overflow-x-auto p-4 sm:p-6">
+      <div class="slavia-data-table overflow-x-auto p-4 sm:p-6">
         <table class="w-full text-left text-sm">
           <thead>
             <tr class="border-b border-default text-muted">

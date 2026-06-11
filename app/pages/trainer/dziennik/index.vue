@@ -40,7 +40,13 @@ const filtered = computed(() => {
       title="Dzienniki treningów"
       icon="i-lucide-book-marked"
       description="Wybierz zawodnika, aby dodać lub edytować wpisy z jednostek treningowych — zawodnik zobaczy je u siebie w panelu."
-    />
+    >
+      <template #actions>
+        <UButton to="/trainer" variant="soft" color="neutral" size="sm" icon="i-lucide-layout-dashboard">
+          Panel
+        </UButton>
+      </template>
+    </PanelPageHeader>
 
     <div class="mb-6 max-w-md">
       <UInput
@@ -51,16 +57,19 @@ const filtered = computed(() => {
       />
     </div>
 
-    <div
+    <PanelLoadingState
       v-if="pending"
-      class="flex items-center gap-2 text-muted py-10"
-    >
-      <UIcon
-        name="i-lucide-loader-2"
-        class="size-6 animate-spin"
-      />
-      Ładowanie listy…
-    </div>
+      variant="cards"
+      :count="6"
+      label="Ładowanie listy zawodników…"
+    />
+
+    <PublicEmptyState
+      v-else-if="filtered.length === 0"
+      icon="i-lucide-user-round-search"
+      title="Brak wyników"
+      description="Spróbuj innej frazy wyszukiwania lub wyczyść filtr."
+    />
 
     <div
       v-else
@@ -70,7 +79,7 @@ const filtered = computed(() => {
         v-for="a in filtered"
         :key="a.id"
         :to="trainerDiaryAthletePath(a.full_name, a.id)"
-        class="group flex items-center justify-between gap-3 rounded-xl border border-default bg-card p-4 transition-all hover:border-primary/40 hover:shadow-md"
+        class="slavia-athlete-picker-card group"
       >
         <div class="min-w-0">
           <p class="font-semibold text-highlighted truncate group-hover:text-primary">
@@ -87,13 +96,6 @@ const filtered = computed(() => {
         />
       </NuxtLink>
     </div>
-
-    <p
-      v-if="!pending && filtered.length === 0"
-      class="py-12 text-center text-muted"
-    >
-      Brak zawodników spełniających kryteria.
-    </p>
 
     <div class="mt-10">
       <UButton

@@ -35,6 +35,7 @@ export const SUPERADMIN_SEARCH_CATALOG: SuperadminSearchEntry[] = [
   // System i bezpieczeństwo
   link('sa-accounts', 'Konta i role', 'Administratorzy, trenerzy, zawodnicy', 'i-lucide-shield-alert', '/superadmin/zawodnicy?tab=accounts', 'text-red-500', 'bg-red-500/10', 'konta role uprawnienia'),
   link('sa-audit', 'Logi systemowe', 'Audyt operacji', 'i-lucide-history', '/superadmin/audit-logs', 'text-primary', 'bg-primary/10', 'audyt logi'),
+  link('sa-role-preview', 'Podgląd roli', 'Symulator read-only konta', 'i-lucide-eye', '/superadmin/podglad-roli', 'text-amber-600', 'bg-amber-500/10', 'impersonate podgląd zawodnik trener'),
   link('sa-workers', 'Workery cron', 'Zadania w tle', 'i-lucide-timer', '/superadmin/workers', 'text-fuchsia-500', 'bg-fuchsia-500/10'),
   link('sa-developer', 'Narzędzia developera', 'Diagnostyka API i PWA', 'i-lucide-terminal', '/superadmin/developer', 'text-violet-500', 'bg-violet-500/10', 'developer seo cwv'),
   link('sa-panel-nav', 'Nawigacja paneli', 'Widoczność modułów ról', 'i-lucide-layout-grid', '/superadmin/nawigacja-paneli', 'text-sky-500', 'bg-sky-500/10', 'feature flags moduły'),

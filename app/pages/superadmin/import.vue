@@ -121,9 +121,13 @@ useSeoMeta({
       title="Import danych z federacji"
       icon="i-lucide-database"
       description="Import danych zawodników z federacji został wyłączony. Synchronizacja zawodów nadal działa w module kalendarza klubowego."
+      :breadcrumbs="[
+        { label: 'SuperAdmin', to: '/superadmin', icon: 'i-lucide-shield-check' },
+        { label: 'Import danych', icon: 'i-lucide-database' }
+      ]"
     />
 
-    <UCard>
+    <UCard class="overflow-hidden rounded-2xl border-default/70 ring-1 ring-default/20">
       <template #header>
         <h2 class="text-lg font-semibold">Import zawodników z federacji</h2>
       </template>
@@ -158,7 +162,7 @@ useSeoMeta({
           </UButton>
         </div>
 
-        <div class="overflow-x-auto rounded-xl border border-default">
+        <div class="slavia-data-table overflow-x-auto rounded-xl border border-default/60">
           <table class="min-w-full text-sm">
             <thead>
               <tr class="border-b border-default bg-muted/30 text-left text-muted">

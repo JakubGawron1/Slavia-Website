@@ -110,8 +110,11 @@ async function submit() {
       </template>
     </PublicPageHeader>
 
-    <div class="mx-auto grid w-full max-w-6xl gap-8 lg:grid-cols-2 lg:gap-10 lg:items-start">
-      <div class="slavia-page-card space-y-6 border border-default/60 bg-card/80 p-6 shadow-sm sm:p-8">
+    <div class="slavia-content-well slavia-public-grid slavia-public-grid--2 lg:items-start">
+      <div
+        v-slavia-reveal="'fade-up'"
+        class="slavia-page-card space-y-6 border border-default/60 bg-card/80 p-6 shadow-sm sm:p-8"
+      >
         <div>
           <h2 class="text-lg font-bold text-highlighted">
             O klubie
@@ -190,7 +193,11 @@ async function submit() {
         </UButton>
       </div>
 
-      <UCard class="slavia-page-card h-full">
+      <UCard
+        v-slavia-reveal="'fade-up'"
+        :data-slavia-reveal-delay="80"
+        class="slavia-page-card h-full"
+      >
         <template #header>
           <div class="px-1 pt-1">
             <h2 class="text-lg font-bold text-highlighted">

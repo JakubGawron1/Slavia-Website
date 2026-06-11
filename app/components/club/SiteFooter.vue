@@ -16,11 +16,11 @@ const appReleaseLabel = computed(() => String(config.public.appVersion ?? ''))
 
 <template>
   <footer
-    class="border-t border-default bg-muted/5 py-8 slavia-safe-bottom slavia-safe-x lg:py-10"
+    class="slavia-public-footer slavia-safe-bottom slavia-safe-x"
   >
-    <div class="mx-auto flex max-w-[1440px] flex-col gap-8 md:flex-row md:items-center md:justify-between lg:gap-12">
+    <div class="mx-auto flex max-w-[1440px] flex-col gap-8 px-3 sm:px-4 lg:px-6 md:flex-row md:items-center md:justify-between lg:gap-12 xl:px-8">
       <div class="flex flex-col gap-2">
-        <p class="text-sm font-bold text-highlighted uppercase tracking-widest">
+        <p class="slavia-public-footer__brand">
           CKS Slavia Ruda Śląska
         </p>
         <div class="flex flex-col text-xs text-muted">
@@ -44,28 +44,28 @@ const appReleaseLabel = computed(() => String(config.public.appVersion ?? ''))
             Treningi: Pn, Śr, Pt (15:00 - 18:00)
           </span>
         </div>
-        <div class="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs">
+        <div class="mt-4 flex flex-wrap gap-x-5 gap-y-2">
           <NuxtLink
             to="/o-klubie"
-            class="font-semibold text-primary underline-offset-2 hover:underline"
+            class="slavia-public-footer__link"
           >
             O klubie
           </NuxtLink>
           <NuxtLink
             to="/klub/wyzwania"
-            class="font-semibold text-primary underline-offset-2 hover:underline"
+            class="slavia-public-footer__link"
           >
             Wyzwania miesiąca
           </NuxtLink>
           <NuxtLink
             to="/zawodnicy"
-            class="font-semibold text-primary underline-offset-2 hover:underline"
+            class="slavia-public-footer__link"
           >
             Zawodnicy
           </NuxtLink>
           <NuxtLink
             to="/kalendarz"
-            class="font-semibold text-primary underline-offset-2 hover:underline"
+            class="slavia-public-footer__link"
           >
             Kalendarz
           </NuxtLink>

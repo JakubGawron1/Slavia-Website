@@ -33,9 +33,9 @@ const containerClass = computed(() => {
   ]
   if (props.narrow) c.push('max-w-3xl')
   else if (props.centered) c.push('max-w-5xl')
-  if (props.padding === 'default') c.push('pt-10 pb-8 sm:pt-14 sm:pb-12 lg:pt-16 lg:pb-14')
-  else if (props.padding === 'compact') c.push('pt-8 pb-6 sm:pt-12 sm:pb-10')
-  else if (props.padding === 'hero') c.push('pt-8 pb-6 sm:pt-10 sm:pb-8 lg:pt-12 lg:pb-10')
+  if (props.padding === 'default') c.push('pt-8 pb-6 sm:pt-10 sm:pb-8 lg:pt-12 lg:pb-10')
+  else if (props.padding === 'compact') c.push('pt-6 pb-5 sm:pt-8 sm:pb-7')
+  else if (props.padding === 'hero') c.push('pt-6 pb-5 sm:pt-8 sm:pb-7 lg:pt-10 lg:pb-8')
   else if (props.padding === 'flush') c.push('pt-4 pb-0 sm:pt-6')
   if (props.animate) c.push('animate-page-in')
   const layoutClass = presetLayoutClass.value
@@ -67,7 +67,10 @@ const containerClass = computed(() => {
         class="absolute inset-x-0 bottom-0 h-24 bg-linear-to-t from-background/80 to-transparent dark:from-background/90"
       />
     </div>
-    <div class="slavia-page-flow">
+    <div
+      class="slavia-page-flow"
+      :class="padding === 'compact' ? 'slavia-page-flow--tight' : ''"
+    >
       <slot />
     </div>
     <SlaviaScrollToTop />

@@ -212,15 +212,10 @@ useSeoMeta({
     </header>
 
     <main class="slavia-diary-compose__main flex-1 overflow-y-auto px-4 py-6 sm:px-6">
-      <div
+      <PanelLoadingState
         v-if="loading"
-        class="flex justify-center py-16 text-muted"
-      >
-        <UIcon
-          name="i-lucide-loader-2"
-          class="size-8 animate-spin"
-        />
-      </div>
+        label="Wczytywanie wpisów…"
+      />
       <div
         v-else
         class="mx-auto max-w-3xl space-y-6"

@@ -71,6 +71,25 @@ const headerCopy = computed(() => {
 const showAdminsManager = computed(
   () => props.area !== 'trainer' && (auth.isAdmin.value || auth.isSuperAdmin.value)
 )
+
+const breadcrumbs = computed(() => {
+  if (props.area === 'trainer') {
+    return [
+      { label: 'Panel trenera', to: '/trainer', icon: 'i-lucide-dumbbell' },
+      { label: 'Zespół i konta', icon: 'i-lucide-users-round' }
+    ]
+  }
+  if (props.area === 'superadmin') {
+    return [
+      { label: 'SuperAdmin', to: '/superadmin', icon: 'i-lucide-shield-check' },
+      { label: 'Zespół i konta', icon: 'i-lucide-users-round' }
+    ]
+  }
+  return [
+    { label: 'Administracja', to: '/admin', icon: 'i-lucide-shield' },
+    { label: 'Zespół i konta', icon: 'i-lucide-users-round' }
+  ]
+})
 </script>
 
 <template>
@@ -81,27 +100,39 @@ const showAdminsManager = computed(
       :title="headerCopy.title"
       icon="i-lucide-users-round"
       :description="headerCopy.description"
-    />
+      :breadcrumbs="breadcrumbs"
+    >
+      <template v-if="area === 'trainer'" #actions>
+        <UButton to="/trainer" variant="soft" color="neutral" size="sm" icon="i-lucide-layout-dashboard">
+          Panel
+        </UButton>
+      </template>
+    </PanelPageHeader>
 
     <nav
-      class="mb-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap"
+      class="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2"
       aria-label="Sekcje zespołu"
     >
       <button
         v-for="t in tabs"
         :key="t.id"
         type="button"
-        class="group flex min-h-11 flex-1 flex-col rounded-2xl border px-4 py-3 text-left transition sm:min-w-48 sm:max-w-md"
+        class="group flex min-h-[4.75rem] flex-col rounded-2xl border px-4 py-3.5 text-left shadow-sm ring-1 transition duration-200"
         :class="tab === t.id
-          ? 'border-primary/45 bg-primary/10 shadow-sm ring-1 ring-primary/25'
-          : 'border-default/60 bg-card/80 hover:border-primary/25 hover:bg-muted/10'"
+          ? 'border-primary/45 bg-primary/10 ring-primary/25'
+          : 'border-default/60 bg-card/85 ring-default/15 hover:border-primary/25 hover:bg-muted/10'"
         @click="tab = t.id"
       >
-        <span class="flex items-center gap-2 font-bold text-highlighted">
-          <UIcon :name="t.icon" class="size-4 text-primary" />
+        <span class="flex items-center gap-2.5 font-bold text-highlighted">
+          <span
+            class="flex size-9 items-center justify-center rounded-xl ring-1 ring-inset ring-current/10"
+            :class="tab === t.id ? 'bg-primary/15 text-primary' : 'bg-muted/15 text-muted group-hover:text-primary'"
+          >
+            <UIcon :name="t.icon" class="size-4" />
+          </span>
           {{ t.label }}
         </span>
-        <span class="mt-1 text-xs text-muted">{{ t.hint }}</span>
+        <span class="mt-1.5 pl-[2.875rem] text-xs leading-snug text-muted">{{ t.hint }}</span>
       </button>
     </nav>
 

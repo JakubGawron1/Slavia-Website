@@ -61,6 +61,8 @@ const {
 <template>
   <KlubPageShell
     icon="i-lucide-user-check"
+    page-label="Obecność"
+    page-icon="i-lucide-user-check"
     staff-title="Obecność kadry"
     staff-description="Kalendarz, weryfikacja zgłoszeń i kod QR do druku — jeden moduł obecności."
     athlete-title="Moja obecność"
@@ -85,25 +87,14 @@ const {
 
     <AttendanceQrScannerPanel v-if="!isStaff && activeView === 'scan'" />
 
-    <section
+    <PanelPageSection
       v-if="isStaff && activeView === 'calendar'"
+      title="Nowe zgłoszenia obecności"
+      description="Zgłoszenia zawodników oczekujące na zatwierdzenie przez kadrę."
+      icon="i-lucide-clipboard-check"
       class="relative mb-6 overflow-hidden rounded-[1.75rem] border border-warning/30 bg-linear-to-br from-warning/14 via-card to-card p-5 shadow-lg ring-1 ring-warning/20 sm:p-6"
     >
-      <div class="pointer-events-none absolute -right-16 -top-16 size-48 rounded-full bg-warning/20 blur-3xl" />
-      <div class="relative flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div class="min-w-0">
-          <p class="text-[10px] font-black uppercase tracking-[0.2em] text-warning">
-            Do weryfikacji
-          </p>
-          <h2 class="mt-1 text-xl font-black text-highlighted sm:text-2xl">
-            Nowe zgłoszenia obecności
-          </h2>
-          <p class="mt-2 text-sm text-muted">
-            {{ pendingQueue.length }}
-            {{ pendingQueue.length === 1 ? 'wpis czeka' : 'wpisów czeka' }}
-            na zatwierdzenie — ze wszystkich zawodników.
-          </p>
-        </div>
+      <template #actions>
         <UButton
           v-if="pendingQueue.length"
           size="lg"
@@ -115,19 +106,21 @@ const {
         >
           Zatwierdź wszystkie ({{ pendingQueue.length }})
         </UButton>
-      </div>
+      </template>
 
-      <div v-if="pendingLoading" class="relative mt-5 flex justify-center py-10">
-        <UIcon name="i-lucide-loader-2" class="size-9 animate-spin text-warning" />
-      </div>
-
-      <PublicEmptyState
-        v-else-if="!pendingQueue.length"
+      <PanelLoadingState
+        v-if="pendingLoading"
         compact
+        label="Wczytywanie kolejki…"
+        class="relative mt-2"
+      />
+
+      <SlaviaEmptyState
+        v-else-if="!pendingQueue.length"
         icon="i-lucide-sparkles"
         title="Brak oczekujących zgłoszeń"
         description="Gdy zawodnik zgłosi obecność, pojawi się tutaj do jednego kliknięcia."
-        class="relative mt-5"
+        class="relative mt-2"
       />
 
       <ul v-else class="relative mt-5 space-y-2.5">
@@ -170,20 +163,17 @@ const {
           </UButton>
         </li>
       </ul>
-    </section>
+    </PanelPageSection>
 
-    <UCard v-if="!isStaff && activeView === 'calendar'" class="slavia-page-card mb-6">
-      <p class="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
-        Szybkie zgłoszenie
-      </p>
-      <h2 class="mt-1 text-lg font-black text-highlighted">
-        Zgłoś obecność na trening
-      </h2>
-      <p class="mt-1 text-sm text-muted">
-        Na sali zeskanuj kod QR w aplikacji mobilnej Slavia (menu → Skaner obecności) — wpis jest od razu zatwierdzony.
-        Poniżej możesz też wysłać ręczne zgłoszenie do weryfikacji przez trenera.
-      </p>
-      <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <PanelPageSection
+      v-if="!isStaff && activeView === 'calendar'"
+      title="Zgłoś obecność na trening"
+      description="Na sali zeskanuj kod QR w aplikacji mobilnej Slavia — wpis jest od razu zatwierdzony. Poniżej możesz też wysłać ręczne zgłoszenie do weryfikacji."
+      icon="i-lucide-send"
+      class="mb-6"
+    >
+    <UCard class="slavia-page-card">
+      <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <UFormField label="Data treningu">
           <UInput v-model="sessionDate" type="date" class="w-full" />
         </UFormField>
@@ -203,18 +193,18 @@ const {
         </UButton>
       </div>
     </UCard>
+    </PanelPageSection>
 
-    <div v-show="activeView === 'calendar'" class="slavia-content-well">
+    <PanelPageSection
+      v-show="activeView === 'calendar'"
+      title="Kalendarz treningowy"
+      :description="format(monthRef, 'LLLL yyyy', { locale: pl })"
+      icon="i-lucide-calendar-days"
+    >
       <UCard class="slavia-page-card overflow-hidden">
         <div class="mb-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div class="min-w-0 flex-1">
-            <p class="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
-              Kalendarz treningowy
-            </p>
-            <p class="mt-1 text-xl font-black text-highlighted sm:text-2xl">
-              {{ format(monthRef, 'LLLL yyyy', { locale: pl }) }}
-            </p>
-            <div class="mt-3 flex flex-wrap gap-2">
+            <div class="flex flex-wrap gap-2">
               <UBadge variant="subtle" color="success" size="sm">{{ monthStats.present }} obecnych</UBadge>
               <UBadge variant="subtle" color="error" size="sm">{{ monthStats.absent }} nieobecnych</UBadge>
               <UBadge v-if="monthStats.pending" variant="subtle" color="warning" size="sm">
@@ -400,7 +390,7 @@ const {
           </ul>
         </div>
       </UCard>
-    </div>
+    </PanelPageSection>
 
     <SlaviaModal
       v-model:open="attendanceModalOpen"

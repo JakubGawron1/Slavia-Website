@@ -24,6 +24,7 @@ useSeoMeta({
 })
 
 const auth = useAuth()
+const rolePreviewState = useRolePreviewState()
 const apiFetch = useApi()
 const toast = useToast()
 const terms = useSlaviaCopy()
@@ -39,7 +40,7 @@ const {
   yearStats,
   refreshYearTable
 } = useMembershipYearGrid(async (y) => {
-  if (!auth.canAccessAthletePortal.value || !auth.isAthlete.value) return []
+  if (!auth.canAccessAthletePortal.value || !rolePreviewState.viewingAthletePortal.value) return []
   const q = `?year=${encodeURIComponent(String(y))}`
   return await apiFetch<PaymentMonthStatusRow[]>(`${apiRoutes.payments.myYear}${q}`).catch(() => [])
 })
@@ -68,7 +69,7 @@ const paymentForm = reactive<{
 })
 
 async function loadAthleteProfile() {
-  if (!auth.canAccessAthletePortal.value || !auth.isAthlete.value) {
+  if (!auth.canAccessAthletePortal.value || !rolePreviewState.viewingAthletePortal.value) {
     athleteProfile.value = null
     return
   }
@@ -76,7 +77,7 @@ async function loadAthleteProfile() {
 }
 
 async function refreshPaymentStatus() {
-  if (!auth.canAccessAthletePortal.value || !auth.isAthlete.value) {
+  if (!auth.canAccessAthletePortal.value || !rolePreviewState.viewingAthletePortal.value) {
     paymentStatus.value = null
     return
   }
@@ -212,6 +213,7 @@ const standingOrderTimeline = computed(() => {
 
 const canSubmitPayment = computed(() =>
   auth.isAthlete.value
+  && !rolePreviewState.isReadOnly.value
   && !hasStandingOrder(paymentStatus.value)
   && !paymentStatus.value?.is_paid
 )
@@ -219,6 +221,16 @@ const canSubmitPayment = computed(() =>
 
 <template>
   <PanelPageLayout padding="compact">
+    <UAlert
+      v-if="rolePreviewState.isReadOnly.value"
+      class="mb-4"
+      color="warning"
+      variant="subtle"
+      icon="i-lucide-eye"
+      title="Podgląd read-only"
+      description="Widzisz składki tego zawodnika — zgłaszanie wpłat jest wyłączone."
+    />
+
     <PanelPageHeader area="athlete" title="Składka klubowa" icon="i-lucide-banknote">
       <template #description>
         Miesięczna składka <span class="font-bold">{{ formatPln(MONTHLY_FEE_PLN) }}</span> — termin
@@ -226,12 +238,16 @@ const canSubmitPayment = computed(() =>
       </template>
       <template #actions>
         <UButton to="/athlete" variant="soft" color="neutral" icon="i-lucide-layout-dashboard" size="sm">
-          Panel
+          Panel zawodnika
         </UButton>
       </template>
     </PanelPageHeader>
 
-    <div v-if="paymentStatus" class="mb-6 grid gap-3 sm:grid-cols-3">
+    <PanelDashboardGrid
+      v-if="paymentStatus"
+      variant="kpi"
+      class="mb-6"
+    >
       <DashboardKpiCard
         label="Kwota miesięczna"
         :value="formatPln(MONTHLY_FEE_PLN)"
@@ -253,7 +269,7 @@ const canSubmitPayment = computed(() =>
         :tone="yearStats.overdue ? 'warning' : 'success'"
         :hint="yearStats.pending ? `${yearStats.pending} oczekuje na weryfikację` : `${year}`"
       />
-    </div>
+    </PanelDashboardGrid>
 
     <PanelCalloutBanner
       v-if="paymentStatus?.is_overdue && !paymentStatus.is_paid"
