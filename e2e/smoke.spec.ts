@@ -87,4 +87,23 @@ test.describe('ochrona tras', () => {
     await page.goto('/athlete', gotoOpts)
     await page.waitForURL(/\/logowanie/, { timeout: 20_000 })
   })
+
+  test('panel trenera wymaga logowania', async ({ page }) => {
+    await page.goto('/trainer', gotoOpts)
+    await page.waitForURL(/\/logowanie/, { timeout: 20_000 })
+  })
+
+  test('Trener AI wymaga logowania', async ({ page }) => {
+    await page.goto('/athlete/ai-coach', gotoOpts)
+    await page.waitForURL(/\/logowanie/, { timeout: 20_000 })
+  })
+})
+
+test.describe('AI coach smoke', () => {
+  test('publiczny status asystenta przez BFF', async ({ request }) => {
+    const res = await request.get('/api/ai/public/status')
+    expect(res.ok()).toBeTruthy()
+    const body = await res.json() as { available?: boolean, reason?: string }
+    expect(typeof body.available).toBe('boolean')
+  })
 })

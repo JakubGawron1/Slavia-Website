@@ -169,10 +169,10 @@
 | ID | Temat | Ulepszenie |
 |----|-------|------------|
 | FE-BFF1 ✅ | `/api/ai/public/**` | `server/utils/publicAiRateLimit.ts` w `ai/public/chat.post.ts` |
-| FE-BFF2 | `status.get.ts` | Graceful fallback |
-| FE-BFF3 | `smoke-backend.ps1` | Brak ping `/api/ai/coach/status` |
+| FE-BFF2 ✅ | `status.get.ts` | Graceful fallback (`/api/ai/public/status`) |
+| FE-BFF3 ✅ | `smoke-backend.ps1` | Ping `/api/ai/coach/public/status` |
 | FE-BFF4 | `release:check` | Opcjonalny AI healthcheck |
-| FE-BFF5 | `OlympicCoachPanel` | `lazy: true` na `useAsyncData` |
+| FE-BFF5 ✅ | `OlympicCoachPanel` | `lazy: true` na `useAsyncData` |
 
 ---
 
@@ -189,7 +189,7 @@
 | BE-G3 | Wersja OpenAPI = `Cargo.toml` (5.1.0) | j.w. |
 | BE-G4 | CI: embed ≠ router → fail | `.github/workflows/` |
 | BE-G5 ✅ | **`RequireTrainerOrHigher` + Admin** | `src/middleware/auth.rs` |
-| BE-G6 | Distributed throttle (Redis/Turso) | `src/post_throttle.rs`, `login_throttle.rs` |
+| BE-G6 ✅ | Distributed throttle (SQLite/Turso MVP) | `distributed_throttle.rs` + `rate_limit_hits` |
 | BE-G7 | IP throttle login + contact | `src/router.rs` |
 | BE-G8 | JWT: odrzuć start bez secret na prod | `src/main.rs` |
 | BE-G9 | Security headers (HSTS, X-Frame-Options) | `src/router.rs` |
@@ -568,11 +568,11 @@
 
 ### Fala 3 — architektura (3–4 tygodnie)
 
-18. Refactor monolitów: `[slug].vue`, OlympicCoachPanel, api_service.dart
-19. ✅ `SlaviaChatMarkdown.vue` (shared markdownInline — backlog)
-20. Mobile: feature flags, theme z JSON
-21. Distributed throttle
-22. E2E: panele auth, AI coach — częściowo (`porownanie`, `kontakt` w smoke)
+18. ✅ Refactor monolitów (start): `useAthletePublicProfilePage`, OlympicCoachPanel `lazy`, `api_service_ai_coach.dart` + `api_service_public_ext.dart`
+19. ✅ `SlaviaChatMarkdown.vue` + `@slavia/shared/markdown-inline`
+20. ✅ Mobile: `PanelNavigationService` + `ThemePresetCatalog` z JSON
+21. ✅ Distributed throttle (`DISTRIBUTED_THROTTLE=1` → SQLite `rate_limit_hits`)
+22. ✅ E2E: panel trenera, Trener AI auth, public AI status BFF
 
 ### Fala 4 — strategiczne (backlog)
 
