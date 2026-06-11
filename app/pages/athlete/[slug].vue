@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { format, parseISO } from 'date-fns'
 import { pl } from 'date-fns/locale'
+import type { CompetitionResult } from '~/types/models'
 import type { SinclairGender } from '~/utils/sinclair'
 import { sinclairTotal } from '~/utils/sinclair'
 import { effectiveBodyweightKgForSinclair } from '~/utils/sinclairAthlete'
 import { cmsRoutePageName } from '~/utils/cmsRoutePage'
-import AthleteProgressChart from '~/components/AthleteProgressChart.vue'
-import AthleteCombinedChart from '~/components/AthleteCombinedChart.vue'
+import AthleteProgressChart, { type AthleteChartPoint } from '~/components/AthleteProgressChart.vue'
+import AthleteCombinedChart, { type CombinedChartPoint } from '~/components/AthleteCombinedChart.vue'
 
 const route = useRoute()
 const auth = useAuth()
