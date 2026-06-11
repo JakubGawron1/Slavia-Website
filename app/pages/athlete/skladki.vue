@@ -10,7 +10,6 @@ import {
   daysUntilDueDate,
   hasStandingOrder,
   membershipMonthBadgeFromStatus,
-  membershipYearStats,
   MONTHLY_FEE_PLN,
   monthLabelPl,
   showPre10PaymentAthleteReminder,
@@ -31,14 +30,19 @@ const terms = useSlaviaCopy()
 
 const paymentStatus = ref<PaymentStatusResponse | null>(null)
 const athleteProfile = ref<Athlete | null>(null)
-const currentYear = new Date().getFullYear()
 const currentMonth = new Date().toISOString().slice(0, 7)
-const calendarMonth = new Date().getMonth() + 1
-const canPreviewNextYear = computed(() => calendarMonth >= 11)
-const allowedYears = computed(() => (canPreviewNextYear.value ? [currentYear, currentYear + 1] : [currentYear]))
-const year = ref<number>(currentYear)
-const loadingYear = ref(false)
-const yearRows = ref<PaymentMonthStatusRow[]>([])
+const {
+  year,
+  allowedYears,
+  yearRows,
+  loadingYear,
+  yearStats,
+  refreshYearTable
+} = useMembershipYearGrid(async (y) => {
+  if (!auth.canAccessAthletePortal.value || !auth.isAthlete.value) return []
+  const q = `?year=${encodeURIComponent(String(y))}`
+  return await apiFetch<PaymentMonthStatusRow[]>(`${apiRoutes.payments.myYear}${q}`).catch(() => [])
+})
 const submitting = ref(false)
 const paymentFormRef = ref<HTMLElement | null>(null)
 const PAY_HIDE_LS = 'slavia_hide_payment_reminder'
@@ -69,24 +73,6 @@ async function loadAthleteProfile() {
     return
   }
   athleteProfile.value = await apiFetch<Athlete | null>('/api/athletes/me').catch(() => null)
-}
-
-async function refreshYearTable() {
-  if (!auth.canAccessAthletePortal.value || !auth.isAthlete.value) {
-    yearRows.value = []
-    return
-  }
-  if (!allowedYears.value.includes(year.value)) {
-    year.value = allowedYears.value[0]!
-  }
-  loadingYear.value = true
-  try {
-    const q = `?year=${encodeURIComponent(String(year.value))}`
-    const rows = await apiFetch<PaymentMonthStatusRow[]>(`${apiRoutes.payments.myYear}${q}`).catch(() => [])
-    yearRows.value = Array.isArray(rows) ? rows : []
-  } finally {
-    loadingYear.value = false
-  }
 }
 
 async function refreshPaymentStatus() {
@@ -167,10 +153,6 @@ async function copyTransferTitle() {
   }
 }
 
-watch(year, () => {
-  void refreshYearTable()
-})
-
 watch(() => paymentForm.month, () => {
   void refreshPaymentStatus()
 })
@@ -192,8 +174,6 @@ const paymentKpi = computed(() => {
   }
   return athletePaymentKpiFromStatus(paymentStatus.value, terms.paymentStandingOrder())
 })
-
-const yearStats = computed(() => membershipYearStats(yearRows.value))
 
 const daysToDue = computed(() => {
   if (!paymentStatus.value?.due_date) return null

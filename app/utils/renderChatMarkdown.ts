@@ -11,12 +11,19 @@ function renderInlineMarkdown(line: string): string {
   let html = line
   html = html.replace(/`([^`]+)`/g, '<code class="oc-md-code">$1</code>')
   html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-  html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>')
+  html = html.replace(/__([^_]+)__/g, '<strong>$1</strong>')
+  html = html.replace(/~~([^~]+)~~/g, '<s>$1</s>')
+  html = html.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>')
+  html = html.replace(/(?<!_)_([^_]+)_(?!_)/g, '<em>$1</em>')
   html = html.replace(
     /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
     '<a href="$2" target="_blank" rel="noopener noreferrer" class="oc-md-link">$1</a>'
   )
   return html
+}
+
+function isHorizontalRule(line: string): boolean {
+  return /^(-{3,}|\*{3,}|_{3,})$/.test(line.trim())
 }
 
 function isTableRow(line: string): boolean {
@@ -65,6 +72,30 @@ function renderBlocks(source: string): string {
         i += 1
       }
       parts.push(`<table class="oc-md-table"><thead>${header}</thead><tbody>${bodyRows.join('')}</tbody></table>`)
+      continue
+    }
+
+    if (isTableRow(trimmed)) {
+      const tableRows: string[] = []
+      while (i < lines.length && isTableRow(lines[i] ?? '')) {
+        tableRows.push(lines[i] ?? '')
+        i += 1
+      }
+      if (tableRows.length >= 2) {
+        const header = renderTableRow(tableRows[0] ?? '', 'th')
+        const bodyRows = tableRows.slice(1).map(r => renderTableRow(r, 'td'))
+        parts.push(`<table class="oc-md-table"><thead>${header}</thead><tbody>${bodyRows.join('')}</tbody></table>`)
+        continue
+      }
+      if (tableRows.length === 1) {
+        parts.push(`<table class="oc-md-table"><tbody>${renderTableRow(tableRows[0] ?? '', 'td')}</tbody></table>`)
+        continue
+      }
+    }
+
+    if (isHorizontalRule(trimmed)) {
+      parts.push('<hr class="oc-md-hr">')
+      i += 1
       continue
     }
 
@@ -120,6 +151,7 @@ function renderBlocks(source: string): string {
         || /^[-*]\s+/.test(next)
         || /^\d+\.\s+/.test(next)
         || isTableRow(next)
+        || isHorizontalRule(next)
         || /^>\s+/.test(next)
       ) {
         break
@@ -153,7 +185,7 @@ export function renderChatMarkdown(source: string): string {
   return DOMPurify.sanitize(html, {
     ALLOWED_TAGS: [
       'a', 'strong', 'em', 'br', 'p', 'h2', 'h3', 'h4', 'h5', 'h6',
-      'ul', 'ol', 'li', 'code', 'pre', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'blockquote'
+      'ul', 'ol', 'li', 'code', 'pre', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'blockquote', 'hr', 's'
     ],
     ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'scope']
   })

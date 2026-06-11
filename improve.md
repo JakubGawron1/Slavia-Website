@@ -113,7 +113,7 @@
 | FE-ATH1 | `athlete/index.vue` (~892) | Ekstrakcja composables; error boundary |
 | FE-ATH2 | `athlete/[slug].vue` (~1304) | **Priorytet refaktoru**; lazy charts; schema.org Person |
 | FE-ATH3 | `athlete/wyniki` | Testy walidacji; optimistic UI |
-| FE-ATH4 | `athlete/skladki` + `trainer/skladki` | **Wspólny** `useMembershipPaymentsPage` (~490 ln duplikat) |
+| FE-ATH4 ✅ | `athlete/skladki` + `trainer/skladki` | `useMembershipPaymentsPage` + `useMembershipYearGrid` |
 | FE-ATH5 | `athlete/kalendarz` | ✅ Fix public fetch (ANT3); testy ICS |
 | FE-ATH6 | `athlete/dziennik/*` | E2E; scroll restore spójność |
 | FE-ATH7 | `athlete/plany` | Import AI → `/athlete/plany` dla zawodnika |
@@ -168,7 +168,7 @@
 
 | ID | Temat | Ulepszenie |
 |----|-------|------------|
-| FE-BFF1 | `/api/ai/public/**` | Brak rate limit Nitro |
+| FE-BFF1 ✅ | `/api/ai/public/**` | `server/utils/publicAiRateLimit.ts` w `ai/public/chat.post.ts` |
 | FE-BFF2 | `status.get.ts` | Graceful fallback |
 | FE-BFF3 | `smoke-backend.ps1` | Brak ping `/api/ai/coach/status` |
 | FE-BFF4 | `release:check` | Opcjonalny AI healthcheck |
@@ -253,7 +253,7 @@
 | BE-CH1 ✅ | **`open_thread` — weryfikacja pary użytkowników** | role + uczestnictwo w `chat.rs` |
 | BE-CH2 | Limit długości + anty-spam wiadomości |
 | BE-CH3 | Indeks `chat_messages(thread_id, created_at)` |
-| BE-CH4 | Cursor paginacja messages |
+| BE-CH4 ✅ | Paginacja `limit`/`offset` messages (`pagination.rs`; domyślnie 100, max 500) |
 | BE-CMS1 | Brak sekretów w public CMS vars |
 | BE-CMS2 | Paginacja version history |
 | BE-CMS3 | Rozszerzyć testy XSS `cms_sanitize.rs` |
@@ -313,9 +313,9 @@
 
 | ID | Akcja | Pliki / obszar |
 |----|-------|----------------|
-| MOB-DEPREC1 | **Usunąć ekrany** admin/SA + wpisy w hubach | ✅ sekcja Administracja w `more_hub_screen.dart`; pliki ekranów — do usunięcia |
-| MOB-DEPREC2 | **Wyciąć metody API** SuperAdmin z `api_service.dart` | audit logs, CRUD `/api/admins`, CRUD ogłoszeń admin-only — po usunięciu ekranów |
-| MOB-DEPREC3 | **UX konta Admin/SA** bez panelu mobile | Komunikat „użyj panelu w przeglądarce” lub widok trenera/zawodnika, jeśli użytkownik ma tę rolę kadry — bez nowych ekranów administracyjnych |
+| MOB-DEPREC1 ✅ | **Usunąć ekrany** admin/SA + wpisy w hubach | usunięte 4 ekrany + sekcje w `more_hub` / `calculators_page` |
+| MOB-DEPREC2 ✅ | **Wyciąć metody API** SuperAdmin z `api_service.dart` | audit, CRUD adminów, CRUD ogłoszeń, CRUD zawodników SA |
+| MOB-DEPREC3 ✅ | **UX konta Admin/SA** bez panelu mobile | `browser_panel_screen.dart` + routing w `main.dart` |
 
 *Odpowiedniki WWW (backlog tylko Nuxt):* `FE-ADM1`–`FE-ADM7` (§1.6), `superadmin/*` w §13.4.
 
@@ -324,7 +324,7 @@
 | Moduł WWW | Priorytet | ID |
 |-----------|-----------|-----|
 | **Składki** (API jest!) | **Wysoki** | MOB-P1 ✅ |
-| **Trener AI** | **Wysoki** | MOB-P2 |
+| **Trener AI** | **Wysoki** | MOB-P2 ✅ |
 | Strona `/banned` | Wysoki | MOB-P3 ✅ |
 | Wyzwania miesiąca | Średni | MOB-P4 |
 | Ranking publiczny `/zawodnicy` | Średni | MOB-P5 |
@@ -344,7 +344,7 @@
 |----|-------|------------|
 | MOB-S1 | `login_screen` | Rate-limit feedback; username memory |
 | MOB-S2 | `dashboard_page` (~1100) | Split; kafelki składki + AI; pull-to-refresh |
-| MOB-S3 | `chat_screen` | **Auto-refresh**; markdown; layout wątków |
+| MOB-S3 | `chat_screen` | **Auto-refresh**; ✅ `plainChatMarkdown`; layout wątków |
 | MOB-S4 | `notification_screen` | Deep link; FCM zamiast poll 30s |
 | MOB-S5 | `attendance_qr_scan` | Debounce; offline queue |
 | MOB-S6 | `calendar_screen` | Widok miesiąca; intent kalendarz systemowy |
@@ -389,7 +389,7 @@
 |----|------------|---------|
 | SH-1 ✅ | Backend `ALLOW_PRESET` ← `theme-presets.json` | `src/embed/theme-presets.json` + `theme_presets.rs` |
 | SH-2 | PZPC: TS czyta JSON nie hardcode | `src/logic/pzpcWeightCategories.ts` |
-| SH-3 | Test parity PZPC JSON↔TS | `tests/pzpc-catalog-parity.test.ts` |
+| SH-3 ✅ | Test parity PZPC JSON↔TS | `tests/pzpc-catalog-parity.test.ts` |
 | SH-4 | Dart odznaki z JSON nie const | `dart/lib/athlete_badge_catalog.dart` |
 | SH-5 | `sinclairAthlete` w Dart | `dart/lib/sinclair_athlete.dart` |
 | SH-6 | Proporcje w Dart z TS | usuń duplikat mobile |
@@ -559,20 +559,20 @@
 
 11. ✅ MD w ClubPublicAiAssistant (+ mobile chat — pozostałe)
 12. ✅ FE: quota toast AI przy limicie; error bubbles; smart scroll — częściowo
-13. Mobile: Trener AI (WebView lub native) — bez modułów Admin/SA
-13b. Mobile: **MOB-DEPREC1** ✅ hub admin usunięty; **MOB-DEPREC2–3** — pozostałe
-14. FE: useMembershipPaymentsPage unify
-15. Parser MD: ####, HR, tabele fallback
-16. BE: paginacja (results, chat, attendance, training-log)
+13. ✅ Mobile: Trener AI (`ai_coach_screen.dart` + API)
+13b. ✅ Mobile: **MOB-DEPREC1–3** — ekrany, API, `BrowserPanelScreen`
+14. ✅ FE: `useMembershipPaymentsPage` unify
+15. ✅ Parser MD: HR, tabele fallback, `__bold__`, `~~strike~~`
+16. ✅ BE: paginacja (results, chat, attendance, training-log)
 17. Mobile: FCM / go_router
 
 ### Fala 3 — architektura (3–4 tygodnie)
 
 18. Refactor monolitów: `[slug].vue`, OlympicCoachPanel, api_service.dart
-19. `SlaviaChatMarkdown.vue` + shared markdownInline
+19. ✅ `SlaviaChatMarkdown.vue` (shared markdownInline — backlog)
 20. Mobile: feature flags, theme z JSON
 21. Distributed throttle
-22. E2E: panele auth, AI coach, mobile parity smoke
+22. E2E: panele auth, AI coach — częściowo (`porownanie`, `kontakt` w smoke)
 
 ### Fala 4 — strategiczne (backlog)
 
