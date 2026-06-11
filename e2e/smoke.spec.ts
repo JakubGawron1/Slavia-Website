@@ -39,6 +39,19 @@ test.describe('smoke publiczne', () => {
     await expect(page.locator('input[type="password"], input[autocomplete="current-password"]').first()).toBeVisible()
   })
 
+  test('porównanie zawodników — lista przez BFF', async ({ page }) => {
+    const res = await page.goto('/zawodnicy/porownanie', gotoOpts)
+    expect(res?.ok()).toBeTruthy()
+    await expect(page.getByText(/Porównanie zawodników/i).first()).toBeVisible({ timeout: 15_000 })
+  })
+
+  test('kontakt — formularz widoczny', async ({ page }) => {
+    const res = await page.goto('/kontakt', gotoOpts)
+    expect(res?.ok()).toBeTruthy()
+    await expect(page.getByText(/Wyślij wiadomość/i).first()).toBeVisible()
+    await expect(page.locator('input[name="website"]')).toHaveCount(1)
+  })
+
   test('ogloszenia (CSR) ładują shell strony', async ({ page }) => {
     const res = await page.goto('/ogloszenia', gotoOpts)
     expect(res?.ok()).toBeTruthy()

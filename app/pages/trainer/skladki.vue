@@ -6,7 +6,7 @@ import type { Athlete, AthletePaymentOverviewRow, PaymentMonthStatusRow, Pending
 import { apiRoutes } from '~/config/api'
 import { getApiErrorMessage } from '~/composables/useApi'
 import { formatPln } from '~/utils/formatCurrency'
-import { membershipYearStats, MONTHLY_FEE_PLN, monthLabelPl } from '~/utils/paymentSemantics'
+import { MONTHLY_FEE_PLN, monthLabelPl } from '~/utils/paymentSemantics'
 
 definePageMeta({ middleware: 'trainer' })
 
@@ -19,14 +19,20 @@ const apiFetch = useApi()
 const toast = useToast()
 
 const month = ref(new Date().toISOString().slice(0, 7))
-const currentYear = new Date().getFullYear()
-const calendarMonth = new Date().getMonth() + 1
-const canPreviewNextYear = computed(() => calendarMonth >= 11)
-const allowedYears = computed(() => (canPreviewNextYear.value ? [currentYear, currentYear + 1] : [currentYear]))
-const year = ref<number>(currentYear)
 const selectedAthleteId = ref<string>('')
-const yearLoading = ref(false)
-const yearRows = ref<PaymentMonthStatusRow[]>([])
+const {
+  year,
+  allowedYears,
+  yearRows,
+  loadingYear: yearLoading,
+  yearStats,
+  refreshYearTable
+} = useMembershipYearGrid(async (y) => {
+  const aid = selectedAthleteId.value
+  if (!aid) return []
+  const q = `?year=${encodeURIComponent(String(y))}`
+  return await apiFetch<PaymentMonthStatusRow[]>(`${apiRoutes.payments.athleteYear(aid)}${q}`).catch(() => [])
+})
 const athleteSearch = ref('')
 const approvingId = ref<string | null>(null)
 const rejectingId = ref<string | null>(null)
@@ -52,26 +58,7 @@ watch(
   { immediate: true }
 )
 
-async function refreshYearTable() {
-  const aid = selectedAthleteId.value
-  if (!aid) {
-    yearRows.value = []
-    return
-  }
-  if (!allowedYears.value.includes(year.value)) {
-    year.value = allowedYears.value[0]!
-  }
-  yearLoading.value = true
-  try {
-    const q = `?year=${encodeURIComponent(String(year.value))}`
-    const rows = await apiFetch<PaymentMonthStatusRow[]>(`${apiRoutes.payments.athleteYear(aid)}${q}`).catch(() => [])
-    yearRows.value = Array.isArray(rows) ? rows : []
-  } finally {
-    yearLoading.value = false
-  }
-}
-
-watch([selectedAthleteId, year], () => {
+watch(selectedAthleteId, () => {
   void refreshYearTable()
 })
 
@@ -111,8 +98,6 @@ const standingOrderAthletes = computed(() =>
 const selectedAthlete = computed(() =>
   (athletes.value || []).find(a => a.id === selectedAthleteId.value) ?? null
 )
-
-const yearStats = computed(() => membershipYearStats(yearRows.value))
 
 const monthOverviewLabel = computed(() => monthLabelPl(month.value))
 
