@@ -30,7 +30,8 @@ export const apiRoutes = {
       `/api/athletes/${encodeURIComponent(athleteId)}/training-log/${encodeURIComponent(entryId)}`,
     link: (id: string) => `/api/athletes/${encodeURIComponent(id)}/link`,
     attachUser: (id: string) => `/api/athletes/${encodeURIComponent(id)}/attach-user`,
-    detachUser: (id: string) => `/api/athletes/${encodeURIComponent(id)}/detach-user`
+    detachUser: (id: string) => `/api/athletes/${encodeURIComponent(id)}/detach-user`,
+    sinclairRanking: '/api/athletes/ranking/sinclair'
   },
   players: {
     list: '/api/athletes'
@@ -148,6 +149,7 @@ export const apiRoutes = {
     status: '/api/ai/coach/status',
     settings: '/api/ai/coach/settings',
     chat: '/api/ai/coach/chat',
+    stream: '/api/ai/coach/stream',
     importPlan: '/api/ai/coach/import-plan',
     barbellPathRefine: '/api/ai/coach/barbell-path/refine'
   },

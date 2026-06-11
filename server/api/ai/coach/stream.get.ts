@@ -1,6 +1,6 @@
 import { resolvePublicApiBase } from '../../../utils/resolvePublicApiBase'
 
-const OFFLINE_SSE = 'event: stub\ndata: {"message":"stream unavailable"}\n\n'
+const OFFLINE_SSE = 'event: stub\ndata: {"streaming":false,"message":"stream unavailable","fallback":"POST /api/ai/coach/chat"}\n\n'
 
 /** BFF proxy do stub SSE backendu (pełny streaming LLM — backlog). */
 export default defineEventHandler(async (event): Promise<string> => {

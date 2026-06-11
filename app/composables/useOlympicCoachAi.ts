@@ -1,6 +1,10 @@
 import { apiRoutes } from '~/config/api'
 import { getApiErrorMessage } from '~/composables/useApi'
 import type { OlympicCoachAttachmentDraft, OlympicCoachAttachmentPayload } from '~/utils/olympicCoachAttachments'
+import {
+  parseOlympicCoachStreamProbe,
+  type OlympicCoachStreamMode
+} from '~/utils/olympicCoachStream'
 
 export type OlympicCoachMode = 'chat' | 'plan' | 'supplements' | 'recovery' | 'barbell_path'
 
@@ -229,11 +233,25 @@ export function olympicCoachQuotaMetrics(
   return metrics
 }
 
+export async function probeOlympicCoachStream(): Promise<OlympicCoachStreamMode> {
+  if (!import.meta.client) return 'offline'
+  try {
+    const body = await $fetch<string>(apiRoutes.aiCoach.stream, {
+      responseType: 'text',
+      timeout: 8_000
+    })
+    return parseOlympicCoachStreamProbe(body)
+  } catch {
+    return 'offline'
+  }
+}
+
 export function useOlympicCoachAi() {
   const api = useApi()
 
   const status = ref<OlympicCoachStatus | null>(null)
   const statusLoading = ref(true)
+  const streamMode = ref<OlympicCoachStreamMode>('offline')
   const messages = ref<OlympicCoachMessage[]>([])
   const loading = ref(false)
   const importing = ref(false)
@@ -254,13 +272,19 @@ export function useOlympicCoachAi() {
   async function refreshStatus() {
     statusLoading.value = true
     try {
-      status.value = await api<OlympicCoachStatus>(apiRoutes.aiCoach.status)
+      const [nextStatus, nextStream] = await Promise.all([
+        api<OlympicCoachStatus>(apiRoutes.aiCoach.status),
+        probeOlympicCoachStream()
+      ])
+      status.value = nextStatus
+      streamMode.value = nextStream
     } catch {
       status.value = {
         configured: false,
         model: 'llama-3.1-70b-versatile',
         key_format_ok: false
       }
+      streamMode.value = await probeOlympicCoachStream().catch(() => 'offline' as const)
     } finally {
       statusLoading.value = false
     }
@@ -392,6 +416,7 @@ export function useOlympicCoachAi() {
   return {
     status,
     statusLoading,
+    streamMode,
     messages,
     loading,
     importing,

@@ -9,6 +9,7 @@ import {
   cardGender,
   type PublicBoardRow
 } from '~/utils/zawodnicyRanking'
+import type { SinclairRankingRow } from '~/types/sinclairRanking'
 import { sinclairTotal } from '~/utils/sinclair'
 import { effectiveBodyweightKgForSinclair } from '~/utils/sinclairAthlete'
 
@@ -32,6 +33,14 @@ export function useZawodnicyPage() {
     key: 'players-public-board',
     default: () => [] as PublicBoardRow[]
   })
+
+  const { data: sinclairServerRaw } = usePublicLazyFetch<SinclairRankingRow[]>(
+    'athletes/ranking/sinclair',
+    {
+      key: 'players-sinclair-ranking-server',
+      default: () => [] as SinclairRankingRow[]
+    }
+  )
 
   if (import.meta.client) {
     onMounted(() => {
@@ -188,11 +197,40 @@ export function useZawodnicyPage() {
       .sort((a, b) => b.sinclair - a.sinclair)
   )
 
-  const rankingPlayers = computed(() => mappedPlayers.value.filter(x => x.total > 0 && x.sinclair > 0))
-  const podium = computed(() => rankingPlayers.value.slice(0, 3))
-  const filteredRankings = computed(() =>
-    mappedPlayers.value.filter(x => x.total > 0 && x.sinclair > 0)
+  const useServerSinclairRanking = computed(() =>
+    selectedCategory.value === 'all'
+    && !filterActiveOnly.value
+    && filterWeightThreshold.value === 'all'
+    && filterPaymentStaff.value === 'all'
+    && (sinclairServerRaw.value?.length ?? 0) > 0
   )
+
+  function orderByServerSinclair<T extends { id: string, sinclair: number, total: number }>(
+    cards: T[]
+  ): T[] {
+    const eligible = cards.filter(x => x.total > 0 && x.sinclair > 0)
+    if (!useServerSinclairRanking.value) return eligible
+
+    const byId = new Map(eligible.map(p => [p.id, p]))
+    const ordered: T[] = []
+    for (const row of sinclairServerRaw.value ?? []) {
+      const card = byId.get(row.athlete_id)
+      if (!card) continue
+      ordered.push({
+        ...card,
+        sinclair: row.sinclair_total ?? card.sinclair,
+        total: row.total_kg ?? card.total
+      })
+    }
+    for (const p of eligible) {
+      if (!ordered.some(o => o.id === p.id)) ordered.push(p)
+    }
+    return ordered
+  }
+
+  const rankingPlayers = computed(() => orderByServerSinclair(mappedPlayers.value))
+  const podium = computed(() => rankingPlayers.value.slice(0, 3))
+  const filteredRankings = computed(() => orderByServerSinclair(mappedPlayers.value))
 
   const trainingRanking = computed(() => {
     if (!auth.isLoggedIn.value) return []
