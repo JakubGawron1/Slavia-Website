@@ -17,6 +17,8 @@ type PublicLazyFetchOpts<T> = {
   /** Po stronie klienta — nie odświeżaj danych przez N ms (SWR w pamięci). */
   staleTimeMs?: number
   query?: MaybeRef<Record<string, string | undefined>>
+  /** Przekazywane do `useAsyncData` — np. `false` dla danych tylko po logowaniu. */
+  server?: boolean
 }
 
 /**
@@ -62,7 +64,7 @@ export function usePublicLazyFetch<T>(
       }
     },
     {
-      server: true,
+      server: opts.server ?? true,
       lazy: true,
       default: opts.default,
       dedupe: 'defer',

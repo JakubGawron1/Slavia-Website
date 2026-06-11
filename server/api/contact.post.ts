@@ -9,7 +9,9 @@ interface ContactBody {
   website?: string
 }
 
-export default defineEventHandler(async (event) => {
+type ContactSubmitResponse = { ok: boolean, id?: string }
+
+export default defineEventHandler(async (event): Promise<ContactSubmitResponse> => {
   const body = await readBody<ContactBody>(event)
 
   if (String(body?.website ?? '').trim()) {
@@ -26,7 +28,7 @@ export default defineEventHandler(async (event) => {
   const base = await resolvePublicApiBase()
   const ip = getRequestIP(event, { xForwardedFor: true }) || 'unknown'
 
-  return await $fetch(`${base}/api/contact`, {
+  return await $fetch<ContactSubmitResponse>(`${base}/api/contact`, {
     method: 'POST',
     body: {
       name,
