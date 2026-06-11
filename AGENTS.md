@@ -2,7 +2,7 @@
 
 > **Język dokumentu:** polski. Wyjątek — sekcja [Commity Git](#commity-git): szablony wiadomości commitów i przykłady **muszą być po angielsku** (wymóg repozytorium).
 
-Aplikacja Nuxt 4 dla klubu CKS Slavia Ruda Śląska. Frontend współpracuje z backendem Rust (`../Slavia-backend`), paczką współdzieloną (`../Slavia-shared` → `@slavia/shared`) i opcjonalnie z aplikacją mobilną (`../Slavia-mobile`).
+Aplikacja Nuxt 4 dla klubu CKS Slavia Ruda Śląska. Frontend współpracuje z backendem Rust (`../Slavia-backend`), paczką współdzieloną (`../Slavia-shared` → `@slavia/shared`) i z aplikacją mobilną (`../Slavia-mobile` — **tylko zawodnik/trener**, bez paneli Admin/SuperAdmin; szczegóły w [Slavia-mobile](#slavia-mobile-flutter)).
 
 ## Szybki start
 
@@ -83,6 +83,45 @@ Backend **nie importuje** TypeScript — tylko pliki neutralne (JSON). Źródło
 | `data/weightlifting-exercises.json` | Tylko kalkulatory UI — **nie** dla API | Nie |
 
 Integracja Rust: `include_str!` / `build.rs` czytający `../Slavia-shared/data/*.json` przy `cargo build`, albo skrypt sync przed CI backendu.
+
+---
+
+## Slavia-mobile (Flutter)
+
+Repozytorium: `../Slavia-mobile`. Współdzieli `@slavia/shared` (Dart) i ten sam backend Rust co WWW.
+
+### Zakres ról — tylko zawodnik i trener
+
+Aplikacja mobilna obsługuje **wyłącznie** role **Zawodnik** (`Athlete`) i **Trener** (`Trainer`) oraz wspólne funkcje klubowe po zalogowaniu (czat, obecność, kalendarz itd.). **Nie** implementujemy paneli WWW `/admin/**` ani `/superadmin/**` — CMS, import danych, nawigacja paneli, developer tools, audit logi, zarządzanie kontami adminów itp. pozostają **tylko w przeglądarce**.
+
+| Rola WWW | Mobile |
+|----------|--------|
+| Zawodnik (`/athlete/**`) | Tak — parity tam, gdzie ma sens na telefonie |
+| Trener (`/trainer/**`) | Tak — parity tam, gdzie ma sens na telefonie |
+| Admin (`/admin/**`) | **Nie** — użyj WWW |
+| SuperAdmin (`/superadmin/**`) | **Nie** — użyj WWW |
+
+**Dla agentów:** nowe moduły panelu admin/superadmin we frontendzie Nuxt **nie wymagają** odpowiednika w Flutterze. W backlogu mobile nie planuj „parity” z `/admin` ani `/superadmin`.
+
+### Legacy do usunięcia (mobile)
+
+W kodzie Flutter nadal są ślady paneli administracyjnych (do wyczyszczenia w przyszłości):
+
+- `superadmin_athlete_manager_screen.dart`, `user_management_screen.dart`, `audit_log_screen.dart`
+- `announcements_manage_screen.dart` (CRUD ogłoszeń — rola Admin na WWW)
+- Sekcje „Administracja” / „SuperAdministracja” w `more_hub_screen.dart`, `calculators_page.dart`
+- Metody w `api_service.dart` pod SuperAdmin (audit, CRUD adminów)
+
+Po usunięciu: konto Admin/SuperAdmin na mobile powinno widzieć trenera/zawodnika tam, gdzie ma przypisaną rolę kadry, albo komunikat „użyj panelu w przeglądarce” — bez ekranów administracyjnych.
+
+### Wyjątek: endpointy „admin” używane przez trenera
+
+Nie mylić **panelu Admin** z endpointami API nazwanymi `admin`, które kadra używa w codziennej pracy:
+
+- `GET /api/athletes/admin` — lista zawodników dla trenera (czat, plany, lista kadry), **nie** ekran `SuperAdminAthleteManagerScreen`
+- Trener z rolą `Trainer` (bez Admin) nadal może korzystać z tych tras — ACL po stronie backendu
+
+Nowe funkcje trenera/zawodnika w mobile: tak. Nowe funkcje admin/superadmin: tylko WWW.
 
 ---
 
