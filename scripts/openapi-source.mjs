@@ -34,7 +34,7 @@ export function sha256File(path) {
 
 export function countOpenApiPaths(path) {
   const doc = JSON.parse(readFileSync(path, 'utf8'))
-  return Object.keys(doc.paths ?? {}).length
+  return Object.keys(doc.paths ?? {}).filter(p => p.startsWith('/api/')).length
 }
 
 export function readSnapshotSha() {
