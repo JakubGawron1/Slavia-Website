@@ -2,8 +2,6 @@
 import { format, parseISO } from 'date-fns'
 import { pl } from 'date-fns/locale'
 import { getApiErrorMessage } from '~/composables/useApi'
-import { renderSimpleMarkdown } from '~/utils/renderSimpleMarkdown'
-
 const { accountSettingsPath } = useRoleDashboardNav()
 
 interface Announcement {
@@ -355,12 +353,10 @@ function bodyPreview(text: string, max = 100) {
             <h2 class="text-lg font-bold tracking-tight text-highlighted sm:text-xl">
               {{ a.title }}
             </h2>
-            <!-- eslint-disable vue/no-v-html — renderSimpleMarkdown (DOMPurify) -->
-            <div
+            <SlaviaSimpleMarkdown
               class="prose prose-sm mt-3 max-w-none leading-relaxed text-muted prose-headings:text-highlighted sm:prose-base"
-              v-html="renderSimpleMarkdown(a.body)"
+              :source="a.body"
             />
-            <!-- eslint-enable vue/no-v-html -->
           </div>
           <div
             v-if="canManage"

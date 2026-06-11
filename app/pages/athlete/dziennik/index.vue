@@ -2,7 +2,6 @@
 import type { Athlete, TrainingLogEntry } from '~/types/models'
 import { getApiErrorMessage } from '~/composables/useApi'
 import { isProbablyRichHtml } from '~/utils/html'
-import { sanitizeRichHtml } from '~/utils/sanitizeHtml'
 
 definePageMeta({ middleware: 'athlete-dziennik' })
 
@@ -167,8 +166,11 @@ async function removeEntry(e: TrainingLogEntry) {
                   class="font-semibold text-highlighted"
                 >{{ e.title }}</span>
               </div>
-              <!-- eslint-disable-next-line vue/no-v-html — treść po DOMPurify -->
-              <div v-if="isProbablyRichHtml(e.notes)" class="slavia-rich-content text-sm leading-relaxed text-highlighted" v-html="sanitizeRichHtml(e.notes)" />
+              <SlaviaSafeHtml
+                v-if="isProbablyRichHtml(e.notes)"
+                class="slavia-rich-content text-sm leading-relaxed text-highlighted"
+                :html="e.notes"
+              />
               <p
                 v-else
                 class="text-sm text-highlighted whitespace-pre-wrap leading-relaxed"

@@ -54,8 +54,6 @@ onMounted(() => {
 
 const plainExcerpt = computed(() => stripHtmlTags(sanitizeRichHtml(post.value?.content ?? '')).slice(0, 168))
 
-const sanitizedPostContent = computed(() => sanitizeRichHtml(post.value?.content ?? ''))
-
 const seoTitle = computed(() =>
   post.value?.title
     ? `${post.value?.title} — Slavia Ruda Śląska`
@@ -226,8 +224,11 @@ function formatDate(dateStr: string) {
           </div>
         </div>
 
-        <!-- eslint-disable-next-line vue/no-v-html -->
-        <div v-if="isProbablyRichHtml(post.content)" class="slavia-rich-content prose prose-lg prose-neutral max-w-none leading-relaxed dark:prose-invert" v-html="sanitizedPostContent" />
+        <SlaviaSafeHtml
+          v-if="isProbablyRichHtml(post.content)"
+          class="slavia-rich-content prose prose-lg prose-neutral max-w-none leading-relaxed dark:prose-invert"
+          :html="post.content"
+        />
         <div
           v-else
           class="prose prose-neutral max-w-none text-muted dark:prose-invert prose-lg leading-relaxed"

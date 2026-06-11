@@ -376,7 +376,15 @@ export default defineNuxtConfig({
 
       pathPrefix: false
 
-    }
+    },
+
+  {
+
+    path: '~/components/ui',
+
+    pathPrefix: false
+
+  }
 
   ],
 

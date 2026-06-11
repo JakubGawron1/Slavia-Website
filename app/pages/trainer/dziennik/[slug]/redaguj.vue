@@ -75,8 +75,6 @@ const form = reactive({
 const saving = ref(false)
 const previewOpen = ref(false)
 
-const sanitizedNotesPreview = computed(() => sanitizeRichHtml(form.notes.trim()))
-
 function applyEntryToForm(id: string) {
   const e = entries.value.find(x => x.id === id)
   if (!e) {
@@ -253,12 +251,10 @@ useSeoMeta({
             </div>
           </template>
           <div class="p-4 sm:p-6">
-            <!-- eslint-disable vue/no-v-html — sanitizeRichHtml (DOMPurify) -->
-            <div
+            <SlaviaSafeHtml
               class="slavia-rich-content prose prose-lg prose-neutral max-w-none leading-relaxed dark:prose-invert"
-              v-html="sanitizedNotesPreview"
+              :html="form.notes.trim()"
             />
-            <!-- eslint-enable vue/no-v-html -->
           </div>
         </UCard>
 

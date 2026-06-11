@@ -1,21 +1,24 @@
 import { KLUB_SHARED_ROUTES } from '../app/config/klubRoutes'
+import { slaviaSecurityHeaders, withSecurityHeaders } from './securityHeaders'
 
 /** Trasy panelu — CSR (SPA), bez SSR, bez prerenderu i bez cache CDN. */
 export const panelNoStore = {
   ssr: false as const,
   prerender: false as const,
-  headers: { 'cache-control': 'private, no-store' }
+  headers: withSecurityHeaders({ 'cache-control': 'private, no-store' })
 }
 
 /** Publiczny BFF — krótki cache na Vercel (zgodny z ISR list). */
 export const publicBffCache = {
-  headers: {
+  headers: withSecurityHeaders({
     'cache-control': 'public, s-maxage=60, stale-while-revalidate=300'
-  }
+  })
 }
 
 export function buildRouteRules(devDisableRootIsr: boolean) {
   return {
+    '/**': { headers: { ...slaviaSecurityHeaders } },
+
     '/api/public/**': publicBffCache,
     '/api/ai/public/**': panelNoStore,
 
@@ -49,4 +52,4 @@ export function buildRouteRules(devDisableRootIsr: boolean) {
     '/superadmin/**': panelNoStore
   } as const
 }
-
+
