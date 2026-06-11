@@ -462,13 +462,11 @@ function exerciseName(item: TrainingPlanItem) {
                 v-if="hasAthleteNote(draftFor(p).athlete_note)"
                 class="rounded-2xl border border-default/60 bg-card/60 p-4"
               >
-                <!-- eslint-disable vue/no-v-html — sanitizeRichHtml (DOMPurify) -->
-                <div
+                <SlaviaSafeHtml
                   v-if="isProbablyRichHtml(draftFor(p).athlete_note)"
                   class="slavia-rich-content prose prose-sm prose-neutral max-w-none leading-relaxed dark:prose-invert"
-                  v-html="sanitizedAthleteNote(draftFor(p).athlete_note)"
+                  :html="draftFor(p).athlete_note ?? ''"
                 />
-                <!-- eslint-enable vue/no-v-html -->
                 <p v-else class="text-sm text-highlighted leading-relaxed">
                   {{ noteExcerpt(draftFor(p).athlete_note, 500) }}
                 </p>
@@ -602,13 +600,11 @@ function exerciseName(item: TrainingPlanItem) {
           class="rounded-2xl border border-default/70"
         >
           <div class="p-4 sm:p-6">
-            <!-- eslint-disable vue/no-v-html — sanitizeRichHtml (DOMPurify) -->
-            <div
+            <SlaviaSafeHtml
               v-if="stripHtmlTags(noteEditorPreviewHtml)"
               class="slavia-rich-content prose prose-lg prose-neutral max-w-none leading-relaxed dark:prose-invert"
-              v-html="noteEditorPreviewHtml"
+              :html="noteEditorHtml.trim()"
             />
-            <!-- eslint-enable vue/no-v-html -->
             <p v-else class="text-sm italic text-muted">
               Notatka jest pusta — wróć do edycji i dodaj treść.
             </p>

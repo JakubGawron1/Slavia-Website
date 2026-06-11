@@ -65,8 +65,6 @@ watch(
 /** Do badge na podglądzie — po zapisie odświeżany przez watch z props (edit). */
 const lastKnownPublished = ref(!!props.initialPublished)
 
-const sanitizedBody = computed(() => sanitizeRichHtml(content.value.trim()))
-
 function clickFileInput() {
   fileInputRef.value?.click()
 }
@@ -258,13 +256,10 @@ function closePreview() {
           alt=""
           class="max-h-72 w-full rounded-xl object-cover ring-1 ring-default/40"
         >
-        <!-- Treść po DOMPurify — vue/no-v-html: narzędzie nie widzi sanityzacji. -->
-        <!-- eslint-disable vue/no-v-html -->
-        <div
+        <SlaviaSafeHtml
           class="slavia-rich-content prose prose-lg prose-neutral max-w-none leading-relaxed dark:prose-invert"
-          v-html="sanitizedBody"
+          :html="content.trim()"
         />
-        <!-- eslint-enable vue/no-v-html -->
       </div>
     </UCard>
 
