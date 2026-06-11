@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { useClubPublicAi } from '~/composables/useClubPublicAi'
 import { useOverlayDismiss } from '~/composables/useOverlayDismiss'
-import { renderChatMarkdown } from '~/utils/renderChatMarkdown'
 
 const open = ref(false)
 const draft = ref('')
@@ -200,11 +199,9 @@ function toggleOpen() {
               :class="{ 'club-ai__bubble--md': msg.role === 'assistant' }"
             >
               <span v-if="msg.role === 'user'">{{ msg.content }}</span>
-              <!-- eslint-disable-next-line vue/no-v-html -->
-              <span
+              <SlaviaChatMarkdown
                 v-else
-                class="oc-md-root"
-                v-html="renderChatMarkdown(msg.content)"
+                :source="msg.content"
               />
             </div>
           </div>

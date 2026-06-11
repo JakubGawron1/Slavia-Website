@@ -303,7 +303,7 @@
 | MOB-A3 ✅ | **Ekran bana** (`isBanned`) | `banned_screen.dart` + `main.dart` |
 | MOB-A4 | Globalny handler 401 na każdym requeście |
 | MOB-A5 ✅ | `go_router` + deep linki | fundament: `app_router.dart`; pełne FCM/deeplinki → Fala 3 (`docs/fcm-go-router-roadmap.md`) |
-| MOB-A6 | Feature flags `panel_nav_*` z API — **tylko** moduły zawodnik/trener (`panel_nav_athlete_*`, `panel_nav_trainer_*`); ignoruj admin/SA |
+| MOB-A6 ✅ | Feature flags `panel_nav_*` z API — **tylko** moduły zawodnik/trener (`panel_nav_athlete_*`, `panel_nav_trainer_*`); ignoruj admin/SA |
 | MOB-A7 | Usunąć/podłączyć `offline_attendance_service.dart` |
 | MOB-A8 | `cached_network_image` — użyć lub usunąć z pubspec |
 | MOB-A9 | `Semantics` — brak w całym `lib/` |
@@ -334,7 +334,7 @@
 | Wyniki kadry pełne | Średni | MOB-P9 |
 | Regeneracja trenera | Średni | MOB-P10 |
 | Konfiguracja TOTP | Średni | MOB-P11 |
-| Panel nav flags (athlete/trainer) | Średni | MOB-P12 |
+| Panel nav flags (athlete/trainer) | Średni | MOB-P12 ✅ |
 | Monitoring trenera, wydarzenia (`trainer/wydarzenia`) | Niski | MOB-P13 |
 | ~~CMS, import, superadmin tools~~ | — | **Poza zakresem mobile** — tylko WWW |
 
@@ -566,13 +566,13 @@
 16. ✅ BE: paginacja (results, chat, attendance, training-log)
 17. ✅ Mobile: FCM / go_router — fundament (`app_router`, `FcmService` stub); pełny push → `docs/fcm-go-router-roadmap.md`
 
-### Fala 3 — architektura (3–4 tygodnie)
+### Fala 3 — architektura (3–4 tygodnie) ✅
 
-18. ✅ Refactor monolitów (start): `useAthletePublicProfilePage`, OlympicCoachPanel `lazy`, `api_service_ai_coach.dart` + `api_service_public_ext.dart`
-19. ✅ `SlaviaChatMarkdown.vue` + `@slavia/shared/markdown-inline`
-20. ✅ Mobile: `PanelNavigationService` + `ThemePresetCatalog` z JSON
-21. ✅ Distributed throttle (`DISTRIBUTED_THROTTLE=1` → SQLite `rate_limit_hits`)
-22. ✅ E2E: panel trenera, Trener AI auth, public AI status BFF
+18. ✅ Refactor monolitów: `useAthletePublicProfileCharts`, `OlympicCoachMessageList`, `api_service_ai_coach.dart` + `api_service_public_ext.dart`
+19. ✅ `SlaviaChatMarkdown.vue` w OlympicCoach + ClubPublicAi; `@slavia/shared/markdown-inline`
+20. ✅ Mobile: `PanelNavigationService` (ChangeNotifier) + gating hubów + `ThemePresetCatalog` z JSON
+21. ✅ Distributed throttle: `prune_rate_limit_hits` na starcie + dokumentacja `.env.example`
+22. ✅ E2E: panel trenera/zawodnika, Trener AI (athlete+trainer), składki auth, public AI status BFF
 
 ### Fala 4 — strategiczne (backlog)
 

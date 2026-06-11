@@ -3,7 +3,6 @@ import type { Athlete } from '~/types/models'
 import type { OlympicCoachMode } from '~/composables/useOlympicCoachAi'
 import { olympicCoachChatBlockedReason, olympicCoachQuotaMetrics } from '~/composables/useOlympicCoachAi'
 import { getApiErrorMessage } from '~/composables/useApi'
-import { renderChatMarkdown } from '~/utils/renderChatMarkdown'
 import {
   buildOlympicCoachAttachment,
   olympicCoachAttachmentLimit,
@@ -278,10 +277,6 @@ function onInputKeydown(e: KeyboardEvent) {
   }
 }
 
-function renderMessageHtml(content: string) {
-  return renderChatMarkdown(content)
-}
-
 function attachmentIcon(kind: OlympicCoachAttachmentDraft['kind']) {
   if (kind === 'image') return 'i-lucide-image'
   if (kind === 'video') return 'i-lucide-video'
@@ -414,10 +409,6 @@ async function confirmImportPlan() {
       color: 'error'
     })
   }
-}
-
-function canImportMessage(msg: { role: string, mode: OlympicCoachMode }) {
-  return isStaff.value && msg.role === 'assistant' && msg.mode === 'plan'
 }
 
 function truncatePrompt(text: string, max = 72) {
@@ -855,77 +846,14 @@ function truncatePrompt(text: string, max = 72) {
           </div>
         </div>
 
-        <template v-else>
-          <div
-            v-for="msg in messages"
-            :key="msg.id"
-            class="olympic-coach__row"
-            :class="{ 'olympic-coach__row--user': msg.role === 'user' }"
-          >
-            <div
-              class="olympic-coach__avatar"
-              :class="msg.role === 'user' ? 'olympic-coach__avatar--user' : 'olympic-coach__avatar--ai'"
-              aria-hidden="true"
-            >
-              <UIcon
-                :name="msg.role === 'user' ? 'i-lucide-user' : 'i-lucide-sparkles'"
-                class="size-3.5"
-              />
-            </div>
-            <div
-              class="olympic-coach__bubble"
-              :class="msg.role === 'user' ? 'olympic-coach__bubble--user' : 'olympic-coach__bubble--ai'"
-            >
-              <div
-                v-if="msg.attachments?.length"
-                class="olympic-coach__msg-attachments"
-              >
-                <span
-                  v-for="att in msg.attachments"
-                  :key="att.id"
-                  class="olympic-coach__msg-attachment"
-                >
-                  <img
-                    v-if="att.previewUrl && att.kind === 'image'"
-                    :src="att.previewUrl"
-                    :alt="att.name"
-                  >
-                  <span
-                    v-else
-                    class="olympic-coach__attachment-thumb"
-                    aria-hidden="true"
-                  >
-                    <UIcon
-                      :name="attachmentIcon(att.kind)"
-                      class="size-3.5"
-                    />
-                  </span>
-                  <span class="truncate">{{ att.name }}</span>
-                </span>
-              </div>
-              <!-- eslint-disable vue/no-v-html — renderChatMarkdown (DOMPurify) -->
-              <div
-                class="olympic-coach__bubble-md"
-                v-html="renderMessageHtml(msg.content)"
-              />
-              <div
-                v-if="canImportMessage(msg)"
-                class="olympic-coach__bubble-actions"
-              >
-                <UButton
-                  size="xs"
-                  color="primary"
-                  variant="soft"
-                  icon="i-lucide-file-input"
-                  :disabled="importing || loading"
-                  @click="openImportModal(msg.content)"
-                >
-                  Importuj do planów
-                </UButton>
-              </div>
-            </div>
-          </div>
-        </template>
+        <OlympicCoachMessageList
+          v-else
+          :messages="messages"
+          :loading="loading"
+          :importing="importing"
+          :is-staff="isStaff"
+          @import-plan="openImportModal"
+        />
 
         <div
           v-if="loading"
