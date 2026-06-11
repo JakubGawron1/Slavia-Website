@@ -8,6 +8,7 @@ useSeoMeta({
   robots: 'noindex, nofollow'
 })
 
+const rolePreviewState = useRolePreviewState()
 const { form, logs, pending, saving, saveCheckin } = useAthleteRecoveryLogs()
 </script>
 
@@ -19,13 +20,19 @@ const { form, logs, pending, saving, saveCheckin } = useAthleteRecoveryLogs()
       title="Regeneracja"
       icon="i-lucide-heart-pulse"
       description="Krótki check-in pomaga trenerowi widzieć trend snu i zmęczenia — nie zastępuje rozmowy, ale ułatwia planowanie obciążeń."
-    />
+    >
+      <template #actions>
+        <UButton to="/athlete" variant="soft" color="neutral" size="sm" icon="i-lucide-layout-dashboard">
+          Panel
+        </UButton>
+      </template>
+    </PanelPageHeader>
 
     <div class="mb-10 grid gap-4 sm:grid-cols-3">
       <UCard
         v-for="item in RECOVERY_SCALE_LEGEND"
         :key="item.title"
-        class="border-default/70 bg-muted/5"
+        class="slavia-page-card border-default/70"
       >
         <p class="text-xs font-bold uppercase tracking-wide text-primary">
           {{ item.title }}
@@ -36,7 +43,20 @@ const { form, logs, pending, saving, saveCheckin } = useAthleteRecoveryLogs()
       </UCard>
     </div>
 
-    <UCard class="mb-10 overflow-hidden border-primary/20 ring-1 ring-primary/10">
+    <UAlert
+      v-if="rolePreviewState.isReadOnly.value"
+      class="mb-4"
+      color="warning"
+      variant="subtle"
+      icon="i-lucide-eye"
+      title="Podgląd read-only"
+      description="Historia regeneracji jest widoczna — zapisywanie check-inów jest wyłączone."
+    />
+
+    <UCard
+      v-if="!rolePreviewState.isReadOnly.value"
+      class="mb-10 overflow-hidden border-primary/20 ring-1 ring-primary/10"
+    >
       <div class="border-b border-default/60 bg-primary/5 px-5 py-4 dark:bg-primary/10">
         <h2 class="flex items-center gap-2 text-base font-bold text-highlighted">
           <UIcon name="i-lucide-clipboard-pen-line" class="size-5 text-primary" />

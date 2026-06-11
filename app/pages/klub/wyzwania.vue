@@ -109,8 +109,8 @@ function podiumAccent(idx: number) {
       :description="pageDescription"
     />
 
-    <div class="slavia-content-well mx-auto w-full max-w-4xl space-y-8">
-      <UCard class="slavia-page-card space-y-4">
+    <div class="slavia-content-well slavia-public-section mx-auto w-full max-w-4xl space-y-8">
+      <UCard class="slavia-page-card slavia-public-card slavia-public-card--flat space-y-4">
         <div class="flex flex-wrap gap-2">
           <UButton
             v-for="opt in metricOptions"

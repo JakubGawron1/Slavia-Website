@@ -22,8 +22,8 @@ const containerClass = computed(() => {
   const c: string[] = ['slavia-below-site-header', 'mx-auto', 'w-full', 'min-w-0']
   if (props.panel) c.push('slavia-panel-page')
   if (props.narrow) c.push('max-w-5xl')
-  if (props.padding === 'default') c.push('pt-10 pb-8 md:pt-14 md:pb-12 lg:pt-16 lg:pb-14')
-  else if (props.padding === 'compact') c.push('pt-8 pb-6 sm:pt-10 sm:pb-8 md:pt-12 md:pb-10')
+  if (props.padding === 'default') c.push('pt-8 pb-6 md:pt-10 md:pb-8 lg:pt-12 lg:pb-10')
+  else if (props.padding === 'compact') c.push('pt-6 pb-5 sm:pt-8 sm:pb-7 md:pt-10 md:pb-8')
   if (props.animate) c.push('animate-page-in')
   const layoutClass = presetLayoutClass.value
   if (layoutClass) c.push(layoutClass)

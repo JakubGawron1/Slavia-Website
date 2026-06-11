@@ -145,7 +145,7 @@ function editPostUrl(post: BlogPost) {
       v-if="pending"
       class="py-10"
     >
-      <div class="grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3 xl:gap-10">
+      <div class="slavia-public-grid">
         <div
           v-for="i in 6"
           :key="`posts-skel-${i}`"
@@ -194,37 +194,48 @@ function editPostUrl(post: BlogPost) {
       </template>
     </PublicEmptyState>
 
-    <div
+    <PanelDataToolbar
       v-if="showManageActions && posts && posts.length > 0"
-      class="mb-6 flex flex-wrap items-center justify-center gap-2 sm:justify-end"
+      :summary="`${publishedPostsCount} opublikowanych · ${posts.length} łącznie`"
+      sticky
+      class="mb-6"
     >
-      <UButton
-        to="/aktualnosci/nowy"
-        icon="i-lucide-pen-tool"
-        color="primary"
-        size="lg"
-        class="min-h-11 w-full shrink-0 justify-center font-semibold sm:w-auto"
-      >
-        Dodaj wpis
-      </UButton>
-    </div>
+      <template #meta>
+        <UBadge color="neutral" variant="subtle" size="sm">
+          Panel treści
+        </UBadge>
+      </template>
+      <template #actions>
+        <UButton
+          to="/aktualnosci/nowy"
+          icon="i-lucide-pen-tool"
+          color="primary"
+          size="lg"
+          class="min-h-11 w-full shrink-0 justify-center font-semibold sm:w-auto"
+        >
+          Dodaj wpis
+        </UButton>
+      </template>
+    </PanelDataToolbar>
 
     <div
       v-if="posts && posts.length > 0"
-      class="grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3 xl:gap-10"
+      class="slavia-public-grid slavia-public-grid--stagger"
     >
       <article
         v-for="post in posts"
         :key="post.id"
-        class="group slavia-page-card flex flex-col overflow-hidden transition-all duration-300 hover:border-primary/35 hover:shadow-md"
+        class="group slavia-public-card slavia-page-card flex flex-col overflow-hidden"
         @pointerenter="schedulePrefetch(post)"
         @pointerleave="cancelScheduledPrefetch(post)"
       >
-        <div class="relative flex aspect-[16/10] items-center justify-center overflow-hidden bg-muted/20 sm:aspect-[5/3]">
+        <div class="slavia-public-card__media sm:aspect-[5/3]">
           <img
             v-if="post.image_url"
             :src="postImageSrc(post.image_url)"
-            class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+            loading="lazy"
+            decoding="async"
+            :alt="post.title"
           >
           <div
             v-else
@@ -237,8 +248,8 @@ function editPostUrl(post: BlogPost) {
           </div>
         </div>
 
-        <div class="flex flex-1 flex-col p-5 sm:p-6">
-          <p class="mb-2 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-primary">
+        <div class="slavia-public-card__body">
+          <p class="slavia-public-meta mb-2">
             <UIcon
               name="i-lucide-calendar"
               class="size-3.5"

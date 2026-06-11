@@ -29,30 +29,39 @@ const {
       title="Regeneracja zawodników"
       icon="i-lucide-heart-pulse"
       description="Podgląd check-inów zawodników (sen, skale subiektywne, notatki). Dane pochodzą z ich wpisów — możesz reagować planem treningowym lub rozmową."
-    />
+    >
+      <template #actions>
+        <UButton to="/trainer" variant="soft" color="neutral" size="sm" icon="i-lucide-layout-dashboard">
+          Panel
+        </UButton>
+      </template>
+    </PanelPageHeader>
 
-    <UCard class="slavia-page-card mb-10">
-      <UFormField label="Zawodnik" description="Lista aktywnych profili dostępnych dla kadry">
-        <SlaviaOverlaySelect
-          v-model="selectedAthleteId"
-          value-key="value"
-          size="lg"
-          class="w-full"
-          :items="athleteSelectItems"
-        />
-      </UFormField>
-      <div v-if="selectedAthleteId !== NO_ATHLETE" class="mt-4 grid gap-4 sm:grid-cols-2">
-        <UFormField label="Od daty">
-          <UInput v-model="dateFrom" type="date" size="lg" class="w-full" />
+    <PanelDataToolbar
+      class="mb-10"
+      :summary="selectedAthleteId !== NO_ATHLETE ? `Wybrano: ${selectedName}` : undefined"
+      sticky
+    >
+      <template #filters>
+        <UFormField label="Zawodnik" description="Lista aktywnych profili dostępnych dla kadry" class="w-full sm:max-w-md">
+          <SlaviaOverlaySelect
+            v-model="selectedAthleteId"
+            value-key="value"
+            size="lg"
+            class="w-full"
+            :items="athleteSelectItems"
+          />
         </UFormField>
-        <UFormField label="Do daty">
-          <UInput v-model="dateTo" type="date" size="lg" class="w-full" />
-        </UFormField>
-      </div>
-      <p v-if="selectedAthleteId !== NO_ATHLETE" class="mt-3 text-xs text-muted">
-        Wybrano: <span class="font-semibold text-highlighted">{{ selectedName }}</span>
-      </p>
-    </UCard>
+        <template v-if="selectedAthleteId !== NO_ATHLETE">
+          <UFormField label="Od daty" class="w-full sm:w-44">
+            <UInput v-model="dateFrom" type="date" size="lg" class="w-full" />
+          </UFormField>
+          <UFormField label="Do daty" class="w-full sm:w-44">
+            <UInput v-model="dateTo" type="date" size="lg" class="w-full" />
+          </UFormField>
+        </template>
+      </template>
+    </PanelDataToolbar>
 
     <PublicEmptyState
       v-if="selectedAthleteId === NO_ATHLETE"

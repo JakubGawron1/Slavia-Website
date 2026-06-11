@@ -101,6 +101,7 @@ onBeforeUnmount(() => {
     </button>
     <div
       v-show="isOpen"
+      class="panel-collapsible-section__body"
       :class="embedded ? 'pt-3' : 'border-t border-default/50 px-4 pb-5 pt-4 sm:px-5'"
     >
       <slot />

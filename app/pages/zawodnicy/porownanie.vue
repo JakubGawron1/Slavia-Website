@@ -50,7 +50,7 @@ useSeoMeta({
     />
 
     <div class="slavia-content-well slavia-public-section">
-      <UCard class="mb-8 rounded-2xl border-default/70 shadow-sm ring-1 ring-default/40">
+      <UCard class="slavia-page-card slavia-public-card slavia-public-card--flat mb-8">
         <div class="max-h-80 space-y-1 overflow-y-auto p-3 sm:p-4">
           <div v-if="pending" class="text-sm text-muted">
             Ładowanie listy…
@@ -77,7 +77,7 @@ useSeoMeta({
 
       <UCard
         v-if="selectedRows.length > 0"
-        class="rounded-2xl border-default/70 shadow-sm ring-1 ring-default/40"
+        class="slavia-page-card slavia-public-card slavia-public-card--flat"
         :ui="{ body: 'p-0 overflow-x-auto' }"
       >
         <table class="w-full min-w-[520px] text-sm">
@@ -127,13 +127,12 @@ useSeoMeta({
         </table>
       </UCard>
 
-      <UAlert
+      <PublicEmptyState
         v-else
-        color="neutral"
-        variant="subtle"
+        icon="i-lucide-users"
         title="Nic nie wybrano"
         description="Zaznacz co najmniej jednego zawodnika powyżej."
-        class="rounded-2xl"
+        compact
       />
     </div>
   </PublicPageLayout>

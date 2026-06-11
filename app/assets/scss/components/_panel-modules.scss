@@ -1,0 +1,65 @@
+/** Premium module cards + data toolbars (panele admin / SA) */
+
+/** Karta modułu — wspólny język z `.slavia-page-card` (PanelModuleCard / DashboardModuleCard) */
+.slavia-module-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: var(--slavia-radius-2xl);
+  border: 1px solid var(--slavia-surface-edge-strong, var(--slavia-glass-border));
+  background: linear-gradient(
+    168deg,
+    var(--slavia-card-gradient-top),
+    var(--slavia-card-gradient-bottom)
+  );
+  box-shadow: var(--slavia-elevation-card);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.22s ease,
+    transform 0.2s ease;
+}
+
+.slavia-module-card:hover {
+  border-color: color-mix(in oklab, var(--ui-primary) 30%, var(--ui-border));
+  box-shadow: var(--slavia-elevation-card-hover);
+  transform: translateY(-2px);
+}
+
+.slavia-module-card:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--ui-primary) 85%, #fff);
+  outline-offset: 2px;
+}
+
+.slavia-panel-toolbar :where(.slavia-panel-toolbar__filters > *) {
+  min-width: 0;
+}
+
+.slavia-panel-toolbar :where(label) {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ui-text-muted);
+}
+
+.slavia-panel-loading {
+  border-radius: var(--slavia-radius-2xl);
+  border: 1px dashed color-mix(in srgb, var(--ui-border) 70%, transparent);
+  background: color-mix(in srgb, var(--ui-bg-muted) 35%, transparent);
+}
+
+/** Zakładki kontekstu CMS / zespół — spójny pasek */
+.slavia-panel-tab-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  padding: 0.375rem;
+  border-radius: var(--slavia-radius-xl);
+  border: 1px solid color-mix(in srgb, var(--ui-border) 65%, transparent);
+  background: color-mix(in srgb, var(--ui-bg-muted) 30%, transparent);
+}

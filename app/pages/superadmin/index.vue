@@ -88,6 +88,7 @@ const SUPERADMIN_MODULE_GROUPS: { title: string, items: DashboardModuleLink[] }[
     items: [
       dashboardLink('Konta i role', 'Administratorzy, trenerzy, zawodnicy', 'i-lucide-shield-alert', '/superadmin/zawodnicy?tab=accounts', 'text-red-500', 'bg-red-500/10'),
       dashboardLink('Logi systemowe', 'Audyt operacji', 'i-lucide-history', '/superadmin/audit-logs', 'text-primary', 'bg-primary/10'),
+      dashboardLink('Podgląd roli', 'Symulator read-only jako inne konto', 'i-lucide-eye', '/superadmin/podglad-roli', 'text-amber-600', 'bg-amber-500/10'),
       dashboardLink('Workery cron', 'Zadania w tle', 'i-lucide-timer', '/superadmin/workers', 'text-fuchsia-500', 'bg-fuchsia-500/10'),
       dashboardLink('Narzędzia developera', 'Diagnostyka API i PWA', 'i-lucide-terminal', '/superadmin/developer', 'text-violet-500', 'bg-violet-500/10'),
       dashboardLink('Nawigacja paneli', 'Widoczność modułów ról', 'i-lucide-layout-grid', '/superadmin/nawigacja-paneli', 'text-sky-500', 'bg-sky-500/10'),
@@ -202,7 +203,7 @@ function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 
       <DashboardHero
         eyebrow="Superadministracja"
         :title="`Witaj, ${auth.user.value?.username || 'Superadminie'}!`"
-        lead="Panel systemowy: role, bezpieczeństwo, narzędzia i szybkie przejścia."
+        lead="Kontrola systemu, widoczność modułów i szybkie przejścia do narzędzi kadry."
         icon="i-lucide-crown"
         :badges="[
           { label: `Konta admin: ${adminsCount}`, color: 'neutral' },
@@ -213,6 +214,25 @@ function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 
         ]"
       />
     </PanelCollapsibleSection>
+
+    <PanelCalloutBanner
+      class="mt-6"
+      title="SuperAdmin"
+      description="Wyłączone moduły na dashboardzie mają odznakę „Wyłączony”. Zarządzaj flagami w Nawigacja paneli."
+      icon="i-lucide-layout-grid"
+      tone="primary"
+    >
+      <template #actions>
+        <UButton
+          to="/superadmin/nawigacja-paneli"
+          size="sm"
+          variant="soft"
+          trailing-icon="i-lucide-arrow-right"
+        >
+          Nawigacja paneli
+        </UButton>
+      </template>
+    </PanelCalloutBanner>
 
     <DashboardSectionsToolbar class="mt-6" />
 

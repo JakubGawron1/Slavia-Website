@@ -495,9 +495,12 @@ function printAthleteResume() {
       </div>
     </section>
 
-    <div class="space-y-12 py-8 sm:py-10 lg:space-y-16 lg:py-12">
+    <div class="slavia-content-well space-y-12 py-8 sm:py-10 lg:space-y-16 lg:py-12">
         <!-- ========== BIO PULL-QUOTE ========== -->
-        <section v-if="athlete!.public_bio?.trim()" class="relative">
+        <section
+          v-if="athlete!.public_bio?.trim()"
+          class="slavia-public-section relative"
+        >
           <div class="slavia-page-card relative mx-auto max-w-4xl p-6 sm:p-10">
             <UIcon
               name="i-lucide-quote"
@@ -513,13 +516,16 @@ function printAthleteResume() {
         </section>
 
         <!-- ========== QUICK STATS ========== -->
-        <section v-if="publicStats.totalStarts > 0">
-          <header class="mb-5 flex items-center gap-3">
-            <span class="h-8 w-1 rounded-full bg-primary" />
-            <h2 class="text-xl font-bold tracking-tight text-highlighted sm:text-2xl">
-              Statystyki w skrócie
-            </h2>
-          </header>
+        <section
+          v-if="publicStats.totalStarts > 0"
+          class="slavia-public-section"
+        >
+          <PublicSectionHead
+            split
+            eyebrow="Zawody"
+            title="Statystyki w skrócie"
+            lead="Podsumowanie zatwierdzonych startów — bez wpisów treningowych z sali."
+          />
           <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div class="slavia-page-card slavia-page-card--flat p-5 transition hover:border-primary/30">
               <p class="text-[10px] font-bold uppercase tracking-wide text-muted">
@@ -577,56 +583,46 @@ function printAthleteResume() {
         <section
           v-if="approvedResults.length > 0"
           id="progres"
-          class="scroll-mt-24"
+          class="slavia-public-section scroll-mt-24"
         >
-          <header class="mb-5 flex flex-wrap items-end justify-between gap-3">
-            <div class="flex items-center gap-3">
-              <span class="h-8 w-1 rounded-full bg-primary" />
-              <div>
-                <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">
-                  Pomost
-                </p>
-                <h2 class="mt-0.5 text-xl font-bold tracking-tight text-highlighted sm:text-2xl">
-                  Progresja totalu — zawody
-                </h2>
-              </div>
-            </div>
-            <p class="text-[11px] text-muted">
-              Najedź punkt — szczegóły startu.
-            </p>
-          </header>
+          <PublicSectionHead
+            split
+            eyebrow="Pomost"
+            title="Progresja totalu — zawody"
+            lead="Najedź punkt na wykresie — szczegóły startu."
+          />
           <div class="slavia-page-card p-5 sm:p-7">
             <AthleteProgressChart :series="progressSeries" :height="260" />
           </div>
         </section>
 
         <!-- ========== ANALIZA ŁĄCZONA (auth) ========== -->
-        <section v-if="showCombinedSection" id="analiza" class="scroll-mt-24">
-          <header class="mb-5 flex flex-wrap items-end justify-between gap-3">
-            <div class="flex items-center gap-3">
-              <span class="h-8 w-1 rounded-full bg-success" />
-              <div>
-                <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-success dark:text-success">
-                  Trening + zawody
-                </p>
-                <h2 class="mt-0.5 text-xl font-bold tracking-tight text-highlighted sm:text-2xl">
-                  Analiza łączona
-                </h2>
+        <section
+          v-if="showCombinedSection"
+          id="analiza"
+          class="slavia-public-section scroll-mt-24"
+        >
+          <PublicSectionHead
+            split
+            eyebrow="Trening + zawody"
+            title="Analiza łączona"
+            lead="Porównanie formy z sali i wyników z pomostu — widoczne po zalogowaniu."
+          >
+            <template #actions>
+              <div class="flex flex-wrap items-center gap-3 text-[11px]">
+                <span class="flex items-center gap-1.5">
+                  <span class="inline-block h-2 w-3 rounded-full bg-primary" />
+                  <span class="font-semibold text-highlighted">Zawody</span>
+                  <span class="text-muted">({{ combinedStats.competitions }})</span>
+                </span>
+                <span class="flex items-center gap-1.5">
+                  <span class="inline-block h-1 w-3 rounded-full bg-info" />
+                  <span class="font-semibold text-highlighted">Trening</span>
+                  <span class="text-muted">({{ combinedStats.trainings }})</span>
+                </span>
               </div>
-            </div>
-            <div class="flex flex-wrap items-center gap-3 text-[11px]">
-              <span class="flex items-center gap-1.5">
-                <span class="inline-block h-2 w-3 rounded-full bg-primary" />
-                <span class="font-semibold text-highlighted">Zawody</span>
-                <span class="text-muted">({{ combinedStats.competitions }})</span>
-              </span>
-              <span class="flex items-center gap-1.5">
-                <span class="inline-block h-1 w-3 rounded-full bg-info" />
-                <span class="font-semibold text-highlighted">Trening</span>
-                <span class="text-muted">({{ combinedStats.trainings }})</span>
-              </span>
-            </div>
-          </header>
+            </template>
+          </PublicSectionHead>
 
           <div class="slavia-page-card p-5 sm:p-7">
             <AthleteCombinedChart :series="combinedSeries" :height="260" />
@@ -738,18 +734,16 @@ function printAthleteResume() {
         </section>
 
         <!-- ========== HISTORIA STARTÓW ========== -->
-        <section id="historia-startow" class="scroll-mt-24">
-          <header class="mb-5 flex items-center gap-3">
-            <span class="h-8 w-1 rounded-full bg-primary" />
-            <div>
-              <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">
-                Pomost &amp; sala
-              </p>
-              <h2 class="mt-0.5 text-xl font-bold tracking-tight text-highlighted sm:text-2xl">
-                Historia startów
-              </h2>
-            </div>
-          </header>
+        <section
+          id="historia-startow"
+          class="slavia-public-section scroll-mt-24"
+        >
+          <PublicSectionHead
+            split
+            eyebrow="Pomost i sala"
+            title="Historia startów"
+            lead="Zatwierdzone wyniki z zawodów; wpisy treningowe widoczne dla kadry i właściciela profilu."
+          />
 
           <div
             class="grid gap-6"

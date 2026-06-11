@@ -1,12 +1,6 @@
-/** Sekcja treści pod nagłówkiem publicznym */
+/** Sekcja treści pod nagłówkiem publicznym (bez pionowego paddingu — odstępy z page-flow). */
 .slavia-public-section {
-  margin-top: 0.5rem;
-}
-
-@media (min-width: 640px) {
-  .slavia-public-section {
-    margin-top: 0.75rem;
-  }
+  margin-top: 0;
 }
 
 /** Karta treści na podstronach (filtry, tabele, formularze) — szkło + delikatny gradient */
@@ -60,16 +54,19 @@ html.dark .slavia-page-card {
   border-radius: var(--slavia-radius-xl, 1rem);
   border: 1px solid var(--slavia-surface-edge-strong, color-mix(in srgb, var(--ui-primary) 22%, var(--ui-border) 78%));
   background: linear-gradient(
-    168deg,
-    var(--slavia-card-gradient-top),
+    155deg,
+    color-mix(in oklab, var(--ui-primary) 4%, var(--slavia-card-gradient-top)),
     var(--slavia-card-gradient-bottom)
   );
   box-shadow:
     var(--slavia-shadow-xs),
     var(--slavia-shadow-sm),
     inset 0 1px 0 var(--slavia-surface-sheen, var(--slavia-glass-highlight));
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px) saturate(1.08);
+  -webkit-backdrop-filter: blur(12px) saturate(1.08);
+  transition:
+    border-color 0.22s ease,
+    box-shadow 0.25s ease;
 }
 
 /** Bez poświaty layoutu pod kartą hero (kalkulatory, galeria, aktualności…). */

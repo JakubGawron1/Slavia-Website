@@ -226,43 +226,46 @@ function diaryEntryForPlanHref(plan: TrainingPlan) {
       title="Plany treningowe"
       icon="i-lucide-clipboard-list"
       description="Zarządzaj cyklami treningowymi swoich zawodników."
-    />
+    >
+      <template #actions>
+        <UButton to="/trainer" variant="soft" color="neutral" size="sm" icon="i-lucide-layout-dashboard">
+          Panel
+        </UButton>
+      </template>
+    </PanelPageHeader>
 
-    <!-- Toolbar -->
-    <div class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6 bg-card/40 p-6 rounded-3xl border border-default">
-      <div class="flex-1 max-w-md">
-        <label class="block text-[10px] font-black text-primary uppercase tracking-widest mb-2 ml-1">Zawodnik</label>
-        <USelect
-          v-model="selectedAthleteId"
-          size="xl"
-          icon="i-lucide-users"
-          class="font-bold"
-          :items="[{ label: '--- Wybierz zawodnika ---', value: NO_ATHLETE }, ...((athletes || []).map(a => ({ label: a.full_name, value: a.id })))]"
-        />
-      </div>
-      
-      <div v-if="selectedAthleteId !== NO_ATHLETE" class="flex gap-2">
+    <PanelDataToolbar sticky>
+      <template #filters>
+        <UFormField label="Zawodnik" class="w-full max-w-md">
+          <USelect
+            v-model="selectedAthleteId"
+            size="lg"
+            icon="i-lucide-users"
+            class="font-bold"
+            :items="[{ label: '--- Wybierz zawodnika ---', value: NO_ATHLETE }, ...((athletes || []).map(a => ({ label: a.full_name, value: a.id })))]"
+          />
+        </UFormField>
+      </template>
+      <template #actions>
         <UButton
-          v-if="planVsDiaryHref"
+          v-if="selectedAthleteId !== NO_ATHLETE && planVsDiaryHref"
           :to="planVsDiaryHref"
           icon="i-lucide-git-compare"
-          size="xl"
           variant="soft"
           color="primary"
-          class="rounded-2xl px-5"
         >
           Plan vs dziennik
         </UButton>
-        <UButton 
-          icon="i-lucide-plus" 
-          size="xl" 
-          class="rounded-2xl px-6 shadow-lg shadow-primary/20"
+        <UButton
+          v-if="selectedAthleteId !== NO_ATHLETE"
+          icon="i-lucide-plus"
+          color="primary"
           @click="showAddModal = true"
         >
           Nowy plan
         </UButton>
-      </div>
-    </div>
+      </template>
+    </PanelDataToolbar>
 
     <SlaviaEditorSheet
       v-model:open="showAddModal"
@@ -384,13 +387,15 @@ function diaryEntryForPlanHref(plan: TrainingPlan) {
       </template>
     </SlaviaEditorSheet>
 
-    <!-- Content Area -->
-    <div v-if="loading" class="flex flex-col items-center justify-center py-20 gap-4 text-muted">
-      <UIcon name="i-lucide-loader-2" class="size-10 animate-spin text-primary" />
-      <p class="font-bold uppercase tracking-widest text-xs">Wczytywanie planów...</p>
-    </div>
+    <PanelLoadingState
+      v-if="loading"
+      label="Wczytywanie planów…"
+    />
 
-    <div v-else-if="editingPlanId" class="space-y-6 animate-page-in">
+    <div
+      v-else-if="editingPlanId"
+      class="space-y-6 animate-page-in"
+    >
       <div class="flex items-center gap-4 bg-card/60 p-4 rounded-3xl border border-default">
         <UButton icon="i-lucide-arrow-left" variant="ghost" color="neutral" class="rounded-xl" @click="editingPlanId = null">Wróć do listy</UButton>
         <div class="h-6 w-px bg-default mx-2" />
@@ -411,7 +416,12 @@ function diaryEntryForPlanHref(plan: TrainingPlan) {
       />
 
       <template v-else>
-        <div v-for="p in plans" :key="p.id" class="group relative bg-card hover:bg-card/80 border border-default hover:border-primary/30 p-6 rounded-3xl transition-all shadow-sm hover:shadow-xl hover:shadow-primary/5">
+        <UCard
+          v-for="p in plans"
+          :key="p.id"
+          class="slavia-page-card group overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30"
+        >
+          <div class="p-5 sm:p-6">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div class="flex-1">
               <div class="flex items-center gap-3 mb-2">
@@ -480,7 +490,8 @@ function diaryEntryForPlanHref(plan: TrainingPlan) {
               />
             </div>
           </div>
-        </div>
+          </div>
+        </UCard>
 
         <PublicEmptyState
           v-if="plans.length === 0"

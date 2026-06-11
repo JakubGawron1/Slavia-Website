@@ -639,6 +639,10 @@ const filteredUpdates = computed(() => {
       title="Changelog"
       icon="i-lucide-file-text"
       description="Historia zmian w aplikacji — szybkie wyszukiwanie i filtrowanie po typie aktualizacji."
+      :breadcrumbs="[
+        { label: 'Administracja', to: '/admin', icon: 'i-lucide-shield' },
+        { label: 'Changelog', icon: 'i-lucide-file-text' }
+      ]"
     >
       <template #badges>
             <UBadge color="primary" variant="subtle" size="sm">
@@ -659,63 +663,61 @@ const filteredUpdates = computed(() => {
       </template>
     </PanelPageHeader>
 
-      <UCard class="mt-8 rounded-3xl border-default/70 shadow-sm ring-1 ring-default/40">
-        <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div class="min-w-0">
-            <p class="text-[10px] font-black uppercase tracking-[0.22em] text-muted">
-              Filtry
-            </p>
-            <h2 class="mt-1 text-lg font-bold text-highlighted">
-              Znajdź zmianę
-            </h2>
-          </div>
-          <div class="flex flex-wrap gap-2">
+      <PanelDataToolbar
+        class="mt-8"
+        :summary="`${filteredUpdates.length} z ${updates.length} wpisów`"
+        sticky
+      >
+        <template #filters>
+          <UFormField label="Szukaj" class="w-full sm:min-w-60">
             <UInput
               v-model="query"
-              size="sm"
+              size="lg"
               icon="i-lucide-search"
-              placeholder="Szukaj: wersja, tytuł, fraza…"
-              class="min-w-60"
+              placeholder="Wersja, tytuł, fraza…"
+              class="w-full"
             />
-            <UButton
-              size="sm"
-              color="neutral"
-              variant="outline"
-              :icon="typeFilter === 'all' ? 'i-lucide-check' : 'i-lucide-circle'"
-              @click="typeFilter = 'all'"
-            >
-              Wszystkie
-            </UButton>
-            <UButton
-              size="sm"
-              :color="typeFilter === 'feature' ? 'primary' : 'neutral'"
-              :variant="typeFilter === 'feature' ? 'soft' : 'outline'"
-              :icon="typeFilter === 'feature' ? 'i-lucide-check' : 'i-lucide-circle'"
-              @click="typeFilter = typeFilter === 'feature' ? 'all' : 'feature'"
-            >
-              Nowości
-            </UButton>
-            <UButton
-              size="sm"
-              :color="typeFilter === 'bugfix' ? 'warning' : 'neutral'"
-              :variant="typeFilter === 'bugfix' ? 'soft' : 'outline'"
-              :icon="typeFilter === 'bugfix' ? 'i-lucide-check' : 'i-lucide-circle'"
-              @click="typeFilter = typeFilter === 'bugfix' ? 'all' : 'bugfix'"
-            >
-              Bugfix
-            </UButton>
-            <UButton
-              size="sm"
-              :color="typeFilter === 'release' ? 'info' : 'neutral'"
-              :variant="typeFilter === 'release' ? 'soft' : 'outline'"
-              :icon="typeFilter === 'release' ? 'i-lucide-check' : 'i-lucide-circle'"
-              @click="typeFilter = typeFilter === 'release' ? 'all' : 'release'"
-            >
-              Wydania
-            </UButton>
-          </div>
-        </div>
-      </UCard>
+          </UFormField>
+        </template>
+        <template #meta>
+          <UButton
+            size="sm"
+            color="neutral"
+            variant="outline"
+            :icon="typeFilter === 'all' ? 'i-lucide-check' : 'i-lucide-circle'"
+            @click="typeFilter = 'all'"
+          >
+            Wszystkie
+          </UButton>
+          <UButton
+            size="sm"
+            :color="typeFilter === 'feature' ? 'primary' : 'neutral'"
+            :variant="typeFilter === 'feature' ? 'soft' : 'outline'"
+            :icon="typeFilter === 'feature' ? 'i-lucide-check' : 'i-lucide-circle'"
+            @click="typeFilter = typeFilter === 'feature' ? 'all' : 'feature'"
+          >
+            Nowości
+          </UButton>
+          <UButton
+            size="sm"
+            :color="typeFilter === 'bugfix' ? 'warning' : 'neutral'"
+            :variant="typeFilter === 'bugfix' ? 'soft' : 'outline'"
+            :icon="typeFilter === 'bugfix' ? 'i-lucide-check' : 'i-lucide-circle'"
+            @click="typeFilter = typeFilter === 'bugfix' ? 'all' : 'bugfix'"
+          >
+            Bugfix
+          </UButton>
+          <UButton
+            size="sm"
+            :color="typeFilter === 'release' ? 'info' : 'neutral'"
+            :variant="typeFilter === 'release' ? 'soft' : 'outline'"
+            :icon="typeFilter === 'release' ? 'i-lucide-check' : 'i-lucide-circle'"
+            @click="typeFilter = typeFilter === 'release' ? 'all' : 'release'"
+          >
+            Wydania
+          </UButton>
+        </template>
+      </PanelDataToolbar>
 
       <div class="mt-8 space-y-4">
         <UCard
@@ -782,20 +784,12 @@ const filteredUpdates = computed(() => {
           </div>
         </UCard>
 
-        <UCard
+        <SlaviaEmptyState
           v-if="filteredUpdates.length === 0"
-          class="rounded-3xl border-default/70 shadow-sm ring-1 ring-default/30"
-        >
-          <div class="py-10 text-center">
-            <UIcon name="i-lucide-search-x" class="mx-auto size-7 text-muted" />
-            <p class="mt-3 text-sm font-semibold text-highlighted">
-              Brak wyników
-            </p>
-            <p class="mt-1 text-sm text-muted">
-              Zmień filtr lub wpisz inną frazę.
-            </p>
-          </div>
-        </UCard>
+          icon="i-lucide-search-x"
+          title="Brak wyników"
+          description="Zmień filtr lub wpisz inną frazę."
+        />
       </div>
   </PanelPageLayout>
 </template>

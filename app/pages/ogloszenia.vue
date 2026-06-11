@@ -320,13 +320,13 @@ function bodyPreview(text: string, max = 100) {
       </div>
 
       <div
-        class="grid gap-5 sm:gap-6"
-        :class="canManage ? 'md:hidden lg:grid-cols-2' : 'lg:grid-cols-2'"
+        class="slavia-public-grid slavia-public-grid--2 slavia-public-grid--stagger"
+        :class="canManage ? 'md:hidden' : ''"
       >
         <article
           v-for="a in sortedPublic"
           :key="a.id"
-          class="slavia-page-card overflow-hidden p-5 transition-all duration-200 sm:p-6"
+          class="slavia-public-card slavia-page-card slavia-public-card--flat overflow-hidden p-5 sm:p-6"
           :class="a.pinned ? 'slavia-announcement-pin bg-primary/[0.04] ring-1 ring-primary/25' : ''"
         >
           <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">

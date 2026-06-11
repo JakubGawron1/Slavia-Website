@@ -63,24 +63,41 @@ function workerHuman(id: string) {
       title="Workery w tle (cron)"
       icon="i-lucide-cpu"
       description="Ostatnie przebiegi zadań okresowych w procesie backendu. Wyświetlany czas to czas ściany (wall-clock) pojedynczego przebiegu."
+      :breadcrumbs="[
+        { label: 'SuperAdmin', to: '/superadmin', icon: 'i-lucide-shield-check' },
+        { label: 'Workery cron', icon: 'i-lucide-cpu' }
+      ]"
     >
       <template #actions>
-        <UButton icon="i-lucide-refresh-cw" color="neutral" variant="outline" @click="refreshRows">
+        <UButton
+          icon="i-lucide-refresh-cw"
+          color="neutral"
+          variant="outline"
+          :loading="pending"
+          @click="refreshRows"
+        >
           Odśwież
         </UButton>
       </template>
     </PanelPageHeader>
 
-    <UCard class="rounded-2xl">
-      <div v-if="pending" class="flex justify-center py-16">
-        <UIcon name="i-lucide-loader-circle" class="size-10 animate-spin text-primary" />
-      </div>
+    <PanelLoadingState
+      v-if="pending"
+      label="Wczytywanie przebiegów workerów…"
+    />
 
-      <div v-else-if="!(rows?.length)" class="py-12 text-center text-muted">
-        Brak zarejestrowanych przebiegów — uruchomią się po pierwszym takcie schedulerów lub po restarcie backendu.
-      </div>
+    <UCard
+      v-else
+      class="overflow-hidden rounded-2xl border-default/70 ring-1 ring-default/20"
+    >
+      <SlaviaEmptyState
+        v-if="!(rows?.length)"
+        icon="i-lucide-timer-off"
+        title="Brak zarejestrowanych przebiegów"
+        description="Uruchomią się po pierwszym takcie schedulerów lub po restarcie backendu."
+      />
 
-      <div v-else class="-mx-2 overflow-x-auto sm:mx-0">
+      <div v-else class="slavia-data-table overflow-x-auto">
         <table class="w-full min-w-[640px] text-left text-sm">
           <thead>
             <tr class="border-b border-default text-xs uppercase tracking-wide text-muted">

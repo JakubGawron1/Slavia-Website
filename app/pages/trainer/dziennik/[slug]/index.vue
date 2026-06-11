@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Athlete, TrainingLogEntry } from '~/types/models'
+import DashboardKpiCard from '~/components/dashboard/DashboardKpiCard.vue'
 import { getApiErrorMessage } from '~/composables/useApi'
 import { isProbablyRichHtml } from '~/utils/html'
 import { parseSlugId } from '~/utils/slug'
@@ -138,43 +139,26 @@ async function removeEntry(e: TrainingLogEntry) {
     </PanelPageHeader>
 
     <div class="slavia-content-well">
-    <div class="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-      <UCard class="bg-primary/5 border-primary/20">
-        <div class="flex items-center gap-3">
-          <div class="rounded-lg bg-primary/10 p-2 text-primary">
-            <UIcon name="i-lucide-calendar-days" class="size-5" />
-          </div>
-          <div>
-            <p class="text-xs font-bold text-muted uppercase">Ostatnie 7 dni</p>
-            <p class="text-xl font-black text-highlighted">{{ stats.last7d }} jednostek</p>
-          </div>
-        </div>
-      </UCard>
-      <UCard class="bg-info/5 border-info/20">
-        <div class="flex items-center gap-3">
-          <div class="rounded-lg bg-info/10 p-2 text-info">
-            <UIcon name="i-lucide-calendar-range" class="size-5" />
-          </div>
-          <div>
-            <p class="text-xs font-bold text-muted uppercase">Ostatnie 30 dni</p>
-            <p class="text-xl font-black text-highlighted">{{ stats.last30d }} jednostek</p>
-          </div>
-        </div>
-      </UCard>
-      <UCard class="bg-success/5 border-success/20">
-        <div class="flex items-center gap-3">
-          <div class="rounded-lg bg-success/10 p-2 text-success">
-            <UIcon name="i-lucide-clock" class="size-5" />
-          </div>
-          <div>
-            <p class="text-xs font-bold text-muted uppercase">Ostatni wpis</p>
-            <p class="text-xl font-black text-highlighted">
-              {{ stats.lastDate ? stats.lastDate.toISOString().slice(0, 10) : 'Brak' }}
-            </p>
-          </div>
-        </div>
-      </UCard>
-    </div>
+    <PanelDashboardGrid variant="kpi" class="mb-8">
+      <DashboardKpiCard
+        label="Ostatnie 7 dni"
+        :value="`${stats.last7d} jednostek`"
+        icon="i-lucide-calendar-days"
+        tone="primary"
+      />
+      <DashboardKpiCard
+        label="Ostatnie 30 dni"
+        :value="`${stats.last30d} jednostek`"
+        icon="i-lucide-calendar-range"
+        tone="info"
+      />
+      <DashboardKpiCard
+        label="Ostatni wpis"
+        :value="stats.lastDate ? stats.lastDate.toISOString().slice(0, 10) : 'Brak'"
+        icon="i-lucide-clock"
+        tone="success"
+      />
+    </PanelDashboardGrid>
 
     <div class="mb-6 flex gap-1 rounded-xl bg-default/10 p-1">
       <button 
@@ -202,16 +186,10 @@ async function removeEntry(e: TrainingLogEntry) {
         Historia wpisów
       </h2>
 
-    <div
+    <PanelLoadingState
       v-if="loading"
-      class="flex items-center gap-2 py-12 text-muted"
-    >
-      <UIcon
-        name="i-lucide-loader-2"
-        class="size-6 animate-spin"
-      />
-      Wczytywanie…
-    </div>
+      label="Wczytywanie dziennika…"
+    />
 
     <PublicEmptyState
       v-else-if="entries.length === 0"
@@ -231,7 +209,7 @@ async function removeEntry(e: TrainingLogEntry) {
       <UCard
         v-for="e in entries"
         :key="e.id"
-        class="overflow-hidden"
+        class="slavia-page-card overflow-hidden transition-all duration-200 hover:-translate-y-0.5"
       >
         <div class="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5">
           <div class="min-w-0 flex-1 space-y-2">

@@ -21,6 +21,7 @@ useSeoMeta({
 
 const apiFetch = useApi()
 const toast = useToast()
+const rolePreviewState = useRolePreviewState()
 
 const { data: plans, refresh, pending } = await useAsyncData(
   'athlete-my-plans',
@@ -255,12 +256,30 @@ function exerciseName(item: TrainingPlanItem) {
         title="Moje plany"
         icon="i-lucide-clipboard-list"
         description="Ćwiczenia na dziś — realizuj wytyczne trenera i oznaczaj postęp."
+      >
+        <template #actions>
+          <UButton to="/athlete" variant="soft" color="neutral" size="sm" icon="i-lucide-layout-dashboard">
+            Panel
+          </UButton>
+        </template>
+      </PanelPageHeader>
+
+      <UAlert
+        v-if="rolePreviewState.isReadOnly.value"
+        class="mb-4"
+        color="warning"
+        variant="subtle"
+        icon="i-lucide-eye"
+        title="Podgląd read-only"
+        description="Plany i ćwiczenia są widoczne — zmiana postępu i notatek jest wyłączona."
       />
 
-      <div v-if="pending && plans.length === 0" class="flex flex-col items-center justify-center py-20 gap-4">
-        <UIcon name="i-lucide-loader-2" class="size-12 animate-spin text-primary/40" />
-        <p class="text-sm font-bold text-muted uppercase tracking-widest">Wczytywanie planów...</p>
-      </div>
+      <PanelLoadingState
+        v-if="pending && plans.length === 0"
+        variant="list"
+        :count="3"
+        label="Wczytywanie planów…"
+      />
 
       <div v-else class="space-y-8">
         <PublicEmptyState
@@ -476,6 +495,7 @@ function exerciseName(item: TrainingPlanItem) {
               </p>
 
               <UButton
+                v-if="!rolePreviewState.isReadOnly.value"
                 size="lg"
                 color="primary"
                 variant="soft"
@@ -518,10 +538,14 @@ function exerciseName(item: TrainingPlanItem) {
                 :max="100"
                 :step="5"
                 class="h-2 w-full accent-primary"
+                :disabled="rolePreviewState.isReadOnly.value"
                 @update:model-value="normalizeStatusForProgress(p)"
               />
 
-              <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <div
+                v-if="!rolePreviewState.isReadOnly.value"
+                class="grid grid-cols-2 gap-2 sm:grid-cols-4"
+              >
                 <UButton
                   v-for="s in (['planned','active','paused','completed'] as const)"
                   :key="s"
@@ -536,7 +560,10 @@ function exerciseName(item: TrainingPlanItem) {
                 </UButton>
               </div>
 
-              <div class="flex gap-2">
+              <div
+                v-if="!rolePreviewState.isReadOnly.value"
+                class="flex gap-2"
+              >
                 <UButton
                   color="primary"
                   class="flex-1 justify-center rounded-2xl font-black"

@@ -83,6 +83,10 @@ async function submitReview(reviewNote: string) {
   }
 }
 
+async function refreshAll() {
+  await Promise.all([refreshPending(), refreshBoard()])
+}
+
 useSeoMeta({
   title: 'Inne ćwiczenia — Trener',
   robots: 'noindex, nofollow'
@@ -96,7 +100,27 @@ useSeoMeta({
       title="Inne ćwiczenia"
       icon="i-lucide-bar-chart-3"
       description="Siła poza dwubojem: weryfikuj zgłoszenia zawodników, śledź ranking klubu i zarządzaj wspólnym słownikiem ćwiczeń."
-    />
+    >
+      <template #actions>
+        <UButton
+          to="/trainer"
+          variant="soft"
+          color="neutral"
+          size="sm"
+          icon="i-lucide-layout-dashboard"
+        >
+          Panel
+        </UButton>
+        <UButton
+          variant="soft"
+          icon="i-lucide-refresh-ccw"
+          :loading="pendingQueue || boardPending"
+          @click="() => void refreshAll()"
+        >
+          Odśwież
+        </UButton>
+      </template>
+    </PanelPageHeader>
 
     <div class="mb-6 flex flex-wrap gap-2">
       <UButton

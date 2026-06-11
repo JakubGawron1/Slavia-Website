@@ -66,14 +66,19 @@ watch(
 
 <template>
   <div class="space-y-4">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <p class="text-sm text-muted">
-        Zarządzaj rekordami zgodnie z danymi w systemie klubowym.
-      </p>
-      <UButton icon="i-lucide-plus" @click="openCreate">
-        Dodaj zawodnika
-      </UButton>
-    </div>
+    <PanelLoadingState
+      v-if="loading && !players.length"
+      label="Ładowanie zawodników…"
+    />
+
+    <template v-else>
+    <PanelDataToolbar summary="Profile sportowe, kategorie PZPC i powiązania z kontami logowania.">
+      <template #actions>
+        <UButton icon="i-lucide-plus" size="lg" @click="openCreate">
+          Dodaj zawodnika
+        </UButton>
+      </template>
+    </PanelDataToolbar>
 
     <ClubPlayersListPanel
       :players="playersFiltered"
@@ -90,6 +95,7 @@ watch(
       @edit="openEdit"
       @delete="askDelete"
     />
+    </template>
 
     <SlaviaEditorSheet
       v-model:open="modalOpen"

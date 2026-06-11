@@ -56,8 +56,8 @@ useSeoMeta({
       heading-id="o-klubie-history-heading"
     />
 
-    <div class="slavia-page-card mx-auto mt-12 flex max-w-3xl flex-col items-center gap-5 px-6 py-10 text-center sm:mt-16 sm:px-10 sm:py-12">
-      <p class="text-sm leading-relaxed text-muted sm:text-base">
+    <div class="slavia-page-card slavia-public-cta-band">
+      <p class="slavia-public-lead max-w-prose">
         <CmsEditable
           page-name="o-klubie"
           field-key="cta_text"

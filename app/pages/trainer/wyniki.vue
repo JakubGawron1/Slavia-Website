@@ -443,56 +443,64 @@ function badgeColorForKind(k: string | undefined) {
       </template>
     </PanelPageHeader>
 
-    <div class="slavia-toolbar mb-4">
-      <UButton
-        size="sm"
-        :variant="kindFilter === 'all' ? 'solid' : 'ghost'"
-        :color="kindFilter === 'all' ? 'primary' : 'neutral'"
-        class="min-h-9"
-        @click="kindFilter = 'all'"
-      >
-        Wszystko ({{ rows.length }})
-      </UButton>
-      <UButton
-        size="sm"
-        :variant="kindFilter === 'competition' ? 'solid' : 'ghost'"
-        :color="kindFilter === 'competition' ? 'primary' : 'neutral'"
-        class="min-h-9"
-        @click="kindFilter = 'competition'"
-      >
-        Zawody ({{ rows.filter(r => (r.kind ?? 'competition') === 'competition').length }})
-      </UButton>
-      <UButton
-        size="sm"
-        :variant="kindFilter === 'training' ? 'solid' : 'ghost'"
-        :color="kindFilter === 'training' ? 'primary' : 'neutral'"
-        class="min-h-9"
-        @click="kindFilter = 'training'"
-      >
-        Trening ({{ rows.filter(r => r.kind === 'training').length }})
-      </UButton>
-    </div>
-
-    <div class="mb-4 flex flex-wrap items-end justify-between gap-3">
-      <UFormField label="Widok">
-        <select
-          v-model="selectedAthleteId"
-          class="slavia-select min-w-72 py-2.5 text-[14px]"
-        >
-          <option :value="ATHLETE_ALL">Wszyscy zawodnicy</option>
-          <option
-            v-for="a in athleteSelectOptions"
-            :key="a.id"
-            :value="a.id"
+    <PanelDataToolbar
+      :summary="`Wierszy: ${visibleRows.length}`"
+      sticky
+    >
+      <template #filters>
+        <div class="flex flex-wrap gap-2">
+          <UButton
+            size="sm"
+            :variant="kindFilter === 'all' ? 'solid' : 'ghost'"
+            :color="kindFilter === 'all' ? 'primary' : 'neutral'"
+            class="min-h-9"
+            @click="kindFilter = 'all'"
           >
-            {{ a.full_name }}
-          </option>
-        </select>
-      </UFormField>
-      <p class="text-xs text-muted">
-        Wierszy: <strong class="font-mono text-highlighted">{{ visibleRows.length }}</strong>
-      </p>
-    </div>
+            Wszystko ({{ rows.length }})
+          </UButton>
+          <UButton
+            size="sm"
+            :variant="kindFilter === 'competition' ? 'solid' : 'ghost'"
+            :color="kindFilter === 'competition' ? 'primary' : 'neutral'"
+            class="min-h-9"
+            @click="kindFilter = 'competition'"
+          >
+            Zawody ({{ rows.filter(r => (r.kind ?? 'competition') === 'competition').length }})
+          </UButton>
+          <UButton
+            size="sm"
+            :variant="kindFilter === 'training' ? 'solid' : 'ghost'"
+            :color="kindFilter === 'training' ? 'primary' : 'neutral'"
+            class="min-h-9"
+            @click="kindFilter = 'training'"
+          >
+            Trening ({{ rows.filter(r => r.kind === 'training').length }})
+          </UButton>
+        </div>
+        <UFormField label="Zawodnik" class="w-full sm:min-w-72 sm:max-w-xs">
+          <select
+            v-model="selectedAthleteId"
+            class="slavia-select w-full py-2.5 text-[14px]"
+          >
+            <option :value="ATHLETE_ALL">
+              Wszyscy zawodnicy
+            </option>
+            <option
+              v-for="a in athleteSelectOptions"
+              :key="a.id"
+              :value="a.id"
+            >
+              {{ a.full_name }}
+            </option>
+          </select>
+        </UFormField>
+      </template>
+    </PanelDataToolbar>
+
+    <PanelLoadingState
+      v-if="pending && rows.length === 0"
+      label="Wczytywanie wyników…"
+    />
 
     <UCard
       v-if="pendingRows.length > 0"
@@ -548,7 +556,11 @@ function badgeColorForKind(k: string | undefined) {
       </div>
     </UCard>
 
-    <UCard :ui="{ body: 'p-0 overflow-x-auto' }">
+    <UCard
+      v-if="!(pending && rows.length === 0)"
+      class="slavia-page-card"
+      :ui="{ body: 'p-0 overflow-x-auto' }"
+    >
       <table class="w-full min-w-[920px] text-sm">
         <thead class="border-b border-default bg-muted/30">
           <tr>
@@ -585,23 +597,16 @@ function badgeColorForKind(k: string | undefined) {
           </tr>
         </thead>
         <tbody class="divide-y divide-default">
-          <tr v-if="pending">
+          <tr v-if="visibleRows.length === 0">
             <td
               colspan="11"
-              class="px-4 py-10 text-center text-muted"
+              class="px-4 py-6"
             >
-              <UIcon
-                name="i-lucide-loader-2"
-                class="inline size-6 animate-spin"
+              <SlaviaEmptyState
+                icon="i-lucide-trophy"
+                title="Brak wyników"
+                description="Brak zapisanych wyników w tym filtrze."
               />
-            </td>
-          </tr>
-          <tr v-else-if="visibleRows.length === 0">
-            <td
-              colspan="11"
-              class="px-4 py-10 text-center text-muted"
-            >
-              Brak zapisanych wyników w tym filtrze.
             </td>
           </tr>
           <template v-else>

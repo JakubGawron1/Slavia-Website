@@ -2,6 +2,7 @@
 import type { Athlete } from '~/types/models'
 import type { ChatMessage, ChatThread } from '~/composables/useChat'
 import { getApiErrorMessage } from '~/composables/useApi'
+import { panelAreaFromPath } from '~/composables/useSlaviaPanelArea'
 import { resolveAuthProfilePhotoSrc } from '~/utils/profilePhoto'
 
 definePageMeta({ middleware: 'auth' })
@@ -11,10 +12,20 @@ useSeoMeta({
   robots: 'noindex, nofollow'
 })
 
+const route = useRoute()
+const panelArea = computed(() => panelAreaFromPath(route.path))
+const { primaryDashboardPath } = useRoleDashboardNav()
 const auth = useAuth()
+const rolePreviewState = useRolePreviewState()
 const api = useApi()
 const toast = useToast()
 const chat = useChat()
+
+const chatViewerUserId = computed(() =>
+  rolePreviewState.isActive.value && rolePreviewState.state.value?.targetUserId
+    ? rolePreviewState.state.value.targetUserId
+    : (auth.user.value?.id ?? '')
+)
 
 const messageDraft = ref('')
 const selectedAthleteId = ref('')
@@ -41,7 +52,9 @@ const mobileThreadOpen = computed(() => Boolean(chat.activeThreadId.value))
 onMounted(async () => {
   await chat.refreshThreads()
   await chat.refreshMessages()
-  chat.startPresencePing()
+  if (!rolePreviewState.isReadOnly.value) {
+    chat.startPresencePing()
+  }
   hydrateReadMarkers()
 })
 
@@ -250,7 +263,51 @@ async function sendMessage() {
 </script>
 
 <template>
-  <PanelPageLayout padding="flush" :animate="false">
+  <PanelPageLayout padding="compact" :animate="false">
+    <PanelPageHeader
+      :area="panelArea"
+      eyebrow="Klub"
+      title="Czat trener–zawodnik"
+      icon="i-lucide-messages-square"
+      description="Wiadomości prywatne między kadrą a zawodnikami klubu."
+      :breadcrumbs="[
+        { label: 'Strefa klubu', to: '/klub', icon: 'i-lucide-layout-grid' },
+        { label: 'Czat', icon: 'i-lucide-messages-square' }
+      ]"
+    >
+      <template #actions>
+        <UButton
+          :to="primaryDashboardPath"
+          variant="soft"
+          color="neutral"
+          size="sm"
+          icon="i-lucide-layout-dashboard"
+        >
+          Panel
+        </UButton>
+        <UButton
+          v-if="canManageThreads && !rolePreviewState.isReadOnly.value"
+          variant="soft"
+          color="primary"
+          size="sm"
+          icon="i-lucide-square-pen"
+          @click="showNewThreadForm = !showNewThreadForm"
+        >
+          Nowa rozmowa
+        </UButton>
+      </template>
+    </PanelPageHeader>
+
+    <UAlert
+      v-if="rolePreviewState.isReadOnly.value"
+      class="mb-4"
+      color="warning"
+      variant="subtle"
+      icon="i-lucide-eye"
+      title="Podgląd read-only"
+      description="Widzisz czat wybranego użytkownika — wysyłanie wiadomości i edycja wątków są wyłączone."
+    />
+
     <div class="slavia-messenger">
       <aside
         class="slavia-messenger__sidebar"
@@ -258,19 +315,12 @@ async function sendMessage() {
       >
         <header class="slavia-messenger__sidebar-head">
           <div class="min-w-0 flex-1">
-            <h1 class="slavia-messenger__title">Wiadomości</h1>
-            <p class="slavia-messenger__subtitle">Czat trener–zawodnik</p>
+            <h2 class="slavia-messenger__title">Konwersacje</h2>
+            <p class="slavia-messenger__subtitle">
+              {{ sortedThreads.length }}
+              {{ sortedThreads.length === 1 ? 'wątek' : 'wątków' }}
+            </p>
           </div>
-          <UButton
-            v-if="canManageThreads"
-            icon="i-lucide-square-pen"
-            color="primary"
-            variant="soft"
-            size="sm"
-            square
-            aria-label="Nowa konwersacja"
-            @click="showNewThreadForm = !showNewThreadForm"
-          />
         </header>
 
         <div v-if="showNewThreadForm && canManageThreads" class="slavia-messenger__new-thread">
@@ -325,9 +375,15 @@ async function sendMessage() {
               </span>
             </span>
           </button>
-          <p v-if="sortedThreads.length === 0" class="slavia-messenger__empty">
-            Brak konwersacji.{{ canManageThreads ? ' Utwórz nową rozmowę powyżej.' : '' }}
-          </p>
+          <SlaviaEmptyState
+            v-if="sortedThreads.length === 0"
+            icon="i-lucide-messages-square"
+            :title="canManageThreads ? 'Brak konwersacji' : 'Brak wiadomości'"
+            :description="canManageThreads
+              ? 'Utwórz nową rozmowę przyciskiem powyżej lub w nagłówku strony.'
+              : 'Gdy trener rozpocznie rozmowę, zobaczysz ją na tej liście.'"
+            class="slavia-messenger__empty m-4"
+          />
         </div>
       </aside>
 
@@ -366,6 +422,7 @@ async function sendMessage() {
               </p>
             </div>
             <UDropdownMenu
+              v-if="!rolePreviewState.isReadOnly.value"
               :items="[[
                 { label: 'Ustawienia wątku', icon: 'i-lucide-settings-2', onSelect: () => { showThreadSettings = !showThreadSettings } },
                 { label: 'Usuń wątek', icon: 'i-lucide-trash-2', color: 'error' as const, onSelect: deleteActiveThread }
@@ -396,10 +453,10 @@ async function sendMessage() {
               v-for="m in chat.messages.value"
               :key="m.id"
               class="slavia-messenger__message-row"
-              :class="m.sender_user_id === auth.user.value?.id ? 'slavia-messenger__message-row--own' : 'slavia-messenger__message-row--peer'"
+              :class="m.sender_user_id === chatViewerUserId ? 'slavia-messenger__message-row--own' : 'slavia-messenger__message-row--peer'"
             >
               <UAvatar
-                v-if="m.sender_user_id !== auth.user.value?.id"
+                v-if="m.sender_user_id !== chatViewerUserId"
                 :src="messageSenderPhotoSrc(m)"
                 :alt="m.sender_username || 'Rozmówca'"
                 size="xs"
@@ -408,11 +465,11 @@ async function sendMessage() {
               />
               <div
                 class="slavia-messenger__bubble"
-                :class="m.sender_user_id === auth.user.value?.id ? 'slavia-messenger__bubble--own' : 'slavia-messenger__bubble--peer'"
+                :class="m.sender_user_id === chatViewerUserId ? 'slavia-messenger__bubble--own' : 'slavia-messenger__bubble--peer'"
               >
                 <p class="slavia-messenger__bubble-text">{{ m.body }}</p>
                 <div
-                  v-if="chat.chatReactionsOn.value && (m.reactions?.length || 0) > 0"
+                  v-if="!rolePreviewState.isReadOnly.value && chat.chatReactionsOn.value && (m.reactions?.length || 0) > 0"
                   class="slavia-messenger__reactions"
                 >
                   <button
@@ -426,7 +483,7 @@ async function sendMessage() {
                     {{ r.emoji }} {{ r.count }}
                   </button>
                 </div>
-                <div v-if="chat.chatReactionsOn.value" class="slavia-messenger__reaction-add">
+                <div v-if="!rolePreviewState.isReadOnly.value && chat.chatReactionsOn.value" class="slavia-messenger__reaction-add">
                   <button
                     v-for="em in reactionEmojis"
                     :key="`${m.id}-add-${em}`"
@@ -441,7 +498,7 @@ async function sendMessage() {
                 <time class="slavia-messenger__bubble-time">{{ formatTimestamp(m.created_at) }}</time>
               </div>
               <UAvatar
-                v-if="m.sender_user_id === auth.user.value?.id"
+                v-if="m.sender_user_id === chatViewerUserId"
                 :src="selfChatAvatarSrc"
                 :alt="auth.user.value?.username"
                 size="xs"
@@ -449,12 +506,16 @@ async function sendMessage() {
                 class="slavia-messenger__msg-avatar shrink-0"
               />
             </div>
-            <p v-if="chat.messages.value.length === 0" class="slavia-messenger__messages-empty">
-              Brak wiadomości. Napisz coś, aby rozpocząć rozmowę.
-            </p>
+            <SlaviaEmptyState
+              v-if="chat.messages.value.length === 0"
+              icon="i-lucide-message-circle"
+              title="Brak wiadomości"
+              description="Napisz coś, aby rozpocząć rozmowę."
+              class="slavia-messenger__messages-empty"
+            />
           </div>
 
-          <footer class="slavia-messenger__composer">
+          <footer v-if="!rolePreviewState.isReadOnly.value" class="slavia-messenger__composer">
             <div class="slavia-messenger__composer-inner">
               <UInput
                 v-model="messageDraft"
@@ -479,13 +540,13 @@ async function sendMessage() {
           </footer>
         </template>
 
-        <div v-else class="slavia-messenger__placeholder">
-          <UIcon name="i-lucide-messages-square" class="slavia-messenger__placeholder-icon" />
-          <p class="slavia-messenger__placeholder-title">Wybierz konwersację</p>
-          <p class="slavia-messenger__placeholder-desc">
-            Kliknij wątek po lewej, aby zobaczyć wiadomości.
-          </p>
-        </div>
+        <SlaviaEmptyState
+          v-else
+          icon="i-lucide-messages-square"
+          title="Wybierz konwersację"
+          description="Kliknij wątek po lewej, aby zobaczyć wiadomości."
+          class="slavia-messenger__placeholder"
+        />
       </section>
     </div>
   </PanelPageLayout>

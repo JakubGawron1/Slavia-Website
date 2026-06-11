@@ -3,6 +3,7 @@ import type { Athlete, AthletePaymentOverviewRow, CompetitionResult, PendingPaym
 import { apiRoutes } from '~/config/api'
 import { getApiErrorMessage } from '~/composables/useApi'
 import DashboardHero from '~/components/dashboard/DashboardHero.vue'
+import DashboardQuickActions from '~/components/dashboard/DashboardQuickActions.vue'
 import DashboardUrgentList from '~/components/dashboard/DashboardUrgentList.vue'
 import DashboardMonthlySummary from '~/components/dashboard/DashboardMonthlySummary.vue'
 definePageMeta({ middleware: 'trainer' })
@@ -217,6 +218,17 @@ const summaryMetrics = computed(() => [
   }
 ])
 
+const trainerQuickActions = [
+  { label: 'Zawodnicy', to: '/trainer/zawodnicy', icon: 'i-lucide-users' },
+  { label: 'Wyniki', to: '/trainer/wyniki', icon: 'i-lucide-trophy' },
+  { label: 'Składki', to: '/trainer/skladki', icon: 'i-lucide-banknote' },
+  { label: 'Plany', to: '/trainer/plany', icon: 'i-lucide-clipboard-list' },
+  { label: 'Dzienniki', to: '/trainer/dziennik', icon: 'i-lucide-book-marked' },
+  { label: 'Obecność', to: '/klub/obecnosc', icon: 'i-lucide-user-check' },
+  { label: 'Czat', to: '/klub/czat', icon: 'i-lucide-messages-square' },
+  { label: 'Regeneracja', to: '/trainer/regeneracja', icon: 'i-lucide-heart-pulse' }
+]
+
 async function rejectPayment(id: string) {
   try {
     await apiFetch(apiRoutes.payments.reject(id), { method: 'PATCH' })
@@ -256,8 +268,24 @@ async function rejectPayment(id: string) {
           { label: `Oczekujące składki: ${pendingPaymentsCount}`, color: pendingPaymentsCount ? 'warning' : 'neutral' }
         ]"
         :actions="[
-          { label: 'Ustawienia konta', to: accountSettingsPath, icon: 'i-lucide-user-cog', variant: 'outline' }
+          { label: 'Ustawienia konta', to: accountSettingsPath, icon: 'i-lucide-user-cog', variant: 'outline' },
+          { label: 'Zawodnicy', to: '/trainer/zawodnicy', icon: 'i-lucide-users', color: 'primary' },
+          { label: 'Wyniki', to: '/trainer/wyniki', icon: 'i-lucide-clipboard-clock', color: 'primary' }
         ]"
+      />
+    </PanelCollapsibleSection>
+
+    <PanelCollapsibleSection
+      section-id="quick-actions"
+      title="Szybkie akcje"
+      icon="i-lucide-zap"
+      :default-open="true"
+      embedded
+      class="mt-6"
+    >
+      <DashboardQuickActions
+        class="slavia-quick-actions--wide"
+        :items="trainerQuickActions"
       />
     </PanelCollapsibleSection>
 
@@ -330,7 +358,7 @@ async function rejectPayment(id: string) {
       :default-open="true"
       class="mt-6"
     >
-    <div class="grid gap-4 lg:grid-cols-2">
+    <PanelDashboardGrid variant="duo">
       <DashboardUrgentList
         title="Wyniki do zatwierdzenia"
         icon="i-lucide-clipboard-clock"
@@ -392,7 +420,7 @@ async function rejectPayment(id: string) {
           + {{ paymentsPendingCount - unpaidThisMonth.length }} więcej — pełna lista w składkach.
         </p>
       </UCard>
-    </div>
+    </PanelDashboardGrid>
     </PanelCollapsibleSection>
 
     </template>

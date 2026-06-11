@@ -323,12 +323,26 @@ const enabledCount = computed(() => {
               <li
                 v-for="mod in mods"
                 :key="mod.id"
-                class="flex items-start justify-between gap-3 rounded-xl border border-default/40 bg-muted/5 px-3 py-2.5"
+                class="flex items-start justify-between gap-3 rounded-xl border border-default/40 bg-muted/5 px-3 py-2.5 transition-colors hover:border-primary/20 hover:bg-primary/5"
               >
                 <div class="min-w-0 flex-1">
                   <div class="flex flex-wrap items-center gap-2">
-                    <UIcon :name="mod.icon" class="size-4 shrink-0 text-muted" />
+                    <span
+                      class="flex size-8 shrink-0 items-center justify-center rounded-lg ring-1 ring-inset ring-current/10"
+                      :class="`${mod.bg} ${mod.color}`"
+                    >
+                      <UIcon :name="mod.icon" class="size-4" />
+                    </span>
                     <span class="text-sm font-semibold text-highlighted">{{ mod.title }}</span>
+                    <UBadge
+                      v-if="!panelNav.rawGlobalEnabled(mod.id)"
+                      color="neutral"
+                      variant="subtle"
+                      size="xs"
+                      icon="i-lucide-eye-off"
+                    >
+                      Wyłączony
+                    </UBadge>
                     <UBadge
                       v-if="sharedLabel(mod)"
                       color="neutral"
@@ -455,11 +469,16 @@ const enabledCount = computed(() => {
               <li
                 v-for="mod in mods"
                 :key="mod.id"
-                class="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-default/40 bg-muted/5 px-3 py-2.5"
+                class="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-default/40 bg-muted/5 px-3 py-2.5 transition-colors hover:border-primary/20 hover:bg-primary/5"
               >
                 <div class="min-w-0 flex-1">
                   <div class="flex flex-wrap items-center gap-2">
-                    <UIcon :name="mod.icon" class="size-4 shrink-0 text-muted" />
+                    <span
+                      class="flex size-8 shrink-0 items-center justify-center rounded-lg ring-1 ring-inset ring-current/10"
+                      :class="`${mod.bg} ${mod.color}`"
+                    >
+                      <UIcon :name="mod.icon" class="size-4" />
+                    </span>
                     <span class="text-sm font-semibold text-highlighted">{{ mod.title }}</span>
                     <UBadge
                       v-if="accountHasOverride(mod.id)"

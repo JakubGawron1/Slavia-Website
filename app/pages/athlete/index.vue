@@ -6,10 +6,14 @@ import {
   athletePaymentKpiFromStatus,
   showPre10PaymentAthleteReminder
 } from '~/utils/paymentSemantics'
+import DashboardHero from '~/components/dashboard/DashboardHero.vue'
 import DashboardKpiCard from '~/components/dashboard/DashboardKpiCard.vue'
+import DashboardQuickActions from '~/components/dashboard/DashboardQuickActions.vue'
+import DashboardWeekPreview from '~/components/dashboard/DashboardWeekPreview.vue'
 definePageMeta({ middleware: 'auth' })
 
 const auth = useAuth()
+const rolePreviewState = useRolePreviewState()
 const apiFetch = useApi()
 const toast = useToast()
 const terms = useSlaviaCopy()
@@ -73,7 +77,7 @@ async function refreshAttendanceSummary() {
 }
 
 async function refreshPaymentStatus() {
-  if (!auth.canAccessAthletePortal.value || !athlete.value?.id || !auth.isAthlete.value) {
+  if (!auth.canAccessAthletePortal.value || !athlete.value?.id || !rolePreviewState.viewingAthletePortal.value) {
     paymentStatus.value = null
     return
   }
@@ -135,6 +139,10 @@ const pageLead = computed(() => {
   return isAthleteRole.value
     ? 'To jest Twój osobisty panel. Tutaj możesz śledzić swoje postępy, wyniki z zawodów oraz zarządzać swoim profilem.'
     : 'Ustawienia konta (e-mail, hasło, zdjęcie). Funkcje zawodnicze są dostępne tylko dla kont z rolą zawodnika.'
+})
+const heroBadges = computed(() => {
+  const label = auth.rolesDisplayShort.value
+  return label ? [{ label, color: 'neutral' as const }] : undefined
 })
 
 /** Konto z rolą zawodnika powiązane z rekordem oznaczonym jako nieaktywny (archiwum kadry). */
@@ -371,6 +379,21 @@ function toggleChecklistItem(id: string) {
   if (forDate) saveChecklistToStorage(forDate)
 }
 
+const athleteQuickActions = computed(() => {
+  const actions = [
+    { label: 'Starty', to: '/athlete/wyniki', icon: 'i-lucide-trophy' },
+    { label: 'Kalendarz', to: '/athlete/kalendarz', icon: 'i-lucide-calendar-days' },
+    { label: 'Dziennik', to: '/athlete/dziennik', icon: 'i-lucide-book-marked' },
+    { label: 'Plany', to: '/athlete/plany', icon: 'i-lucide-clipboard-list' },
+    { label: 'Czat', to: '/klub/czat', icon: 'i-lucide-messages-square' },
+    { label: 'Regeneracja', to: '/athlete/regeneracja', icon: 'i-lucide-heart-pulse' }
+  ]
+  if (isAthleteRole.value) {
+    actions.splice(1, 0, { label: 'Składka', to: '/athlete/skladki', icon: 'i-lucide-banknote' })
+  }
+  return actions
+})
+
 provideDashboardSections()
 </script>
 
@@ -383,87 +406,38 @@ provideDashboardSections()
       title="Powitanie"
       icon="i-lucide-user"
       :default-open="true"
-      class="mb-6"
     >
-    <div
-      class="relative overflow-hidden rounded-[1.75rem] border border-primary/20 bg-linear-to-br from-primary/[0.14] via-card to-card shadow-sm ring-1 ring-primary/10 sm:rounded-3xl"
-    >
-      <div class="pointer-events-none absolute -right-24 -top-28 size-72 rounded-full bg-primary/25 blur-3xl" />
-      <div class="pointer-events-none absolute -bottom-20 -left-16 size-60 rounded-full bg-primary/10 blur-3xl" />
-      <div class="relative flex flex-col gap-8 p-6 sm:p-8 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
-        <div class="flex min-w-0 flex-col gap-5 sm:flex-row sm:items-center sm:gap-6">
-          <div class="relative shrink-0">
-            <div class="absolute -inset-1 rounded-full bg-linear-to-br from-primary/40 to-primary/5 opacity-80 blur-sm" />
-            <UAvatar
-              :src="portalHeroAvatarSrc"
-              :alt="welcomeName"
-              size="xl"
-              class="relative size-24 ring-2 ring-background shadow-lg sm:size-28"
-            />
-          </div>
-          <div class="min-w-0">
-            <div class="flex flex-wrap items-center gap-2">
-              <span class="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-primary">
-                <UIcon
-                  name="i-lucide-dumbbell"
-                  class="size-3.5"
-                />
-                {{ pageHeading }}
-              </span>
-              <UBadge
-                v-if="auth.rolesDisplayShort"
-                color="neutral"
-                variant="subtle"
-                size="sm"
-              >
-                {{ auth.rolesDisplayShort }}
-              </UBadge>
-            </div>
-            <h1 class="mt-3 text-3xl font-black tracking-tight text-highlighted sm:text-4xl">
-              Cześć, {{ welcomeName }}
-            </h1>
-            <p class="mt-2 max-w-xl text-sm leading-relaxed text-muted sm:text-base">
-              {{ pageLead }}
-            </p>
-          </div>
-        </div>
-        <div class="flex w-full shrink-0 flex-wrap gap-2 lg:max-w-md lg:justify-end">
-          <UButton
-            :to="accountSettingsPath"
-            variant="outline"
-            color="neutral"
-            size="md"
-            icon="i-lucide-user-cog"
-            class="min-h-10"
-          >
-            Ustawienia
-          </UButton>
-          <UButton
-            to="/athlete/wyniki"
-            variant="soft"
-            color="primary"
-            size="md"
-            icon="i-lucide-trophy"
-            class="min-h-10"
-          >
-            Starty
-          </UButton>
-          <UButton
-            to="/athlete/skladki"
-            variant="soft"
-            color="primary"
-            size="md"
-            icon="i-lucide-banknote"
-            class="min-h-10"
-          >
-            Składka
-          </UButton>
-        </div>
-      </div>
-    </div>
+      <DashboardHero
+        :eyebrow="pageHeading"
+        :title="`Cześć, ${welcomeName}`"
+        :lead="pageLead"
+        icon="i-lucide-dumbbell"
+        :avatar-src="portalHeroAvatarSrc"
+        :avatar-alt="welcomeName"
+        :badges="heroBadges"
+        :actions="[
+          { label: 'Ustawienia', to: accountSettingsPath, icon: 'i-lucide-user-cog', variant: 'outline' },
+          { label: 'Starty', to: '/athlete/wyniki', icon: 'i-lucide-trophy', color: 'primary' },
+          ...(isAthleteRole ? [{ label: 'Składka', to: '/athlete/skladki', icon: 'i-lucide-banknote', color: 'primary' as const }] : [])
+        ]"
+      />
     </PanelCollapsibleSection>
 
-    <DashboardSectionsToolbar class="mb-6" />
+    <PanelCollapsibleSection
+      v-if="auth.canAccessAthletePortal && athlete"
+      section-id="quick-actions"
+      title="Szybkie akcje"
+      icon="i-lucide-zap"
+      :default-open="true"
+      embedded
+    >
+      <DashboardQuickActions
+        class="slavia-quick-actions--wide"
+        :items="athleteQuickActions"
+      />
+    </PanelCollapsibleSection>
+
+    <DashboardSectionsToolbar />
 
     <PanelCollapsibleSection
       v-if="showArchivedAthleteNote"
@@ -569,6 +543,11 @@ provideDashboardSections()
       class="mt-6"
     >
     <div class="space-y-4">
+      <DashboardWeekPreview
+        v-if="isAthleteRole"
+        :entry="nearestCalendarEntry"
+        :days-until="daysUntilNearest"
+      />
       <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
         <DashboardKpiCard
           size="compact"

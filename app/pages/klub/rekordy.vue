@@ -229,12 +229,6 @@ function genderLabel(g: string) {
   return 'Inne'
 }
 
-function genderSectionIcon(g: string) {
-  if (g === 'male') return 'i-lucide-user'
-  if (g === 'female') return 'i-lucide-user-round'
-  return 'i-lucide-users'
-}
-
 function chartCaption(_row: RecordRow) {
   if (period.value === 'year') {
     return `Progres totalu — starty ${currentYear}`
@@ -315,24 +309,16 @@ function toRecordCard(row: RecordRow): ClubHallOfFameRecordCardData {
     >
       <section
         v-if="section.rows.length"
-        class="slavia-public-section mb-10 last:mb-0"
+        class="slavia-content-well slavia-public-section mb-10 last:mb-0"
       >
-        <div class="mb-5 flex items-center gap-3">
-          <div class="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20">
-            <UIcon :name="genderSectionIcon(section.gender)" class="size-5" />
-          </div>
-          <div>
-            <h2 class="text-lg font-black tracking-tight text-highlighted sm:text-xl">
-              {{ genderLabel(section.gender) }}
-            </h2>
-            <p class="text-xs text-muted">
-              {{ section.rows.length }} {{ section.rows.length === 1 ? 'kategoria' : 'kategorii' }}
-              <span v-if="period === 'year'"> · wyniki z {{ currentYear }}</span>
-            </p>
-          </div>
-        </div>
+        <PublicSectionHead
+          split
+          :eyebrow="genderLabel(section.gender)"
+          :title="`${section.rows.length} ${section.rows.length === 1 ? 'kategoria' : 'kategorii'}`"
+          :lead="period === 'year' ? `Rekordy i wykresy z zatwierdzonych startów w ${currentYear}.` : 'Najlepsze totale w kategoriach wagowych — zatwierdzone wyniki zawodów.'"
+        />
 
-        <div class="slavia-content-well grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 xl:grid-cols-3 xl:gap-6">
+        <div class="slavia-public-grid slavia-public-grid--stagger">
           <ClubHallOfFameRecordCard
             v-for="row in section.rows"
             :key="`${row.gender}-${row.weightCategory}`"

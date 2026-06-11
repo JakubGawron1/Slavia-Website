@@ -95,7 +95,7 @@ function athletePrefetchHandlers(id?: string | null) {
     <!-- Podium Section -->
     <div
       v-if="podium.length > 0"
-      class="slavia-zawodnicy-podium relative mb-16 mt-6 sm:mb-20 sm:mt-8 md:mt-10"
+      class="slavia-zawodnicy-podium relative mb-10 mt-4 sm:mb-12 sm:mt-5 md:mt-6"
     >
       <div class="pointer-events-none absolute inset-0 -z-10 bg-linear-to-b from-primary/5 to-transparent blur-3xl opacity-50" />
       <div class="mx-auto grid max-w-4xl grid-cols-1 items-end gap-8 px-2 sm:gap-10 sm:px-4 md:grid-cols-3 md:pt-2">
@@ -219,57 +219,55 @@ function athletePrefetchHandlers(id?: string | null) {
     </div>
 
     <!-- Ranking Table Section -->
-    <div class="slavia-content-well mb-32">
-      <div class="mb-8 flex flex-col justify-between gap-6 sm:mb-12 md:flex-row md:items-end lg:mb-14">
-        <div class="min-w-0">
-          <h2 class="flex items-center gap-3 text-2xl font-black uppercase italic tracking-tight text-highlighted sm:gap-4 sm:text-3xl lg:text-4xl">
-            <UIcon
-              name="i-lucide-list-ordered"
-              class="size-7 shrink-0 text-primary sm:size-8"
-            />
-            Tabela Rankingowa
-          </h2>
-          <p class="mt-2 font-medium text-muted">
-            Zestawienie Sinclair — uwzględniani są tylko zawodnicy z co najmniej jednym zatwierdzonym wynikiem.
-          </p>
-          <div class="mt-3 flex flex-wrap items-center gap-2">
-            <USelect
-              v-if="canSeeClubTrainingRanking"
-              v-model="exportKind"
-              :items="[
-                { label: 'Eksport: zawody', value: 'competition' },
-                { label: 'Eksport: trening', value: 'training' }
-              ]"
-              class="w-44"
-              size="sm"
-            />
+    <section class="slavia-content-well slavia-public-section mb-10 sm:mb-12 lg:mb-14">
+      <PublicSectionHead
+        split
+        eyebrow="Ranking zawodów"
+        title="Tabela rankingowa"
+        lead="Zestawienie Sinclair — uwzględniani są tylko zawodnicy z co najmniej jednym zatwierdzonym wynikiem."
+      >
+        <template #actions>
+          <div
+            class="flex w-full flex-wrap gap-2 rounded-2xl border border-default bg-muted/30 p-1.5 md:inline-flex md:w-auto md:flex-nowrap lg:p-2"
+            role="tablist"
+          >
             <UButton
+              v-for="c in categories"
+              :key="c.value"
               size="sm"
-              variant="soft"
-              icon="i-lucide-download"
-              :disabled="(exportKind === 'training' ? trainingRanking : filteredRankings).length === 0"
-              @click="downloadRankingCsv"
+              class="min-h-11 min-w-0 flex-1 sm:min-h-10 sm:flex-none md:shrink-0"
+              :variant="selectedCategory === c.value ? 'solid' : 'ghost'"
+              :color="selectedCategory === c.value ? 'primary' : 'neutral'"
+              @click="selectedCategory = c.value"
             >
-              CSV na zebranie
+              {{ c.label }}
             </UButton>
           </div>
-        </div>
-        <div
-          class="flex w-full flex-wrap gap-2 rounded-2xl border border-default bg-muted/30 p-1.5 md:inline-flex md:w-auto md:flex-nowrap lg:p-2"
-          role="tablist"
+        </template>
+      </PublicSectionHead>
+
+      <div
+        v-if="canSeeClubTrainingRanking"
+        class="mb-6 flex flex-wrap items-center gap-2"
+      >
+        <USelect
+          v-model="exportKind"
+          :items="[
+            { label: 'Eksport: zawody', value: 'competition' },
+            { label: 'Eksport: trening', value: 'training' }
+          ]"
+          class="w-44"
+          size="sm"
+        />
+        <UButton
+          size="sm"
+          variant="soft"
+          icon="i-lucide-download"
+          :disabled="(exportKind === 'training' ? trainingRanking : filteredRankings).length === 0"
+          @click="downloadRankingCsv"
         >
-          <UButton
-            v-for="c in categories"
-            :key="c.value"
-            size="sm"
-            class="min-h-11 min-w-0 flex-1 sm:min-h-10 sm:flex-none md:shrink-0"
-            :variant="selectedCategory === c.value ? 'solid' : 'ghost'"
-            :color="selectedCategory === c.value ? 'primary' : 'neutral'"
-            @click="selectedCategory = c.value"
-          >
-            {{ c.label }}
-          </UButton>
-        </div>
+          CSV na zebranie
+        </UButton>
       </div>
 
       <div
@@ -418,37 +416,24 @@ function athletePrefetchHandlers(id?: string | null) {
           </table>
         </div>
       </div>
-    </div>
+    </section>
 
     <!-- Sekcja TRENINGOWA (tylko dla zalogowanych) -->
-    <div
+    <section
       v-if="showTrainingSection"
-      class="mb-20"
+      class="slavia-content-well slavia-public-section mb-10 sm:mb-12"
     >
-      <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div class="min-w-0">
-          <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-info">
-            <UIcon name="i-lucide-lock" class="size-4 shrink-0" />
-            Sekcja dla zalogowanych
-          </div>
-          <h2 class="mt-2 flex items-center gap-3 text-2xl font-black uppercase italic tracking-tight text-highlighted sm:gap-4 sm:text-3xl lg:text-4xl">
-            <UIcon
-              name="i-lucide-dumbbell"
-              class="size-7 shrink-0 text-info sm:size-8"
-            />
-            Wyniki treningowe
-          </h2>
-          <p class="mt-2 max-w-3xl font-medium text-muted">
-            Wewnętrzny ranking treningowy klubu. Te wpisy nie wpływają na publiczne PB ani na ranking
-            zawodów — pokazujemy je tylko zalogowanym członkom klubu.
-          </p>
-        </div>
-      </div>
+      <PublicSectionHead
+        split
+        eyebrow="Sekcja dla zalogowanych"
+        title="Wyniki treningowe"
+        lead="Wewnętrzny ranking treningowy klubu. Te wpisy nie wpływają na publiczne PB ani na ranking zawodów — pokazujemy je tylko zalogowanym członkom klubu."
+      />
 
       <!-- Podium treningowe — stonowana paleta, więcej oddechu pod nagłówkiem -->
       <div
         v-if="trainingPodium.length > 0"
-        class="relative mb-14 pt-4 sm:mb-16"
+        class="relative mb-10 pt-2 sm:mb-12"
       >
         <div class="pointer-events-none absolute inset-0 -z-10 bg-linear-to-b from-info/5 via-transparent to-transparent blur-3xl opacity-50" />
         <p class="mb-8 text-center text-[10px] font-bold uppercase tracking-[0.2em] text-muted">
@@ -628,21 +613,19 @@ function athletePrefetchHandlers(id?: string | null) {
         description="Gdy pojawią się zatwierdzone wpisy treningowe, ranking wewnętrzny wypełni się automatycznie."
         compact
       />
-    </div>
+    </section>
 
     <!-- Full Athlete List Section -->
-    <div
+    <section
       v-if="mappedPlayers.length > 0"
-      class="mb-20"
+      class="slavia-content-well slavia-public-section mb-10 sm:mb-12"
     >
-      <h2 class="mb-8 flex items-center gap-3 text-2xl font-black uppercase italic tracking-tight text-highlighted sm:mb-12 sm:gap-4 sm:text-3xl lg:text-4xl">
-        <UIcon
-          name="i-lucide-users"
-          class="size-7 shrink-0 text-primary sm:size-8"
-        />
-        Karty Zawodników
-      </h2>
-      <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 xl:grid-cols-3 xl:gap-6">
+      <PublicSectionHead
+        eyebrow="Kadra"
+        title="Karty zawodników"
+        lead="Profile z wykresami progresu i najlepszymi wynikami z zatwierdzonych startów."
+      />
+      <div class="slavia-public-grid slavia-public-grid--stagger">
         <div
           v-for="player in mappedPlayers"
           :key="player.id"
@@ -654,20 +637,18 @@ function athletePrefetchHandlers(id?: string | null) {
           />
         </div>
       </div>
-    </div>
+    </section>
 
-    <div
+    <section
       v-else-if="bundlePending"
-      class="mb-20"
+      class="slavia-content-well slavia-public-section mb-10 sm:mb-12"
     >
-      <h2 class="mb-8 flex items-center gap-3 text-2xl font-black uppercase italic tracking-tight text-highlighted sm:mb-12 sm:gap-4 sm:text-3xl lg:text-4xl">
-        <UIcon
-          name="i-lucide-users"
-          class="size-7 shrink-0 text-primary sm:size-8"
-        />
-        Karty Zawodników
-      </h2>
-      <div class="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12 xl:gap-14">
+      <PublicSectionHead
+        eyebrow="Kadra"
+        title="Karty zawodników"
+        lead="Ładowanie profili zawodników…"
+      />
+      <div class="slavia-public-grid slavia-public-grid--2">
         <div
           v-for="i in 6"
           :key="`player-skel-${i}`"
@@ -698,44 +679,30 @@ function athletePrefetchHandlers(id?: string | null) {
           </div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <section
-      class="mb-16 sm:mb-20"
-      aria-labelledby="zawodnicy-archiwum-teaser"
-    >
-      <UCard
-        class="rounded-2xl border border-default/60 bg-linear-to-br from-muted/15 to-transparent shadow-sm ring-1 ring-default/30"
-        :ui="{ body: 'p-5 sm:p-6' }"
-      >
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div class="min-w-0">
-            <h2
-              id="zawodnicy-archiwum-teaser"
-              class="flex items-center gap-2 text-lg font-black uppercase tracking-tight text-highlighted sm:text-xl"
+    <section class="slavia-content-well slavia-public-section mb-10 sm:mb-12">
+      <div class="slavia-public-card slavia-public-card--glass slavia-page-card slavia-public-card--flat p-5 sm:p-6">
+        <PublicSectionHead
+          split
+          eyebrow="Historia"
+          title="Archiwum kadry"
+          lead="Byli zawodnicy klubu — profile historyczne poza bieżącym rankingiem i listą aktywnej kadry."
+        >
+          <template #actions>
+            <NuxtLink
+              to="/zawodnicy/archiwum"
+              class="slavia-public-inline-link inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-primary/35 bg-primary/10 px-5 text-sm font-bold no-underline transition-colors hover:bg-primary/15"
             >
+              Zobacz archiwum
               <UIcon
-                name="i-lucide-archive"
-                class="size-6 shrink-0 text-primary"
+                name="i-lucide-arrow-right"
+                class="size-4"
               />
-              Archiwum kadry
-            </h2>
-            <p class="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
-              Byli zawodnicy klubu — profile historyczne poza bieżącym rankingiem i listą aktywnej kadry.
-            </p>
-          </div>
-          <NuxtLink
-            to="/zawodnicy/archiwum"
-            class="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-primary/35 bg-primary/10 px-5 text-sm font-bold text-primary transition-colors hover:bg-primary/15"
-          >
-            Zobacz archiwum
-            <UIcon
-              name="i-lucide-arrow-right"
-              class="size-4"
-            />
-          </NuxtLink>
-        </div>
-      </UCard>
+            </NuxtLink>
+          </template>
+        </PublicSectionHead>
+      </div>
     </section>
 
     <UAlert

@@ -32,6 +32,21 @@ const { data: messages, refresh, pending } = await useAsyncData(
 
 const unreadCount = computed(() => (messages.value || []).filter(m => !m.is_read).length)
 
+const readFilter = ref<'all' | 'unread' | 'read'>('all')
+
+const filteredMessages = computed(() => {
+  const list = messages.value || []
+  if (readFilter.value === 'unread') return list.filter(m => !m.is_read)
+  if (readFilter.value === 'read') return list.filter(m => m.is_read)
+  return list
+})
+
+const readFilterItems = [
+  { label: 'Wszystkie', value: 'all' },
+  { label: 'Nieprzeczytane', value: 'unread' },
+  { label: 'Przeczytane', value: 'read' }
+] as const
+
 async function markRead(id: string, is_read: boolean) {
   try {
     await apiFetch(apiRoutes.contact.manageOne(id), {
@@ -79,18 +94,28 @@ function formatDate(d: string) {
       title="Formularz kontaktowy"
       icon="i-lucide-mail"
       eyebrow="Skrzynka"
+      description="Wiadomości z publicznego formularza kontaktowego — oznaczaj jako przeczytane i archiwizuj."
+      :breadcrumbs="[
+        { label: 'Administracja', to: '/admin', icon: 'i-lucide-shield' },
+        { label: 'Formularz kontaktowy', icon: 'i-lucide-mail' }
+      ]"
     >
-      <template #description>
-        Nieprzeczytane: <span class="font-semibold text-highlighted">{{ unreadCount }}</span>
+      <template #badges>
+        <UBadge
+          v-if="unreadCount"
+          color="primary"
+          variant="subtle"
+        >
+          {{ unreadCount }} nieprzeczytanych
+        </UBadge>
+        <UBadge
+          color="neutral"
+          variant="subtle"
+        >
+          {{ (messages || []).length }} łącznie
+        </UBadge>
       </template>
       <template #actions>
-        <UButton
-          variant="soft"
-          icon="i-lucide-refresh-ccw"
-          @click="refresh()"
-        >
-          Odśwież
-        </UButton>
         <UButton
           to="/admin"
           variant="outline"
@@ -101,21 +126,51 @@ function formatDate(d: string) {
       </template>
     </PanelPageHeader>
 
-    <div
-      v-if="pending"
-      class="flex justify-center py-16"
+    <PanelDataToolbar
+      v-if="!pending && messages && messages.length"
+      :summary="`${filteredMessages.length} z ${messages.length} wiadomości`"
+      sticky
     >
-      <UIcon
-        name="i-lucide-loader-2"
-        class="size-8 animate-spin text-primary"
-      />
-    </div>
+      <template #filters>
+        <UFormField label="Filtr" class="w-full sm:w-52">
+          <SlaviaOverlaySelect
+            v-model="readFilter"
+            :items="[...readFilterItems]"
+            value-key="value"
+            size="lg"
+            class="w-full"
+          />
+        </UFormField>
+      </template>
+      <template #actions>
+        <UButton
+          variant="soft"
+          icon="i-lucide-refresh-ccw"
+          :loading="pending"
+          @click="refresh()"
+        >
+          Odśwież
+        </UButton>
+      </template>
+    </PanelDataToolbar>
 
-    <PublicEmptyState
+    <PanelLoadingState
+      v-if="pending"
+      label="Wczytywanie skrzynki…"
+    />
+
+    <SlaviaEmptyState
       v-else-if="!(messages && messages.length)"
       icon="i-lucide-mail"
       title="Brak wiadomości"
       description="Gdy ktoś wyśle formularz kontaktowy na stronie klubu, wiadomość pojawi się tutaj."
+    />
+
+    <SlaviaEmptyState
+      v-else-if="!filteredMessages.length"
+      icon="i-lucide-filter-x"
+      title="Brak wiadomości w tym filtrze"
+      description="Zmień filtr lub odśwież listę."
     />
 
     <div
@@ -123,9 +178,9 @@ function formatDate(d: string) {
       class="space-y-4"
     >
       <UCard
-        v-for="m in messages"
+        v-for="m in filteredMessages"
         :key="m.id"
-        class="border-default"
+        class="overflow-hidden rounded-2xl border-default/70 ring-1 ring-default/15 border-default"
         :class="!m.is_read ? 'ring-2 ring-primary/25 bg-primary/5' : ''"
       >
         <div class="flex flex-col gap-4 p-4 sm:flex-row sm:justify-between">

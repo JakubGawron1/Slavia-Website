@@ -3,9 +3,26 @@
  */
 :root,
 html[data-slavia-preset] {
+  --slavia-radius-sm: 0.5rem;
+  --slavia-radius-md: 0.75rem;
   --slavia-radius-lg: 1rem;
   --slavia-radius-xl: 1.25rem;
   --slavia-radius-2xl: 1.5rem;
+  /** Skala odstępów (4px base) — używaj w SCSS i klasach utility panelu */
+  --slavia-space-1: 0.25rem;
+  --slavia-space-2: 0.5rem;
+  --slavia-space-3: 0.75rem;
+  --slavia-space-4: 1rem;
+  --slavia-space-5: 1.25rem;
+  --slavia-space-6: 1.5rem;
+  --slavia-space-8: 2rem;
+  --slavia-space-10: 2.5rem;
+  /** Powierzchnie kart / paneli */
+  --slavia-surface-panel: color-mix(in oklab, var(--ui-bg-elevated) 94%, var(--ui-bg) 6%);
+  --slavia-surface-card: color-mix(in oklab, var(--ui-bg-elevated) 88%, var(--ui-bg-muted, var(--ui-bg)) 12%);
+  --slavia-surface-muted: color-mix(in oklab, var(--ui-bg-muted, var(--ui-bg-elevated)) 55%, transparent);
+  /** Szerokość bocznej nawigacji modułów (desktop) */
+  --slavia-panel-sidebar-width: 17.5rem;
   --slavia-accent-salmon: #f08070;
   --slavia-accent-coral: #ff9a8b;
   --slavia-accent-salmon-deep: #e06452;
@@ -20,7 +37,21 @@ html[data-slavia-preset] {
   --slavia-shadow-md:
     0 12px 40px -14px color-mix(in srgb, var(--ui-bg-inverted, #000) 22%, transparent),
     0 4px 16px -6px color-mix(in srgb, var(--ui-bg-inverted, #000) 10%, transparent);
+  --slavia-shadow-lg:
+    0 20px 50px -18px color-mix(in srgb, var(--ui-bg-inverted, #000) 28%, transparent),
+    0 8px 24px -10px color-mix(in srgb, var(--ui-bg-inverted, #000) 14%, transparent);
+  --slavia-shadow-xl:
+    0 28px 64px -20px color-mix(in srgb, var(--ui-bg-inverted, #000) 34%, transparent),
+    0 12px 32px -12px color-mix(in srgb, var(--ui-bg-inverted, #000) 18%, transparent);
   --slavia-shadow-glow: 0 0 40px -6px color-mix(in oklab, var(--ui-primary) 28%, transparent);
+  --slavia-elevation-card:
+    var(--slavia-shadow-xs),
+    var(--slavia-shadow-sm),
+    inset 0 1px 0 var(--slavia-surface-sheen, var(--slavia-glass-highlight));
+  --slavia-elevation-card-hover:
+    var(--slavia-shadow-sm),
+    var(--slavia-shadow-md),
+    inset 0 1px 0 var(--slavia-surface-sheen, var(--slavia-glass-highlight));
   --slavia-glass-bg: color-mix(in oklab, var(--ui-bg-elevated) 78%, transparent);
   --slavia-surface-edge: color-mix(in srgb, var(--ui-border) 80%, var(--ui-bg-inverted, #0a0a0a) 20%);
   --slavia-surface-edge-strong: color-mix(in srgb, var(--ui-primary) 28%, var(--ui-border) 72%);
@@ -35,7 +66,7 @@ html[data-slavia-preset] {
   --slavia-content-narrow: 48rem;
   --slavia-page-gutter: 1rem;
   /** Odstępy sekcji — panel i publiczne studnie treści */
-  --slavia-section-gap: 1.5rem;
+  --slavia-section-gap: 1.25rem;
   --slavia-card-padding: 1rem;
   --slavia-table-cell-py: 0.625rem;
 }
@@ -43,7 +74,7 @@ html[data-slavia-preset] {
 @media (min-width: 640px) {
   :root,
   html[data-slavia-preset] {
-    --slavia-section-gap: 2rem;
+    --slavia-section-gap: 1.5rem;
     --slavia-card-padding: 1.25rem;
   }
 }

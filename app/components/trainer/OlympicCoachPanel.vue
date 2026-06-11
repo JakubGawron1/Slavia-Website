@@ -16,6 +16,7 @@ const props = defineProps<{
 }>()
 
 const auth = useAuth()
+const rolePreviewState = useRolePreviewState()
 const api = useApi()
 const toast = useToast()
 const coachOn = useExperimentalFlag('olympic_coach')
@@ -485,6 +486,16 @@ function truncatePrompt(text: string, max = 72) {
         }"
         :style="swipeStyle"
       >
+      <UAlert
+        v-if="rolePreviewState.isReadOnly.value"
+        class="mx-4 mt-4 sm:mx-6"
+        color="warning"
+        variant="subtle"
+        icon="i-lucide-eye"
+        title="Podgląd read-only"
+        description="Interfejs jest widoczny — wysyłanie wiadomości i import planów są wyłączone."
+      />
+
       <OlympicCoachQuotaStrip
         v-if="quotaMetrics.length"
         :metrics="quotaMetrics"
@@ -837,7 +848,7 @@ function truncatePrompt(text: string, max = 72) {
               :key="idx"
               type="button"
               class="olympic-coach__prompt-card"
-              :disabled="loading"
+              :disabled="loading || rolePreviewState.isReadOnly.value"
               @click="useQuickPrompt(prompt)"
             >
               <span class="olympic-coach__prompt-label">{{ modePromptLabels[mode] }}</span>
@@ -851,7 +862,7 @@ function truncatePrompt(text: string, max = 72) {
           :messages="messages"
           :loading="loading"
           :importing="importing"
-          :is-staff="isStaff"
+          :is-staff="isStaff && !rolePreviewState.isReadOnly.value"
           @import-plan="openImportModal"
         />
 
@@ -876,6 +887,7 @@ function truncatePrompt(text: string, max = 72) {
       </div>
 
       <footer
+        v-if="!rolePreviewState.isReadOnly.value"
         class="olympic-coach__composer-wrap"
         :class="{ 'olympic-coach__composer-wrap--athlete': isAthleteView }"
       >

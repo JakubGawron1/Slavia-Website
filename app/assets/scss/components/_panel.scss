@@ -1,0 +1,209 @@
+/** Panel shell — breadcrumb, siatki dashboardu, karty modułów, nawigacja boczna */
+
+.slavia-panel-breadcrumb {
+  margin-bottom: var(--slavia-space-3);
+}
+
+.slavia-panel-breadcrumb__list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--ui-text-muted);
+}
+
+.slavia-panel-breadcrumb__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.slavia-panel-breadcrumb__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: var(--slavia-radius-sm);
+  padding: 0.125rem 0.35rem;
+  font-weight: 600;
+  color: var(--ui-text-muted);
+  text-decoration: none;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.slavia-panel-breadcrumb__link:hover {
+  color: var(--ui-primary);
+  background: color-mix(in oklab, var(--ui-primary) 8%, transparent);
+}
+
+.slavia-panel-breadcrumb__sep {
+  flex-shrink: 0;
+  opacity: 0.45;
+}
+
+.slavia-panel-breadcrumb__current {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 0;
+  font-weight: 700;
+  color: var(--ui-text-highlighted);
+}
+
+/** Siatka KPI / kafelków na dashboardach */
+.slavia-panel-dashboard-grid {
+  display: grid;
+  gap: var(--slavia-space-3);
+  width: 100%;
+  min-width: 0;
+}
+
+.slavia-panel-dashboard-grid--tight {
+  gap: var(--slavia-space-2);
+}
+
+.slavia-panel-dashboard-grid--kpi {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (min-width: 640px) {
+  .slavia-panel-dashboard-grid--kpi {
+    gap: var(--slavia-space-3);
+  }
+}
+
+@media (min-width: 1024px) {
+  .slavia-panel-dashboard-grid--kpi {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.slavia-panel-dashboard-grid--modules {
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .slavia-panel-dashboard-grid--modules {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--slavia-space-4);
+  }
+}
+
+@media (min-width: 1280px) {
+  .slavia-panel-dashboard-grid--modules {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.slavia-panel-dashboard-grid--auto {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+}
+
+.slavia-panel-dashboard-grid--duo {
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 1024px) {
+  .slavia-panel-dashboard-grid--duo {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--slavia-space-4);
+  }
+}
+
+/** Powłoka nawigacji modułów (PanelModuleNav) */
+.slavia-panel-module-shell {
+  overflow: hidden;
+  border-radius: var(--slavia-radius-2xl);
+  border: 1px solid color-mix(in srgb, var(--ui-border) 65%, transparent);
+  background: var(--slavia-surface-panel);
+  box-shadow: var(--slavia-elevation-card);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/** Link wiersza modułu — aktywna trasa */
+.slavia-panel-nav-link {
+  position: relative;
+  border-radius: var(--slavia-radius-xl);
+  border: 1px solid transparent;
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    color 0.15s ease;
+}
+
+.slavia-panel-nav-link:hover {
+  border-color: color-mix(in oklab, var(--ui-primary) 22%, transparent);
+  background: color-mix(in oklab, var(--ui-primary) 6%, transparent);
+}
+
+.slavia-panel-nav-link--active,
+.slavia-panel-nav-link.router-link-active {
+  border-color: color-mix(in oklab, var(--ui-primary) 28%, transparent);
+  background: color-mix(in oklab, var(--ui-primary) 10%, transparent);
+  box-shadow: inset 3px 0 0 var(--ui-primary);
+}
+
+.slavia-panel-nav-link--active .slavia-panel-nav-link__title,
+.slavia-panel-nav-link.router-link-active .slavia-panel-nav-link__title {
+  color: var(--ui-primary);
+}
+
+/** Pusty stan w panelu — kompaktowy wariant */
+.slavia-panel-empty {
+  border-style: dashed;
+  border-color: color-mix(in oklab, var(--slavia-surface-edge-strong, var(--ui-border)) 75%, var(--ui-primary) 25%);
+  background: var(--slavia-surface-muted);
+  box-shadow: none;
+}
+
+.slavia-panel-empty--compact {
+  padding: var(--slavia-space-6) var(--slavia-space-4);
+}
+
+/** Szkielet ładowania — bloki */
+.slavia-skeleton-block {
+  display: block;
+  border-radius: var(--slavia-radius-md);
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklab, var(--ui-bg-muted) 88%, transparent),
+    color-mix(in oklab, var(--ui-primary) 12%, var(--ui-bg-muted)),
+    color-mix(in oklab, var(--ui-bg-muted) 88%, transparent)
+  );
+  background-size: 240% 100%;
+  animation: slavia-skeleton-shimmer 1.25s ease-in-out infinite;
+}
+
+.slavia-skeleton-block--text {
+  height: 0.875rem;
+  border-radius: var(--slavia-radius-sm);
+}
+
+.slavia-skeleton-block--title {
+  height: 1.25rem;
+  width: 55%;
+  border-radius: var(--slavia-radius-sm);
+}
+
+.slavia-skeleton-block--circle {
+  border-radius: 9999px;
+  aspect-ratio: 1;
+}
+
+.slavia-skeleton-block--card {
+  min-height: 6.5rem;
+  border-radius: var(--slavia-radius-xl);
+}
+
+.slavia-skeleton-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--slavia-space-3);
+  width: 100%;
+}

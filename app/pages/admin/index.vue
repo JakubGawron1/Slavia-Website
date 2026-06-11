@@ -208,7 +208,7 @@ function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 
       <DashboardHero
         eyebrow="Administracja"
         :title="`Witaj, ${auth.user.value?.username || 'Adminie'}!`"
-        lead="Szybkie wejścia do modułów i lista rzeczy, które wymagają uwagi."
+        lead="KPI miesiąca, moduły panelu i zadania wymagające uwagi — wszystko w jednym widoku."
         icon="i-lucide-shield"
         :badges="[
           { label: `Wyniki do zatwierdzenia: ${pendingCount}`, color: pendingCount ? 'warning' : 'neutral' },

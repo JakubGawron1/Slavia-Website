@@ -4,6 +4,7 @@ import DashboardKpiCard from '~/components/dashboard/DashboardKpiCard.vue'
 definePageMeta({ middleware: 'auth' })
 
 const copy = useRoleAwareCopy()
+const { primaryDashboardPath } = useRoleDashboardNav()
 const { moduleGroups, panelRole } = useKlubDashboardNav()
 const { moduleGroupsForRole } = usePanelNavigationFlags()
 const fullRoleModuleGroups = computed(() => moduleGroupsForRole(panelRole.value))
@@ -36,6 +37,17 @@ function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 
     athlete-title="Twój klub"
     athlete-description="Obecność, czat, wyzwania i ranking — szybkie wejścia bez szukania w menu."
   >
+    <template #actions>
+      <UButton
+        :to="primaryDashboardPath"
+        variant="soft"
+        color="neutral"
+        size="sm"
+        icon="i-lucide-layout-dashboard"
+      >
+        Panel
+      </UButton>
+    </template>
     <DashboardSectionsToolbar class="mb-6" />
 
     <PanelCollapsibleSection
@@ -45,7 +57,7 @@ function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 
       :default-open="true"
       class="mb-6"
     >
-      <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <PanelDashboardGrid variant="auto">
         <DashboardKpiCard
           v-for="card in statCards"
           :key="card.label"
@@ -57,7 +69,7 @@ function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 
           :to="card.to"
           size="compact"
         />
-      </div>
+      </PanelDashboardGrid>
     </PanelCollapsibleSection>
 
     <PanelCollapsibleSection
@@ -75,7 +87,7 @@ function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 
         :tone-from-bg="toneFromBg"
       />
     </PanelCollapsibleSection>
-    <PublicEmptyState
+    <SlaviaEmptyState
       v-else
       icon="i-lucide-layout-grid"
       title="Brak modułów klubu"

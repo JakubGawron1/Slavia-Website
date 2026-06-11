@@ -6,6 +6,7 @@ import { getApiErrorMessage } from '~/composables/useApi'
 import { useBrowserNotifications } from '~/composables/useBrowserNotifications'
 
 const auth = useAuth()
+const rolePreviewState = useRolePreviewState()
 const toast = useToast()
 const copy = useSlaviaCopy()
 const { resolveLink } = useNotificationLinks()
@@ -37,7 +38,12 @@ async function loadNotifications() {
   await refresh()
 
   const newNotifications = items.value.filter((item) => !knownNotificationIds.value.has(item.id))
-  if (newNotifications.length > 0 && systemNotificationsEnabled.value && hasPermission.value) {
+  if (
+    newNotifications.length > 0
+    && !rolePreviewState.isReadOnly.value
+    && systemNotificationsEnabled.value
+    && hasPermission.value
+  ) {
     newNotifications.slice(0, 2).forEach((n) => {
       notify(n.title, {
         body: n.body,
@@ -175,7 +181,14 @@ onBeforeUnmount(() => {
             <UButton size="xs" variant="ghost" color="neutral" icon="i-lucide-list" to="/klub/powiadomienia">
               Skrzynka
             </UButton>
-            <UButton size="xs" variant="ghost" color="neutral" icon="i-lucide-check-check" @click="onMarkAllRead">
+            <UButton
+              v-if="!rolePreviewState.isReadOnly.value"
+              size="xs"
+              variant="ghost"
+              color="neutral"
+              icon="i-lucide-check-check"
+              @click="onMarkAllRead"
+            >
               Oznacz wszystko
             </UButton>
           </div>
@@ -241,7 +254,7 @@ onBeforeUnmount(() => {
             </p>
           </div>
           <UButton
-            v-if="!n.is_read"
+            v-if="!rolePreviewState.isReadOnly.value && !n.is_read"
             color="primary"
             variant="ghost"
             size="xs"
@@ -252,6 +265,7 @@ onBeforeUnmount(() => {
             @click.stop="onMarkRead(n.id, $event)"
           />
           <UButton
+            v-if="!rolePreviewState.isReadOnly.value"
             color="neutral"
             variant="ghost"
             size="xs"

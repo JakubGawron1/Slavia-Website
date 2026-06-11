@@ -210,9 +210,9 @@ function rowAccentClass(s: string) {
       </template>
     </PublicPageHeader>
 
-    <div class="slavia-content-well mx-auto flex w-full max-w-5xl flex-col gap-8">
+    <div class="slavia-content-well slavia-public-section mx-auto flex w-full max-w-5xl flex-col gap-8">
       <div class="grid w-full gap-8 lg:grid-cols-5">
-        <UCard class="rounded-3xl border-default/70 shadow-sm ring-1 ring-default/40 lg:col-span-2">
+        <UCard class="slavia-page-card slavia-public-card slavia-public-card--flat lg:col-span-2">
           <template #header>
             <div class="flex items-start justify-between gap-3">
               <div class="min-w-0">
@@ -320,7 +320,7 @@ function rowAccentClass(s: string) {
           />
         </UCard>
 
-        <UCard class="rounded-3xl border-primary/20 bg-linear-to-br from-primary/6 via-card to-card shadow-md ring-1 ring-primary/15 lg:col-span-3">
+        <UCard class="slavia-page-card slavia-public-card slavia-public-card--glass border-primary/20 bg-linear-to-br from-primary/6 via-card to-card ring-1 ring-primary/15 lg:col-span-3">
           <template #header>
             <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <div class="min-w-0">

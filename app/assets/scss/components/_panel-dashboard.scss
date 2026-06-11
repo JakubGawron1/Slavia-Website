@@ -1,0 +1,121 @@
+/** Szybkie akcje na dashboardach athlete/trainer */
+.slavia-quick-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .slavia-quick-actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.625rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .slavia-quick-actions--wide {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.slavia-quick-action-chip {
+  display: flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: var(--slavia-radius-xl, 1.25rem);
+  border: 1px solid color-mix(in oklab, var(--ui-border) 88%, var(--ui-primary) 12%);
+  background: linear-gradient(
+    168deg,
+    var(--slavia-card-gradient-top),
+    var(--slavia-card-gradient-bottom)
+  );
+  box-shadow: var(--slavia-shadow-xs);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.22s ease,
+    transform 0.18s ease;
+}
+
+.slavia-quick-action-chip:hover {
+  border-color: color-mix(in oklab, var(--ui-primary) 35%, var(--ui-border));
+  box-shadow: var(--slavia-shadow-sm);
+  transform: translateY(-1px);
+}
+
+.slavia-quick-action-chip:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--ui-primary) 85%, #fff);
+  outline-offset: 2px;
+}
+
+/** Karta wyboru zawodnika (dziennik trenera) */
+.slavia-athlete-picker-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1.125rem;
+  border-radius: var(--slavia-radius-xl, 1.25rem);
+  border: 1px solid var(--slavia-surface-edge, var(--ui-border));
+  background: linear-gradient(
+    168deg,
+    var(--slavia-card-gradient-top),
+    var(--slavia-card-gradient-bottom)
+  );
+  box-shadow: var(--slavia-shadow-xs);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.22s ease,
+    transform 0.18s ease;
+}
+
+.slavia-athlete-picker-card:hover {
+  border-color: color-mix(in oklab, var(--ui-primary) 38%, var(--ui-border));
+  box-shadow: var(--slavia-shadow-sm);
+  transform: translateY(-1px);
+}
+
+/** Szkielet ładowania panelu */
+.slavia-panel-loading__skeleton {
+  background: linear-gradient(
+    110deg,
+    color-mix(in oklab, var(--ui-bg-muted) 70%, transparent) 8%,
+    color-mix(in oklab, var(--ui-bg-elevated) 90%, transparent) 18%,
+    color-mix(in oklab, var(--ui-bg-muted) 70%, transparent) 33%
+  );
+  background-size: 200% 100%;
+  animation: slavia-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes slavia-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+/** Podgląd tygodnia na dashboardzie zawodnika */
+.slavia-week-preview {
+  border-color: color-mix(in oklab, var(--ui-info, #0ea5e9) 22%, var(--ui-border));
+}
+
+.panel-collapsible-section__body {
+  animation: slavia-panel-section-in 0.22s ease-out;
+}
+
+@keyframes slavia-panel-section-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -114,6 +114,25 @@ export const apiRoutes = {
     athlete: (athleteId: string) => `/api/recovery/athlete/${encodeURIComponent(athleteId)}`
   },
   system: {
+    rolePreviewSession: '/api/system/role-preview/session',
+    rolePreviewContext: (userId: string) =>
+      `/api/system/role-preview/context/${encodeURIComponent(userId)}`,
+    rolePreviewAthleteBundle: (userId: string) =>
+      `/api/system/role-preview/athlete-bundle/${encodeURIComponent(userId)}`,
+    rolePreviewAthleteProfile: (userId: string) =>
+      `/api/system/role-preview/athlete-profile/${encodeURIComponent(userId)}`,
+    rolePreviewCalendar: (userId: string) =>
+      `/api/system/role-preview/calendar/${encodeURIComponent(userId)}`,
+    rolePreviewPaymentStatus: (userId: string) =>
+      `/api/system/role-preview/payment-status/${encodeURIComponent(userId)}`,
+    rolePreviewExerciseSubmissions: (userId: string) =>
+      `/api/system/role-preview/exercise-submissions/${encodeURIComponent(userId)}`,
+    rolePreviewNotifications: (userId: string) =>
+      `/api/system/role-preview/notifications/${encodeURIComponent(userId)}`,
+    rolePreviewChatThreads: (userId: string) =>
+      `/api/system/role-preview/chat/threads/${encodeURIComponent(userId)}`,
+    rolePreviewChatMessages: (userId: string, threadId: string) =>
+      `/api/system/role-preview/chat/threads/${encodeURIComponent(userId)}/${encodeURIComponent(threadId)}/messages`,
     ping: '/api/system/ping',
     backendProvider: '/api/system/backend-provider',
     auditLogs: '/api/system/audit-logs',

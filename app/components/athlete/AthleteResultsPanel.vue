@@ -3,6 +3,7 @@ import { getApiErrorMessage } from '~/composables/useApi'
 import type { Athlete, CompetitionResult } from '~/types/models'
 
 const auth = useAuth()
+const rolePreviewState = useRolePreviewState()
 const apiFetch = useApi()
 const toast = useToast()
 const route = useRoute()
@@ -148,6 +149,16 @@ async function submitResult() {
   />
 
   <div v-else class="grid gap-10 xl:grid-cols-12">
+    <UAlert
+      v-if="rolePreviewState.isReadOnly.value"
+      class="xl:col-span-12"
+      color="warning"
+      variant="subtle"
+      icon="i-lucide-eye"
+      title="Podgląd read-only"
+      description="Historia zgłoszeń jest widoczna — formularz zgłaszania wyników jest wyłączony."
+    />
+
     <div class="space-y-6 xl:col-span-7">
       <div
         v-if="pendingCount > 0"
@@ -157,7 +168,7 @@ async function submitResult() {
         <span class="text-muted"> zgłoszeń czeka na zatwierdzenie przez kadrę.</span>
       </div>
 
-      <div class="slavia-form-panel shadow-md">
+      <div v-if="!rolePreviewState.isReadOnly.value" class="slavia-form-panel shadow-md">
         <div class="slavia-form-panel__header">
           <div class="slavia-form-panel__title">
             <span class="slavia-form-panel__icon">
