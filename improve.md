@@ -576,11 +576,11 @@
 
 ### Fala 4 — strategiczne (backlog)
 
-23. Streaming AI SSE
-24. Flutter parity publiczne + zawodnik/trener (ranking, wyzwania) — bez Admin/SA
-25. i18n
-26. Biblioteka MD (marked)
-27. Server-side Sinclair ranking (shared vectors)
+23. ✅ SSE stub (`GET /api/ai/coach/stream` + BFF) — pełny streaming LLM w backlogu
+24. ✅ Flutter: `PublicRankingScreen`, `ClubChallengesScreen` (bez Admin/SA)
+25. i18n — odłożone (duży zakres)
+26. Biblioteka MD (`marked`) — odłożone; `renderChatMarkdown` + shared `markdownInline` wystarczają
+27. ✅ Server-side Sinclair (`sinclair.rs`, `GET /api/athletes/ranking/sinclair`, wektory embed)
 
 ---
 
