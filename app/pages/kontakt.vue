@@ -14,19 +14,17 @@ useSeoMeta({
   robots: 'index, follow'
 })
 
-const config = useRuntimeConfig()
 const toast = useToast()
 
 const mapsUrl = 'https://maps.app.goo.gl/zqGy466nizCv45c57'
-
-const apiRoot = computed(() => String(config.public.apiBase || '').replace(/\/$/, ''))
 
 const sending = ref(false)
 const form = reactive({
   name: '',
   email: '',
   phone: '',
-  message: ''
+  message: '',
+  website: ''
 })
 
 async function submit() {
@@ -43,13 +41,14 @@ async function submit() {
   }
   sending.value = true
   try {
-    await $fetch(`${apiRoot.value}/api/contact`, {
+    await $fetch('/api/contact', {
       method: 'POST',
       body: {
         name,
         email,
         phone: form.phone.trim() || undefined,
-        message
+        message,
+        website: form.website
       }
     })
     toast.add({
@@ -206,6 +205,15 @@ async function submit() {
           class="flex flex-col gap-4 px-4 pb-4 sm:px-6 sm:pb-6"
           @submit.prevent="submit"
         >
+          <input
+            v-model="form.website"
+            type="text"
+            name="website"
+            tabindex="-1"
+            autocomplete="off"
+            aria-hidden="true"
+            class="absolute -left-[9999px] h-px w-px overflow-hidden opacity-0"
+          >
           <UFormField
             label="Imię i nazwisko"
             required

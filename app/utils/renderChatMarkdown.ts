@@ -35,7 +35,10 @@ function renderTableRow(line: string, tag: 'th' | 'td'): string {
     .replace(/\|$/, '')
     .split('|')
     .map(c => c.trim())
-  const inner = cells.map(c => `<${tag}>${renderInlineMarkdown(escapeHtml(c))}</${tag}>`).join('')
+  const scope = tag === 'th' ? ' scope="col"' : ''
+  const inner = cells
+    .map(c => `<${tag}${scope}>${renderInlineMarkdown(escapeHtml(c))}</${tag}>`)
+    .join('')
   return `<tr>${inner}</tr>`
 }
 
@@ -65,9 +68,9 @@ function renderBlocks(source: string): string {
       continue
     }
 
-    if (/^#{1,3}\s+/.test(trimmed)) {
+    if (/^#{1,6}\s+/.test(trimmed)) {
       const level = trimmed.match(/^#+/)?.[0].length ?? 1
-      const tag = level <= 1 ? 'h2' : level === 2 ? 'h3' : 'h4'
+      const tag = (['h2', 'h3', 'h4', 'h5', 'h6'] as const)[Math.min(level, 6) - 1] ?? 'h2'
       const text = trimmed.replace(/^#+\s+/, '')
       parts.push(`<${tag} class="oc-md-${tag}">${renderInlineMarkdown(escapeHtml(text))}</${tag}>`)
       i += 1
@@ -113,7 +116,7 @@ function renderBlocks(source: string): string {
       const next = (lines[i] ?? '').trim()
       if (
         !next
-        || /^#{1,3}\s+/.test(next)
+        || /^#{1,6}\s+/.test(next)
         || /^[-*]\s+/.test(next)
         || /^\d+\.\s+/.test(next)
         || isTableRow(next)
@@ -149,9 +152,9 @@ export function renderChatMarkdown(source: string): string {
 
   return DOMPurify.sanitize(html, {
     ALLOWED_TAGS: [
-      'a', 'strong', 'em', 'br', 'p', 'h2', 'h3', 'h4',
+      'a', 'strong', 'em', 'br', 'p', 'h2', 'h3', 'h4', 'h5', 'h6',
       'ul', 'ol', 'li', 'code', 'pre', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'blockquote'
     ],
-    ALLOWED_ATTR: ['href', 'target', 'rel', 'class']
+    ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'scope']
   })
 }

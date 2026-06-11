@@ -19,7 +19,9 @@ const MAX_ATTACHMENTS = 4
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024
 const MAX_TEXT_FILE_BYTES = 48 * 1024
 const MAX_VIDEO_BYTES = 24 * 1024 * 1024
-const MAX_VIDEO_FRAMES = 5
+/** Zgodnie z limitem backendu `MAX_CHAT_ATTACHMENTS` (8 payloadów). */
+const MAX_VIDEO_FRAMES = 2
+const MAX_TOTAL_PAYLOADS = 8
 const MAX_IMAGE_DIMENSION = 1600
 
 const TEXT_EXTENSIONS = new Set(['.txt', '.md', '.csv', '.json', '.log', '.xml', '.yaml', '.yml'])
@@ -214,5 +216,13 @@ export function releaseOlympicCoachAttachmentPreview(draft: OlympicCoachAttachme
 export function flattenAttachmentPayload(
   drafts: OlympicCoachAttachmentDraft[]
 ): OlympicCoachAttachmentPayload[] {
-  return drafts.flatMap(d => d.payload)
+  const flat = drafts.flatMap(d => d.payload)
+  if (flat.length > MAX_TOTAL_PAYLOADS) {
+    throw new Error(`Za dużo załączników (max ${MAX_TOTAL_PAYLOADS} — limit API)`)
+  }
+  return flat
+}
+
+export function olympicCoachMaxTotalPayloads(): number {
+  return MAX_TOTAL_PAYLOADS
 }

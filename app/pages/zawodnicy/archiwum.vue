@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import AtheleteCard from '~/components/AtheleteCard.vue'
+import AthleteCard from '~/components/AthleteCard.vue'
 import { athleteProfilePath } from '~/utils/slug'
 import { mapArchivedAthleteToCard } from '~/utils/athleteArchiveCard'
 import type { Athlete as AthleteModel } from '~/types/models'
@@ -112,7 +112,7 @@ useSeoMeta({
           prefetch-on="interaction"
           class="block"
         >
-          <AtheleteCard :model-value="player" />
+          <AthleteCard :model-value="player" />
         </NuxtLink>
       </div>
 

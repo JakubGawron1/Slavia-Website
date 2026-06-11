@@ -1,4 +1,4 @@
-import type { Athlete as AthleteCard } from '~/components/AtheleteCard.vue'
+import type { Athlete as AthleteCard } from '~/components/AthleteCard.vue'
 import type { Athlete as AthleteModel } from '~/types/models'
 import type { SinclairGender } from '~/utils/sinclair'
 import { sinclairTotal } from '~/utils/sinclair'
