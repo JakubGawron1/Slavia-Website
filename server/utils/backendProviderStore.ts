@@ -1,4 +1,7 @@
-type BackendProvider = 'leapcell' | 'render'
+import {
+  type BackendProviderId as BackendProvider,
+  normalizeBackendProvider
+} from '~/utils/backendProviderTypes'
 
 /**
  * Vercel Blob domyślnie wyłączony. Jawne włączenie: `SLAVIA_ENABLE_BLOB=1` (produkcja + token).
@@ -21,23 +24,13 @@ function isProductionRuntime(): boolean {
   return process.env.NODE_ENV === 'production'
 }
 
-function normalizeProvider(raw: unknown): BackendProvider {
-  if (typeof raw === 'string') {
-    const normalized = raw.toLowerCase()
-    if (normalized === 'render') {
-      return 'render'
-    }
-  }
-  return 'leapcell'
-}
-
 async function readFromNetlify(): Promise<BackendProvider | null> {
   if (process.env.NETLIFY !== 'true') return null
   try {
     const { getStore } = await import('@netlify/blobs')
     const store = getStore('slavia-config')
     const val = await store.get(STORE_KEY)
-    return normalizeProvider(val)
+    return normalizeBackendProvider(val)
   } catch {
     return null
   }
@@ -73,7 +66,7 @@ async function readFromVercelBlob(): Promise<BackendProvider | null> {
       throw new Error(`Vercel Blob read failed: HTTP ${res.status}`)
     }
     const payload = (await res.json()) as { active_provider?: string }
-    return normalizeProvider(payload.active_provider)
+    return normalizeBackendProvider(payload.active_provider)
   } catch (e) {
     console.error('[backendProviderStore] readFromVercelBlob error:', e)
     return null
@@ -116,11 +109,11 @@ export async function getGlobalBackendProvider(): Promise<BackendProvider> {
   if (netlify) return netlify
   const vercel = await readFromVercelBlob()
   if (vercel) return vercel
-  return normalizeProvider(process.env.DEFAULT_BACKEND_PROVIDER)
+  return normalizeBackendProvider(process.env.DEFAULT_BACKEND_PROVIDER)
 }
 
 export async function setGlobalBackendProvider(providerRaw: unknown): Promise<BackendProvider> {
-  const provider = normalizeProvider(providerRaw)
+  const provider = normalizeBackendProvider(providerRaw)
   const netlifyOk = await writeToNetlify(provider)
   if (netlifyOk) return provider
   const vercelOk = await writeToVercelBlob(provider)

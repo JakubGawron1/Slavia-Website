@@ -1,4 +1,8 @@
-type BackendProvider = 'leapcell' | 'render'
+import {
+  apiBaseForBackendProvider,
+  isBackendProviderId,
+  type BackendProviderId as BackendProvider
+} from '~/utils/backendProviderTypes'
 
 interface BackendProviderResponse {
   active_provider: BackendProvider
@@ -17,15 +21,15 @@ export function useBackendProvider() {
   const activeProvider = useState<BackendProvider>(BACKEND_PROVIDER_STATE_KEY, () => 'leapcell')
   const hydrated = useState<boolean>(BACKEND_PROVIDER_HYDRATED_STATE_KEY, () => false)
 
-  const fallbackBase = computed(() => normalizeBase(config.public.apiBase))
-  const leapcellBase = computed(() => normalizeBase(config.public.apiBaseLeapcell))
-  const renderBase = computed(() => normalizeBase(config.public.apiBaseRender))
+  const providerConfig = computed(() => ({
+    apiBase: normalizeBase(config.public.apiBase),
+    apiBaseLeapcell: normalizeBase(config.public.apiBaseLeapcell),
+    apiBaseRender: normalizeBase(config.public.apiBaseRender),
+    apiBaseHuggingface: normalizeBase(config.public.apiBaseHuggingface)
+  }))
 
   function resolveApiBase(provider: BackendProvider): string {
-    if (provider === 'render') {
-      return renderBase.value || fallbackBase.value
-    }
-    return leapcellBase.value || fallbackBase.value
+    return apiBaseForBackendProvider(provider, providerConfig.value)
   }
 
   const activeApiBase = computed(() => resolveApiBase(activeProvider.value))
@@ -48,7 +52,7 @@ export function useBackendProvider() {
 
     try {
       const res = await $fetch<BackendProviderResponse>('/api/system/backend-provider')
-      if (res?.active_provider === 'leapcell' || res?.active_provider === 'render') {
+      if (isBackendProviderId(res?.active_provider)) {
         activeProvider.value = res.active_provider
       }
     } catch {

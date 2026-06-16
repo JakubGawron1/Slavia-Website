@@ -75,7 +75,11 @@ const vercelPurgeFailures = computed(() =>
               aktywny: {{
                 d.isLocalBackend
                   ? 'localhost'
-                  : (d.activeBackendProvider === 'render' ? 'Render' : 'Leapcell')
+                  : (d.activeBackendProvider === 'render'
+                    ? 'Render'
+                    : d.activeBackendProvider === 'huggingface'
+                      ? 'Hugging Face'
+                      : 'Leapcell')
               }}
             </UBadge>
           </div>
@@ -105,6 +109,16 @@ const vercelPurgeFailures = computed(() =>
               @click="d.selectedBackendProvider = 'render'"
             >
               Render
+            </UButton>
+            <UButton
+              size="xs"
+              color="neutral"
+              class="touch-manipulation"
+              :disabled="d.isLocalBackend"
+              :variant="d.selectedBackendProvider === 'huggingface' ? 'solid' : 'outline'"
+              @click="d.selectedBackendProvider = 'huggingface'"
+            >
+              Hugging Face
             </UButton>
           </div>
           <div class="mt-2 flex flex-wrap gap-1">

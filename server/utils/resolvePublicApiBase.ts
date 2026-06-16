@@ -1,6 +1,11 @@
 import { getGlobalBackendProvider } from './backendProviderStore'
+import {
+  apiBaseForBackendProvider,
+  backendProviderFromEnv,
+  type BackendProviderId
+} from '~/utils/backendProviderTypes'
 
-export type BackendProviderId = 'leapcell' | 'render'
+export type { BackendProviderId }
 
 /** localhost / 127.0.0.1 — tylko dev; na Vercel build nie proxy'ujemy tam. */
 export function isLocalApiBase(url: string): boolean {
@@ -13,33 +18,20 @@ function normalizeBase(url: string | undefined): string {
   return String(url ?? '').trim().replace(/\/$/, '')
 }
 
-function apiBaseForProvider(
-  provider: BackendProviderId,
-  cfg: { apiBase: string, apiBaseLeapcell: string, apiBaseRender: string }
-): string {
-  if (provider === 'render') {
-    return normalizeBase(cfg.apiBaseRender) || normalizeBase(cfg.apiBase)
-  }
-  return normalizeBase(cfg.apiBaseLeapcell) || normalizeBase(cfg.apiBase)
-}
-
-function providerFromEnv(): BackendProviderId {
-  return process.env.DEFAULT_BACKEND_PROVIDER === 'render' ? 'render' : 'leapcell'
-}
-
 /**
  * Bazowy URL backendu dla BFF / sitemap / prerender.
- * Na Vercel: Leapcell lub Render z env (nie localhost), opcjonalnie Blob provider.
+ * Na Vercel: Leapcell, Render lub Hugging Face z env (nie localhost), opcjonalnie Blob provider.
  */
 export async function resolvePublicApiBase(): Promise<string> {
   const config = useRuntimeConfig()
   const cfg = {
     apiBase: String(config.public.apiBase ?? ''),
     apiBaseLeapcell: String(config.public.apiBaseLeapcell ?? ''),
-    apiBaseRender: String(config.public.apiBaseRender ?? '')
+    apiBaseRender: String(config.public.apiBaseRender ?? ''),
+    apiBaseHuggingface: String(config.public.apiBaseHuggingface ?? '')
   }
 
-  let provider = providerFromEnv()
+  let provider = backendProviderFromEnv()
   if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
     try {
       provider = await getGlobalBackendProvider()
@@ -48,7 +40,7 @@ export async function resolvePublicApiBase(): Promise<string> {
     }
   }
 
-  const primary = apiBaseForProvider(provider, cfg) || normalizeBase(cfg.apiBase)
+  const primary = apiBaseForBackendProvider(provider, cfg) || normalizeBase(cfg.apiBase)
 
   /** Lokalny `nuxt dev` — proxy na localhost/127.0.0.1 jest poprawny. */
   if (!process.env.VERCEL) {
@@ -59,9 +51,9 @@ export async function resolvePublicApiBase(): Promise<string> {
     return primary
   }
 
-  for (const alt of ['leapcell', 'render'] as const) {
+  for (const alt of ['leapcell', 'render', 'huggingface'] as const) {
     if (alt === provider) continue
-    const url = apiBaseForProvider(alt, cfg)
+    const url = apiBaseForBackendProvider(alt, cfg)
     if (!isLocalApiBase(url)) {
       return url
     }

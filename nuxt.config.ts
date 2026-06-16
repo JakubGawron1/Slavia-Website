@@ -33,6 +33,8 @@ const buildApiLeapcell = (process.env.NUXT_PUBLIC_API_BASE_URL_LEAPCELL || build
 
 const buildApiRender = (process.env.NUXT_PUBLIC_API_BASE_URL_RENDER || buildApiBase).replace(/\/$/, '')
 
+const buildApiHuggingface = (process.env.NUXT_PUBLIC_API_BASE_URL_HUGGINGFACE || buildApiBase).replace(/\/$/, '')
+
 
 
 /**
@@ -407,6 +409,8 @@ export default defineNuxtConfig({
       apiBaseLeapcell: buildApiLeapcell,
 
       apiBaseRender: buildApiRender,
+
+      apiBaseHuggingface: buildApiHuggingface,
 
       siteUrl: publicSiteUrl,
 
