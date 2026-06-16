@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { backendProviderLabel } from '~/utils/backendProviderTypes'
+
 const d = useDeveloperPage()
 
 type PurgeRow = { path: string, ok: boolean, status?: number, error?: string }
@@ -75,16 +77,13 @@ const vercelPurgeFailures = computed(() =>
               aktywny: {{
                 d.isLocalBackend
                   ? 'localhost'
-                  : (d.activeBackendProvider === 'render'
-                    ? 'Render'
-                    : d.activeBackendProvider === 'huggingface'
-                      ? 'Hugging Face'
-                      : 'Leapcell')
+                  : backendProviderLabel(d.activeBackendProvider)
               }}
             </UBadge>
           </div>
           <p class="mt-1 text-[11px] leading-snug text-muted">
             Ustawienie zapisuje się po stronie API i obowiązuje dla wszystkich urządzeń/kont.
+            Vercel Preview zawsze kieruje ruch na Hugging Face.
           </p>
           <p class="mt-1 break-all font-mono text-[10px] text-muted">
             URL: {{ d.activeBackendApiBase }}
@@ -92,33 +91,23 @@ const vercelPurgeFailures = computed(() =>
           <div class="mt-2 flex flex-wrap gap-1">
             <UButton
               size="xs"
-              color="neutral"
-              class="touch-manipulation"
-              :disabled="d.isLocalBackend"
-              :variant="d.selectedBackendProvider === 'leapcell' ? 'solid' : 'outline'"
-              @click="d.selectedBackendProvider = 'leapcell'"
-            >
-              Leapcell
-            </UButton>
-            <UButton
-              size="xs"
-              color="neutral"
-              class="touch-manipulation"
-              :disabled="d.isLocalBackend"
-              :variant="d.selectedBackendProvider === 'render' ? 'solid' : 'outline'"
-              @click="d.selectedBackendProvider = 'render'"
-            >
-              Render
-            </UButton>
-            <UButton
-              size="xs"
-              color="neutral"
+              color="primary"
               class="touch-manipulation"
               :disabled="d.isLocalBackend"
               :variant="d.selectedBackendProvider === 'huggingface' ? 'solid' : 'outline'"
               @click="d.selectedBackendProvider = 'huggingface'"
             >
               Hugging Face
+            </UButton>
+            <UButton
+              size="xs"
+              color="warning"
+              class="touch-manipulation"
+              :disabled="d.isLocalBackend"
+              :variant="d.selectedBackendProvider === 'render' ? 'solid' : 'outline'"
+              @click="d.selectedBackendProvider = 'render'"
+            >
+              Render (deprecated)
             </UButton>
           </div>
           <div class="mt-2 flex flex-wrap gap-1">

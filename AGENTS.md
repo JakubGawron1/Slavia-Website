@@ -17,7 +17,7 @@ pnpm test:e2e     # Playwright (lokalnie: PLAYWRIGHT_START_SERVER=1)
 pnpm release:check  # pełna walidacja przed release (PowerShell)
 ```
 
-**Env:** `.env` → `NUXT_PUBLIC_API_BASE_URL` (bez końcowego slasha). Opcjonalnie `NUXT_PUBLIC_API_BASE_URL_LEAPCELL` / `_RENDER` dla dual-provider.
+**Env:** `.env` → `NUXT_PUBLIC_API_BASE_URL` (bez końcowego slasha). Opcjonalnie `NUXT_PUBLIC_API_BASE_URL_HUGGINGFACE` / `_RENDER` (deprecated) dla dual-provider.
 
 **Backend lokalny:** `pnpm smoke:backend` — szybki ping API przed pracą z panelami.
 
@@ -130,7 +130,7 @@ Nowe funkcje trenera/zawodnika w mobile: tak. Nowe funkcje admin/superadmin: tyl
 └─────────────────────────────────────────────────────────────┘
 ┌─────────────────────────────────────────────────────────────┐
 │  Panele po logowaniu (CSR, no-store)                        │
-│  useApi() → auth.apiBase (Leapcell/Render) + Bearer JWT     │
+│  useApi() → auth.apiBase (Hugging Face / Render) + Bearer JWT │
 └─────────────────────────────────────────────────────────────┘
 ┌─────────────────────────────────────────────────────────────┐
 │  Server routes Nuxt (BFF, bez tokenu użytkownika)           │
@@ -143,7 +143,7 @@ Nowe funkcje trenera/zawodnika w mobile: tak. Nowe funkcje admin/superadmin: tyl
 | Publiczne GET (cache CDN) | `usePublicLazyFetch`, `publicApiUrl()` | Ranking, galeria, aktualności, kalendarz publiczny |
 | Autoryzowane mutacje/GET | `useApi()` | Panele admin/trener/zawodnik, czat, dziennik |
 | Wyszukiwarka w belce | `publicApiUrl()` | Zawsze BFF — nigdy `config.public.apiBase` z klienta |
-| Provider backendu | `useBackendProvider()` | Hydracja w `plugins/00.auth.ts`; przełącznik Leapcell ↔ Render |
+| Provider backendu | `useBackendProvider()` | Hydracja w `plugins/00.auth.ts`; przełącznik Hugging Face ↔ Render (deprecated) |
 
 **Błędy API:** `getApiErrorMessage(e)` / `getApiDetailedErrorMessage(e)` z `useApi.ts`. Uploady `FormData` mają timeout 120 s (domyślnie 20 s).
 
@@ -350,7 +350,7 @@ E2E smoke: publiczne trasy (w tym `/zawodnicy/archiwum`), manifest PWA, ochrona 
 - Router: `src/router.rs` — źródło prawdy dla ścieżek
 - OpenAPI embed: `src/embed/openapi.json` — generuj typy przed PR z nowymi endpointami
 - CORS: backend musi zezwalać na origin frontendu
-- Dual provider: Leapcell (domyślny) / Render — przełączany przez `/api/system/backend-provider`
+- Dual provider: Hugging Face (domyślnie, Preview Vercel) / Render (deprecated) — przełączany przez `/api/system/backend-provider`
 
 **Zmiana API:** najpierw backend + OpenAPI, potem `openapi:types` i frontend. Nie zgaduj kształtu JSON.
 

@@ -20,13 +20,12 @@ function normalizeBase(url: string | undefined): string {
 
 /**
  * Bazowy URL backendu dla BFF / sitemap / prerender.
- * Na Vercel: Leapcell, Render lub Hugging Face z env (nie localhost), opcjonalnie Blob provider.
+ * Na Vercel: Hugging Face (domyślnie / Preview) lub Render (deprecated).
  */
 export async function resolvePublicApiBase(): Promise<string> {
   const config = useRuntimeConfig()
   const cfg = {
     apiBase: String(config.public.apiBase ?? ''),
-    apiBaseLeapcell: String(config.public.apiBaseLeapcell ?? ''),
     apiBaseRender: String(config.public.apiBaseRender ?? ''),
     apiBaseHuggingface: String(config.public.apiBaseHuggingface ?? '')
   }
@@ -42,7 +41,6 @@ export async function resolvePublicApiBase(): Promise<string> {
 
   const primary = apiBaseForBackendProvider(provider, cfg) || normalizeBase(cfg.apiBase)
 
-  /** Lokalny `nuxt dev` — proxy na localhost/127.0.0.1 jest poprawny. */
   if (!process.env.VERCEL) {
     return primary
   }
@@ -51,7 +49,7 @@ export async function resolvePublicApiBase(): Promise<string> {
     return primary
   }
 
-  for (const alt of ['leapcell', 'render', 'huggingface'] as const) {
+  for (const alt of ['huggingface', 'render'] as const) {
     if (alt === provider) continue
     const url = apiBaseForBackendProvider(alt, cfg)
     if (!isLocalApiBase(url)) {

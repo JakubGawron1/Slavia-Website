@@ -21,7 +21,7 @@ const d = useDeveloperPage()
       <ul class="mt-3 grid gap-2 text-[11px] text-muted sm:grid-cols-2">
         <li class="rounded-lg border border-default/50 bg-muted/10 px-3 py-2">
           <span class="font-mono text-[10px] text-highlighted">NUXT_PUBLIC_API_BASE_URL</span>
-          — backend Leapcell / Render / localhost.
+          — backend Hugging Face / Render (deprecated) / localhost.
         </li>
         <li class="rounded-lg border border-default/50 bg-muted/10 px-3 py-2">
           <span class="font-mono text-[10px] text-highlighted">NUXT_PUBLIC_CMS_BASE_URL</span>

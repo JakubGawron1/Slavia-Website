@@ -1,10 +1,15 @@
-/** Identyfikatory globalnego providera backendu (Leapcell / Render / Hugging Face). */
-export type BackendProviderId = 'leapcell' | 'render' | 'huggingface'
+/** Identyfikatory globalnego providera backendu (Hugging Face domyślnie, Render legacy). */
+export type BackendProviderId = 'render' | 'huggingface'
 
-const PROVIDER_IDS: BackendProviderId[] = ['leapcell', 'render', 'huggingface']
+const PROVIDER_IDS: BackendProviderId[] = ['render', 'huggingface']
 
 export function isBackendProviderId(raw: unknown): raw is BackendProviderId {
   return typeof raw === 'string' && PROVIDER_IDS.includes(raw as BackendProviderId)
+}
+
+/** Vercel Preview zawsze idzie na Hugging Face (izolacja od produkcji). */
+export function isVercelPreviewRuntime(): boolean {
+  return (process.env.VERCEL_ENV || '').trim().toLowerCase() === 'preview'
 }
 
 /** Normalizuje wartość z env / Blob / PATCH do kanonicznego id. */
@@ -14,26 +19,38 @@ export function normalizeBackendProvider(raw: unknown): BackendProviderId {
     if (normalized === 'render') {
       return 'render'
     }
-    if (normalized === 'huggingface' || normalized === 'hf' || normalized === 'hugging_face') {
+    if (
+      normalized === 'huggingface'
+      || normalized === 'hf'
+      || normalized === 'hugging_face'
+      || normalized === 'leapcell'
+    ) {
       return 'huggingface'
     }
   }
-  return 'leapcell'
+  return 'huggingface'
 }
 
 export function backendProviderFromEnv(): BackendProviderId {
-  return normalizeBackendProvider(process.env.DEFAULT_BACKEND_PROVIDER)
+  if (isVercelPreviewRuntime()) {
+    return 'huggingface'
+  }
+  return normalizeBackendProvider(process.env.DEFAULT_BACKEND_PROVIDER || 'huggingface')
+}
+
+export function isBackendProviderDeprecated(provider: BackendProviderId): boolean {
+  return provider === 'render'
 }
 
 export function backendProviderLabel(provider: BackendProviderId): string {
-  if (provider === 'render') return 'Render'
-  if (provider === 'huggingface') return 'Hugging Face'
-  return 'Leapcell'
+  if (provider === 'render') {
+    return 'Render (deprecated)'
+  }
+  return 'Hugging Face'
 }
 
 export type BackendProviderRuntimeConfig = {
   apiBase: string
-  apiBaseLeapcell: string
   apiBaseRender: string
   apiBaseHuggingface: string
 }
@@ -46,8 +63,5 @@ export function apiBaseForBackendProvider(
   if (provider === 'render') {
     return normalize(cfg.apiBaseRender) || normalize(cfg.apiBase)
   }
-  if (provider === 'huggingface') {
-    return normalize(cfg.apiBaseHuggingface) || normalize(cfg.apiBase)
-  }
-  return normalize(cfg.apiBaseLeapcell) || normalize(cfg.apiBase)
+  return normalize(cfg.apiBaseHuggingface) || normalize(cfg.apiBase)
 }
