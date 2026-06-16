@@ -1,4 +1,4 @@
-<!-- Zachowane dla kompatybilności — nawigacja jest w PanelPageLayout (PanelDashboardNav). -->
+<!-- Zachowane dla kompatybilności — boczna nawigacja w PanelPageLayout (PanelDashboardNav). -->
 <template>
   <span class="hidden" aria-hidden="true" />
 </template>

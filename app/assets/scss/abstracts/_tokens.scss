@@ -23,6 +23,7 @@ html[data-slavia-preset] {
   --slavia-surface-muted: color-mix(in oklab, var(--ui-bg-muted, var(--ui-bg-elevated)) 55%, transparent);
   /** Szerokość bocznej nawigacji modułów (desktop) */
   --slavia-panel-sidebar-width: 17.5rem;
+  --slavia-panel-sidebar-collapsed-width: 3.75rem;
   --slavia-accent-salmon: #f08070;
   --slavia-accent-coral: #ff9a8b;
   --slavia-accent-salmon-deep: #e06452;

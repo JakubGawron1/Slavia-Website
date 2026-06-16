@@ -4,7 +4,6 @@ import { getApiErrorMessage } from '~/composables/useApi'
 import DashboardHero from '~/components/dashboard/DashboardHero.vue'
 import DashboardUrgentList from '~/components/dashboard/DashboardUrgentList.vue'
 import DashboardMonthlySummary from '~/components/dashboard/DashboardMonthlySummary.vue'
-import type { DashboardModuleLink } from '~/utils/dashboardLink'
 
 definePageMeta({ middleware: 'admin' })
 
@@ -17,15 +16,6 @@ const auth = useAuth()
 const { isAccountView } = useDashboardAccountView()
 const { accountSettingsPath } = useRoleDashboardNav()
 const apiFetch = useApi()
-/** Sam administrator (bez osobnej roli trenera i bez SuperAdmin). */
-const isPureAdmin = computed(() => {
-  const r = auth.user.value?.roles ?? []
-  return r.includes('Admin')
-    && !r.includes('Trainer')
-    && !r.includes('SuperAdmin')
-})
-
-// Pobieranie podstawowych statystyk
 const { data: athletes } = await useAsyncData(
   'dashboard-athletes',
   async (): Promise<Athlete[]> => {
@@ -135,20 +125,7 @@ async function submitReview() {
   }
 }
 
-const { moduleGroupsForRole } = usePanelNavigationFlags()
-
 provideDashboardSections()
-
-const moduleGroups = computed((): { title: string, items: DashboardModuleLink[] }[] => {
-  const adminGroups = moduleGroupsForRole('admin')
-  if (isPureAdmin.value) return adminGroups
-
-  const trainerItems = moduleGroupsForRole('trainer').flatMap(g => g.items)
-  const trainerBlock = { title: 'Kadra trenera', items: trainerItems }
-  const [most, content, account] = adminGroups
-  if (!most || !content || !account) return adminGroups
-  return [most, content, trainerBlock, account].filter(g => g.items.length > 0)
-})
 
 const summaryMetrics = computed(() => [
   {
@@ -178,19 +155,6 @@ const summaryMetrics = computed(() => [
     to: '/klub/obecnosc'
   }
 ])
-
-function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral' {
-  const s = String(bg || '').toLowerCase()
-  if (s.includes('red')) return 'error'
-  if (s.includes('rose')) return 'error'
-  if (s.includes('orange')) return 'warning'
-  if (s.includes('amber') || s.includes('yellow')) return 'warning'
-  if (s.includes('fuchsia')) return 'primary'
-  if (s.includes('emerald') || s.includes('green') || s.includes('teal') || s.includes('lime')) return 'success'
-  if (s.includes('sky') || s.includes('cyan') || s.includes('blue') || s.includes('indigo')) return 'info'
-  if (s.includes('violet') || s.includes('purple') || s.includes('primary')) return 'primary'
-  return 'neutral'
-}
 
 </script>
 
@@ -241,20 +205,6 @@ function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 
       class="mt-6"
     >
       <KlubHubSection context="admin" />
-    </PanelCollapsibleSection>
-
-    <PanelCollapsibleSection
-      section-id="modules"
-      title="Moduły panelu"
-      icon="i-lucide-layout-grid"
-      :default-open="true"
-      embedded
-      class="mt-6"
-    >
-      <PanelModuleNav
-        :groups="moduleGroups"
-        :tone-from-bg="toneFromBg"
-      />
     </PanelCollapsibleSection>
 
     <PanelCollapsibleSection

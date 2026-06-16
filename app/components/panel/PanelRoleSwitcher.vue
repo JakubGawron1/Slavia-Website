@@ -1,4 +1,4 @@
-<!-- @deprecated Użyj PanelDashboardNav (automatycznie w PanelPageLayout). -->
+<!-- @deprecated Przełącznik ról jest w PanelDashboardNav (sidebar w PanelPageLayout). -->
 <script setup lang="ts">
 defineProps<{
   title?: string

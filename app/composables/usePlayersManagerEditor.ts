@@ -6,7 +6,7 @@ import {
   pzpcWeightClassLabels,
   type PzpcAgeGroupId
 } from '~/data/pzpcWeightCategories'
-import type { Competition, GroupedAdminAccounts, Player, UserRole } from '~/types/models'
+import type { GroupedAdminAccounts, Player, UserRole } from '~/types/models'
 import { useFormFieldScrollRestore } from '~/composables/useFormFieldScrollRestore'
 import { useFormDirtyGuard } from '~/composables/useFormDirtyGuard'
 import { buildUploadFormData } from '~/utils/uploadFormData'
@@ -72,9 +72,6 @@ export function usePlayersManagerEditor(options: {
   const standingOrderInitial = ref(false)
   const uploadLoading = ref(false)
   const legacyWeightCategoryRaw = ref('')
-  const competitionsCatalog = ref<Competition[]>([])
-  const assignedCompetitionIds = ref<string[]>([])
-  const assignmentsLoading = ref(false)
   const athleteAccountOptions = ref<{ label: string, value: string }[]>([])
   const athleteAccountSelected = ref<string>('')
   const athleteAccountSaving = ref(false)
@@ -93,7 +90,6 @@ export function usePlayersManagerEditor(options: {
 
   const dirtyGuard = useFormDirtyGuard(() => ({
     form: { ...form },
-    assignedCompetitionIds: [...assignedCompetitionIds.value],
     athleteAccountSelected: athleteAccountSelected.value
   }))
 
@@ -246,37 +242,13 @@ export function usePlayersManagerEditor(options: {
     }
   }
 
-  async function loadCompetitionsCatalog() {
-    try {
-      const rows = await api<Competition[]>(apiRoutes.competitions.collection)
-      competitionsCatalog.value = [...rows].sort((a, b) => a.date.localeCompare(b.date))
-    } catch {
-      competitionsCatalog.value = []
-    }
-  }
-
-  async function loadAthleteAssignments(athleteId: string) {
-    assignmentsLoading.value = true
-    try {
-      const mine = await api<Competition[]>(apiRoutes.athletes.competitions(athleteId))
-      assignedCompetitionIds.value = mine.map(c => c.id)
-    } catch {
-      assignedCompetitionIds.value = []
-    } finally {
-      assignmentsLoading.value = false
-    }
-  }
-
   watch(modalOpen, async (open) => {
     if (!open) return
     editorTab.value = 'profile'
     nextTick(scrollEditorSheetBodyTop)
-    await loadCompetitionsCatalog()
     if (editingId.value) {
       void refreshAthleteAccountCatalog()
-      await loadAthleteAssignments(editingId.value)
     } else {
-      assignedCompetitionIds.value = []
       athleteAccountSelected.value = ''
     }
     nextTick(() => dirtyGuard.captureBaseline())
@@ -287,7 +259,6 @@ export function usePlayersManagerEditor(options: {
     legacyWeightCategoryRaw.value = ''
     Object.assign(form, createEmptyPlayerForm())
     standingOrderInitial.value = false
-    assignedCompetitionIds.value = []
     athleteAccountSelected.value = ''
     dirtyGuard.resetBaseline()
   }
@@ -372,22 +343,6 @@ export function usePlayersManagerEditor(options: {
     }
   }
 
-  async function saveCompetitionAssignments(athleteId: string, wasEditing: boolean) {
-    if (!wasEditing && assignedCompetitionIds.value.length === 0) return
-    try {
-      await api(apiRoutes.athletes.competitions(athleteId), {
-        method: 'PUT',
-        body: { competition_ids: [...assignedCompetitionIds.value] }
-      })
-    } catch (e) {
-      toast.add({
-        title: 'Zapisano zawodnika — nie zapisano przypisań do zawodów',
-        description: getApiErrorMessage(e),
-        color: 'warning'
-      })
-    }
-  }
-
   async function savePlayer() {
     if (!form.full_name.trim()) {
       toast.add({ title: 'Uzupełnij nazwisko i imię', color: 'warning' })
@@ -447,8 +402,6 @@ export function usePlayersManagerEditor(options: {
           icon: 'i-lucide-check'
         })
       }
-
-      await saveCompetitionAssignments(athleteId, wasEditing)
 
       const standingOrderChanged = wasEditing
         ? form.has_standing_order !== standingOrderInitial.value
@@ -533,9 +486,6 @@ export function usePlayersManagerEditor(options: {
     pzpcWeightSelectItems,
     legacyWeightCategoryHint,
     currentYear,
-    competitionsCatalog,
-    assignedCompetitionIds,
-    assignmentsLoading,
     athleteAccountOptions,
     athleteAccountSelected,
     athleteAccountSaving,

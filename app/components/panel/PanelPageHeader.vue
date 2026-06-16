@@ -54,6 +54,24 @@ const rootClass = computed(() =>
     ? 'slavia-public-hero'
     : 'mb-5 sm:mb-6'
 )
+
+const sidebarNav = usePanelSidebarNav()
+
+watch(
+  () => props.breadcrumbs,
+  (items) => {
+    if (items?.length) {
+      sidebarNav.setBreadcrumbs(items)
+      return
+    }
+    sidebarNav.clearBreadcrumbs()
+  },
+  { immediate: true, deep: true }
+)
+
+onBeforeUnmount(() => {
+  sidebarNav.clearBreadcrumbs()
+})
 </script>
 
 <template>
@@ -62,7 +80,7 @@ const rootClass = computed(() =>
     :class="rootClass"
   >
     <PanelBreadcrumb
-      v-if="breadcrumbs?.length"
+      v-if="breadcrumbs?.length && !sidebarNav.showSidebarForRoute"
       :items="breadcrumbs"
     />
     <div class="relative flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">

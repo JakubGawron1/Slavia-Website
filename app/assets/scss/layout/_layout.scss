@@ -214,3 +214,71 @@ html[data-slavia-preset='glass'] .slavia-diary-compose__header {
     gap: 1rem;
   }
 }
+
+/** Przycisk przewijania na górę — wyśrodkowany na dole ekranu */
+.slavia-scroll-to-top {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  z-index: 50;
+  transform: translateX(-50%);
+  pointer-events: none;
+
+  @media (min-width: 640px) {
+    bottom: 2rem;
+  }
+
+  &--panel {
+    @media (min-width: 1024px) {
+      left: calc(
+        var(--slavia-panel-sidebar-width)
+        + (100vw - var(--slavia-panel-sidebar-width)) / 2
+      );
+    }
+
+    &.slavia-scroll-to-top--panel-collapsed {
+      @media (min-width: 1024px) {
+        left: calc(
+          var(--slavia-panel-sidebar-collapsed-width)
+          + (100vw - var(--slavia-panel-sidebar-collapsed-width)) / 2
+        );
+      }
+    }
+  }
+
+  &__button {
+    display: flex;
+    width: 2.75rem;
+    height: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 9999px;
+    background: var(--ui-primary);
+    color: #fff;
+    box-shadow: var(--slavia-shadow-md, 0 10px 15px -3px rgb(0 0 0 / 0.1));
+    cursor: pointer;
+    pointer-events: auto;
+    transition:
+      transform 0.15s ease,
+      background-color 0.15s ease;
+    box-shadow:
+      0 10px 15px -3px rgb(0 0 0 / 0.1),
+      0 0 0 2px color-mix(in oklab, var(--ui-primary) 30%, transparent);
+
+    @media (min-width: 640px) {
+      width: 3rem;
+      height: 3rem;
+    }
+
+    &:hover {
+      transform: scale(1.05);
+      background: color-mix(in oklab, var(--ui-primary) 90%, #000);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--ui-primary);
+      outline-offset: 2px;
+    }
+  }
+}
