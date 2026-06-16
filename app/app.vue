@@ -116,6 +116,8 @@ async function logout() {
 
 const showPublicAi = computed(() => !isSlaviaPrivateRoute(route.path))
 
+const { showSidebarForRoute, collapsed: panelSidebarCollapsed } = usePanelSidebarNav()
+
 const { items: notifications, refresh: refreshNotifications } = useNotifications()
 const unreadCount = computed(() => (notifications.value || []).filter(n => !n.is_read).length)
 
@@ -259,7 +261,11 @@ useHead({
         <NuxtPage />
       </UMain>
 
-      <ClubSiteFooter />
+      <ClubSiteFooter v-if="!showSidebarForRoute" />
+      <SlaviaScrollToTop
+        :panel="showSidebarForRoute"
+        :panel-sidebar-collapsed="panelSidebarCollapsed"
+      />
       <ClubPublicAiAssistant v-if="showPublicAi" />
       <CmsGlobalEditToggle />
       <CmsInlinePageBar />

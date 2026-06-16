@@ -18,6 +18,8 @@ const props = withDefaults(
   }
 )
 
+const { showSidebarForRoute, sidebarArea } = usePanelSidebarNav()
+
 const containerClass = computed(() => {
   const c: string[] = ['slavia-below-site-header', 'mx-auto', 'w-full', 'min-w-0']
   if (props.panel) c.push('slavia-panel-page')
@@ -32,7 +34,20 @@ const containerClass = computed(() => {
 </script>
 
 <template>
-  <UContainer :class="containerClass">
+  <PanelSidebarShell
+    v-if="showSidebarForRoute && sidebarArea"
+    :area="sidebarArea"
+  >
+    <UContainer :class="containerClass">
+      <div class="slavia-page-flow">
+        <slot />
+      </div>
+    </UContainer>
+  </PanelSidebarShell>
+  <UContainer
+    v-else
+    :class="containerClass"
+  >
     <div class="slavia-page-flow">
       <slot />
     </div>

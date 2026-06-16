@@ -73,6 +73,5 @@ const containerClass = computed(() => {
     >
       <slot />
     </div>
-    <SlaviaScrollToTop />
   </UContainer>
 </template>

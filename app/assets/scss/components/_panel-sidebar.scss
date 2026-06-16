@@ -1,0 +1,546 @@
+/** Boczny panel nawigacji panelu — design 3.0 */
+
+.slavia-panel-sidebar-shell {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+}
+
+.slavia-panel-sidebar-shell__main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.slavia-panel-sidebar-shell__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.slavia-panel-sidebar-shell__footer {
+  flex-shrink: 0;
+  margin-top: auto;
+}
+
+.slavia-panel-sidebar-shell__mobile-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem var(--slavia-page-gutter) 0;
+}
+
+.slavia-panel-sidebar-shell__backdrop {
+  position: fixed;
+  inset: var(--ui-header-height, 4rem) 0 0 0;
+  z-index: 44;
+  border: 0;
+  background: rgb(0 0 0 / 45%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.slavia-panel-sidebar-shell__backdrop--visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.slavia-panel-sidebar {
+  --slavia-panel-sidebar-collapsed-width: 3.75rem;
+  position: fixed;
+  top: var(--ui-header-height, 4rem);
+  left: 0;
+  z-index: 45;
+  display: flex;
+  width: min(var(--slavia-panel-sidebar-width), 88vw);
+  max-height: calc(100dvh - var(--ui-header-height, 4rem));
+  height: calc(100dvh - var(--ui-header-height, 4rem));
+  overflow: hidden;
+  transform: translateX(-105%);
+  transition:
+    transform 0.24s ease,
+    width 0.24s cubic-bezier(0.4, 0, 0.2, 1);
+  border-right: 1px solid color-mix(in srgb, var(--ui-border) 70%, transparent);
+  background: color-mix(in srgb, var(--slavia-surface-panel, var(--ui-bg-elevated)) 94%, transparent);
+  box-shadow: var(--slavia-elevation-card);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+@media (min-width: 1024px) {
+  .slavia-panel-sidebar {
+    position: sticky;
+    top: var(--ui-header-height, 4rem);
+    height: auto;
+    align-self: stretch;
+    max-height: calc(100dvh - var(--ui-header-height, 4rem));
+    flex-shrink: 0;
+    transform: none;
+  }
+
+  .slavia-panel-sidebar__inner {
+    min-height: 100%;
+  }
+
+  .slavia-panel-sidebar-shell__backdrop {
+    display: none;
+  }
+}
+
+.slavia-panel-sidebar--open {
+  transform: translateX(0);
+}
+
+.slavia-panel-sidebar--collapsed {
+  width: var(--slavia-panel-sidebar-collapsed-width);
+}
+
+.slavia-panel-sidebar__inner {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  max-height: inherit;
+  overflow: hidden;
+}
+
+.slavia-panel-sidebar__head {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.75rem 0.65rem 0.6rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--ui-border) 55%, transparent);
+  transition: padding 0.2s ease;
+}
+
+.slavia-panel-sidebar__head--collapsed {
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 0.35rem 0.5rem;
+}
+
+.slavia-panel-sidebar__brand {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 0.65rem;
+  border-radius: var(--slavia-radius-lg);
+  padding: 0.35rem 0.4rem;
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+}
+
+.slavia-panel-sidebar__brand--collapsed {
+  flex: none;
+  width: 100%;
+  justify-content: center;
+  padding: 0.2rem;
+}
+
+.slavia-panel-sidebar__brand:hover {
+  background: color-mix(in oklab, var(--ui-primary) 7%, transparent);
+}
+
+.slavia-panel-sidebar__brand-mark {
+  display: inline-flex;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  background: color-mix(in oklab, var(--ui-primary) 12%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ui-primary) 22%, transparent);
+}
+
+.slavia-panel-sidebar__brand-text {
+  min-width: 0;
+  overflow: hidden;
+  opacity: 1;
+  max-width: 10rem;
+  transition:
+    opacity 0.18s ease,
+    max-width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.slavia-panel-sidebar__brand-text--hidden {
+  max-width: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.slavia-panel-sidebar__collapse {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 0.65rem;
+  background: transparent;
+  color: var(--ui-text-muted);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.slavia-panel-sidebar__collapse:hover {
+  background: color-mix(in oklab, var(--ui-primary) 8%, transparent);
+  color: var(--ui-primary);
+}
+
+.slavia-panel-sidebar__collapse--desktop {
+  display: none;
+}
+
+.slavia-panel-sidebar__collapse--mobile {
+  display: inline-flex;
+}
+
+@media (min-width: 1024px) {
+  .slavia-panel-sidebar__collapse--desktop {
+    display: inline-flex;
+  }
+
+  .slavia-panel-sidebar__collapse--mobile {
+    display: none;
+  }
+
+  .slavia-panel-sidebar__head--collapsed .slavia-panel-sidebar__collapse--desktop {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.7rem;
+    background: color-mix(in oklab, var(--ui-bg-muted) 55%, transparent);
+  }
+}
+
+.slavia-panel-sidebar__nav {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-height: 0;
+  padding: 0.55rem 0.45rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  transition: padding 0.2s ease;
+}
+
+.slavia-panel-sidebar--collapsed .slavia-panel-sidebar__nav {
+  padding: 0.5rem 0.3rem;
+  align-items: center;
+}
+
+.slavia-panel-sidebar__foot {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.55rem 0.45rem 0.75rem;
+  border-top: 1px solid color-mix(in srgb, var(--ui-border) 55%, transparent);
+  transition: padding 0.2s ease;
+}
+
+.slavia-panel-sidebar--collapsed .slavia-panel-sidebar__foot {
+  padding: 0.5rem 0.3rem 0.65rem;
+  align-items: center;
+}
+
+.slavia-panel-sidebar__roles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.35rem;
+  width: 100%;
+}
+
+.slavia-panel-sidebar__roles--collapsed {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.slavia-panel-sidebar__role {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2rem;
+  border-radius: 0.7rem;
+  border: 1px solid transparent;
+  padding: 0.35rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--ui-text-muted);
+  text-decoration: none;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.slavia-panel-sidebar__role:hover {
+  border-color: color-mix(in oklab, var(--ui-primary) 20%, transparent);
+  background: color-mix(in oklab, var(--ui-primary) 6%, transparent);
+  color: var(--ui-text-highlighted);
+}
+
+.slavia-panel-sidebar__role--active {
+  border-color: color-mix(in oklab, var(--ui-primary) 30%, transparent);
+  background: color-mix(in oklab, var(--ui-primary) 12%, transparent);
+  color: var(--ui-primary);
+}
+
+.slavia-panel-sidebar__role--collapsed {
+  position: relative;
+  justify-content: center;
+  width: 2.25rem;
+  min-height: 2.25rem;
+  padding: 0;
+  border-radius: 0.7rem;
+}
+
+.slavia-panel-sidebar__role-label--hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.slavia-panel-sidebar__crumb {
+  min-width: 0;
+  width: 100%;
+  overflow: hidden;
+  max-height: 2.5rem;
+  opacity: 1;
+  transition:
+    opacity 0.18s ease,
+    max-height 0.22s ease,
+    margin 0.22s ease;
+}
+
+.slavia-panel-sidebar__crumb--collapsed {
+  max-height: 0;
+  opacity: 0;
+  margin: 0;
+  pointer-events: none;
+}
+
+.slavia-panel-sidebar__crumb-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0 0.15rem;
+  list-style: none;
+  font-size: 0.68rem;
+  line-height: 1.35;
+  color: var(--ui-text-muted);
+}
+
+.slavia-panel-sidebar__crumb-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.slavia-panel-sidebar__crumb-link {
+  font-weight: 600;
+  color: var(--ui-text-muted);
+  text-decoration: none;
+}
+
+.slavia-panel-sidebar__crumb-link:hover {
+  color: var(--ui-primary);
+}
+
+.slavia-panel-sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  min-height: 2.5rem;
+  border-radius: 0.8rem;
+  border: 1px solid transparent;
+  padding: 0.35rem 0.5rem;
+  text-decoration: none;
+  transition:
+    gap 0.2s ease,
+    padding 0.2s ease,
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.slavia-panel-sidebar-link:hover {
+  border-color: color-mix(in oklab, var(--ui-primary) 18%, transparent);
+  background: color-mix(in oklab, var(--ui-primary) 6%, transparent);
+}
+
+.slavia-panel-sidebar-link--active {
+  border-color: color-mix(in oklab, var(--ui-primary) 28%, transparent);
+  background: color-mix(in oklab, var(--ui-primary) 11%, transparent);
+  box-shadow: inset 3px 0 0 var(--ui-primary);
+}
+
+.slavia-panel-sidebar-link--collapsed {
+  justify-content: center;
+  gap: 0;
+  width: 2.5rem;
+  min-height: 2.5rem;
+  padding: 0;
+  margin-inline: auto;
+}
+
+.slavia-panel-sidebar-link--collapsed:hover {
+  background: transparent;
+  border-color: transparent;
+}
+
+.slavia-panel-sidebar-link--collapsed.slavia-panel-sidebar-link--active {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.slavia-panel-sidebar-link__icon {
+  display: inline-flex;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.7rem;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.slavia-panel-sidebar-link__icon--collapsed {
+  background: color-mix(in oklab, var(--ui-bg-muted) 75%, transparent);
+  color: var(--ui-text-muted);
+}
+
+.slavia-panel-sidebar-link:hover .slavia-panel-sidebar-link__icon--collapsed {
+  background: color-mix(in oklab, var(--ui-primary) 10%, var(--ui-bg-muted));
+  color: var(--ui-primary);
+}
+
+.slavia-panel-sidebar-link__icon--collapsed-active {
+  background: color-mix(in oklab, var(--ui-primary) 18%, transparent);
+  color: var(--ui-primary);
+  box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--ui-primary) 42%, transparent);
+}
+
+.slavia-panel-sidebar-link__label {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--ui-text-highlighted);
+  overflow: hidden;
+  white-space: nowrap;
+  opacity: 1;
+  max-width: 11rem;
+  transition:
+    opacity 0.18s ease,
+    max-width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.slavia-panel-sidebar-link__label--hidden {
+  max-width: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.slavia-panel-sidebar-link--active .slavia-panel-sidebar-link__label {
+  color: var(--ui-primary);
+}
+
+.slavia-panel-sidebar-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  border-radius: 0.9rem;
+  transition: background-color 0.15s ease;
+}
+
+.slavia-panel-sidebar-section--active:not(.slavia-panel-sidebar-section--collapsed) {
+  background: color-mix(in oklab, var(--ui-primary) 4%, transparent);
+}
+
+.slavia-panel-sidebar-section__toggle {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.35rem;
+  border: 0;
+  border-radius: 0.65rem;
+  padding: 0.4rem 0.45rem;
+  background: transparent;
+  color: var(--ui-text-muted);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.slavia-panel-sidebar-section__toggle:hover {
+  background: color-mix(in oklab, var(--ui-primary) 7%, transparent);
+  color: var(--ui-text-highlighted);
+}
+
+.slavia-panel-sidebar-section--active .slavia-panel-sidebar-section__toggle {
+  color: var(--ui-primary);
+}
+
+.slavia-panel-sidebar-section__title {
+  flex: 1;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.slavia-panel-sidebar-section__chevron {
+  opacity: 0.55;
+  transition: transform 0.2s ease, opacity 0.15s ease;
+}
+
+.slavia-panel-sidebar-section--open .slavia-panel-sidebar-section__chevron {
+  transform: rotate(0deg);
+  opacity: 0.85;
+}
+
+.slavia-panel-sidebar-section:not(.slavia-panel-sidebar-section--open) .slavia-panel-sidebar-section__chevron {
+  transform: rotate(-90deg);
+}
+
+.slavia-panel-sidebar-section__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  padding: 0 0.1rem 0.2rem 0.35rem;
+}
+
+.slavia-panel-sidebar-section__body--flat {
+  padding: 0;
+  gap: 0.12rem;
+}
+
+@media (min-width: 1024px) {
+  .slavia-panel-sidebar-shell__main .slavia-panel-page {
+    max-width: none;
+  }
+}

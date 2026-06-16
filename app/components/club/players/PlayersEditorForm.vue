@@ -25,9 +25,6 @@ const {
   detachAccountFromAthlete,
   editingPlayer,
   linkedAthleteAccountUsername,
-  competitionsCatalog,
-  assignedCompetitionIds,
-  assignmentsLoading,
   savePlayer
 } = usePlayersEditorContext()
 </script>
@@ -372,52 +369,6 @@ const {
             <p class="text-xs text-muted">
               Ten zawodnik ma już konto w systemie.
             </p>
-          </div>
-        </div>
-
-        <div class="rounded-xl border border-default/70 bg-muted/10 p-4 dark:bg-muted/5">
-          <p class="text-sm font-bold text-highlighted">
-            Przypisania do zawodów
-          </p>
-          <p class="mt-1 text-xs text-muted">
-            Zaznaczone pozycje trafiają do osobistego kalendarza zawodnika.
-          </p>
-          <div
-            v-if="assignmentsLoading"
-            class="mt-4 flex items-center gap-2 text-sm text-muted"
-          >
-            <UIcon
-              name="i-lucide-loader-2"
-              class="size-4 shrink-0 animate-spin"
-            />
-            Wczytywanie…
-          </div>
-          <div
-            v-else-if="!competitionsCatalog.length"
-            class="mt-3 text-xs text-muted"
-          >
-            Brak wpisów w kalendarzu — dodaj wydarzenie w zakładce Kalendarz.
-          </div>
-          <div
-            v-else
-            class="mt-4 max-h-52 space-y-2 overflow-y-auto pr-1"
-          >
-            <label
-              v-for="c in competitionsCatalog"
-              :key="c.id"
-              class="flex cursor-pointer items-start gap-3 rounded-lg border border-default/60 bg-background/80 px-3 py-2.5 transition-colors hover:border-primary/35 hover:bg-primary/5"
-            >
-              <input
-                v-model="assignedCompetitionIds"
-                type="checkbox"
-                :value="c.id"
-                class="mt-1 size-4 rounded border-default text-primary focus:ring-primary/40"
-              >
-              <span class="text-sm leading-snug">
-                <span class="font-semibold text-highlighted">{{ c.title }}</span>
-                <span class="block text-xs text-muted tabular-nums">{{ (c.date || '').slice(0, 10) }} · {{ c.location }}</span>
-              </span>
-            </label>
           </div>
         </div>
       </div>

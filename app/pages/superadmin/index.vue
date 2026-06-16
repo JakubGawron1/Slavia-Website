@@ -2,7 +2,6 @@
 import type { AthletePaymentOverviewRow } from '~/types/models'
 import DashboardHero from '~/components/dashboard/DashboardHero.vue'
 import DashboardMonthlySummary from '~/components/dashboard/DashboardMonthlySummary.vue'
-import { dashboardLink, type DashboardModuleLink } from '~/utils/dashboardLink'
 
 definePageMeta({ middleware: 'superadmin' })
 
@@ -17,6 +16,8 @@ const { accountSettingsPath } = useRoleDashboardNav()
 const apiFetch = useApi()
 
 // Pobieranie podstawowych statystyk
+const currentMonthStr = new Date().toISOString().slice(0, 7)
+
 const { data: athletes } = await useAsyncData('super-dashboard-athletes', () => apiFetch('/api/athletes/admin').catch(() => []))
 const { data: adminsGrouped } = await useAsyncData(
   'super-dashboard-admins-grouped',
@@ -27,13 +28,22 @@ const { data: adminsGrouped } = await useAsyncData(
       athletes: []
     }))
 )
-const { data: competitions } = await useAsyncData('super-dashboard-competitions', () => apiFetch('/api/competitions').catch(() => []))
-
-/** KPI Summary Data (Extended) */
-const currentMonthStr = new Date().toISOString().slice(0, 7)
 const { data: paymentsOverview } = await useAsyncData(
   'super-kpi-payments',
-  () => apiFetch<AthletePaymentOverviewRow[]>('/api/payments/overview?month=' + currentMonthStr).catch(() => [])
+  () => apiFetch<AthletePaymentOverviewRow[]>(`/api/payments/overview?month=${currentMonthStr}`).catch(() => [])
+)
+const { data: pendingResults } = await useAsyncData(
+  'super-dashboard-pending',
+  () => apiFetch<unknown[]>('/api/results/pending').catch(() => [])
+)
+const { data: recentAttendance } = await useAsyncData(
+  'super-kpi-attendance-recent',
+  () => {
+    const d = new Date()
+    d.setDate(d.getDate() - 30)
+    const from = d.toISOString().slice(0, 10)
+    return apiFetch<{ status: string }[]>(`/api/attendance?from_date=${from}`).catch(() => [])
+  }
 )
 
 const paidCount = computed(() => (paymentsOverview.value || []).filter(r => r.has_approved).length)
@@ -45,22 +55,8 @@ const paymentProgress = computed(() => {
 const paymentsPendingCount = computed(
   () => (paymentsOverview.value || []).filter((r: { has_approved?: boolean }) => !r.has_approved).length
 )
-const { data: pendingResults } = await useAsyncData(
-  'super-dashboard-pending',
-  () => apiFetch<unknown[]>('/api/results/pending').catch(() => [])
-)
 const pendingResultsCount = computed(() =>
   Array.isArray(pendingResults.value) ? pendingResults.value.length : 0
-)
-
-const { data: recentAttendance } = await useAsyncData(
-  'super-kpi-attendance-recent',
-  () => {
-    const d = new Date()
-    d.setDate(d.getDate() - 30)
-    const from = d.toISOString().slice(0, 10)
-    return apiFetch<{ status: string }[]>(`/api/attendance?from_date=${from}`).catch(() => [])
-  }
 )
 
 const avgAttendance = computed(() => {
@@ -79,65 +75,6 @@ const athletesCount = computed(() => {
 })
 const adminsCount = computed(() =>
   Array.isArray(adminsGrouped.value?.admins) ? adminsGrouped.value.admins.length : 0
-)
-const _competitionsCount = computed(() => Array.isArray(competitions.value) ? competitions.value.length : 0)
-
-const SUPERADMIN_MODULE_GROUPS: { title: string, items: DashboardModuleLink[] }[] = [
-  {
-    title: 'System i bezpieczeństwo',
-    items: [
-      dashboardLink('Konta i role', 'Administratorzy, trenerzy, zawodnicy', 'i-lucide-shield-alert', '/superadmin/zawodnicy?tab=accounts', 'text-red-500', 'bg-red-500/10'),
-      dashboardLink('Logi systemowe', 'Audyt operacji', 'i-lucide-history', '/superadmin/audit-logs', 'text-primary', 'bg-primary/10'),
-      dashboardLink('Podgląd roli', 'Symulator read-only jako inne konto', 'i-lucide-eye', '/superadmin/podglad-roli', 'text-amber-600', 'bg-amber-500/10'),
-      dashboardLink('Workery cron', 'Zadania w tle', 'i-lucide-timer', '/superadmin/workers', 'text-fuchsia-500', 'bg-fuchsia-500/10'),
-      dashboardLink('Narzędzia developera', 'Diagnostyka API i PWA', 'i-lucide-terminal', '/superadmin/developer', 'text-violet-500', 'bg-violet-500/10'),
-      dashboardLink('Nawigacja paneli', 'Widoczność modułów ról', 'i-lucide-layout-grid', '/superadmin/nawigacja-paneli', 'text-sky-500', 'bg-sky-500/10'),
-      dashboardLink('Import danych', 'Federacje i CSV', 'i-lucide-file-up', '/superadmin/import', 'text-cyan-600', 'bg-cyan-500/10'),
-      dashboardLink('Baza zawodników', 'Pełna edycja profili', 'i-lucide-users', '/superadmin/zawodnicy', 'text-blue-500', 'bg-blue-500/10'),
-      dashboardLink('Barbell Lab', 'Eksperymenty wizji', 'i-lucide-beaker', '/superadmin/barbell-lab', 'text-pink-500', 'bg-pink-500/10')
-    ]
-  },
-  {
-    title: 'Administracja treści',
-    items: [
-      dashboardLink('Zespół i konta', 'Zawodnicy + logowania', 'i-lucide-users-round', '/superadmin/zawodnicy', 'text-rose-500', 'bg-rose-500/10'),
-      dashboardLink('Wiadomości (kontakt)', 'Formularz publiczny', 'i-lucide-mail', '/admin/kontakt-wiadomosci', 'text-info', 'bg-info/12'),
-      dashboardLink('Changelog', 'Historia wydań', 'i-lucide-file-text', '/admin/changelog', 'text-success', 'bg-success/12'),
-      dashboardLink('Aktualności', 'Wpisy klubu', 'i-lucide-newspaper', '/aktualnosci', 'text-orange-500', 'bg-orange-500/10'),
-      dashboardLink('Ogłoszenia', 'Tablica klubu', 'i-lucide-megaphone', '/ogloszenia', 'text-violet-500', 'bg-violet-500/10'),
-      dashboardLink('Galeria', 'Zdjęcia na stronie', 'i-lucide-images', '/galeria', 'text-pink-500', 'bg-pink-500/10'),
-      dashboardLink('Kalendarz', 'Wydarzenia klubu', 'i-lucide-calendar', '/kalendarz', 'text-purple-500', 'bg-purple-500/10')
-    ]
-  },
-  {
-    title: 'Kadra trenera',
-    items: [
-      dashboardLink('Starty zawodników', 'Lista startów', 'i-lucide-list-checks', '/trainer/wyniki', 'text-teal-500', 'bg-teal-500/10'),
-      dashboardLink('Składki', 'Zatwierdzanie wpłat', 'i-lucide-banknote', '/trainer/skladki', 'text-green-600', 'bg-green-500/10'),
-      dashboardLink('Obecności', 'Weryfikacja', 'i-lucide-user-check', '/klub/obecnosc', 'text-indigo-600', 'bg-indigo-500/10'),
-      dashboardLink('Dzienniki', 'Wpisy treningowe', 'i-lucide-book-marked', '/trainer/dziennik', 'text-cyan-600', 'bg-cyan-500/10'),
-      dashboardLink('Plany', 'Monitoring progresu', 'i-lucide-clipboard-list', '/trainer/plany', 'text-emerald-600', 'bg-emerald-500/10'),
-      dashboardLink('Regeneracja', 'Check-in zawodników', 'i-lucide-heart-pulse', '/trainer/regeneracja', 'text-rose-600', 'bg-rose-500/10'),
-      dashboardLink('Inne ćwiczenia', 'Ranking, weryfikacja i słownik', 'i-lucide-bar-chart-3', '/trainer/cwiczenia', 'text-lime-600', 'bg-lime-500/10'),
-      dashboardLink('Analiza sztangi', 'Wideo i diagnostyka', 'i-lucide-scan-line', '/trainer/analiza-sztangi', 'text-orange-500', 'bg-orange-500/10'),
-      dashboardLink('Monitoring', 'Metryki kadry', 'i-lucide-activity', '/trainer/monitoring', 'text-sky-600', 'bg-sky-500/10'),
-      dashboardLink('Czat', 'Wiadomości 1:1', 'i-lucide-messages-square', '/klub/czat', 'text-info', 'bg-info/12')
-    ]
-  },
-  {
-    title: 'Klub publiczny i konto',
-    items: [
-      dashboardLink('Ranking zawodników', 'Wyniki publiczne', 'i-lucide-trophy', '/zawodnicy', 'text-yellow-600', 'bg-yellow-500/10'),
-      dashboardLink('Wyzwania miesiąca', 'Aktywność', 'i-lucide-flame', '/klub/wyzwania', 'text-orange-600', 'bg-orange-500/10'),
-      dashboardLink('Powiadomienia', 'Alerty', 'i-lucide-bell', '/klub/powiadomienia', 'text-amber-600', 'bg-amber-500/10'),
-      dashboardLink('Proporcje', 'Kalkulator bojów', 'i-lucide-sigma', '/kalkulator-proporcji', 'text-success', 'bg-success/12'),
-    ]
-  }
-]
-
-const cms = useCms()
-const moduleGroups = computed(() =>
-  cmsNavGroupsFromItems('superadmin', cms.navigation.value, SUPERADMIN_MODULE_GROUPS)
 )
 
 provideDashboardSections()
@@ -176,18 +113,6 @@ const summaryMetrics = computed(() => [
   }
 ])
 
-function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral' {
-  const s = String(bg || '').toLowerCase()
-  if (s.includes('red')) return 'error'
-  if (s.includes('rose')) return 'error'
-  if (s.includes('orange')) return 'warning'
-  if (s.includes('amber') || s.includes('yellow')) return 'warning'
-  if (s.includes('fuchsia')) return 'primary'
-  if (s.includes('emerald') || s.includes('green') || s.includes('teal') || s.includes('lime')) return 'success'
-  if (s.includes('sky') || s.includes('cyan') || s.includes('blue') || s.includes('indigo')) return 'info'
-  if (s.includes('violet') || s.includes('purple') || s.includes('primary')) return 'primary'
-  return 'neutral'
-}
 </script>
 
 <template>
@@ -255,20 +180,6 @@ function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 
       class="mt-6"
     >
       <KlubHubSection context="superadmin" />
-    </PanelCollapsibleSection>
-
-    <PanelCollapsibleSection
-      section-id="modules"
-      title="Moduły panelu"
-      icon="i-lucide-layout-grid"
-      :default-open="true"
-      embedded
-      class="mt-6"
-    >
-      <PanelModuleNav
-        :groups="moduleGroups"
-        :tone-from-bg="toneFromBg"
-      />
     </PanelCollapsibleSection>
     </template>
   </PanelPageLayout>

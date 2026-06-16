@@ -39,7 +39,6 @@ const { data: pendingPayments, refresh: refreshPendingPayments } = await useAsyn
   async (): Promise<PendingPaymentRow[]> =>
     apiFetch<PendingPaymentRow[]>(apiRoutes.payments.pending).catch(() => [])
 )
-const { data: competitions } = await useAsyncData('trainer-competitions', () => apiFetch('/api/competitions').catch(() => []))
 
 const toast = useToast()
 
@@ -121,27 +120,8 @@ const athletesCount = computed(() => {
 })
 const pendingCount = computed(() => (Array.isArray(pendingResults.value) ? pendingResults.value.length : 0))
 const pendingPaymentsCount = computed(() => (Array.isArray(pendingPayments.value) ? pendingPayments.value.length : 0))
-const _competitionsCount = computed(() => (Array.isArray(competitions.value) ? competitions.value.length : 0))
-
-const { moduleGroupsForRole } = usePanelNavigationFlags()
-const moduleGroups = computed(() => moduleGroupsForRole('trainer'))
 
 provideDashboardSections()
-
-function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral' {
-  const s = String(bg || '').toLowerCase()
-  if (s.includes('red')) return 'error'
-  if (s.includes('rose')) return 'error'
-  if (s.includes('orange')) return 'warning'
-  if (s.includes('amber') || s.includes('yellow')) return 'warning'
-  if (s.includes('fuchsia')) return 'primary'
-  if (s.includes('emerald') || s.includes('green') || s.includes('teal') || s.includes('lime')) return 'success'
-  if (s.includes('sky') || s.includes('cyan') || s.includes('blue') || s.includes('indigo')) return 'info'
-  if (s.includes('violet') || s.includes('purple') || s.includes('primary')) return 'primary'
-  return 'neutral'
-}
-
-// [2002] Review modal state
 const reviewModalOpen = ref(false)
 const reviewingId = ref('')
 const reviewMode = ref<'approve' | 'reject'>('approve')
@@ -334,20 +314,6 @@ async function rejectPayment(id: string) {
           </UButton>
         </template>
       </UAlert>
-    </PanelCollapsibleSection>
-
-    <PanelCollapsibleSection
-      section-id="modules"
-      title="Moduły panelu"
-      icon="i-lucide-layout-grid"
-      :default-open="true"
-      embedded
-      class="mt-6"
-    >
-      <PanelModuleNav
-        :groups="moduleGroups"
-        :tone-from-bg="toneFromBg"
-      />
     </PanelCollapsibleSection>
 
     <PanelCollapsibleSection
