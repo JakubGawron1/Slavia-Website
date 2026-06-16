@@ -48,7 +48,7 @@ export async function proxyPublicBackendGet(
   if (isLocalApiBase(base) && (process.env.VERCEL || isPrerenderPass())) {
     if (isPrerenderPass()) {
       console.warn(
-        `[public-api] Prerender: pominięto ${apiPath} — ustaw NUXT_PUBLIC_API_BASE_URL_LEAPCELL lub _RENDER na Vercel.`
+        `[public-api] Prerender: pominięto ${apiPath} — ustaw NUXT_PUBLIC_API_BASE_URL_LEAPCELL, _RENDER lub _HUGGINGFACE na Vercel.`
       )
     }
     return emptyPublicApiFallback(apiPath)

@@ -17,6 +17,11 @@ import {
 import { getApiDetailedErrorMessage, getApiErrorMessage } from '~/composables/useApi'
 import { apiRoutes } from '~/config/api'
 import type { CompetitionResult } from '~/types/models'
+import {
+  backendProviderLabel,
+  isBackendProviderId,
+  type BackendProviderId
+} from '~/utils/backendProviderTypes'
 
 import type { DeveloperPageContext } from '~/composables/developer/types'
 import { buildAutoRouteGroups, routeChipLabel } from '~/composables/developer/routeMapUtils'
@@ -361,7 +366,7 @@ const devLinkGroupsCombined = computed(() => {
 const apiPingMs = ref<number | null>(null)
 const backendProviderSaving = ref(false)
 const backendProviderServerUpdatedAt = ref<string | null>(null)
-const selectedBackendProvider = ref<'leapcell' | 'render'>(backendProvider.activeProvider.value)
+const selectedBackendProvider = ref<BackendProviderId>(backendProvider.activeProvider.value)
 const activeBackendProvider = computed(() => backendProvider.activeProvider.value)
 const activeBackendApiBase = computed(() => backendProvider.activeApiBase.value)
 const isLocalBackend = computed(() => {
@@ -394,11 +399,11 @@ onMounted(() => {
   void refreshVercelCacheStatus()
   void refreshAiPublicStatus()
   void refreshAiCoachStatus()
-  void $fetch<{ active_provider: 'leapcell' | 'render', updated_at?: string | null }>('/api/system/backend-provider', {
+  void $fetch<{ active_provider: BackendProviderId, updated_at?: string | null }>('/api/system/backend-provider', {
     headers: auth.token.value ? { Authorization: `Bearer ${auth.token.value}` } : undefined
   })
     .then((res) => {
-      if (res.active_provider === 'leapcell' || res.active_provider === 'render') {
+      if (isBackendProviderId(res.active_provider)) {
         backendProvider.setActiveProvider(res.active_provider)
         selectedBackendProvider.value = res.active_provider
       }
@@ -808,10 +813,10 @@ async function pingApiLatency() {
 
 async function refreshBackendProviderSetting() {
   try {
-    const res = await $fetch<{ active_provider: 'leapcell' | 'render', updated_at?: string | null }>('/api/system/backend-provider', {
+    const res = await $fetch<{ active_provider: BackendProviderId, updated_at?: string | null }>('/api/system/backend-provider', {
       headers: auth.token.value ? { Authorization: `Bearer ${auth.token.value}` } : undefined
     })
-    if (res.active_provider === 'leapcell' || res.active_provider === 'render') {
+    if (isBackendProviderId(res.active_provider)) {
       backendProvider.setActiveProvider(res.active_provider)
       selectedBackendProvider.value = res.active_provider
     }
@@ -825,7 +830,7 @@ async function refreshBackendProviderSetting() {
 async function saveBackendProviderSetting() {
   backendProviderSaving.value = true
   try {
-    const res = await $fetch<{ active_provider: 'leapcell' | 'render', updated_at?: string | null }>('/api/system/backend-provider', {
+    const res = await $fetch<{ active_provider: BackendProviderId, updated_at?: string | null }>('/api/system/backend-provider', {
       method: 'PATCH',
       headers: auth.token.value ? { Authorization: `Bearer ${auth.token.value}` } : undefined,
       body: { active_provider: selectedBackendProvider.value }
@@ -842,7 +847,7 @@ async function saveBackendProviderSetting() {
       apiBase: backendProvider.activeApiBase.value
     })
     toast.add({
-      title: `Ustawiono backend: ${res.active_provider === 'render' ? 'Render' : 'Leapcell'}`,
+      title: `Ustawiono backend: ${backendProviderLabel(res.active_provider)}`,
       description: `Aktywny URL backendu: ${backendProvider.activeApiBase.value}`,
       color: 'success'
     })

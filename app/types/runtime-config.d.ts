@@ -4,6 +4,7 @@ declare module 'nuxt/schema' {
     apiBase: string
     apiBaseLeapcell: string
     apiBaseRender: string
+    apiBaseHuggingface: string
     siteUrl: string
     /** Z `package.json` → `version`, z prefiksem `v` (build-time), np. `v3.0.0-dev`. */
     appVersion: string
