@@ -19,6 +19,7 @@ import { apiRoutes } from '~/config/api'
 import type { CompetitionResult } from '~/types/models'
 import {
   backendProviderLabel,
+  isBackendProviderDeprecated,
   isBackendProviderId,
   type BackendProviderId
 } from '~/utils/backendProviderTypes'
@@ -848,8 +849,10 @@ async function saveBackendProviderSetting() {
     })
     toast.add({
       title: `Ustawiono backend: ${backendProviderLabel(res.active_provider)}`,
-      description: `Aktywny URL backendu: ${backendProvider.activeApiBase.value}`,
-      color: 'success'
+      description: isBackendProviderDeprecated(res.active_provider)
+        ? `Render jest deprecated — rozważ Hugging Face. URL: ${backendProvider.activeApiBase.value}`
+        : `Aktywny URL backendu: ${backendProvider.activeApiBase.value}`,
+      color: isBackendProviderDeprecated(res.active_provider) ? 'warning' : 'success'
     })
   } catch (e) {
     const detail = getApiDetailedErrorMessage(e)

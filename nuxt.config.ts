@@ -29,8 +29,6 @@ const isProd = process.env.NODE_ENV === 'production'
 
 const buildApiBase = resolveBuildTimeApiBase()
 
-const buildApiLeapcell = (process.env.NUXT_PUBLIC_API_BASE_URL_LEAPCELL || buildApiBase).replace(/\/$/, '')
-
 const buildApiRender = (process.env.NUXT_PUBLIC_API_BASE_URL_RENDER || buildApiBase).replace(/\/$/, '')
 
 const buildApiHuggingface = (process.env.NUXT_PUBLIC_API_BASE_URL_HUGGINGFACE || buildApiBase).replace(/\/$/, '')
@@ -405,8 +403,6 @@ export default defineNuxtConfig({
     public: {
 
       apiBase: buildApiBase,
-
-      apiBaseLeapcell: buildApiLeapcell,
 
       apiBaseRender: buildApiRender,
 

@@ -18,12 +18,11 @@ function normalizeBase(url: string | undefined): string {
 
 export function useBackendProvider() {
   const config = useRuntimeConfig()
-  const activeProvider = useState<BackendProvider>(BACKEND_PROVIDER_STATE_KEY, () => 'leapcell')
+  const activeProvider = useState<BackendProvider>(BACKEND_PROVIDER_STATE_KEY, () => 'huggingface')
   const hydrated = useState<boolean>(BACKEND_PROVIDER_HYDRATED_STATE_KEY, () => false)
 
   const providerConfig = computed(() => ({
     apiBase: normalizeBase(config.public.apiBase),
-    apiBaseLeapcell: normalizeBase(config.public.apiBaseLeapcell),
     apiBaseRender: normalizeBase(config.public.apiBaseRender),
     apiBaseHuggingface: normalizeBase(config.public.apiBaseHuggingface)
   }))
@@ -37,7 +36,6 @@ export function useBackendProvider() {
   function setActiveProvider(provider: BackendProvider) {
     activeProvider.value = provider
     if (import.meta.client) {
-      // Jedno źródło prawdy: provider -> activeApiBase.
       console.info('[backend-provider] switched', {
         provider,
         apiBase: resolveApiBase(provider)
@@ -56,8 +54,7 @@ export function useBackendProvider() {
         activeProvider.value = res.active_provider
       }
     } catch {
-      // Fallback do ustawień lokalnych builda, gdy endpoint kontrolny chwilowo niedostępny.
-      activeProvider.value = 'leapcell'
+      activeProvider.value = 'huggingface'
     } finally {
       hydrated.value = true
     }

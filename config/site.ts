@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import { backendProviderFromEnv } from '../app/utils/backendProviderTypes'
 
 export function readPackageJsonVersion(): string {
   const path = fileURLToPath(new URL('../package.json', import.meta.url))
@@ -30,19 +31,16 @@ function isLocalhostApiUrl(url: string): boolean {
   return !u || u.includes('127.0.0.1') || u.includes('localhost')
 }
 
-/** Lokalny dev: honoruj .env (localhost:8080 OK). Na Vercel: publiczny URL Leapcell / Render / Hugging Face. */
+/** Lokalny dev: honoruj .env (localhost:8080 OK). Na Vercel: Hugging Face (domyślnie) lub Render. */
 export function resolveBuildTimeApiBase(): string {
   const explicit = (process.env.NUXT_PUBLIC_API_BASE_URL || '').trim()
-  const leapcell = (process.env.NUXT_PUBLIC_API_BASE_URL_LEAPCELL || explicit || '').trim()
   const render = (process.env.NUXT_PUBLIC_API_BASE_URL_RENDER || explicit || '').trim()
   const huggingface = (process.env.NUXT_PUBLIC_API_BASE_URL_HUGGINGFACE || explicit || '').trim()
-  const provider = (process.env.DEFAULT_BACKEND_PROVIDER || 'leapcell').toLowerCase()
+  const provider = backendProviderFromEnv()
 
   const ordered = provider === 'render'
-    ? [render, leapcell, huggingface, explicit]
-    : provider === 'huggingface' || provider === 'hf'
-      ? [huggingface, leapcell, render, explicit]
-      : [leapcell, render, huggingface, explicit]
+    ? [render, huggingface, explicit]
+    : [huggingface, render, explicit]
 
   if (!process.env.VERCEL) {
     for (const candidate of ordered) {

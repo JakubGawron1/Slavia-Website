@@ -1,5 +1,6 @@
 import {
   type BackendProviderId as BackendProvider,
+  isVercelPreviewRuntime,
   normalizeBackendProvider
 } from '~/utils/backendProviderTypes'
 
@@ -105,6 +106,9 @@ async function writeToVercelBlob(provider: BackendProvider): Promise<boolean> {
 }
 
 export async function getGlobalBackendProvider(): Promise<BackendProvider> {
+  if (isVercelPreviewRuntime()) {
+    return 'huggingface'
+  }
   const netlify = await readFromNetlify()
   if (netlify) return netlify
   const vercel = await readFromVercelBlob()
