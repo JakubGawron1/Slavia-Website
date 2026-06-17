@@ -618,7 +618,7 @@ function athletePrefetchHandlers(id?: string | null) {
     <!-- Full Athlete List Section -->
     <section
       v-if="mappedPlayers.length > 0"
-      class="slavia-content-well slavia-public-section mb-10 sm:mb-12"
+      class="slavia-public-section slavia-page-bleed mb-10 sm:mb-12"
     >
       <PublicSectionHead
         eyebrow="Kadra"
@@ -641,14 +641,14 @@ function athletePrefetchHandlers(id?: string | null) {
 
     <section
       v-else-if="bundlePending"
-      class="slavia-content-well slavia-public-section mb-10 sm:mb-12"
+      class="slavia-public-section slavia-page-bleed mb-10 sm:mb-12"
     >
       <PublicSectionHead
         eyebrow="Kadra"
         title="Karty zawodników"
         lead="Ładowanie profili zawodników…"
       />
-      <div class="slavia-public-grid slavia-public-grid--2">
+      <div class="slavia-public-grid slavia-public-grid--stagger">
         <div
           v-for="i in 6"
           :key="`player-skel-${i}`"

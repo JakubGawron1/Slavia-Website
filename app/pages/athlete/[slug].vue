@@ -155,6 +155,18 @@ const nameInitials = computed(() => {
     .join('')
 })
 
+const profileTagline = computed(() => athlete.value?.profile_tagline?.trim() || '')
+const publicBioText = computed(() => athlete.value?.public_bio?.trim() || '')
+const heroDescription = computed(() => {
+  if (profileTagline.value) return profileTagline.value
+  return ''
+})
+const showBioSection = computed(() => {
+  const bio = publicBioText.value
+  const tagline = profileTagline.value
+  return !!(bio && (!tagline || bio !== tagline))
+})
+
 const resumeShareUrl = computed(() => `${requestUrlState.origin}${route.path}?share=1`)
 
 async function copyResumeShareLink() {
@@ -174,197 +186,182 @@ async function copyResumeShareLink() {
 function printAthleteResume() {
   if (import.meta.client) window.print()
 }
+
+const profileMoreActions = computed(() => {
+  if (approvedResults.value.length === 0) return []
+  const items = [
+    { label: 'Kopiuj link (media)', icon: 'i-lucide-share-2', onSelect: () => copyResumeShareLink() }
+  ]
+  if (shareLite.value) {
+    items.push({ label: 'Drukuj', icon: 'i-lucide-printer', onSelect: async () => { printAthleteResume() } })
+  }
+  return [items]
+})
 </script>
 
 <template>
   <PublicPageLayout padding="flush" :ambient="false">
-    <!-- ========== HERO MAGAZINE ========== -->
-    <section class="relative overflow-hidden border-b border-default/60">
-      <div
-        v-if="athlete!.image_url"
-        class="pointer-events-none absolute inset-0 -z-10 opacity-25 saturate-150"
-        :style="{
-          backgroundImage: `url(${athlete!.image_url})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          filter: 'blur(48px)'
-        }"
-      />
-      <div
-        class="pointer-events-none absolute inset-0 -z-10 bg-linear-to-b from-background/50 via-background/85 to-background"
-      />
-      <div
-        class="pointer-events-none absolute inset-0 -z-10"
-        style="background-image: radial-gradient(ellipse at top left, rgb(34 197 94 / 0.12), transparent 55%), radial-gradient(ellipse at bottom right, rgb(14 165 233 / 0.08), transparent 55%);"
-      />
-
-      <div class="relative pt-8 pb-10 sm:pt-10 sm:pb-14 lg:pt-14 lg:pb-20">
+    <section class="border-b border-default/60">
+      <div class="py-5 sm:py-7">
         <PublicPageHeader
           back-to="/zawodnicy"
           back-label="Lista zawodników"
-          eyebrow="Profil zawodnika"
-          class="!mb-6 !flex-col !items-start !gap-2 md:!mb-8"
+          class="mb-4 sm:mb-5"
         />
 
-        <div class="grid gap-8 lg:grid-cols-[minmax(0,18rem)_1fr] lg:gap-12">
-          <!-- AVATAR / FOTO -->
-          <div class="relative mx-auto w-full max-w-[18rem] lg:mx-0">
-            <div class="absolute -inset-3 rounded-4xl bg-linear-to-br from-primary/40 via-primary/10 to-info/18 opacity-60 blur-2xl" />
-            <div class="relative aspect-4/5 overflow-hidden rounded-3xl border border-white/10 bg-slate-950 shadow-2xl shadow-primary/15 ring-1 ring-primary/15">
+        <article class="slavia-page-card overflow-hidden">
+          <div class="flex flex-col sm:flex-row">
+            <div class="relative mx-auto w-full max-w-xs shrink-0 bg-muted/20 sm:mx-0 sm:max-w-[11.5rem] md:max-w-[13rem]">
               <img
                 v-if="athlete!.image_url"
                 :src="athlete!.image_url"
                 :alt="`Zdjęcie ${athlete!.full_name}`"
-                class="h-full w-full object-cover"
+                class="aspect-4/5 w-full object-cover sm:aspect-auto sm:h-full sm:min-h-52"
               >
               <div
                 v-else
-                class="flex h-full w-full items-center justify-center bg-linear-to-br from-primary/30 via-primary/10 to-neutral-900"
+                class="flex aspect-4/5 w-full items-center justify-center bg-muted/30 sm:aspect-auto sm:min-h-52"
               >
-                <span class="font-display text-7xl font-black tracking-tight text-white/85">
+                <span class="font-display text-5xl font-black text-muted/50">
                   {{ nameInitials || '—' }}
                 </span>
               </div>
-              <div class="absolute inset-x-0 bottom-0 flex items-end gap-2 bg-linear-to-t from-black/85 via-black/40 to-transparent p-4">
-                <span class="rounded-full bg-primary/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg">
-                  CKS Slavia
-                </span>
-                <span
+            </div>
+
+            <div class="flex min-w-0 flex-1 flex-col p-5 sm:p-6">
+              <div class="flex flex-wrap items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <p class="text-[11px] font-semibold uppercase tracking-wide text-muted">
+                    CKS Slavia Ruda Śląska
+                  </p>
+                  <h1 class="mt-1 text-2xl font-black leading-tight tracking-tight text-highlighted sm:text-3xl">
+                    {{ athlete!.full_name }}
+                  </h1>
+                </div>
+                <UBadge
                   v-if="athlete && athlete.is_active === false"
-                  class="rounded-full bg-warning/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg"
+                  color="warning"
+                  variant="subtle"
+                  size="sm"
                 >
                   Nieaktywny
-                </span>
-                <span
+                </UBadge>
+                <UBadge
                   v-else
-                  class="rounded-full bg-success/95 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg"
+                  color="success"
+                  variant="subtle"
+                  size="sm"
                 >
                   Aktywny
-                </span>
+                </UBadge>
+              </div>
+
+              <dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-2.5 text-sm sm:grid-cols-3 lg:grid-cols-4">
+                <div v-if="athlete!.weight_category">
+                  <dt class="text-[10px] font-bold uppercase tracking-wide text-muted">
+                    Kategoria
+                  </dt>
+                  <dd class="mt-0.5 font-semibold text-highlighted">
+                    {{ athlete!.weight_category }}
+                  </dd>
+                </div>
+                <div v-if="athlete!.bodyweight != null">
+                  <dt class="text-[10px] font-bold uppercase tracking-wide text-muted">
+                    Waga
+                  </dt>
+                  <dd class="mt-0.5 font-mono font-semibold text-highlighted">
+                    {{ athlete!.bodyweight }} kg
+                  </dd>
+                </div>
+                <div v-if="genderLabel(athlete!.gender)">
+                  <dt class="text-[10px] font-bold uppercase tracking-wide text-muted">
+                    Płeć
+                  </dt>
+                  <dd class="mt-0.5 font-semibold text-highlighted">
+                    {{ genderLabel(athlete!.gender) }}
+                  </dd>
+                </div>
+                <div v-if="athlete!.birth_year">
+                  <dt class="text-[10px] font-bold uppercase tracking-wide text-muted">
+                    Rocznik
+                  </dt>
+                  <dd class="mt-0.5 font-semibold text-highlighted">
+                    {{ athlete!.birth_year }}
+                  </dd>
+                </div>
+                <div v-if="publicStats.totalStarts > 0">
+                  <dt class="text-[10px] font-bold uppercase tracking-wide text-muted">
+                    Starty
+                  </dt>
+                  <dd class="mt-0.5 font-semibold text-highlighted">
+                    {{ publicStats.totalStarts }}
+                  </dd>
+                </div>
+              </dl>
+
+              <p
+                v-if="heroDescription"
+                class="mt-4 text-sm leading-relaxed text-muted"
+              >
+                {{ heroDescription }}
+              </p>
+
+              <UAlert
+                v-if="athlete && athlete.is_active === false"
+                class="mt-4"
+                color="warning"
+                variant="subtle"
+                icon="i-lucide-user-x"
+                title="Profil w archiwum kadry"
+                description="Dane historyczne pozostają dostępne — zawodnik nie jest na liście aktywnej kadry."
+              />
+
+              <div class="mt-5 flex flex-wrap items-center gap-2">
+                <UButton
+                  v-if="canEditAthlete && athleteId"
+                  :to="`/trainer/zawodnicy?edit=${encodeURIComponent(String(athleteId))}`"
+                  color="primary"
+                  size="sm"
+                  icon="i-lucide-pencil"
+                >
+                  Edytuj profil
+                </UButton>
+                <UButton
+                  v-if="approvedResults.length > 0"
+                  to="#progres"
+                  variant="soft"
+                  color="primary"
+                  size="sm"
+                  icon="i-lucide-trending-up"
+                >
+                  Progres
+                </UButton>
+                <UButton
+                  v-if="approvedResults.length > 0"
+                  to="#historia-startow"
+                  variant="ghost"
+                  color="neutral"
+                  size="sm"
+                  icon="i-lucide-list"
+                >
+                  Historia
+                </UButton>
+                <UDropdownMenu
+                  v-if="profileMoreActions.length > 0"
+                  :items="profileMoreActions"
+                >
+                  <UButton
+                    variant="ghost"
+                    color="neutral"
+                    size="sm"
+                    icon="i-lucide-ellipsis"
+                    aria-label="Więcej akcji"
+                  />
+                </UDropdownMenu>
               </div>
             </div>
           </div>
-
-          <!-- INFO -->
-          <div class="flex flex-col justify-end">
-            <p class="text-[11px] font-bold uppercase tracking-[0.3em] text-primary">
-              Profil zawodnika
-            </p>
-            <h1 class="mt-3 text-4xl font-black leading-[1.05] tracking-tight text-highlighted sm:text-5xl lg:text-6xl">
-              {{ athlete!.full_name }}
-            </h1>
-            <p
-              v-if="athlete!.profile_tagline?.trim()"
-              class="mt-3 text-lg font-semibold text-primary/90 sm:text-xl"
-            >
-              {{ athlete!.profile_tagline!.trim() }}
-            </p>
-
-            <!-- Badges szybkich faktów -->
-            <div class="mt-5 flex flex-wrap items-center gap-2 text-xs">
-              <span
-                v-if="athlete!.weight_category"
-                class="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 font-semibold text-primary"
-              >
-                <UIcon name="i-lucide-scale" class="size-3.5" />
-                {{ athlete!.weight_category }}
-              </span>
-              <span
-                v-if="athlete!.bodyweight != null"
-                class="inline-flex items-center gap-1.5 rounded-full border border-default/60 bg-muted/10 px-3 py-1.5 font-mono font-semibold text-highlighted"
-              >
-                <UIcon name="i-lucide-weight" class="size-3.5 text-muted" />
-                {{ athlete!.bodyweight }} kg
-              </span>
-              <span
-                v-if="genderLabel(athlete!.gender)"
-                class="inline-flex items-center gap-1.5 rounded-full border border-default/60 bg-muted/10 px-3 py-1.5 font-semibold text-muted"
-              >
-                <UIcon
-                  :name="athlete!.gender === 'female' ? 'i-lucide-venus' : 'i-lucide-mars'"
-                  class="size-3.5"
-                />
-                {{ genderLabel(athlete!.gender) }}
-              </span>
-              <span
-                v-if="athlete!.birth_year"
-                class="inline-flex items-center gap-1.5 rounded-full border border-default/60 bg-muted/10 px-3 py-1.5 font-semibold text-muted"
-              >
-                <UIcon name="i-lucide-cake" class="size-3.5" />
-                rocznik {{ athlete!.birth_year }}
-              </span>
-              <span
-                v-if="publicStats.totalStarts > 0"
-                class="inline-flex items-center gap-1.5 rounded-full border border-success/40 bg-success/10 px-3 py-1.5 font-semibold text-success dark:text-success"
-              >
-                <UIcon name="i-lucide-medal" class="size-3.5" />
-                {{ publicStats.totalStarts }} {{ publicStats.totalStarts === 1 ? 'start' : 'startów' }}
-              </span>
-            </div>
-
-            <UAlert
-              v-if="athlete && athlete.is_active === false"
-              class="mt-5 max-w-2xl"
-              color="warning"
-              variant="subtle"
-              icon="i-lucide-user-x"
-              title="Profil nieaktywny w kadrze"
-              description="Ten zawodnik jest oznaczony jako nieaktywny — zwykle oznacza to przerwę w treningach lub archiwizację profilu. Dane historyczne pozostają widoczne."
-            />
-
-            <p class="mt-5 max-w-3xl text-base leading-relaxed text-muted">
-              {{ profileHeroBio }}
-            </p>
-
-            <!-- CTA -->
-            <div class="mt-7 flex flex-wrap gap-2">
-              <UButton
-                v-if="canEditAthlete && athleteId"
-                :to="`/trainer/zawodnicy?edit=${encodeURIComponent(String(athleteId))}`"
-                color="primary"
-                icon="i-lucide-pencil"
-              >
-                Edytuj profil
-              </UButton>
-              <UButton
-                v-if="approvedResults.length > 0"
-                to="#progres"
-                variant="soft"
-                color="primary"
-                icon="i-lucide-trending-up"
-              >
-                Zobacz progres
-              </UButton>
-              <UButton
-                v-if="approvedResults.length > 0"
-                to="#historia-startow"
-                variant="ghost"
-                color="neutral"
-                icon="i-lucide-list"
-              >
-                Historia startów
-              </UButton>
-              <UButton
-                v-if="approvedResults.length > 0"
-                variant="outline"
-                color="neutral"
-                icon="i-lucide-share-2"
-                @click="copyResumeShareLink"
-              >
-                Link (media / sponsor)
-              </UButton>
-              <UButton
-                v-if="shareLite && approvedResults.length > 0"
-                variant="soft"
-                color="primary"
-                icon="i-lucide-printer"
-                @click="printAthleteResume"
-              >
-                Drukuj
-              </UButton>
-            </div>
-          </div>
-        </div>
+        </article>
       </div>
     </section>
 
@@ -498,19 +495,15 @@ function printAthleteResume() {
     <div class="slavia-content-well space-y-12 py-8 sm:py-10 lg:space-y-16 lg:py-12">
         <!-- ========== BIO PULL-QUOTE ========== -->
         <section
-          v-if="athlete!.public_bio?.trim()"
+          v-if="showBioSection"
           class="slavia-public-section relative"
         >
-          <div class="slavia-page-card relative mx-auto max-w-4xl p-6 sm:p-10">
-            <UIcon
-              name="i-lucide-quote"
-              class="absolute -top-4 left-6 size-10 rounded-full bg-primary p-2 text-white shadow-md"
-            />
+          <div class="slavia-page-card relative mx-auto max-w-4xl p-6 sm:p-8">
             <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-primary">
               O zawodniku
             </p>
-            <p class="mt-3 whitespace-pre-wrap text-lg leading-relaxed text-highlighted/95 sm:text-xl">
-              {{ athlete!.public_bio!.trim() }}
+            <p class="mt-3 whitespace-pre-wrap text-base leading-relaxed text-highlighted/95">
+              {{ publicBioText }}
             </p>
           </div>
         </section>

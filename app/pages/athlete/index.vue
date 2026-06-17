@@ -134,11 +134,11 @@ const pageHeading = computed(() => {
 })
 const pageLead = computed(() => {
   if (isAthletePortalAsSuperAdminOnly.value) {
-    return 'Superadmin ma dostęp do całej aplikacji — tutaj widzisz widok jak dla konta z rolą zawodnika (jeśli masz powiązany profil zawodnika w bazie).'
+    return 'Podgląd strefy zawodnika dla superadmina.'
   }
   return isAthleteRole.value
-    ? 'To jest Twój osobisty panel. Tutaj możesz śledzić swoje postępy, wyniki z zawodów oraz zarządzać swoim profilem.'
-    : 'Ustawienia konta (e-mail, hasło, zdjęcie). Funkcje zawodnicze są dostępne tylko dla kont z rolą zawodnika.'
+    ? 'Składka, starty, kalendarz i moduły — wszystko w jednym miejscu.'
+    : 'Ustawienia konta. Funkcje zawodnicze wymagają roli zawodnika.'
 })
 const heroBadges = computed(() => {
   const label = auth.rolesDisplayShort.value
@@ -385,8 +385,7 @@ const athleteQuickActions = computed(() => {
     { label: 'Kalendarz', to: '/athlete/kalendarz', icon: 'i-lucide-calendar-days' },
     { label: 'Dziennik', to: '/athlete/dziennik', icon: 'i-lucide-book-marked' },
     { label: 'Plany', to: '/athlete/plany', icon: 'i-lucide-clipboard-list' },
-    { label: 'Czat', to: '/klub/czat', icon: 'i-lucide-messages-square' },
-    { label: 'Regeneracja', to: '/athlete/regeneracja', icon: 'i-lucide-heart-pulse' }
+    { label: 'Czat', to: '/klub/czat', icon: 'i-lucide-messages-square' }
   ]
   if (isAthleteRole.value) {
     actions.splice(1, 0, { label: 'Składka', to: '/athlete/skladki', icon: 'i-lucide-banknote' })
@@ -417,93 +416,311 @@ provideDashboardSections()
         :badges="heroBadges"
         :actions="[
           { label: 'Ustawienia', to: accountSettingsPath, icon: 'i-lucide-user-cog', variant: 'outline' },
-          { label: 'Starty', to: '/athlete/wyniki', icon: 'i-lucide-trophy', color: 'primary' },
-          ...(isAthleteRole ? [{ label: 'Składka', to: '/athlete/skladki', icon: 'i-lucide-banknote', color: 'primary' as const }] : [])
+          { label: 'Moje starty', to: '/athlete/wyniki', icon: 'i-lucide-trophy', color: 'primary' }
         ]"
       />
-    </PanelCollapsibleSection>
-
-    <PanelCollapsibleSection
-      v-if="auth.canAccessAthletePortal && athlete"
-      section-id="quick-actions"
-      title="Szybkie akcje"
-      icon="i-lucide-zap"
-      :default-open="true"
-      embedded
-    >
       <DashboardQuickActions
-        class="slavia-quick-actions--wide"
+        v-if="auth.canAccessAthletePortal && athlete"
+        class="slavia-quick-actions--wide mt-4"
         :items="athleteQuickActions"
+        aria-label="Skróty do modułów"
       />
-    </PanelCollapsibleSection>
-
-    <DashboardSectionsToolbar />
-
-    <PanelCollapsibleSection
-      v-if="showArchivedAthleteNote"
-      section-id="archived-note"
-      title="Profil w archiwum"
-      icon="i-lucide-ghost"
-      :default-open="true"
-      class="mb-6"
-    >
-    <UAlert
-      class="rounded-2xl"
-      color="warning"
-      variant="subtle"
-      icon="i-lucide-ghost"
-      title="Gratulacje — oficjalnie jesteś eksponatem"
-      description="Kadra włożyła Cię do archiwum jak winyl, którego nikt już nie puszcza: na liście zawodników Cię nie ma, za to możesz podziwiać siebie w muzeum nieaktywnych legend. Panel nadal działa — historia startów nie ginie, nawet gdy kolana już dawno o tym zapomniały. Ale sztanga się nie podnosi sama i nikt nie wraca do formy przez scrollowanie archiwum. Jak masz dość bycia reliktem — wpadnij na trening albo napisz trenerowi. Chętnie Cię ściągną z półki."
-    >
-      <template #actions>
-        <UButton
-          to="/klub/czat"
-          size="xs"
-          color="primary"
-          variant="soft"
-          icon="i-lucide-messages-square"
-        >
-          Napisz do trenera
-        </UButton>
-        <UButton
-          to="/zawodnicy/archiwum"
-          size="xs"
-          color="neutral"
-          variant="ghost"
-          icon="i-lucide-archive"
-        >
-          Twoje miejsce w archiwum
-        </UButton>
-      </template>
-    </UAlert>
-    </PanelCollapsibleSection>
-
-    <PanelCollapsibleSection
-      v-if="showPre10PaymentBanner && paymentStatus"
-      section-id="payment-reminder"
-      title="Przypomnienie o składce"
-      icon="i-lucide-banknote"
-      :default-open="true"
-      class="mb-6"
-    >
-    <UAlert
-      color="warning"
-      variant="subtle"
-      title="Zbliża się termin składki (10. dzień miesiąca)"
-      :description="`Nie masz jeszcze zatwierdzonej wpłaty za ${paymentStatus.month}. Zgłoś przelew w składkach — przypomnienie wyłączysz w ustawieniach konta na dole panelu.`"
-    />
     </PanelCollapsibleSection>
 
     <PanelCollapsibleSection
       v-if="auth.canAccessAthletePortal && athlete"
       section-id="badges"
-      class="mb-6"
       title="Osiągnięcia"
       icon="i-lucide-award"
-      badge="Badges"
       :default-open="true"
+      class="mt-4"
     >
       <AthleteBadges :athlete="athlete" :present-count="attendanceSummary?.present_count || 0" />
+    </PanelCollapsibleSection>
+
+    <div
+      v-if="auth.canAccessAthletePortal && athlete"
+      class="mt-4 space-y-3"
+    >
+      <UAlert
+        v-if="showArchivedAthleteNote"
+        class="rounded-2xl"
+        color="warning"
+        variant="subtle"
+        icon="i-lucide-ghost"
+        title="Profil w archiwum kadry"
+        description="Nie jesteś na liście aktywnej kadry, ale historia startów pozostaje dostępna. Napisz trenerowi, jeśli wracasz do treningów."
+      >
+        <template #actions>
+          <UButton to="/klub/czat" size="xs" color="primary" variant="soft" icon="i-lucide-messages-square">
+            Napisz do trenera
+          </UButton>
+        </template>
+      </UAlert>
+
+      <UAlert
+        v-if="showOverduePaymentAlert && paymentStatus"
+        color="error"
+        variant="subtle"
+        icon="i-lucide-alert-triangle"
+        :title="`Zaległa składka — ${paymentStatus.month}`"
+        description="Termin płatności minął 10. dnia miesiąca. Zgłoś przelew w module składek."
+      >
+        <template #actions>
+          <UButton to="/athlete/skladki" size="sm" color="error" variant="soft">
+            Zgłoś płatność
+          </UButton>
+        </template>
+      </UAlert>
+
+      <UAlert
+        v-else-if="showPre10PaymentBanner && paymentStatus"
+        color="warning"
+        variant="subtle"
+        icon="i-lucide-banknote"
+        title="Zbliża się termin składki"
+        :description="`Brak zatwierdzonej wpłaty za ${paymentStatus.month}. Zgłoś przelew do 10. dnia miesiąca.`"
+      >
+        <template #actions>
+          <UButton to="/athlete/skladki" size="sm" color="warning" variant="soft">
+            Składki
+          </UButton>
+        </template>
+      </UAlert>
+    </div>
+
+    <DashboardSectionsToolbar class="mt-4" />
+
+    <PanelCollapsibleSection
+      v-if="auth.canAccessAthletePortal && athlete"
+      section-id="overview"
+      title="Dziś i ten miesiąc"
+      icon="i-lucide-gauge"
+      :default-open="true"
+      class="mt-4"
+    >
+      <div class="space-y-4">
+        <DashboardWeekPreview
+          v-if="isAthleteRole"
+          :entry="nearestCalendarEntry"
+          :days-until="daysUntilNearest"
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
+          <DashboardKpiCard
+            size="compact"
+            label="Składka"
+            :value="paymentKpi.value"
+            icon="i-lucide-banknote"
+            :tone="paymentKpi.tone"
+            :hint="paymentKpi.hint"
+            to="/athlete/skladki"
+          />
+          <DashboardKpiCard
+            size="compact"
+            label="Frekwencja"
+            :value="attendanceSummary ? `${attendanceSummary.attendance_percent}%` : '—'"
+            icon="i-lucide-user-check"
+            :tone="attendanceSummary ? 'primary' : 'info'"
+            :hint="attendanceSummary ? `${attendanceSummary.present_count} obecności · ${attendanceSummary.absent_count} nieob.` : null"
+            to="/klub/obecnosc"
+          />
+          <DashboardKpiCard
+            size="compact"
+            label="Wyniki oczek."
+            :value="myPendingResultsCount"
+            icon="i-lucide-clipboard-clock"
+            :tone="myPendingResultsCount ? 'warning' : 'info'"
+            to="/athlete/wyniki"
+          />
+        </div>
+        <ClubVotingWidget />
+      </div>
+    </PanelCollapsibleSection>
+
+    <PanelCollapsibleSection
+      v-if="preStartEntry"
+      section-id="prestart"
+      class="mt-4"
+      title="Lista przed startem"
+      icon="i-lucide-check-square"
+      :badge="daysUntilNearest === 0 ? 'Dzisiaj' : 'Jutro'"
+      :default-open="true"
+    >
+      <div class="rounded-xl border border-warning/40 bg-warning/6 p-4">
+        <p class="mb-3 text-sm text-muted">
+          <span class="font-semibold text-highlighted">{{ preStartEntry.competition?.title }}</span>
+          · {{ preStartEntry.competition?.date?.slice(0, 10) }}
+          · {{ preStartEntry.competition?.location ?? '—' }}
+          <span class="ms-2 text-xs">({{ checklistDoneCount }}/{{ checklistTotal }})</span>
+        </p>
+        <div class="mb-3 h-1.5 w-full overflow-hidden rounded-full bg-default/40">
+          <div
+            class="h-full rounded-full bg-warning transition-all duration-500"
+            :style="{ width: `${Math.round((checklistDoneCount / checklistTotal) * 100)}%` }"
+          />
+        </div>
+        <div class="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+          <label
+            v-for="item in checklistItems"
+            :key="item.id"
+            class="flex cursor-pointer items-center gap-2.5 rounded-lg border border-default/50 bg-card px-3 py-2 transition-colors hover:border-warning/35"
+            @click="toggleChecklistItem(item.id)"
+          >
+            <div
+              class="flex size-4 shrink-0 items-center justify-center rounded border-2 transition-all"
+              :class="item.checked ? 'border-warning bg-warning/20 text-warning' : 'border-default/60'"
+            >
+              <UIcon v-if="item.checked" name="i-lucide-check" class="size-2.5" />
+            </div>
+            <span class="text-sm" :class="item.checked ? 'text-muted line-through' : 'text-highlighted'">
+              {{ item.label }}
+            </span>
+          </label>
+        </div>
+      </div>
+    </PanelCollapsibleSection>
+
+    <PanelCollapsibleSection
+      v-if="auth.canAccessAthletePortal && athlete"
+      section-id="modules"
+      title="Moduły panelu"
+      icon="i-lucide-layout-grid"
+      :default-open="true"
+      embedded
+      class="mt-4"
+    >
+      <PanelModuleNav
+        :groups="athleteModuleGroups"
+        :tone-from-bg="toneFromIconBg"
+      />
+    </PanelCollapsibleSection>
+
+    <PanelCollapsibleSection
+      v-if="auth.canAccessAthletePortal && athlete"
+      section-id="klub-hub"
+      title="Strefa klubu"
+      icon="i-lucide-users"
+      :default-open="false"
+      embedded
+      class="mt-4"
+    >
+      <KlubHubSection context="athlete" />
+    </PanelCollapsibleSection>
+
+    <PanelCollapsibleSection
+      v-if="auth.canAccessAthletePortal && athlete && isAthleteRole"
+      section-id="season-goal"
+      class="mt-4"
+      title="Cel sezonu"
+      icon="i-lucide-target"
+      :default-open="false"
+    >
+      <div class="rounded-xl border border-default/50 bg-muted/10 p-4">
+        <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <p class="text-sm text-muted">
+            Śledź postęp względem najlepszego zatwierdzonego wyniku.
+          </p>
+          <div class="flex gap-1">
+            <UButton
+              v-if="seasonGoal && !goalEditing"
+              size="xs"
+              variant="ghost"
+              icon="i-lucide-pencil"
+              @click="goalEditing = true"
+            >
+              Edytuj
+            </UButton>
+            <UButton
+              v-if="seasonGoal"
+              size="xs"
+              variant="ghost"
+              color="error"
+              icon="i-lucide-trash-2"
+              @click="clearGoal"
+            >
+              Usuń
+            </UButton>
+          </div>
+        </div>
+
+        <template v-if="seasonGoal && !goalEditing">
+          <div class="mb-2 flex items-end justify-between gap-2">
+            <div>
+              <p class="text-[10px] font-bold uppercase tracking-widest text-muted">
+                {{ seasonGoal.mode === 'total' ? 'Total' : 'Sinclair (szac.)' }}
+              </p>
+              <div class="mt-1 flex items-end gap-1">
+                <span class="text-2xl font-black tabular-nums text-highlighted">{{ goalCurrentValue }}</span>
+                <span class="mb-0.5 text-sm font-semibold text-muted">/ {{ seasonGoal.target }} kg</span>
+              </div>
+            </div>
+            <span class="text-xl font-black tabular-nums" :class="goalProgress >= 100 ? 'text-success' : 'text-primary'">
+              {{ goalProgress }}%
+            </span>
+          </div>
+          <div class="h-2 w-full overflow-hidden rounded-full bg-default/40">
+            <div
+              class="h-full rounded-full transition-all duration-700"
+              :class="goalProgress >= 100 ? 'bg-success' : 'bg-primary'"
+              :style="{ width: `${goalProgress}%` }"
+            />
+          </div>
+        </template>
+
+        <template v-else>
+          <div class="flex flex-wrap items-end gap-3">
+            <UFormField label="Typ celu">
+              <USelect
+                v-model="goalMode"
+                :items="[{ label: 'Total (kg)', value: 'total' }, { label: 'Sinclair (szac.)', value: 'sinclair' }]"
+                class="w-40"
+              />
+            </UFormField>
+            <UFormField label="Cel (kg)">
+              <UInputNumber
+                v-model="goalTarget"
+                :min="1"
+                :step="1"
+                placeholder="np. 250"
+                class="w-28"
+              />
+            </UFormField>
+            <UButton color="success" size="sm" icon="i-lucide-check" @click="saveGoal">
+              Zapisz
+            </UButton>
+            <UButton v-if="seasonGoal" variant="ghost" color="neutral" size="sm" @click="goalEditing = false">
+              Anuluj
+            </UButton>
+          </div>
+        </template>
+      </div>
+    </PanelCollapsibleSection>
+
+    <PanelCollapsibleSection
+      v-if="latestRelease"
+      section-id="mobile-app"
+      class="mt-4"
+      title="Aplikacja mobilna"
+      icon="i-lucide-smartphone"
+      :badge="latestRelease.version"
+      :default-open="false"
+    >
+      <div class="flex flex-col gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div class="min-w-0">
+          <p class="font-semibold text-highlighted">Aplikacja na Androida</p>
+          <p class="text-sm text-muted">Wyniki i obecność w telefonie.</p>
+          <UBadge size="sm" variant="soft" color="primary" class="mt-1 font-mono">{{ latestRelease.version }}</UBadge>
+        </div>
+        <UButton
+          :to="latestRelease.download_url"
+          target="_blank"
+          color="primary"
+          trailing-icon="i-lucide-download"
+          class="shrink-0"
+        >
+          Pobierz APK
+        </UButton>
+      </div>
     </PanelCollapsibleSection>
 
     <SlaviaModal
@@ -516,13 +733,13 @@ provideDashboardSections()
         <div class="space-y-4 p-4 sm:p-5">
           <ol class="list-decimal space-y-3 ps-5 text-sm text-muted">
             <li>
-              <strong class="text-highlighted">Składka</strong> — zgłoś przelew do 10. dnia miesiąca; przy przelewie stałym system tworzy wpisy automatycznie.
+              <strong class="text-highlighted">Składka</strong> — zgłoś przelew do 10. dnia miesiąca.
             </li>
             <li>
-              <strong class="text-highlighted">Kalendarz</strong> — sprawdzaj przypisane starty i treningi klubowe.
+              <strong class="text-highlighted">Kalendarz</strong> — starty i treningi klubowe.
             </li>
             <li>
-              <strong class="text-highlighted">Wynik</strong> — możesz zgłosić start lub trening; kadra zatwierdza wpis w systemie.
+              <strong class="text-highlighted">Wyniki</strong> — zgłaszaj starty; kadra zatwierdza wpisy.
             </li>
           </ol>
           <div class="flex justify-end border-t border-default/60 pt-3">
@@ -534,336 +751,18 @@ provideDashboardSections()
       </template>
     </SlaviaModal>
 
-    <PanelCollapsibleSection
-      v-if="auth.canAccessAthletePortal && athlete"
-      section-id="overview"
-      title="Twój przegląd"
-      icon="i-lucide-gauge"
-      :default-open="true"
-      class="mt-6"
-    >
-    <div class="space-y-4">
-      <DashboardWeekPreview
-        v-if="isAthleteRole"
-        :entry="nearestCalendarEntry"
-        :days-until="daysUntilNearest"
-      />
-      <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
-        <DashboardKpiCard
-          size="compact"
-          label="Składka"
-          :value="paymentKpi.value"
-          icon="i-lucide-banknote"
-          :tone="paymentKpi.tone"
-          :hint="paymentKpi.hint"
-          to="/athlete/skladki"
-        />
-        <DashboardKpiCard
-          size="compact"
-          label="Frekwencja"
-          :value="attendanceSummary ? `${attendanceSummary.attendance_percent}%` : '—'"
-          icon="i-lucide-user-check"
-          :tone="attendanceSummary ? 'primary' : 'info'"
-          :hint="attendanceSummary ? `${attendanceSummary.present_count} obecności · ${attendanceSummary.absent_count} nieob.` : null"
-          to="/klub/obecnosc"
-        />
-        <DashboardKpiCard
-          size="compact"
-          label="Wyniki oczek."
-          :value="myPendingResultsCount"
-          icon="i-lucide-clipboard-clock"
-          :tone="myPendingResultsCount ? 'warning' : 'info'"
-          to="/athlete/wyniki"
-        />
-      </div>
-      <ClubVotingWidget />
-
-      <KlubHubSection context="athlete" class="mt-4" />
-    </div>
-    </PanelCollapsibleSection>
-
-    <PanelCollapsibleSection
-      v-if="showOverduePaymentAlert && paymentStatus"
-      section-id="payment-overdue"
-      title="Zaległa składka"
-      icon="i-lucide-alert-triangle"
-      :default-open="true"
-      class="mt-6"
-    >
-    <div>
-      <div class="relative overflow-hidden rounded-2xl border-2 border-error/60 bg-error/8 px-5 py-4 shadow-md shadow-error/10 sm:flex sm:items-center sm:justify-between sm:gap-4">
-        <div class="pointer-events-none absolute -right-10 -top-10 size-40 rounded-full bg-error/15 blur-3xl" />
-        <div class="flex items-start gap-3">
-          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-error/20 text-error ring-1 ring-error/30 shadow-inner mt-0.5">
-            <UIcon name="i-lucide-alert-triangle" class="size-5" />
-          </div>
-          <div class="min-w-0">
-            <p class="text-sm font-black text-error sm:text-base">
-              Zaległa składka — {{ paymentStatus.month }}
-            </p>
-            <p class="mt-0.5 text-sm text-muted">
-              Nie masz zatwierdzonej wpłaty za ten miesiąc. Termin płatności minął 10. dnia miesiąca.
-            </p>
-          </div>
-        </div>
-        <UButton
-          to="/athlete/skladki"
-          color="error"
-          size="sm"
-          trailing-icon="i-lucide-arrow-right"
-          class="mt-3 shrink-0 sm:mt-0"
-        >
-          Zgłoś płatność
-        </UButton>
-      </div>
-    </div>
-    </PanelCollapsibleSection>
-
-    <PanelCollapsibleSection
-      v-if="preStartEntry"
-      section-id="prestart"
-      class="mt-6"
-      title="Lista przed startem"
-      icon="i-lucide-check-square"
-      :badge="daysUntilNearest === 0 ? 'Dzisiaj' : 'Jutro'"
-      :default-open="true"
-    >
-      <div class="relative overflow-hidden rounded-2xl border border-warning/50 bg-warning/8 p-5 shadow-sm">
-        <div class="pointer-events-none absolute -right-8 -top-8 size-32 rounded-full bg-warning/20 blur-3xl" />
-        <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <div class="flex items-center gap-2">
-            <UIcon name="i-lucide-check-square" class="size-5 text-warning" />
-            <h2 class="text-lg font-black text-highlighted">Lista kontrolna przed startem</h2>
-            <UBadge color="warning" variant="soft" size="sm">
-              {{ daysUntilNearest === 0 ? 'Dzisiaj!' : 'Jutro!' }}
-            </UBadge>
-          </div>
-          <div class="text-sm text-muted font-medium">
-            {{ checklistDoneCount }} / {{ checklistTotal }} gotowe
-          </div>
-        </div>
-        <p class="mb-4 text-sm text-muted">
-          <span class="font-semibold text-highlighted">{{ preStartEntry.competition?.title }}</span>
-          · {{ preStartEntry.competition?.date?.slice(0,10) }}
-          · {{ preStartEntry.competition?.location ?? '—' }}
-        </p>
-        <!-- Progress bar -->
-        <div class="mb-4 h-2 w-full overflow-hidden rounded-full bg-default/40">
-          <div
-            class="h-full rounded-full bg-warning transition-all duration-500"
-            :style="{ width: `${Math.round((checklistDoneCount / checklistTotal) * 100)}%` }"
-          />
-        </div>
-        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <label
-            v-for="item in checklistItems"
-            :key="item.id"
-            class="flex cursor-pointer items-center gap-3 rounded-xl border border-default/60 bg-card px-3 py-2.5 transition-colors hover:border-warning/40 hover:bg-warning/5"
-            @click="toggleChecklistItem(item.id)"
-          >
-            <div
-              class="flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition-all"
-              :class="item.checked ? 'border-warning bg-warning/20 text-warning' : 'border-default/60'"
-            >
-              <UIcon v-if="item.checked" name="i-lucide-check" class="size-3" />
-            </div>
-            <span class="text-sm" :class="item.checked ? 'text-muted line-through' : 'text-highlighted'">
-              {{ item.label }}
-            </span>
-          </label>
-        </div>
-        <p v-if="checklistDoneCount === checklistTotal" class="mt-4 text-center text-sm font-bold text-warning">
-          ✓ Wszystko gotowe — powodzenia na starcie!
-        </p>
-      </div>
-    </PanelCollapsibleSection>
-
-    <PanelCollapsibleSection
-      v-if="auth.canAccessAthletePortal && athlete && isAthleteRole"
-      section-id="season-goal"
-      class="mt-6"
-      title="Cel sezonu"
-      icon="i-lucide-target"
-      badge="Opcjonalnie"
-    >
-      <div class="rounded-xl border border-default/50 bg-muted/10 p-4 sm:p-5">
-        <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <div class="flex items-center gap-2">
-            <UIcon name="i-lucide-target" class="size-5 text-success" />
-            <h2 class="text-lg font-black text-highlighted">Cel sezonu</h2>
-          </div>
-          <div class="flex gap-2">
-            <UButton
-              v-if="seasonGoal && !goalEditing"
-              size="xs"
-              variant="ghost"
-              icon="i-lucide-pencil"
-              @click="goalEditing = true"
-            >Edytuj</UButton>
-            <UButton
-              v-if="seasonGoal"
-              size="xs"
-              variant="ghost"
-              color="error"
-              icon="i-lucide-trash-2"
-              @click="clearGoal"
-            >Usuń</UButton>
-          </div>
-        </div>
-
-        <!-- Display mode -->
-        <template v-if="seasonGoal && !goalEditing">
-          <div class="mb-2 flex items-end justify-between gap-2">
-            <div>
-              <p class="text-xs font-bold uppercase tracking-widest text-muted">
-                {{ seasonGoal.mode === 'total' ? 'Total (dwubój)' : 'Sinclair (szacunkowy)' }}
-              </p>
-              <div class="mt-1 flex items-end gap-1.5">
-                <span class="text-4xl font-black tabular-nums text-highlighted">{{ goalCurrentValue }}</span>
-                <span class="mb-1 text-lg font-bold text-muted">&nbsp;/&nbsp;{{ seasonGoal.target }} kg</span>
-              </div>
-            </div>
-            <div class="text-right">
-              <span class="text-3xl font-black tabular-nums" :class="goalProgress >= 100 ? 'text-success' : 'text-primary'">
-                {{ goalProgress }}%
-              </span>
-            </div>
-          </div>
-          <div class="h-3 w-full overflow-hidden rounded-full bg-default/40">
-            <div
-              class="h-full rounded-full transition-all duration-700"
-              :class="goalProgress >= 100 ? 'bg-success' : 'bg-primary'"
-              :style="{ width: `${goalProgress}%` }"
-            />
-          </div>
-          <p v-if="goalProgress >= 100" class="mt-2 text-sm font-bold text-success">
-            🎉 Cel osiągnięty! Czas podbić poprzeczkę.
-          </p>
-          <p v-else-if="goalCurrentValue === 0" class="mt-2 text-sm text-muted">
-            Brak zatwierdzonego wyniku do porównania. Zgłoś wynik, by zobaczyć postęp.
-          </p>
-          <p v-else class="mt-2 text-sm text-muted">
-            Zostało <span class="font-bold text-highlighted">{{ seasonGoal.target - goalCurrentValue }} kg</span> do celu.
-          </p>
-        </template>
-
-        <!-- Edit / create mode -->
-        <template v-else>
-          <p class="mb-4 text-sm text-muted">
-            Ustaw cel na ten sezon — system pokaże Twój postęp na podstawie najlepszego zatwierdzonego wyniku.
-          </p>
-          <div class="flex flex-wrap items-end gap-3">
-            <UFormField label="Typ celu">
-              <USelect
-                v-model="goalMode"
-                :items="[{ label: 'Total (dwubój kg)', value: 'total' }, { label: 'Sinclair (szacunkowy)', value: 'sinclair' }]"
-                class="w-48"
-              />
-            </UFormField>
-            <UFormField label="Cel (kg)">
-              <UInputNumber
-                v-model="goalTarget"
-                :min="1"
-                :step="1"
-                placeholder="np. 250"
-                class="w-32"
-              />
-            </UFormField>
-            <UButton color="success" icon="i-lucide-check" @click="saveGoal">Zapisz</UButton>
-            <UButton v-if="seasonGoal" variant="ghost" color="neutral" @click="goalEditing = false">Anuluj</UButton>
-          </div>
-        </template>
-      </div>
-    </PanelCollapsibleSection>
-
-    <PanelCollapsibleSection
-      v-if="auth.canAccessAthletePortal && athlete"
-      section-id="modules"
-      title="Moduły panelu"
-      icon="i-lucide-layout-grid"
-      :default-open="true"
-      embedded
-      class="mt-6 mb-6"
-    >
-      <PanelModuleNav
-        :groups="athleteModuleGroups"
-        :tone-from-bg="toneFromIconBg"
-      />
-    </PanelCollapsibleSection>
-
-    <PanelCollapsibleSection
-      v-if="latestRelease"
-      section-id="mobile-app"
-      class="mt-6"
-      title="Aplikacja mobilna"
-      icon="i-lucide-smartphone"
-      :badge="latestRelease.version"
-    >
-      <div
-        class="group relative overflow-hidden rounded-xl border border-primary/20 bg-linear-to-r from-primary/10 to-indigo-500/10 p-5"
-      >
-        <div class="absolute -right-12 -top-12 size-40 rounded-full bg-primary/20 blur-3xl transition-all group-hover:bg-primary/30" />
-        <div class="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-          <div class="flex items-center gap-4">
-            <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/20 text-primary ring-1 ring-primary/30 shadow-inner">
-              <UIcon name="i-lucide-smartphone" class="size-7" />
-            </div>
-            <div class="min-w-0">
-              <h3 class="text-lg font-black text-highlighted tracking-tight">Dostępna aplikacja mobilna</h3>
-              <p class="text-sm text-muted">Śledź swoje wyniki i obecność bezpośrednio w telefonie.</p>
-              <div class="mt-1 flex items-center gap-2">
-                <UBadge size="sm" variant="soft" color="primary" class="font-bold font-mono">{{ latestRelease.version }}</UBadge>
-                <span class="text-[10px] text-muted/60 uppercase font-bold tracking-widest">Wersja Android (.apk)</span>
-              </div>
-            </div>
-          </div>
-          <UButton
-            :to="latestRelease.download_url"
-            target="_blank"
-            size="xl"
-            color="primary"
-            trailing-icon="i-lucide-download"
-            class="min-h-12 w-full justify-center sm:w-auto shadow-lg shadow-primary/20 transition-transform active:scale-95"
-          >
-            Pobierz teraz
-          </UButton>
-        </div>
-      </div>
-    </PanelCollapsibleSection>
-
     <div
-      v-else-if="auth.canAccessAthletePortal && !athlete"
-      class="mb-10"
+      v-if="auth.canAccessAthletePortal && !athlete"
+      class="mt-4"
     >
       <UAlert
         icon="i-lucide-info"
         title="Brak powiązanego profilu"
-        description="Twoje konto nie jest jeszcze powiązane z rekordem zawodnika. Skontaktuj się z administratorem, aby połączyć swoje konto z danymi startowymi."
+        description="Konto nie jest powiązane z rekordem zawodnika. Skontaktuj się z administratorem."
         color="warning"
         variant="subtle"
         class="rounded-2xl"
       />
-    </div>
-
-    <div
-      v-if="auth.canAccessAthletePortal && athlete"
-      class="mb-8 overflow-hidden rounded-2xl border border-amber-500/25 bg-linear-to-r from-amber-500/10 via-card to-card p-5 sm:p-6"
-    >
-      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p class="text-[10px] font-black uppercase tracking-[0.2em] text-amber-600">Wyniki startowe</p>
-          <h2 class="mt-1 text-xl font-black text-highlighted">Zgłoś wynik z zawodów lub treningu</h2>
-          <p class="mt-2 text-sm text-muted">
-            Formularz i pełna historia zgłoszeń — na osobnej podstronie panelu.
-            <span v-if="myPendingResultsCount > 0" class="font-semibold text-warning">
-              {{ myPendingResultsCount }} oczekuje na kadrę.
-            </span>
-          </p>
-        </div>
-        <UButton to="/athlete/wyniki" size="lg" color="primary" trailing-icon="i-lucide-arrow-right" class="shrink-0">
-          Moje starty
-        </UButton>
-      </div>
     </div>
 
     </template>
