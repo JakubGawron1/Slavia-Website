@@ -58,8 +58,8 @@ export function buildPwaConfig(
         {
           urlPattern: ({ url }: { url: URL }) => {
             const p = url.pathname
-            return p.startsWith('/api/public/')
-              || p.startsWith('/api/athletes')
+            // /api/public/* — cache tylko na Vercel BFF; SW NetworkFirst podawał puste [] z buildu.
+            return p.startsWith('/api/athletes')
               || p.startsWith('/api/posts')
               || p.startsWith('/api/gallery')
               || p.startsWith('/api/announcements')
@@ -68,7 +68,7 @@ export function buildPwaConfig(
           },
           handler: 'NetworkFirst',
           options: {
-            cacheName: 'slavia-public-api',
+            cacheName: 'slavia-public-api-v2',
             networkTimeoutSeconds: 8,
             expiration: { maxEntries: 64, maxAgeSeconds: 300 }
           }

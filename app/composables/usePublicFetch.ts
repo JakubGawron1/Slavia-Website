@@ -11,6 +11,11 @@ export function publicApiUrl(path: string): string {
   return `${usePublicApiBase()}/${normalized}`
 }
 
+function readPublicPayloadCache<T>(nuxtApp: ReturnType<typeof useNuxtApp>, cacheKey: string): T | undefined {
+  const entry = nuxtApp.payload.data[cacheKey] ?? nuxtApp.static.data[cacheKey]
+  return entry !== undefined ? (entry as T) : undefined
+}
+
 type PublicLazyFetchOpts<T> = {
   key?: string
   default?: () => T
@@ -52,11 +57,16 @@ export function usePublicLazyFetch<T>(
   return useAsyncData<T>(
     key,
     async () => {
+      const nuxtApp = useNuxtApp()
       try {
         const result = (await $fetch(buildUrl(), { timeout: 12_000 })) as T
         publicFetchTimestamps.set(key.value, Date.now())
         return result
       } catch (err) {
+        const existing = readPublicPayloadCache<T>(nuxtApp, key.value)
+        if (existing !== undefined) {
+          return existing
+        }
         if (opts.default) {
           if (import.meta.dev) {
             console.warn(`[public-api] ${buildUrl()} niedostępne, używam default()`, err)
@@ -72,15 +82,31 @@ export function usePublicLazyFetch<T>(
       default: opts.default,
       dedupe: 'defer',
       getCachedData: (cacheKey, nuxtApp, ctx) => {
-        if (ctx.cause === 'refresh:manual' || !import.meta.client || staleTimeMs <= 0) {
+        if (ctx.cause === 'refresh:manual') {
           return undefined
         }
+
+        const fromPayload = readPublicPayloadCache<T>(nuxtApp, cacheKey)
+        if (fromPayload === undefined) {
+          return undefined
+        }
+
+        if (!import.meta.client || staleTimeMs <= 0) {
+          return fromPayload
+        }
+
         const fetchedAt = publicFetchTimestamps.get(cacheKey)
-        if (!fetchedAt || Date.now() - fetchedAt >= staleTimeMs) {
-          return undefined
+        if (!fetchedAt) {
+          // Hydracja klienta — zachowaj dane z SSR/ISR, nie nadpisuj default() przed fetch.
+          publicFetchTimestamps.set(cacheKey, Date.now())
+          return fromPayload
         }
-        const entry = nuxtApp.payload.data[cacheKey] ?? nuxtApp.static.data[cacheKey]
-        return entry !== undefined ? (entry as T) : undefined
+
+        if (Date.now() - fetchedAt < staleTimeMs) {
+          return fromPayload
+        }
+
+        return undefined
       }
     }
   )
