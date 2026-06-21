@@ -207,10 +207,19 @@ const profileMoreActions = computed(() => {
   }
   return [items]
 })
+
+const profileHeroRef = ref<HTMLElement | null>(null)
+const { visible: profileMiniHeaderVisible } = useAthleteProfileStickyHeader(profileHeroRef)
 </script>
 
 <template>
   <PublicPageLayout padding="flush" :ambient="false">
+    <AthleteProfileMiniHeader
+      :visible="profileMiniHeaderVisible"
+      :name="athlete!.full_name"
+      :weight-category="athlete!.weight_category"
+    />
+
     <section class="border-b border-default/60">
       <div class="py-5 sm:py-7">
         <PublicPageHeader
@@ -219,7 +228,10 @@ const profileMoreActions = computed(() => {
           class="mb-4 sm:mb-5"
         />
 
-        <article class="slavia-page-card overflow-hidden">
+        <article
+          ref="profileHeroRef"
+          class="slavia-page-card overflow-hidden"
+        >
           <div class="flex flex-col sm:flex-row">
             <div class="relative mx-auto w-full max-w-xs shrink-0 bg-muted/20 sm:mx-0 sm:max-w-[11.5rem] md:max-w-[13rem]">
               <img
