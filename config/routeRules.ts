@@ -15,11 +15,20 @@ export const publicBffCache = {
   })
 }
 
+/** Panelowy BFF — tylko prywatny cache przeglądarki (Bearer), bez współdzielonego CDN. */
+export const panelBffCache = {
+  headers: withSecurityHeaders({
+    'cache-control': 'private, max-age=10, stale-while-revalidate=30',
+    vary: 'Authorization'
+  })
+}
+
 export function buildRouteRules(devDisableRootIsr: boolean) {
   return {
     '/**': { headers: { ...slaviaSecurityHeaders } },
 
     '/api/public/**': publicBffCache,
+    '/api/panel/**': panelBffCache,
     '/api/ai/public/**': panelNoStore,
 
     '/': devDisableRootIsr ? { isr: false, prerender: true } : { isr: 600, prerender: true },
