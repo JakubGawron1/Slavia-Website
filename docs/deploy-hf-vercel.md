@@ -1,6 +1,6 @@
 # Deploy: Hugging Face (backend) + Vercel (frontend)
 
-Produkcja: **backend Rust** na [Hugging Face Space](https://huggingface.co/spaces) (Docker), **frontend Nuxt** na Vercel. Szczegóły HF po stronie backendu: `Slavia-backend/docs/DEPLOY_HUGGINGFACE.md`.
+Produkcja: **backend Rust** na [Hugging Face Space](https://huggingface.co/spaces) (Docker), **frontend Nuxt** na Vercel. Szczegóły HF po stronie backendu: `Slavia-backend/docs/DEPLOY_HUGGINGFACE.md`. Metryki Prometheus i canary scrape: [`observability.md`](observability.md).
 
 ## Kolejność wdrożenia
 
