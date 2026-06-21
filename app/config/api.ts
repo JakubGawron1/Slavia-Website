@@ -21,6 +21,7 @@ export const apiRoutes = {
     list: '/api/athletes',
     listAdmin: '/api/athletes/admin',
     me: '/api/athletes/me',
+    meDashboard: '/api/athletes/me/dashboard',
     myCalendar: '/api/athletes/my-calendar',
     one: (id: string) => `/api/athletes/${encodeURIComponent(id)}`,
     competitions: (id: string) => `/api/athletes/${encodeURIComponent(id)}/competitions`,
@@ -32,6 +33,9 @@ export const apiRoutes = {
     attachUser: (id: string) => `/api/athletes/${encodeURIComponent(id)}/attach-user`,
     detachUser: (id: string) => `/api/athletes/${encodeURIComponent(id)}/detach-user`,
     sinclairRanking: '/api/athletes/ranking/sinclair'
+  },
+  trainer: {
+    dashboard: '/api/trainer/dashboard'
   },
   players: {
     list: '/api/athletes'
@@ -213,6 +217,14 @@ export const apiRoutes = {
     pending: '/api/submissions/pending',
     approve: (id: string) => `/api/submissions/${encodeURIComponent(id)}/approve`,
     one: (id: string) => `/api/submissions/${encodeURIComponent(id)}`
+  },
+  boardDocuments: {
+    documents: '/api/board/documents',
+    document: (id: string) => `/api/board/documents/${encodeURIComponent(id)}`,
+    documentContent: (id: string) =>
+      `/api/board/documents/${encodeURIComponent(id)}/content`,
+    documentPreview: (id: string) =>
+      `/api/board/documents/${encodeURIComponent(id)}/preview`
   },
   cms: {
     variables: '/api/cms/variables',

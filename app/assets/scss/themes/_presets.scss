@@ -1,3 +1,5 @@
+@use '../abstracts/mixins' as *;
+
 /**
  * Rozszerzenia presetów — dopracowanie klasycznych motywów + eksperymentalne układy.
  * Inspiracje: transmisje IWF, Hookgrip, nowoczesne aplikacje fitness, industrial gym branding.
@@ -619,4 +621,50 @@ html.dark[data-slavia-preset] .slavia-panel-page {
 
 html[data-slavia-preset]:not(.dark) .slavia-panel-page {
   color-scheme: light;
+}
+
+/**
+ * F-P5: nadpisanie presetów z backdrop-filter — mobile i prefers-reduced-motion.
+ * Ładuje się po presets-core, żeby wygrać kaskadę (glass, aurora, chalk).
+ */
+@media (max-width: 639px) {
+  html[data-slavia-preset='glass'] .slavia-page-card,
+  html[data-slavia-preset='glass'] .slavia-page-card--flat,
+  html[data-slavia-preset='glass'] .slavia-public-hero,
+  html[data-slavia-preset='glass'] .slavia-section-card {
+    @include slavia-backdrop-flat;
+    background: linear-gradient(
+      168deg,
+      var(--slavia-card-gradient-top),
+      var(--slavia-card-gradient-bottom)
+    );
+  }
+
+  html[data-slavia-preset='aurora'] .slavia-page-card,
+  html[data-slavia-preset='aurora'] .slavia-public-hero,
+  html[data-slavia-preset='chalk'] .slavia-page-card,
+  html[data-slavia-preset='chalk'] .slavia-public-hero {
+    @include slavia-backdrop-flat;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-slavia-preset='glass'] .slavia-page-card,
+  html[data-slavia-preset='glass'] .slavia-page-card--flat,
+  html[data-slavia-preset='glass'] .slavia-public-hero,
+  html[data-slavia-preset='glass'] .slavia-section-card {
+    @include slavia-backdrop-flat;
+    background: linear-gradient(
+      168deg,
+      var(--slavia-card-gradient-top),
+      var(--slavia-card-gradient-bottom)
+    );
+  }
+
+  html[data-slavia-preset='aurora'] .slavia-page-card,
+  html[data-slavia-preset='aurora'] .slavia-public-hero,
+  html[data-slavia-preset='chalk'] .slavia-page-card,
+  html[data-slavia-preset='chalk'] .slavia-public-hero {
+    @include slavia-backdrop-flat;
+  }
 }

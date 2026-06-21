@@ -415,6 +415,20 @@ async function confirmImportPlan() {
 function truncatePrompt(text: string, max = 72) {
   return text.length > max ? `${text.slice(0, max)}…` : text
 }
+
+const chatLiveItems = computed(() =>
+  messages.value.map(m => ({
+    id: m.id,
+    body: m.content,
+    role: m.role === 'assistant' ? 'assistant' as const : 'self' as const
+  }))
+)
+
+const { announcement: chatLiveAnnouncement } = useChatLiveRegion(chatLiveItems, {
+  assistantLabel: 'Trener AI',
+  loadingLabel: 'Trener analizuje…',
+  loading
+})
 </script>
 
 <template>
@@ -814,6 +828,13 @@ function truncatePrompt(text: string, max = 72) {
         class="olympic-coach__thread"
         :class="{ 'olympic-coach__thread--athlete': isAthleteView }"
       >
+        <div
+          class="sr-only"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          {{ chatLiveAnnouncement }}
+        </div>
         <div
           v-if="messages.length === 0"
           class="olympic-coach__hero"

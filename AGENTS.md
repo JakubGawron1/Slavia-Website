@@ -13,6 +13,7 @@ pnpm lint         # ESLint (m.in. zakaz v-html poza komponentami safe-html)
 pnpm test         # Vitest (sanitizeHtml, renderChatMarkdown, ranking)
 pnpm typecheck    # vue-tsc przez Nuxt
 pnpm build        # produkcja (wymaga ~8 GB RAM — skrypt ustawia max-old-space-size)
+pnpm bundle:report  # F-13: raport chunków JS po buildzie (wymaga .output/public/_nuxt)
 pnpm test:e2e     # Playwright (lokalnie: PLAYWRIGHT_START_SERVER=1)
 pnpm release:check  # pełna walidacja przed release (PowerShell)
 ```
@@ -20,6 +21,8 @@ pnpm release:check  # pełna walidacja przed release (PowerShell)
 **Env:** `.env` → `NUXT_PUBLIC_API_BASE_URL` (bez końcowego slasha). Opcjonalnie `NUXT_PUBLIC_API_BASE_URL_HUGGINGFACE` / `_RENDER` (deprecated) dla dual-provider.
 
 **Backend lokalny:** `pnpm smoke:backend` — szybki ping API przed pracą z panelami.
+
+**Po deployu (HF + Vercel):** `pnpm smoke:post-deploy` — patrz `docs/deploy-hf-vercel.md` (`SLAVIA_HF_API_URL`, `SLAVIA_SITE_URL`).
 
 **Submodule shared:** po klonie: `git submodule update --init --recursive --remote` (Vercel/CI/ci.yml zawsze ściągają **latest `main`** z `Slavia-shared`). Lokalnie: `pnpm shared:pull`.
 
@@ -336,11 +339,15 @@ TensorFlow, kamera, QR, edytor WYSIWYG, podgląd viewportu — wszystko co wymag
 
 Kolejność w `.github/workflows/ci.yml`:
 
-`openapi:check` → `lint` → `pnpm test` (Vitest) → `shared:test` → `typecheck` → `build` → Playwright smoke
+`openapi:check` → `lint` → `pnpm test` (Vitest) → `shared:test` → `typecheck` → `build` → `bundle:report` → Playwright smoke
 
-Lokalnie pełny check: `pnpm release:check`.
+Lokalnie pełny check: `pnpm release:check` (zawiera `bundle:report` po buildzie).
+
+**Bundle size (F-13):** `scripts/bundle-report.mjs` — po `pnpm build` skanuje rekurencyjnie `.output/public/_nuxt` (pliki `.js`), wypisuje top chunków i ostrzega gdy suma JS > progu. Próg domyślny: `DEFAULT_MAX_JS_KB` w skrypcie (TODO: baseline po pierwszym pomiarze na CI); override: `SLAVIA_BUNDLE_JS_MAX_KB`. Flagi: `--fail` (exit 1 przy przekroczeniu), `--json`, `--top=N`, `--dir=…`. CI i `release:check` uruchamiają `pnpm bundle:report` bez `--fail` — tylko ostrzeżenie w logu.
 
 E2E smoke: publiczne trasy (w tym `/zawodnicy/archiwum`), manifest PWA, ochrona tras, projekt `mobile-pixel5` (Pixel 5). Serwer: `PLAYWRIGHT_START_SERVER=1`.
+
+**Deploy prod (HF + Vercel):** przy zmianach API najpierw backend na Hugging Face, potem frontend na Vercel. Checklist OpenAPI, `/api/athletes/me/dashboard` i env `NUXT_PUBLIC_API_BASE_URL` — [`docs/deploy-hf-vercel.md`](docs/deploy-hf-vercel.md).
 
 ---
 
@@ -454,7 +461,7 @@ app/
 config/           # routeRules, prerender, pwa, site
 server/           # BFF routes, public proxy, backend-provider store
 e2e/              # Playwright smoke
-scripts/          # openapi check, release-check, split developer page
+scripts/          # openapi check, release-check, bundle-report, split developer page
 ```
 
 ---

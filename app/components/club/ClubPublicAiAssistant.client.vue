@@ -83,6 +83,21 @@ async function useQuickPrompt(text: string) {
 function toggleOpen() {
   open.value = !open.value
 }
+
+const chatLiveItems = computed(() =>
+  messages.value.map(m => ({
+    id: m.id,
+    body: m.content,
+    role: m.role === 'assistant' ? 'assistant' as const : 'self' as const
+  }))
+)
+
+const { announcement: chatLiveAnnouncement } = useChatLiveRegion(chatLiveItems, {
+  assistantLabel: 'Asystent Slavia',
+  loadingLabel: 'Slavia odpowiada…',
+  loading,
+  scopeKey: computed(() => (open.value ? 'open' : 'closed'))
+})
 </script>
 
 <template>
@@ -149,6 +164,13 @@ function toggleOpen() {
           ref="messagesRef"
           class="club-ai__thread"
         >
+          <div
+            class="sr-only"
+            aria-live="polite"
+            aria-atomic="true"
+          >
+            {{ chatLiveAnnouncement }}
+          </div>
           <div
             v-if="!enabled && statusLoaded"
             class="club-ai__offline"

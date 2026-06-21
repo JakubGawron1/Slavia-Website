@@ -1,3 +1,5 @@
+@use '../abstracts/mixins' as *;
+
 /** Sekcja treści pod nagłówkiem publicznym (bez pionowego paddingu — odstępy z page-flow). */
 .slavia-public-section {
   margin-top: 0;
@@ -162,4 +164,22 @@ html[data-slavia-preset='neon-brutalism'] .slavia-public-hero:hover {
     inset 0 1px 0 var(--slavia-surface-sheen, var(--slavia-glass-highlight));
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+}
+
+/** F-P5: bez backdrop-filter na mobile — tańsze compositing (desktop zachowuje szkło). */
+@media (max-width: 639px) {
+  .slavia-page-card,
+  .slavia-public-hero,
+  .slavia-section-card {
+    @include slavia-backdrop-flat;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slavia-page-card,
+  .slavia-page-card--flat,
+  .slavia-public-hero,
+  .slavia-section-card {
+    @include slavia-backdrop-flat;
+  }
 }

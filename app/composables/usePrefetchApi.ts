@@ -53,14 +53,28 @@ export function usePrefetchApi<T>(
   }
 }
 
+export type PrefetchScheduler = ReturnType<typeof createPrefetchScheduler>
+
+type ViewportObserveOpts = {
+  rootMargin?: string
+  threshold?: number
+  /** Po pierwszym prefetch — przestań obserwować element (domyślnie true). */
+  once?: boolean
+}
+
 /**
  * Dynamiczny prefetch (lista wpisów / ranking) — debounce per klucz, zapis do `useNuxtData`.
+ * `observeViewport` — prefetch po wejściu karty w viewport (IntersectionObserver, client-only).
  */
 export function createPrefetchScheduler(opts?: { debounceMs?: number, maxConcurrent?: number }) {
   const debounceMs = opts?.debounceMs ?? 140
   const maxConcurrent = opts?.maxConcurrent ?? 2
   const timers = new Map<string, ReturnType<typeof setTimeout>>()
   let inflight = 0
+
+  const viewportFetchers = new Map<string, () => Promise<unknown>>()
+  const viewportMeta = new WeakMap<Element, Array<{ key: string, once: boolean }>>()
+  let viewportObserver: IntersectionObserver | null = null
 
   function cancel(key: string) {
     const t = timers.get(key)
@@ -91,5 +105,70 @@ export function createPrefetchScheduler(opts?: { debounceMs?: number, maxConcurr
     timers.set(key, t)
   }
 
-  return { schedule, cancel }
+  function ensureViewportObserver(rootMargin: string, threshold: number) {
+    if (!import.meta.client) return null
+    if (viewportObserver) return viewportObserver
+
+    viewportObserver = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          const metas = viewportMeta.get(entry.target)
+          if (!metas?.length) continue
+
+          if (entry.isIntersecting) {
+            let unobserve = false
+            for (const meta of metas) {
+              const fetcher = viewportFetchers.get(meta.key)
+              if (fetcher) schedule(meta.key, fetcher)
+              if (meta.once) unobserve = true
+            }
+            if (unobserve) {
+              viewportObserver?.unobserve(entry.target)
+              viewportMeta.delete(entry.target)
+              for (const meta of metas) {
+                viewportFetchers.delete(meta.key)
+              }
+            }
+          } else {
+            for (const meta of metas) {
+              if (!meta.once) cancel(meta.key)
+            }
+          }
+        }
+      },
+      { root: null, rootMargin, threshold }
+    )
+    return viewportObserver
+  }
+
+  function observeViewport(
+    el: Element | null | undefined,
+    key: string,
+    fetcher: () => Promise<unknown>,
+    ioOpts?: ViewportObserveOpts
+  ) {
+    if (!import.meta.client || !el) return
+    const existing = useNuxtData(key).data.value
+    if (existing !== undefined && existing !== null) return
+
+    const rootMargin = ioOpts?.rootMargin ?? '160px 0px'
+    const threshold = ioOpts?.threshold ?? 0.01
+    const once = ioOpts?.once ?? true
+
+    const existingMeta = viewportMeta.get(el) ?? []
+    if (existingMeta.some(meta => meta.key === key)) return
+
+    viewportFetchers.set(key, fetcher)
+    existingMeta.push({ key, once })
+    viewportMeta.set(el, existingMeta)
+    ensureViewportObserver(rootMargin, threshold)?.observe(el)
+  }
+
+  function disconnectViewport() {
+    viewportObserver?.disconnect()
+    viewportObserver = null
+    viewportFetchers.clear()
+  }
+
+  return { schedule, cancel, observeViewport, disconnectViewport }
 }

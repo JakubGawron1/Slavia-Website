@@ -1,6 +1,12 @@
 # Changelog - Slavia Frontend
 
-## [5.1.0] - 2026-06-07
+## [5.1.0] - 2026-06-21
+
+### improvements/all (dashboard, HF, perf)
+- Dashboard zawodnika: `useAthleteDashboard`, KPI z retry przy cold start HF, smoke E2E w CI.
+- Role preview (SuperAdmin): przepisywanie API; BFF cache panelu, cache offline SWR.
+- Wydajność: lazy sekcje `/`, wirtualizacja wyników trenera, mobile nav zawodnika.
+- Deploy: `post-deploy-smoke`, docs preview/HF; baseline bundle w CI.
 
 ### Modularyzacja i UX klubu
 - **`KlubPageShell`**, **`useRoleAwareCopy`**, tokeny spacingu w `_tokens.scss`.

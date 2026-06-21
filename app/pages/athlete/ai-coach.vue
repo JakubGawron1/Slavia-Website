@@ -1,6 +1,12 @@
 <script setup lang="ts">
 definePageMeta({ middleware: 'athlete-or-trainer' })
 
+const OlympicCoachPanelLazy = defineAsyncComponent({
+  loader: () => import('~/components/trainer/OlympicCoachPanel.vue'),
+  delay: 80,
+  timeout: 120_000
+})
+
 useSlaviaPageBack({ to: '/athlete' })
 
 useSeoMeta({
@@ -34,6 +40,16 @@ useSeoMeta({
       </template>
     </PanelPageHeader>
 
-    <OlympicCoachPanel area="athlete" />
+    <Suspense>
+      <OlympicCoachPanelLazy area="athlete" />
+      <template #fallback>
+        <div class="flex justify-center py-16 text-muted">
+          <UIcon
+            name="i-lucide-loader-2"
+            class="size-8 animate-spin"
+          />
+        </div>
+      </template>
+    </Suspense>
   </PanelPageLayout>
 </template>

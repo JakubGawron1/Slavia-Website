@@ -9,10 +9,15 @@ import {
  * BFF GET → zewnętrzny backend (SSG/ISR/SSR na Vercel).
  * Tylko jawna whitelist ścieżek — bez tokenów i bez tras administracyjnych.
  */
+const ATHLETE_UUID =
+  '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
+
 const PUBLIC_GET_PATTERNS: RegExp[] = [
   /^\/api\/athletes$/,
   /^\/api\/athletes\/ranking\/sinclair$/,
   /^\/api\/athletes\/archive$/,
+  new RegExp(`^/api/athletes/${ATHLETE_UUID}$`, 'i'),
+  new RegExp(`^/api/results/athlete/${ATHLETE_UUID}$`, 'i'),
   /^\/api\/posts$/,
   /^\/api\/posts\/[^/]+$/,
   /^\/api\/gallery$/,

@@ -1,0 +1,7 @@
+/**
+ * Wyłącza backdrop-filter (wariant „flat”) — tańsze na mobile i przy prefers-reduced-motion.
+ */
+@mixin slavia-backdrop-flat {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}

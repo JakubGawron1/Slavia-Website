@@ -1,0 +1,102 @@
+@use '../abstracts/mixins' as *;
+
+/** Dolna nawigacja panelu zawodnika — tylko mobile (Design 3.0). */
+.slavia-athlete-mobile-nav {
+  --slavia-athlete-mobile-nav-height: 4.25rem;
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 48;
+  border-top: 1px solid color-mix(in srgb, var(--ui-border) 70%, transparent);
+  background: color-mix(in srgb, var(--slavia-surface-panel, var(--ui-bg-elevated)) 96%, transparent);
+  box-shadow:
+    0 -4px 24px color-mix(in srgb, var(--ui-bg-inverted, #000) 8%, transparent),
+    inset 0 1px 0 color-mix(in oklab, #fff 8%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@media (max-width: 767px) {
+  .slavia-athlete-mobile-nav {
+    @include slavia-backdrop-flat;
+  }
+}
+
+.slavia-athlete-mobile-nav__list {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-items: stretch;
+  width: 100%;
+  min-height: var(--slavia-athlete-mobile-nav-height);
+  margin: 0;
+  padding: 0.3rem var(--slavia-page-gutter) 0.2rem;
+  list-style: none;
+}
+
+.slavia-athlete-mobile-nav__item {
+  min-width: 0;
+}
+
+.slavia-athlete-mobile-nav__link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  min-height: 3.25rem;
+  border-radius: var(--slavia-radius-lg);
+  border: 1px solid transparent;
+  padding: 0.25rem 0.15rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  color: var(--ui-text-muted);
+  text-decoration: none;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.slavia-athlete-mobile-nav__link:hover {
+  color: var(--ui-text-highlighted);
+  background: color-mix(in oklab, var(--ui-bg-muted) 35%, transparent);
+}
+
+.slavia-athlete-mobile-nav__link--active {
+  color: var(--ui-primary);
+  border-color: color-mix(in oklab, var(--ui-primary) 24%, transparent);
+  background: color-mix(in oklab, var(--ui-primary) 10%, transparent);
+  box-shadow: inset 0 -2px 0 var(--ui-primary);
+}
+
+.slavia-athlete-mobile-nav__icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+}
+
+.slavia-athlete-mobile-nav__label {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/** Odstęp treści nad dolną nawigacją zawodnika (mobile). */
+.slavia-main--athlete-mobile-nav {
+  @media (max-width: 767px) {
+    padding-bottom: calc(
+      var(--slavia-athlete-mobile-nav-height, 4.25rem) + env(safe-area-inset-bottom, 0px)
+    );
+  }
+}
+
+/** Przycisk „do góry” — nad dolną nawigacją zawodnika. */
+.slavia-scroll-to-top--athlete-mobile-nav {
+  @media (max-width: 767px) {
+    bottom: calc(var(--slavia-athlete-mobile-nav-height, 4.25rem) + 0.75rem + env(safe-area-inset-bottom, 0px));
+  }
+}

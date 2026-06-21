@@ -1,3 +1,6 @@
+/** Publiczny profil `/athlete/imie--uuid` — sync z `isAthletePublicProfileRoute`. */
+const ATHLETE_PUBLIC_PROFILE_OFFLINE_DENY_PATTERN = /^\/athlete\/[^/]*--[^/]*\/?$/
+
 export function buildPwaConfig(
   packageJsonVersion: string,
   formatPublicAppVersion: (raw: string) => string,
@@ -23,7 +26,15 @@ export function buildPwaConfig(
     },
     workbox: {
       navigateFallback: '/',
-      navigateFallbackDenylist: [/^\/api\//, /^\/dev-sw/, /^\/_nuxt/, /^\/athlete/, /^\/trainer/, /^\/admin/, /^\/superadmin/],
+      navigateFallbackDenylist: [
+        /^\/api\//,
+        /^\/dev-sw/,
+        /^\/_nuxt/,
+        ATHLETE_PUBLIC_PROFILE_OFFLINE_DENY_PATTERN,
+        /^\/trainer/,
+        /^\/admin/,
+        /^\/superadmin/
+      ],
       globPatterns: ['**/*.{js,css,html,ico,woff2,webmanifest}'],
       maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
       cleanupOutdatedCaches: true,
@@ -60,6 +71,15 @@ export function buildPwaConfig(
             cacheName: 'slavia-public-api',
             networkTimeoutSeconds: 8,
             expiration: { maxEntries: 64, maxAgeSeconds: 300 }
+          }
+        },
+        {
+          urlPattern: ({ url }: { url: URL }) => url.pathname.startsWith('/api/panel/'),
+          handler: 'NetworkFirst',
+          options: {
+            cacheName: 'slavia-athlete-panel-api',
+            networkTimeoutSeconds: 10,
+            expiration: { maxEntries: 32, maxAgeSeconds: 600 }
           }
         }
       ]

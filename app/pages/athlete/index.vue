@@ -1,396 +1,60 @@
 <script setup lang="ts">
-import type { Athlete, CompetitionResult, MobileReleaseInfo, MyCalendarEntry, PaymentStatusResponse } from '~/types/models'
-import { apiRoutes } from '~/config/api'
-import { resolveAuthProfilePhotoSrc } from '~/utils/profilePhoto'
-import {
-  athletePaymentKpiFromStatus,
-  showPre10PaymentAthleteReminder
-} from '~/utils/paymentSemantics'
 import DashboardHero from '~/components/dashboard/DashboardHero.vue'
 import DashboardKpiCard from '~/components/dashboard/DashboardKpiCard.vue'
 import DashboardQuickActions from '~/components/dashboard/DashboardQuickActions.vue'
 import DashboardWeekPreview from '~/components/dashboard/DashboardWeekPreview.vue'
+
 definePageMeta({ middleware: 'auth' })
 
-const auth = useAuth()
-const rolePreviewState = useRolePreviewState()
-const apiFetch = useApi()
-const toast = useToast()
-const terms = useSlaviaCopy()
-const route = useRoute()
-const { accountSettingsPath } = useRoleDashboardNav()
 const { isAccountView } = useDashboardAccountView()
 
-/** Konto z przypisaną rolą „Zawodnik” (nie mylić z dostępem SuperAdmin do tej strefy). */
-const isAthleteRole = computed(() => auth.isAthlete.value)
-const isAthletePortalAsSuperAdminOnly = computed(
-  () => auth.isSuperAdmin.value && !auth.isAthlete.value
-)
-
-type AthleteBundle = { athlete: Athlete | null, results: CompetitionResult[], calendarEntries: MyCalendarEntry[] }
-type AttendanceSummary = {
-  athlete_id: string
-  present_count: number
-  absent_count: number
-  pending_count: number
-  attendance_percent: number
-}
-
-const { data: bundle } = await useAsyncData(
-  'athlete-page-bundle',
-  async () => {
-    await auth.ensureSession()
-    const roles = auth.user.value?.roles ?? []
-    if (!roles.includes('Athlete') && !roles.includes('SuperAdmin')) {
-      return { athlete: null, results: [], calendarEntries: [] } satisfies AthleteBundle
-    }
-    const a = await apiFetch<Athlete | null>(`/api/athletes/me`).catch(() => null)
-    const results = a?.id
-      ? await apiFetch<CompetitionResult[]>(`/api/results/athlete/${a.id}/submissions`).catch(() => [])
-      : []
-    const cal = await apiFetch<{ entries: MyCalendarEntry[] }>('/api/athletes/my-calendar').catch(() => ({
-      entries: [] as MyCalendarEntry[]
-    }))
-    return {
-      athlete: a,
-      results,
-      calendarEntries: Array.isArray(cal.entries) ? cal.entries : []
-    } satisfies AthleteBundle
-  },
-  { default: () => ({ athlete: null, results: [], calendarEntries: [] }) }
-)
-
-const athlete = computed(() => bundle.value?.athlete ?? null)
-const results = computed(() => bundle.value?.results ?? [])
-const myPendingResultsCount = computed(() => results.value.filter(r => r.status === 'Pending').length)
-const attendanceSummary = ref<AttendanceSummary | null>(null)
-const paymentStatus = ref<PaymentStatusResponse | null>(null)
-
-const paymentMonth = ref(new Date().toISOString().slice(0, 7))
-
-async function refreshAttendanceSummary() {
-  if (!athlete.value?.id) {
-    attendanceSummary.value = null
-    return
-  }
-  attendanceSummary.value = await apiFetch<AttendanceSummary>(`/api/attendance/summary/${athlete.value.id}`).catch(() => null)
-}
-
-async function refreshPaymentStatus() {
-  if (!auth.canAccessAthletePortal.value || !athlete.value?.id || !rolePreviewState.viewingAthletePortal.value) {
-    paymentStatus.value = null
-    return
-  }
-  const q = paymentMonth.value ? `?month=${encodeURIComponent(paymentMonth.value)}` : ''
-  paymentStatus.value = await apiFetch<PaymentStatusResponse>(`${apiRoutes.payments.myStatus}${q}`).catch(() => null)
-}
-
-const { data: latestRelease } = await useAsyncData('latest-mobile-release-athlete', () => apiFetch<MobileReleaseInfo>('/api/system/mobile-releases/latest').catch(() => null))
+const {
+  auth,
+  accountSettingsPath,
+  athlete,
+  athleteModuleGroups,
+  athleteQuickActions,
+  attendanceKpiLoad,
+  attendanceSummary,
+  checklistDoneCount,
+  checklistItems,
+  checklistTotal,
+  clearGoal,
+  daysUntilNearest,
+  dismissOnboarding,
+  goalCurrentValue,
+  goalEditing,
+  goalMode,
+  goalProgress,
+  goalTarget,
+  heroBadges,
+  isAthleteRole,
+  latestRelease,
+  myPendingResultsCount,
+  nearestCalendarEntry,
+  pageHeading,
+  pageLead,
+  paymentKpi,
+  paymentKpiLoad,
+  paymentStatus,
+  portalHeroAvatarSrc,
+  preStartEntry,
+  refreshAttendanceSummary,
+  refreshPaymentStatus,
+  saveGoal,
+  seasonGoal,
+  showArchivedAthleteNote,
+  showOnboarding,
+  showOverduePaymentAlert,
+  showPre10PaymentBanner,
+  toggleChecklistItem,
+  toneFromIconBg,
+  welcomeName
+} = await useAthleteDashboard()
 
 useSeoMeta({
   title: 'Profil konta — CKS Slavia Ruda Śląska',
   robots: 'noindex, nofollow'
-})
-
-const welcomeName = computed(
-  () => athlete.value?.full_name?.trim() || auth.user.value?.username || 'Zawodniku'
-)
-
-/** Avatar na dashboardzie: konto (`avatar_url` + opcjonalnie `athlete_image_url` z /me) albo `image_url` z API zawodnika. */
-const portalHeroAvatarSrc = computed(() => {
-  const fromAuth = resolveAuthProfilePhotoSrc(auth.user.value ?? undefined)
-  if (fromAuth) return fromAuth
-  const img = athlete.value?.image_url?.trim()
-  return img || undefined
-})
-
-const paymentKpi = computed(() => {
-  if (!isAthleteRole.value) {
-    return { value: '—', tone: 'info' as const, hint: 'Dostępne tylko dla roli zawodnika' }
-  }
-  if (!paymentStatus.value) {
-    return { value: '—', tone: 'info' as const, hint: 'Brak danych (odśwież)' }
-  }
-  return athletePaymentKpiFromStatus(paymentStatus.value, terms.paymentStandingOrder())
-})
-
-const { moduleGroupsForRole } = usePanelNavigationFlags()
-const athleteModuleGroups = computed(() => moduleGroupsForRole('athlete'))
-
-function toneFromIconBg(iconBg?: string): 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral' {
-  const s = String(iconBg || '').toLowerCase()
-  if (s.includes('error') || s.includes('rose') || s.includes('red')) return 'error'
-  if (s.includes('warning') || s.includes('amber') || s.includes('yellow') || s.includes('orange')) return 'warning'
-  if (s.includes('success') || s.includes('emerald') || s.includes('green') || s.includes('teal')) return 'success'
-  if (s.includes('info') || s.includes('sky') || s.includes('cyan') || s.includes('blue') || s.includes('indigo')) return 'info'
-  if (s.includes('primary') || s.includes('violet') || s.includes('purple') || s.includes('fuchsia') || s.includes('lime')) return 'primary'
-  if (s.includes('muted')) return 'neutral'
-  return 'neutral'
-}
-
-const pageHeading = computed(() => {
-  if (isAthletePortalAsSuperAdminOnly.value) return 'Strefa zawodnika'
-  return isAthleteRole.value ? 'Panel Zawodnika' : 'Profil konta'
-})
-const pageLead = computed(() => {
-  if (isAthletePortalAsSuperAdminOnly.value) {
-    return 'Podgląd strefy zawodnika dla superadmina.'
-  }
-  return isAthleteRole.value
-    ? 'Składka, starty, kalendarz i moduły — wszystko w jednym miejscu.'
-    : 'Ustawienia konta. Funkcje zawodnicze wymagają roli zawodnika.'
-})
-const heroBadges = computed(() => {
-  const label = auth.rolesDisplayShort.value
-  return label ? [{ label, color: 'neutral' as const }] : undefined
-})
-
-/** Konto z rolą zawodnika powiązane z rekordem oznaczonym jako nieaktywny (archiwum kadry). */
-const showArchivedAthleteNote = computed(
-  () => isAthleteRole.value && !!athlete.value?.id && athlete.value.is_active === false
-)
-
-const PAY_HIDE_LS = 'slavia_hide_payment_reminder'
-const hidePaymentReminderLocal = ref(false)
-const ONBOARD_LS = 'slavia_onboarding_athlete_v1_done'
-const showOnboarding = ref(false)
-
-function syncPaymentReminderFromStorage() {
-  if (!import.meta.client) return
-  try {
-    hidePaymentReminderLocal.value = localStorage.getItem(PAY_HIDE_LS) === '1'
-  } catch {
-    /* ignore */
-  }
-}
-
-watch(
-  () => route.fullPath,
-  () => {
-    syncPaymentReminderFromStorage()
-  }
-)
-
-onMounted(() => {
-  syncPaymentReminderFromStorage()
-  void refreshAttendanceSummary()
-  void refreshPaymentStatus()
-  if (isAthleteRole.value) {
-    try {
-      if (!localStorage.getItem(ONBOARD_LS)) {
-        showOnboarding.value = true
-      }
-    } catch {
-      /* ignore */
-    }
-  }
-})
-
-function dismissOnboarding() {
-  showOnboarding.value = false
-  if (!import.meta.client) return
-  try {
-    localStorage.setItem(ONBOARD_LS, '1')
-  } catch {
-    /* ignore */
-  }
-}
-
-const showPre10PaymentBanner = computed(() =>
-  showPre10PaymentAthleteReminder({
-    isAthlete: isAthleteRole.value,
-    hiddenInBrowserStorage: hidePaymentReminderLocal.value,
-    paymentStatus: paymentStatus.value
-  }))
-
-// ─── [2024] Overdue payment alert ──────────────────────────────────────────
-const showOverduePaymentAlert = computed(() => {
-  if (!isAthleteRole.value) return false
-  const ps = paymentStatus.value
-  if (!ps) return false
-  // Show when payment is overdue (past the 10th) and not paid
-  return !!(ps.is_overdue && !ps.is_paid)
-})
-
-// ─── [2001] "Mój Tydzień" widget ─────────────────────────────────────────
-/** Today’s date string (YYYY-MM-DD) */
-const todayStr = new Date().toISOString().slice(0, 10)
-
-/** Nearest upcoming calendar entry (competition or event). */
-const nearestCalendarEntry = computed(() => {
-  const entries = bundle.value?.calendarEntries ?? []
-  const future = entries
-    .filter(e => {
-      const d = e.competition?.date ?? ''
-      return d >= todayStr
-    })
-    .sort((a, b) => (a.competition?.date ?? '').localeCompare(b.competition?.date ?? ''))
-  return future[0] ?? null
-})
-
-/** Days until nearest event (0 = today). */
-const daysUntilNearest = computed(() => {
-  const d = nearestCalendarEntry.value?.competition?.date
-  if (!d) return null
-  const diff = Math.ceil((new Date(d).getTime() - new Date(todayStr).getTime()) / 86_400_000)
-  return diff
-})
-
-// ─── [2005] Season Goal ────────────────────────────────────────────────────
-const GOAL_LS_KEY = 'slavia_season_goal_v1'
-
-type GoalMode = 'total' | 'sinclair'
-interface SeasonGoalData {
-  mode: GoalMode
-  target: number
-}
-
-const seasonGoal = ref<SeasonGoalData | null>(null)
-const goalMode = ref<GoalMode>('total')
-const goalTarget = ref<number | null>(null)
-const goalEditing = ref(false)
-
-function loadGoalFromStorage() {
-  if (!import.meta.client) return
-  try {
-    const raw = localStorage.getItem(GOAL_LS_KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw) as SeasonGoalData
-      seasonGoal.value = parsed
-      goalMode.value = parsed.mode
-      goalTarget.value = parsed.target
-    }
-  } catch { /* ignore */ }
-}
-
-function saveGoal() {
-  if (!goalTarget.value || goalTarget.value <= 0) {
-    toast.add({ title: 'Podaj cel większy od zera', color: 'warning' })
-    return
-  }
-  const data: SeasonGoalData = { mode: goalMode.value, target: goalTarget.value }
-  seasonGoal.value = data
-  goalEditing.value = false
-  if (!import.meta.client) return
-  try { localStorage.setItem(GOAL_LS_KEY, JSON.stringify(data)) } catch { /* ignore */ }
-  toast.add({ title: 'Cel sezonu zapisany', color: 'success' })
-}
-
-function clearGoal() {
-  seasonGoal.value = null
-  goalTarget.value = null
-  goalEditing.value = false
-  if (!import.meta.client) return
-  try { localStorage.removeItem(GOAL_LS_KEY) } catch { /* ignore */ }
-}
-
-/** Current best relevant to the goal mode. */
-const goalCurrentValue = computed(() => {
-  if (!athlete.value) return 0
-  if (goalMode.value === 'total') {
-    return athlete.value.total_kg ?? 0
-  }
-  // Sinclair requires bodyweight + total
-  const bw = athlete.value.bodyweight ?? 0
-  const total = athlete.value.total_kg ?? 0
-  if (bw <= 0 || total <= 0) return 0
-  // We use a synchronous approximation. Full async Sinclair is in the form.
-  // A² coefficient approximation: Sinclair ≈ total * 1.0–1.35 depending on bw.
-  // We just display total here and note it is approximate for the progress bar.
-  return total
-})
-
-const goalProgress = computed(() => {
-  if (!seasonGoal.value || seasonGoal.value.target <= 0) return 0
-  const pct = Math.round((goalCurrentValue.value / seasonGoal.value.target) * 100)
-  return Math.min(pct, 100)
-})
-
-onMounted(() => {
-  loadGoalFromStorage()
-})
-
-// ─── [2013] Pre-start checklist ────────────────────────────────────────────
-const CHECKLIST_LS_KEY = 'slavia_prestart_checklist_v1'
-
-const defaultChecklist = [
-  { id: 'singlet', label: 'Strjój startowy (singlet)', checked: false },
-  { id: 'shoes', label: 'Buty ciężarowe', checked: false },
-  { id: 'belt', label: 'Pas dźwigniowy', checked: false },
-  { id: 'wraps', label: 'Opaski / kolanka', checked: false },
-  { id: 'id_card', label: 'Dowód tożsamości', checked: false },
-  { id: 'license', label: 'Licencja zawodnicza', checked: false },
-  { id: 'weight', label: 'Sprawdzona waga (kategoria wagowa)', checked: false },
-  { id: 'nutrition', label: 'Posiłki i nawodnienie na dzień', checked: false },
-] as { id: string; label: string; checked: boolean }[]
-
-const checklistItems = ref(defaultChecklist.map(i => ({ ...i })))
-
-function loadChecklistFromStorage(forDate: string) {
-  if (!import.meta.client) return
-  try {
-    const raw = localStorage.getItem(`${CHECKLIST_LS_KEY}_${forDate}`)
-    if (raw) {
-      const saved = JSON.parse(raw) as { id: string; checked: boolean }[]
-      checklistItems.value = checklistItems.value.map(item => ({
-        ...item,
-        checked: saved.find(s => s.id === item.id)?.checked ?? false
-      }))
-    } else {
-      checklistItems.value = defaultChecklist.map(i => ({ ...i }))
-    }
-  } catch { /* ignore */ }
-}
-
-function saveChecklistToStorage(forDate: string) {
-  if (!import.meta.client) return
-  try {
-    localStorage.setItem(
-      `${CHECKLIST_LS_KEY}_${forDate}`,
-      JSON.stringify(checklistItems.value.map(i => ({ id: i.id, checked: i.checked })))
-    )
-  } catch { /* ignore */ }
-}
-
-/** Next competition within 48 hours. */
-const preStartEntry = computed(() => {
-  const entry = nearestCalendarEntry.value
-  if (!entry) return null
-  const d = daysUntilNearest.value
-  if (d === null || d > 1) return null
-  const cat = (entry.competition?.category ?? '').toLowerCase()
-  if (cat === 'training') return null
-  return entry
-})
-
-const checklistDoneCount = computed(() => checklistItems.value.filter(i => i.checked).length)
-const checklistTotal = computed(() => checklistItems.value.length)
-
-watch(preStartEntry, (entry) => {
-  if (entry?.competition?.date) {
-    loadChecklistFromStorage(entry.competition.date)
-  }
-}, { immediate: true })
-
-function toggleChecklistItem(id: string) {
-  const item = checklistItems.value.find(i => i.id === id)
-  if (item) item.checked = !item.checked
-  const forDate = preStartEntry.value?.competition?.date
-  if (forDate) saveChecklistToStorage(forDate)
-}
-
-const athleteQuickActions = computed(() => {
-  const actions = [
-    { label: 'Starty', to: '/athlete/wyniki', icon: 'i-lucide-trophy' },
-    { label: 'Kalendarz', to: '/athlete/kalendarz', icon: 'i-lucide-calendar-days' },
-    { label: 'Dziennik', to: '/athlete/dziennik', icon: 'i-lucide-book-marked' },
-    { label: 'Plany', to: '/athlete/plany', icon: 'i-lucide-clipboard-list' },
-    { label: 'Czat', to: '/klub/czat', icon: 'i-lucide-messages-square' }
-  ]
-  if (isAthleteRole.value) {
-    actions.splice(1, 0, { label: 'Składka', to: '/athlete/skladki', icon: 'i-lucide-banknote' })
-  }
-  return actions
 })
 
 provideDashboardSections()
@@ -513,7 +177,11 @@ provideDashboardSections()
             icon="i-lucide-banknote"
             :tone="paymentKpi.tone"
             :hint="paymentKpi.hint"
+            :loading="paymentKpiLoad.loading.value"
+            :failed="paymentKpiLoad.failed.value"
+            error-hint="Nie udało się załadować składki — spróbuj ponownie"
             to="/athlete/skladki"
+            @retry="refreshPaymentStatus"
           />
           <DashboardKpiCard
             size="compact"
@@ -522,7 +190,11 @@ provideDashboardSections()
             icon="i-lucide-user-check"
             :tone="attendanceSummary ? 'primary' : 'info'"
             :hint="attendanceSummary ? `${attendanceSummary.present_count} obecności · ${attendanceSummary.absent_count} nieob.` : null"
+            :loading="attendanceKpiLoad.loading.value"
+            :failed="attendanceKpiLoad.failed.value"
+            error-hint="Nie udało się załadować frekwencji — spróbuj ponownie"
             to="/klub/obecnosc"
+            @retry="refreshAttendanceSummary"
           />
           <DashboardKpiCard
             size="compact"
