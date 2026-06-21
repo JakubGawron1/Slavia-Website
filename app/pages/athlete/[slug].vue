@@ -5,8 +5,18 @@ import type { SinclairGender } from '~/utils/sinclair'
 import { sinclairTotal } from '~/utils/sinclair'
 import { effectiveBodyweightKgForSinclair } from '~/utils/sinclairAthlete'
 import { cmsRoutePageName } from '~/utils/cmsRoutePage'
-import AthleteProgressChart from '~/components/AthleteProgressChart.vue'
-import AthleteCombinedChart from '~/components/AthleteCombinedChart.vue'
+
+const AthleteProgressChartLazy = defineAsyncComponent({
+  loader: () => import('~/components/AthleteProgressChart.vue'),
+  delay: 80,
+  timeout: 120_000
+})
+
+const AthleteCombinedChartLazy = defineAsyncComponent({
+  loader: () => import('~/components/AthleteCombinedChart.vue'),
+  delay: 80,
+  timeout: 120_000
+})
 
 const route = useRoute()
 const auth = useAuth()
@@ -585,7 +595,7 @@ const profileMoreActions = computed(() => {
             lead="Najedź punkt na wykresie — szczegóły startu."
           />
           <div class="slavia-page-card p-5 sm:p-7">
-            <AthleteProgressChart :series="progressSeries" :height="260" />
+            <AthleteProgressChartLazy :series="progressSeries" :height="260" />
           </div>
         </section>
 
@@ -618,7 +628,7 @@ const profileMoreActions = computed(() => {
           </PublicSectionHead>
 
           <div class="slavia-page-card p-5 sm:p-7">
-            <AthleteCombinedChart :series="combinedSeries" :height="260" />
+            <AthleteCombinedChartLazy :series="combinedSeries" :height="260" />
             <p class="mt-3 text-right text-[11px] text-muted">
               Linia ciągła = zawody, przerywana = trening.
             </p>

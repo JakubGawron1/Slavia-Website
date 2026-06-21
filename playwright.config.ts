@@ -1,9 +1,10 @@
 import { defineConfig, devices } from '@playwright/test'
 
 /**
- * Smoke E2E bez logowania — pełne ścieżki paneli wymagają konta testowego.
+ * Smoke E2E — publiczne trasy bez logowania; panel zawodnika mockuje API w przeglądarce.
  * Uruchomienie: `pnpm exec playwright install chromium` (raz).
  * Auto-start dev: `PLAYWRIGHT_START_SERVER=1 pnpm test:e2e`
+ * Tylko athlete dashboard: `PLAYWRIGHT_START_SERVER=1 pnpm test:e2e e2e/smoke-athlete-dashboard.spec.ts`
  */
 export default defineConfig({
   testDir: 'e2e',

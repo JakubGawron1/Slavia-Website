@@ -559,130 +559,17 @@ function badgeColorForKind(k: string | undefined) {
     <UCard
       v-if="!(pending && rows.length === 0)"
       class="slavia-page-card"
-      :ui="{ body: 'p-0 overflow-x-auto' }"
+      :ui="{ body: 'p-0' }"
     >
-      <table class="w-full min-w-[920px] text-sm">
-        <thead class="border-b border-default bg-muted/30">
-          <tr>
-            <th class="px-4 py-3 text-left font-semibold text-muted">
-              Data
-            </th>
-            <th class="px-4 py-3 text-left font-semibold text-muted">
-              Typ
-            </th>
-            <th class="px-4 py-3 text-left font-semibold text-muted">
-              Zawodnik
-            </th>
-            <th class="px-4 py-3 text-left font-semibold text-muted">
-              Miejsce
-            </th>
-            <th class="px-4 py-3 text-right font-semibold text-muted">
-              Rwanie
-            </th>
-            <th class="px-4 py-3 text-right font-semibold text-muted">
-              Podrzut
-            </th>
-            <th class="px-4 py-3 text-right font-semibold text-muted">
-              Razem
-            </th>
-            <th class="px-4 py-3 text-right font-semibold text-muted">
-              Sinclair
-            </th>
-            <th class="px-4 py-3 text-left font-semibold text-muted">
-              Status
-            </th>
-            <th class="px-4 py-3 text-right font-semibold text-muted">
-              Akcje
-            </th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-default">
-          <tr v-if="visibleRows.length === 0">
-            <td
-              colspan="11"
-              class="px-4 py-6"
-            >
-              <SlaviaEmptyState
-                icon="i-lucide-trophy"
-                title="Brak wyników"
-                description="Brak zapisanych wyników w tym filtrze."
-              />
-            </td>
-          </tr>
-          <template v-else>
-            <tr
-              v-for="r in visibleRows"
-              :key="r.id"
-              class="hover:bg-muted/15 transition-colors"
-            >
-              <td class="px-4 py-3 whitespace-nowrap">
-                {{ r.date.slice(0, 10) }}
-              </td>
-              <td class="px-4 py-3">
-                <UBadge
-                  :color="badgeColorForKind(r.kind)"
-                  variant="subtle"
-                  size="sm"
-                >
-                  {{ copy.resultKindLabel(r.kind) }}
-                </UBadge>
-              </td>
-              <td class="px-4 py-3">
-                {{ nameById.get(r.athlete_id) || r.athlete_id }}
-              </td>
-              <td class="px-4 py-3 text-muted">
-                <span v-if="r.location">
-                  {{ r.location }}
-                </span>
-                <span v-else class="text-muted/60">—</span>
-              </td>
-              <td class="px-4 py-3 text-right tabular-nums">
-                {{ r.snatch }}
-              </td>
-              <td class="px-4 py-3 text-right tabular-nums">
-                {{ r.clean_and_jerk }}
-              </td>
-              <td class="px-4 py-3 text-right font-semibold tabular-nums">
-                {{ r.total }}
-              </td>
-              <td class="px-4 py-3 text-right">
-                <span
-                  v-if="rowSinclair(r) != null"
-                  class="inline-block rounded-full bg-primary/15 px-2 py-1 font-mono text-xs font-black text-primary"
-                >
-                  {{ rowSinclair(r) }}
-                </span>
-                <span v-else class="text-muted/60">—</span>
-              </td>
-              <td class="px-4 py-3">
-                <UBadge
-                  :color="r.status === 'Approved' ? 'success' : (r.status === 'Rejected' ? 'error' : 'warning')"
-                  variant="subtle"
-                >
-                  {{ copy.resultStatusLabel(r.status) }}
-                </UBadge>
-              </td>
-              <td class="px-4 py-3 text-right">
-                <div class="flex justify-end gap-1">
-                  <UButton
-                    size="xs"
-                    variant="soft"
-                    icon="i-lucide-pencil"
-                    @click="openEdit(r)"
-                  />
-                  <UButton
-                    size="xs"
-                    color="error"
-                    variant="ghost"
-                    icon="i-lucide-trash-2"
-                    @click="removeRow(r)"
-                  />
-                </div>
-              </td>
-            </tr>
-          </template>
-        </tbody>
-      </table>
+      <TrainerWynikiResultsTable
+        :key="`${kindFilter}-${selectedAthleteId}`"
+        :rows="visibleRows"
+        :name-by-id="nameById"
+        :row-sinclair="rowSinclair"
+        :badge-color-for-kind="badgeColorForKind"
+        @edit="openEdit"
+        @remove="removeRow"
+      />
     </UCard>
 
     <SlaviaEditorSheet

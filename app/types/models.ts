@@ -219,6 +219,36 @@ export interface PaymentStatusResponse {
   has_standing_order?: boolean
 }
 
+/** Agregowany payload `GET /api/athletes/me/dashboard` — jeden round-trip na dashboard zawodnika. */
+export interface AthleteDashboardResponse {
+  athlete: Athlete | null
+  pending_results_count: number
+  calendar_entries: MyCalendarEntry[]
+  attendance_summary: {
+    athlete_id: string
+    present_count: number
+    absent_count: number
+    pending_count: number
+    attendance_percent: number
+  } | null
+  payment_status: PaymentStatusResponse | null
+}
+
+/** Agregowany payload `GET /api/trainer/dashboard` — jeden round-trip na dashboard trenera. */
+export interface TrainerDashboardResponse {
+  pending_results: CompetitionResult[]
+  pending_payments: PendingPaymentRow[]
+  monitoring_summary: {
+    athletes_count: number
+    active_plans_count: number
+    pending_results_count: number
+    pending_payments_count: number
+    pending_attendance_count: number
+    unread_notifications_count: number
+    recovery_checkins_7d_count: number
+  }
+}
+
 export interface PaymentMonthStatusRow {
   month: string // YYYY-MM
   due_date: string // YYYY-MM-10

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Athlete, AthletePaymentOverviewRow, CompetitionResult, PendingPaymentRow } from '~/types/models'
+import type { Athlete, AthletePaymentOverviewRow, CompetitionResult, PendingPaymentRow, TrainerDashboardResponse } from '~/types/models'
 import { apiRoutes } from '~/config/api'
 import { getApiErrorMessage } from '~/composables/useApi'
 import DashboardHero from '~/components/dashboard/DashboardHero.vue'
@@ -28,17 +28,23 @@ const { data: athletes } = await useAsyncData(
     }
   }
 )
-const { data: pendingResults, refresh: refreshPending } = await useAsyncData(
-  'trainer-pending-results',
-  async (): Promise<CompetitionResult[]> =>
-    apiFetch<CompetitionResult[]>('/api/results/pending').catch(() => [])
+const { data: dashboardBundle, refresh: refreshDashboard } = await useAsyncData(
+  'trainer-dashboard-bundle',
+  () => apiFetch<TrainerDashboardResponse>(apiRoutes.trainer.dashboard).catch(() => null),
+  { default: () => null }
 )
 
-const { data: pendingPayments, refresh: refreshPendingPayments } = await useAsyncData(
-  'trainer-pending-payments',
-  async (): Promise<PendingPaymentRow[]> =>
-    apiFetch<PendingPaymentRow[]>(apiRoutes.payments.pending).catch(() => [])
-)
+const pendingResults = computed(() => dashboardBundle.value?.pending_results ?? [])
+const pendingPayments = computed(() => dashboardBundle.value?.pending_payments ?? [])
+const monitoringSummary = computed(() => dashboardBundle.value?.monitoring_summary ?? null)
+
+async function refreshPending() {
+  await refreshDashboard()
+}
+
+async function refreshPendingPayments() {
+  await refreshDashboard()
+}
 
 const toast = useToast()
 
@@ -87,16 +93,8 @@ const avgAttendance = computed(() => {
   return Math.round((present / rows.length) * 100)
 })
 
-const { data: pendingAttendanceRows } = await useAsyncData(
-  'trainer-pending-attendance',
-  () =>
-    apiFetch<AttendanceRecord[]>('/api/attendance?verification_state=pending').catch(
-      () => []
-    )
-)
-
 const pendingAttendanceCount = computed(
-  () => (pendingAttendanceRows.value || []).length
+  () => monitoringSummary.value?.pending_attendance_count ?? 0
 )
 
 const athleteNameById = computed(() => {

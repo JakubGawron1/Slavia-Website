@@ -1,4 +1,5 @@
 import { apiRoutes } from '~/config/api'
+import { clearAthleteDashboardCache } from '~/utils/athleteDashboardCache'
 import type { AuthUser, LoginResponse, UserRole } from '~/types/models'
 import type { FetchError } from 'ofetch'
 
@@ -197,6 +198,7 @@ export function useAuth() {
   }
 
   function logout() {
+    clearAthleteDashboardCache()
     token.value = null
     user.value = null
   }

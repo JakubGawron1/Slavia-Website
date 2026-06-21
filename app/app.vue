@@ -118,6 +118,17 @@ const showPublicAi = computed(() => !isSlaviaPrivateRoute(route.path))
 
 const { showSidebarForRoute, collapsed: panelSidebarCollapsed } = usePanelSidebarNav()
 
+const showAthleteMobileNav = computed(
+  () =>
+    auth.isLoggedIn.value
+    && auth.canAccessAthletePortal.value
+    && isAthletePanelRoute(route.path)
+)
+
+const hideSiteFooter = computed(
+  () => showSidebarForRoute.value || isAthletePanelRoute(route.path)
+)
+
 const { items: notifications, refresh: refreshNotifications } = useNotifications()
 const unreadCount = computed(() => (notifications.value || []).filter(n => !n.is_read).length)
 
@@ -257,14 +268,17 @@ useHead({
         id="main-content"
         tabindex="-1"
         class="slavia-safe-x outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+        :class="{ 'slavia-main--athlete-mobile-nav': showAthleteMobileNav }"
       >
         <NuxtPage />
       </UMain>
 
-      <ClubSiteFooter v-if="!showSidebarForRoute" />
+      <AthleteMobileNav v-if="showAthleteMobileNav" />
+      <ClubSiteFooter v-if="!hideSiteFooter" />
       <SlaviaScrollToTop
         :panel="showSidebarForRoute"
         :panel-sidebar-collapsed="panelSidebarCollapsed"
+        :athlete-mobile-nav="showAthleteMobileNav"
       />
       <ClubPublicAiAssistant v-if="showPublicAi" />
       <CmsGlobalEditToggle />

@@ -52,29 +52,26 @@ const showAthleteCompareLink = computed(() => {
   return publicFeaturesMap.value.athleteCompare !== false
 })
 
-const athletePrefetch = createPrefetchScheduler()
-const apiFetch = useApi()
+const {
+  athletePrefetchHandlers,
+  rescanPrefetchContainers,
+  disconnectPrefetchContainers
+} = useAthletePublicProfilePrefetch()
 
-function prefetchAthleteProfile(id?: string | null) {
-  if (!id) return
-  athletePrefetch.schedule(`athlete-detail-${id}`, () =>
-    apiFetch(`/api/athletes/${encodeURIComponent(id)}`).catch(() => null)
-  )
+const rankingTableRef = ref<HTMLElement | null>(null)
+const trainingRankingRef = ref<HTMLElement | null>(null)
+const athleteCardsRef = ref<HTMLElement | null>(null)
+
+function rescanAthletePrefetch() {
+  nextTick(() => {
+    rescanPrefetchContainers(rankingTableRef.value, trainingRankingRef.value, athleteCardsRef.value)
+  })
 }
 
-function cancelAthletePrefetch(id?: string | null) {
-  if (!id) return
-  athletePrefetch.cancel(`athlete-detail-${id}`)
-}
+watch([filteredRankings, trainingRanking, mappedPlayers], rescanAthletePrefetch)
 
-function athletePrefetchHandlers(id?: string | null) {
-  return {
-    onPointerenter: () => prefetchAthleteProfile(id),
-    onFocus: () => prefetchAthleteProfile(id),
-    onPointerleave: () => cancelAthletePrefetch(id),
-    onBlur: () => cancelAthletePrefetch(id)
-  }
-}
+onMounted(rescanAthletePrefetch)
+onBeforeUnmount(disconnectPrefetchContainers)
 
 </script>
 
@@ -103,7 +100,11 @@ function athletePrefetchHandlers(id?: string | null) {
         <NuxtLink
           v-if="podium[1]"
           :to="athleteProfilePath(podium[1].name, podium[1].id)"
-          v-bind="athletePrefetchHandlers(podium[1].id)"
+          prefetch
+          prefetch-on="visibility"
+          v-bind="athletePrefetchHandlers(podium[1].id, podium[1].name)"
+          :data-athlete-prefetch-id="podium[1].id"
+          :data-athlete-prefetch-name="podium[1].name"
           class="order-2 md:order-1 group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-3xl"
         >
           <div class="flex flex-col items-center">
@@ -140,7 +141,11 @@ function athletePrefetchHandlers(id?: string | null) {
         <NuxtLink
           v-if="podium[0]"
           :to="athleteProfilePath(podium[0].name, podium[0].id)"
-          v-bind="athletePrefetchHandlers(podium[0].id)"
+          prefetch
+          prefetch-on="visibility"
+          v-bind="athletePrefetchHandlers(podium[0].id, podium[0].name)"
+          :data-athlete-prefetch-id="podium[0].id"
+          :data-athlete-prefetch-name="podium[0].name"
           class="order-1 md:order-2 group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-3xl"
         >
           <div class="flex flex-col items-center">
@@ -183,7 +188,11 @@ function athletePrefetchHandlers(id?: string | null) {
         <NuxtLink
           v-if="podium[2]"
           :to="athleteProfilePath(podium[2].name, podium[2].id)"
-          v-bind="athletePrefetchHandlers(podium[2].id)"
+          prefetch
+          prefetch-on="visibility"
+          v-bind="athletePrefetchHandlers(podium[2].id, podium[2].name)"
+          :data-athlete-prefetch-id="podium[2].id"
+          :data-athlete-prefetch-name="podium[2].name"
           class="order-3 md:order-3 group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-3xl"
         >
           <div class="flex flex-col items-center">
@@ -372,11 +381,13 @@ function athletePrefetchHandlers(id?: string | null) {
                 </th>
               </tr>
             </thead>
-            <tbody>
+            <tbody ref="rankingTableRef">
               <tr
                 v-for="(p, idx) in filteredRankings"
                 :key="p.id"
                 class="group"
+                :data-athlete-prefetch-id="p.id"
+                :data-athlete-prefetch-name="p.name"
               >
                 <td>
                   <span class="font-mono text-sm font-bold tabular-nums text-muted transition-colors group-hover:text-primary sm:text-base">
@@ -386,6 +397,9 @@ function athletePrefetchHandlers(id?: string | null) {
                 <td class="min-w-0">
                   <NuxtLink
                     :to="athleteProfilePath(p.name, p.id)"
+                    prefetch
+                    prefetch-on="visibility"
+                    v-bind="athletePrefetchHandlers(p.id, p.name)"
                     class="flex min-w-0 items-center gap-2 sm:gap-3 rounded-lg text-left outline-offset-2 hover:text-primary focus-visible:outline-2 focus-visible:outline-primary"
                   >
                     <UAvatar
@@ -443,6 +457,11 @@ function athletePrefetchHandlers(id?: string | null) {
           <NuxtLink
             v-if="trainingPodium[1]"
             :to="athleteProfilePath(trainingPodium[1].name, trainingPodium[1].id)"
+            prefetch
+            prefetch-on="visibility"
+            v-bind="athletePrefetchHandlers(trainingPodium[1].id, trainingPodium[1].name)"
+            :data-athlete-prefetch-id="trainingPodium[1].id"
+            :data-athlete-prefetch-name="trainingPodium[1].name"
             class="order-2 md:order-1 group block rounded-3xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-info/40"
           >
             <div class="flex flex-col items-center">
@@ -472,6 +491,11 @@ function athletePrefetchHandlers(id?: string | null) {
           <NuxtLink
             v-if="trainingPodium[0]"
             :to="athleteProfilePath(trainingPodium[0].name, trainingPodium[0].id)"
+            prefetch
+            prefetch-on="visibility"
+            v-bind="athletePrefetchHandlers(trainingPodium[0].id, trainingPodium[0].name)"
+            :data-athlete-prefetch-id="trainingPodium[0].id"
+            :data-athlete-prefetch-name="trainingPodium[0].name"
             class="order-1 md:order-2 group block rounded-3xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-info/40 md:-mt-3"
           >
             <div class="flex flex-col items-center pt-8 md:pt-10">
@@ -504,6 +528,11 @@ function athletePrefetchHandlers(id?: string | null) {
           <NuxtLink
             v-if="trainingPodium[2]"
             :to="athleteProfilePath(trainingPodium[2].name, trainingPodium[2].id)"
+            prefetch
+            prefetch-on="visibility"
+            v-bind="athletePrefetchHandlers(trainingPodium[2].id, trainingPodium[2].name)"
+            :data-athlete-prefetch-id="trainingPodium[2].id"
+            :data-athlete-prefetch-name="trainingPodium[2].name"
             class="order-3 group block rounded-3xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-info/40"
           >
             <div class="flex flex-col items-center">
@@ -565,11 +594,13 @@ function athletePrefetchHandlers(id?: string | null) {
                 </th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-default/50">
+            <tbody ref="trainingRankingRef" class="divide-y divide-default/50">
               <tr
                 v-for="(p, idx) in trainingRanking.slice(0, 12)"
                 :key="`tr-${p.id}`"
                 class="group transition-colors hover:bg-info/8"
+                :data-athlete-prefetch-id="p.id"
+                :data-athlete-prefetch-name="p.name"
               >
                 <td class="px-3 py-4 font-mono text-base font-black text-muted/60 transition-colors group-hover:text-info dark:group-hover:text-info sm:px-6 sm:py-5">
                   {{ (idx + 1).toString().padStart(2, '0') }}
@@ -577,6 +608,9 @@ function athletePrefetchHandlers(id?: string | null) {
                 <td class="min-w-0 px-3 py-4 sm:px-6 sm:py-5">
                   <NuxtLink
                     :to="athleteProfilePath(p.name, p.id)"
+                    prefetch
+                    prefetch-on="visibility"
+                    v-bind="athletePrefetchHandlers(p.id, p.name)"
                     class="flex items-center gap-2 rounded-lg outline-offset-2 hover:text-info focus-visible:outline-2 focus-visible:outline-info dark:hover:text-info"
                   >
                     <UAvatar :src="p.photo" :alt="p.name" size="sm" class="shrink-0 ring-1 ring-default/30" />
@@ -625,11 +659,16 @@ function athletePrefetchHandlers(id?: string | null) {
         title="Karty zawodników"
         lead="Profile z wykresami progresu i najlepszymi wynikami z zatwierdzonych startów."
       />
-      <div class="slavia-public-grid slavia-public-grid--stagger">
+      <div
+        ref="athleteCardsRef"
+        class="slavia-public-grid slavia-public-grid--stagger"
+      >
         <div
           v-for="player in mappedPlayers"
           :key="player.id"
-          v-bind="athletePrefetchHandlers(player.id)"
+          v-bind="athletePrefetchHandlers(player.id, player.name)"
+          :data-athlete-prefetch-id="player.id"
+          :data-athlete-prefetch-name="player.name"
           class="block"
         >
           <ClubHallOfFameRecordCard

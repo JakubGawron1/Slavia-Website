@@ -1,3 +1,5 @@
+@use '../abstracts/mixins' as *;
+
 /**
  * Strony publiczne — spójna typografia, siatki kart, CTA i sekcje.
  * Używaj z PublicPageLayout + PublicPageHeader.
@@ -517,5 +519,20 @@ a.slavia-public-card:focus-visible {
 
   .slavia-public-grid--stagger > * {
     animation: none !important;
+  }
+
+  .slavia-public-card--glass,
+  .slavia-public-kpi-band,
+  .slavia-site-header {
+    @include slavia-backdrop-flat;
+  }
+}
+
+/** F-P5: bez backdrop-filter na mobile — karty publiczne i sticky header. */
+@media (max-width: 639px) {
+  .slavia-public-card--glass,
+  .slavia-public-kpi-band,
+  .slavia-site-header {
+    @include slavia-backdrop-flat;
   }
 }
