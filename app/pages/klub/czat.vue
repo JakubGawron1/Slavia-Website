@@ -260,6 +260,19 @@ async function sendMessage() {
     toast.add({ title: 'Nie udało się wysłać wiadomości', description: getApiErrorMessage(e), color: 'error' })
   }
 }
+
+const chatLiveItems = computed(() =>
+  chat.messages.value.map(m => ({
+    id: m.id,
+    body: m.body,
+    role: m.sender_user_id === chatViewerUserId.value ? 'self' as const : 'peer' as const,
+    senderName: m.sender_username ?? undefined
+  }))
+)
+
+const { announcement: chatLiveAnnouncement } = useChatLiveRegion(chatLiveItems, {
+  scopeKey: computed(() => chat.activeThreadId.value)
+})
 </script>
 
 <template>
@@ -449,6 +462,13 @@ async function sendMessage() {
           </div>
 
           <div ref="messagesContainerRef" class="slavia-messenger__messages">
+            <div
+              class="sr-only"
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              {{ chatLiveAnnouncement }}
+            </div>
             <div
               v-for="m in chat.messages.value"
               :key="m.id"

@@ -3,7 +3,8 @@
     class="slavia-scroll-to-top"
     :class="{
       'slavia-scroll-to-top--panel': panel,
-      'slavia-scroll-to-top--panel-collapsed': panel && panelSidebarCollapsed
+      'slavia-scroll-to-top--panel-collapsed': panel && panelSidebarCollapsed,
+      'slavia-scroll-to-top--athlete-mobile-nav': athleteMobileNav
     }"
   >
     <Transition
@@ -38,8 +39,10 @@ withDefaults(
     /** Wyśrodkowanie względem kolumny treści panelu (obok sidebara). */
     panel?: boolean
     panelSidebarCollapsed?: boolean
+    /** Dolna nawigacja zawodnika — podnieś FAB „do góry”. */
+    athleteMobileNav?: boolean
   }>(),
-  { panel: false, panelSidebarCollapsed: false }
+  { panel: false, panelSidebarCollapsed: false, athleteMobileNav: false }
 )
 
 const visible = ref(false)

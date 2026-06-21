@@ -1,3 +1,5 @@
+@use '../abstracts/mixins' as *;
+
 /**
  * Strony publiczne — spójna typografia, siatki kart, CTA i sekcje.
  * Używaj z PublicPageLayout + PublicPageHeader.
@@ -453,6 +455,55 @@ a.slavia-public-card:focus-visible {
   }
 }
 
+/** Sticky mini-header profilu zawodnika (pod site header). */
+.slavia-athlete-profile-mini-header {
+  position: fixed;
+  inset-inline: 0;
+  top: var(--ui-header-height, 4rem);
+  z-index: 45;
+  pointer-events: none;
+
+  backdrop-filter: blur(16px) saturate(1.15);
+  -webkit-backdrop-filter: blur(16px) saturate(1.15);
+  background: color-mix(in oklab, var(--ui-bg) 92%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--ui-border) 45%, transparent);
+  box-shadow: 0 1px 0 color-mix(in oklab, var(--ui-primary) 5%, transparent);
+
+  html.dark & {
+    background: color-mix(in oklab, var(--ui-bg) 84%, transparent);
+    box-shadow: 0 4px 20px -10px rgb(0 0 0 / 0.35);
+  }
+
+  &__inner {
+    align-items: baseline;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem 0.75rem;
+    margin-inline: auto;
+    max-width: min(var(--slavia-content-max, 72rem), 100%);
+    padding: 0.625rem var(--slavia-page-gutter, 1rem);
+  }
+
+  &__name {
+    color: var(--ui-text-highlighted);
+    font-family: 'Outfit', var(--font-sans, 'Public Sans', sans-serif);
+    font-size: 0.9375rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin: 0;
+  }
+
+  &__category {
+    color: var(--ui-text-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    margin: 0;
+    text-transform: uppercase;
+  }
+}
+
 /** Nagłówek strony — delikatniejszy cień */
 .slavia-site-header {
   backdrop-filter: blur(16px) saturate(1.15);
@@ -517,5 +568,22 @@ a.slavia-public-card:focus-visible {
 
   .slavia-public-grid--stagger > * {
     animation: none !important;
+  }
+
+  .slavia-public-card--glass,
+  .slavia-public-kpi-band,
+  .slavia-site-header,
+  .slavia-athlete-profile-mini-header {
+    @include slavia-backdrop-flat;
+  }
+}
+
+/** F-P5: bez backdrop-filter na mobile — karty publiczne i sticky header. */
+@media (max-width: 639px) {
+  .slavia-public-card--glass,
+  .slavia-public-kpi-band,
+  .slavia-site-header,
+  .slavia-athlete-profile-mini-header {
+    @include slavia-backdrop-flat;
   }
 }

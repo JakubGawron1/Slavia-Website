@@ -1,4 +1,10 @@
 import { expect, test } from '@playwright/test'
+import {
+  E2E_PUBLIC_ATHLETES,
+  fillContactForm,
+  setupContactPostMock,
+  setupPublicAthletesListMock
+} from './helpers/publicBffMocks'
 
 const gotoOpts = { waitUntil: 'domcontentloaded' as const, timeout: 60_000 }
 
@@ -40,20 +46,27 @@ test.describe('smoke publiczne', () => {
   })
 
   test('porównanie zawodników — lista przez BFF', async ({ page }) => {
+    await setupPublicAthletesListMock(page)
+
+    // CSR: mock Playwrighta działa przy nawigacji klienta (nie przy SSR pierwszego wejścia).
+    await page.goto('/zawodnicy', gotoOpts)
+    const compareLink = page.getByRole('link', { name: 'Porównaj zawodników' })
+    await expect(compareLink).toBeVisible({ timeout: 15_000 })
+
     const athletesRes = page.waitForResponse(
       (r) => r.url().includes('/api/public/athletes') && r.ok(),
       { timeout: 30_000 }
     )
-    const res = await page.goto('/zawodnicy/porownanie', gotoOpts)
-    expect(res?.ok()).toBeTruthy()
+    await compareLink.click()
+
+    await expect(page).toHaveURL(/\/zawodnicy\/porownanie/)
     await athletesRes
     await expect(page.getByText(/Porównanie zawodników/i).first()).toBeVisible({ timeout: 15_000 })
     await expect(page.getByText(/Ładowanie listy/i)).toBeHidden({ timeout: 20_000 })
+    await expect(page.getByText(E2E_PUBLIC_ATHLETES[0].full_name).first()).toBeVisible({ timeout: 15_000 })
+
     const roster = page.locator('label').filter({ has: page.locator('input[type="checkbox"]') })
-    const count = await roster.count()
-    if (count > 0) {
-      await expect(roster.first()).toBeVisible()
-    }
+    await expect(roster).toHaveCount(E2E_PUBLIC_ATHLETES.length)
   })
 
   test('kontakt — formularz widoczny', async ({ page }) => {
@@ -66,21 +79,10 @@ test.describe('smoke publiczne', () => {
   })
 
   test('kontakt — wysyłka przez BFF /api/contact', async ({ page }) => {
-    await page.route('**/api/contact', async (route) => {
-      if (route.request().method() === 'POST') {
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({ ok: true })
-        })
-      } else {
-        await route.continue()
-      }
-    })
+    await setupContactPostMock(page)
     await page.goto('/kontakt', gotoOpts)
-    await page.getByLabel(/Imię i nazwisko/i).fill('Smoke E2E')
-    await page.getByLabel(/^E-mail/i).fill('smoke@example.com')
-    await page.getByLabel(/^Wiadomość/i).fill('Test wiadomości smoke')
+    await fillContactForm(page)
+
     const postReq = page.waitForRequest(
       (r) => r.url().includes('/api/contact') && r.method() === 'POST'
     )
@@ -90,7 +92,7 @@ test.describe('smoke publiczne', () => {
     expect(body.name).toBe('Smoke E2E')
     expect(body.email).toBe('smoke@example.com')
     expect(body.website ?? '').toBe('')
-    await expect(page.getByText(/Wiadomość wysłana/i)).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('Wiadomość wysłana', { exact: true })).toBeVisible({ timeout: 10_000 })
   })
 
   test('ogloszenia (CSR) ładują shell strony', async ({ page }) => {

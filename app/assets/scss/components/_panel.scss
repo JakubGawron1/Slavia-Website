@@ -1,3 +1,5 @@
+@use '../abstracts/mixins' as *;
+
 /** Panel shell — breadcrumb, siatki dashboardu, karty modułów, nawigacja boczna */
 
 .slavia-panel-breadcrumb {
@@ -206,4 +208,17 @@
   flex-direction: column;
   gap: var(--slavia-space-3);
   width: 100%;
+}
+
+/** F-P5: bez backdrop-filter na mobile — powłoka nawigacji modułów panelu. */
+@media (max-width: 639px) {
+  .slavia-panel-module-shell {
+    @include slavia-backdrop-flat;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slavia-panel-module-shell {
+    @include slavia-backdrop-flat;
+  }
 }

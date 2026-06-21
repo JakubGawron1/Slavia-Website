@@ -71,6 +71,9 @@ export function isPrerenderPass(): boolean {
 
 /** Pusta odpowiedź zgodna z kształtem publicznego GET (lista vs pojedynczy wpis). */
 export function emptyPublicApiFallback(apiPath: string): unknown {
+  if (/\/athletes\/[0-9a-f-]{36}$/i.test(apiPath)) {
+    return null
+  }
   if (/\/posts\/[^/]+$/.test(apiPath)) {
     return null
   }

@@ -1,4 +1,5 @@
 import { apiRoutes } from '~/config/api'
+import { clearAthleteDashboardCache } from '~/utils/athleteDashboardCache'
 import type { AuthUser, LoginResponse, UserRole } from '~/types/models'
 import type { FetchError } from 'ofetch'
 
@@ -9,12 +10,30 @@ const ROLE_LABELS: Record<UserRole, string> = {
   Admin: 'Administrator',
   Editor: 'Redaktor',
   Trainer: 'Trener',
-  Athlete: 'Zawodnik'
+  Athlete: 'Zawodnik',
+  BoardMember: 'Członek zarządu',
+  BoardDocsFullAccess: 'Zarząd (pełny dostęp)'
 }
 
-const ROLE_ORDER: UserRole[] = ['SuperAdmin', 'Admin', 'Editor', 'Trainer', 'Athlete']
+const ROLE_ORDER: UserRole[] = [
+  'SuperAdmin',
+  'Admin',
+  'Editor',
+  'BoardDocsFullAccess',
+  'BoardMember',
+  'Trainer',
+  'Athlete'
+]
 
-const KNOWN_ROLES = new Set<UserRole>(['SuperAdmin', 'Admin', 'Editor', 'Trainer', 'Athlete'])
+const KNOWN_ROLES = new Set<UserRole>([
+  'SuperAdmin',
+  'Admin',
+  'Editor',
+  'Trainer',
+  'Athlete',
+  'BoardMember',
+  'BoardDocsFullAccess'
+])
 
 /** Normalizuje role z API / JWT (string lub legacy obiekt z serde). */
 export function normalizeUserRoles(raw: unknown): UserRole[] {
@@ -134,6 +153,18 @@ export function useAuth() {
     () => roles.value.includes('Athlete') || roles.value.includes('SuperAdmin')
   )
 
+  /** Sekcja dokumentów zarządu (`/klub/dokumenty/**`). */
+  const isBoardMember = computed(() =>
+    roles.value.some(r =>
+      ['BoardMember', 'BoardDocsFullAccess', 'SuperAdmin'].includes(r)
+    )
+  )
+
+  /** Zapis i wersjonowanie repozytorium dokumentów (prezes/wice). */
+  const isBoardDocsFullAccess = computed(() =>
+    roles.value.some(r => ['BoardDocsFullAccess', 'SuperAdmin'].includes(r))
+  )
+
   /** Krótki opis wszystkich ról konta (np. „Superadmin · Trener · Zawodnik”). */
   const rolesDisplayShort = computed(() => {
     const uniq = [...new Set(roles.value)] as UserRole[]
@@ -197,6 +228,7 @@ export function useAuth() {
   }
 
   function logout() {
+    clearAthleteDashboardCache()
     token.value = null
     user.value = null
   }
@@ -229,6 +261,8 @@ export function useAuth() {
     isSuperAdmin,
     isAthlete,
     canAccessAthletePortal,
+    isBoardMember,
+    isBoardDocsFullAccess,
     rolesDisplayShort,
     login,
     logout,

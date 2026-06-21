@@ -20,14 +20,16 @@ const bucketAthletes = ref<AdminAccount[]>([])
 const loading = ref(true)
 
 /** Kolejność i zestaw ról nadawalnych przez superadmina. */
-const ALL_ROLES: UserRole[] = ['SuperAdmin', 'Admin', 'Editor', 'Trainer', 'Athlete']
+const ALL_ROLES: UserRole[] = ['SuperAdmin', 'Admin', 'Editor', 'Trainer', 'Athlete', 'BoardDocsFullAccess', 'BoardMember']
 
 const ROLE_LABELS: Record<UserRole, string> = {
   SuperAdmin: 'SuperAdmin',
   Admin: 'Admin',
   Editor: 'Redaktor',
   Trainer: 'Trener',
-  Athlete: 'Zawodnik'
+  Athlete: 'Zawodnik',
+  BoardMember: 'Członek zarządu',
+  BoardDocsFullAccess: 'Zarząd (pełny dostęp)'
 }
 
 const ROLE_FILTER_META: Record<UserRole, { hint: string, pillClass: string, tooltip: string }> = {
@@ -55,6 +57,16 @@ const ROLE_FILTER_META: Record<UserRole, { hint: string, pillClass: string, tool
     hint: 'Strefa zawodnika',
     pillClass: 'border-default bg-muted/40 text-highlighted',
     tooltip: 'Zawodnik: strefa zawodnika (składki, kalendarz, dziennik). Może być powiązany z profilem sportowym.'
+  },
+  BoardMember: {
+    hint: 'Dokumenty zarządu (podgląd)',
+    pillClass: 'border-amber-500/35 bg-amber-500/10 text-amber-800 dark:text-amber-300',
+    tooltip: 'Członek zarządu: dostęp do modułu dokumentów klubu (podgląd).'
+  },
+  BoardDocsFullAccess: {
+    hint: 'Dokumenty zarządu (edycja)',
+    pillClass: 'border-amber-600/35 bg-amber-600/10 text-amber-900 dark:text-amber-200',
+    tooltip: 'Zarząd z pełnym dostępem: edycja i publikacja dokumentów klubu.'
   }
 }
 
@@ -64,7 +76,9 @@ const ROLE_SEARCH_ALIASES: Record<UserRole, string[]> = {
   Admin: ['administrator', 'administracja', 'panel admina', 'admin i trener', 'admin trener'],
   Editor: ['redaktor', 'cms', 'treści', 'edytor'],
   Trainer: ['trener', 'coach', 'panel trenera', 'admin i trener', 'admin trener'],
-  Athlete: ['zawodnik', 'zawodniczka', 'sportowiec', 'sport']
+  Athlete: ['zawodnik', 'zawodniczka', 'sportowiec', 'sport'],
+  BoardMember: ['zarząd', 'członek zarządu', 'dokumenty'],
+  BoardDocsFullAccess: ['zarząd pełny', 'dokumenty edycja', 'board docs']
 }
 
 const searchQuery = ref('')

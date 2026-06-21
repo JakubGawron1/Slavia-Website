@@ -173,6 +173,7 @@
 | FE-BFF3 ✅ | `smoke-backend.ps1` | Ping `/api/ai/coach/public/status` |
 | FE-BFF4 ✅ | `release:check` | Opcjonalny BFF AI healthcheck (`SLAVIA_BFF_URL`) |
 | FE-BFF5 ✅ | `OlympicCoachPanel` | `lazy: true` na `useAsyncData` |
+| I-4 ✅ | `post-deploy-smoke.mjs` | Ping HF `/api/health` + Vercel `/api/system/backend-provider`; `pnpm smoke:post-deploy` |
 
 ---
 

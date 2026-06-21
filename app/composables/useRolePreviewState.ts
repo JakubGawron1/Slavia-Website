@@ -32,6 +32,14 @@ export function useRolePreviewState() {
     state.value = readStored()
   }
 
+  if (import.meta.client) {
+    onMounted(() => {
+      if (!state.value) {
+        state.value = readStored()
+      }
+    })
+  }
+
   const isActive = computed(
     () => auth.isSuperAdmin.value && !!state.value?.targetUserId
   )
