@@ -22,7 +22,7 @@ test.describe('smoke — SuperAdmin podgląd roli zawodnika', () => {
   test.beforeEach(async ({ context, page, baseURL }) => {
     await setupRolePreviewAthleteDashboardMocks(page)
     await dismissRolePreviewAthleteOverlays(page)
-    await seedRolePreviewState(page)
+    await seedRolePreviewState(context)
     await seedRolePreviewAthleteSession(context, baseURL ?? 'http://127.0.0.1:3000')
   })
 

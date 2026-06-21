@@ -14,9 +14,23 @@ function paymentMonthIso(): string {
   return new Date().toISOString().slice(0, 7)
 }
 
-function buildAthleteDashboardMock() {
+export function mockJsonResponse(route: Route, body: unknown) {
+  return route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify(body)
+  })
+}
+
+export function buildAthleteDashboardMockBody(overrides?: {
+  userId?: string
+  athleteId?: string
+  fullName?: string
+}) {
   const paymentMonth = paymentMonthIso()
-  const { userId, athleteId, fullName } = E2E_ATHLETE_MOCK
+  const userId = overrides?.userId ?? E2E_ATHLETE_MOCK.userId
+  const athleteId = overrides?.athleteId ?? E2E_ATHLETE_MOCK.athleteId
+  const fullName = overrides?.fullName ?? E2E_ATHLETE_MOCK.fullName
 
   return {
     athlete: {
@@ -46,34 +60,31 @@ function buildAthleteDashboardMock() {
   }
 }
 
-function isMockedBackendPath(pathname: string): boolean {
-  if (pathname === '/api/auth/me') return true
-  if (pathname === '/api/athletes/me/dashboard') return true
-  if (pathname === '/api/athletes') return true
-  if (pathname === '/api/system/mobile-releases/latest') return true
-  if (pathname.startsWith('/api/system/feature-flags')) return true
-  return false
-}
-
-function mockJsonResponse(route: Route, body: unknown) {
-  return route.fulfill({
-    status: 200,
-    contentType: 'application/json',
-    body: JSON.stringify(body)
-  })
+function buildAthleteDashboardMock() {
+  return buildAthleteDashboardMockBody()
 }
 
 /** Mockuje wywołania Rust API w przeglądarce (panel `/athlete` ma `ssr: false`). */
 export async function setupAthleteDashboardMocks(page: Page) {
   const { userId, athleteId, username, fullName } = E2E_ATHLETE_MOCK
 
-  await page.route('**/api/**', async (route) => {
+  await page.route('**/*', async (route) => {
     const url = new URL(route.request().url())
     const path = url.pathname
     const method = route.request().method()
 
-    if (method !== 'GET' || !isMockedBackendPath(path)) {
+    if (!path.startsWith('/api/')) {
       await route.continue()
+      return
+    }
+
+    if (method !== 'GET') {
+      await route.continue()
+      return
+    }
+
+    if (path === '/api/system/backend-provider') {
+      await mockJsonResponse(route, { active_provider: 'huggingface', updated_at: null })
       return
     }
 
@@ -90,7 +101,7 @@ export async function setupAthleteDashboardMocks(page: Page) {
       return
     }
 
-    if (path === '/api/athletes/me/dashboard') {
+    if (path === '/api/athletes/me/dashboard' || path === '/api/panel/athletes/me/dashboard') {
       await mockJsonResponse(route, buildAthleteDashboardMock())
       return
     }
@@ -110,7 +121,7 @@ export async function setupAthleteDashboardMocks(page: Page) {
       return
     }
 
-    await route.continue()
+    await mockJsonResponse(route, [])
   })
 }
 

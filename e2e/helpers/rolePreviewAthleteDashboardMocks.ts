@@ -40,28 +40,29 @@ function isRolePreviewDashboardRequest(path: string, previewHeader: string | und
     && (path === '/api/panel/athletes/me/dashboard' || path === rolePreviewAthleteDashboardPath())
 }
 
-function isMockedRolePreviewPath(pathname: string): boolean {
-  if (pathname === '/api/auth/me') return true
-  if (pathname === '/api/panel/athletes/me/dashboard') return true
-  if (pathname === rolePreviewAthleteDashboardPath()) return true
-  if (pathname === '/api/athletes') return true
-  if (pathname === '/api/system/mobile-releases/latest') return true
-  if (pathname.startsWith('/api/system/feature-flags')) return true
-  return false
-}
 
 /** Mockuje BFF panelu + przepisane endpointy role-preview (SuperAdmin read-only). */
 export async function setupRolePreviewAthleteDashboardMocks(page: Page) {
   const previewDashboardPath = rolePreviewAthleteDashboardPath()
 
-  await page.route('**/api/**', async (route) => {
+  await page.route('**/*', async (route) => {
     const url = new URL(route.request().url())
     const path = url.pathname
     const method = route.request().method()
     const previewHeader = route.request().headers()['x-slavia-role-preview']
 
-    if (method !== 'GET' || !isMockedRolePreviewPath(path)) {
+    if (!path.startsWith('/api/')) {
       await route.continue()
+      return
+    }
+
+    if (method !== 'GET') {
+      await route.continue()
+      return
+    }
+
+    if (path === '/api/system/backend-provider') {
+      await mockJsonResponse(route, { active_provider: 'huggingface', updated_at: null })
       return
     }
 
@@ -98,7 +99,8 @@ export async function setupRolePreviewAthleteDashboardMocks(page: Page) {
       return
     }
 
-    await route.continue()
+    // Nieznane GET /api/* — pusta odpowiedź zamiast 401 z backendu (useApi wywołuje logout).
+    await mockJsonResponse(route, [])
   })
 }
 
@@ -113,7 +115,7 @@ export async function seedRolePreviewAthleteSession(context: BrowserContext, bas
 }
 
 /** Stan podglądu w sessionStorage (hydracja `useRolePreviewState`). */
-export async function seedRolePreviewState(page: Page) {
+export async function seedRolePreviewState(context: BrowserContext) {
   const state = {
     targetUserId: E2E_PREVIEW_TARGET.userId,
     targetUsername: E2E_PREVIEW_TARGET.username,
@@ -123,7 +125,7 @@ export async function seedRolePreviewState(page: Page) {
     startedAt: new Date().toISOString()
   }
 
-  await page.addInitScript(({ key, json }: { key: string, json: string }) => {
+  await context.addInitScript(({ key, json }: { key: string, json: string }) => {
     try {
       sessionStorage.setItem(key, json)
     } catch {

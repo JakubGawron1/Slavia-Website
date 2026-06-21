@@ -1,8 +1,8 @@
 <script setup lang="ts">
-const preview = useRolePreview()
+const { isActive, state, endPreview: endPreviewAction } = useRolePreview()
 
 const roleLabel = computed(() => {
-  const r = preview.state.value?.previewRole
+  const r = state.value?.previewRole
   if (r === 'Athlete') return 'zawodnik'
   if (r === 'Trainer') return 'trener'
   if (r === 'Admin') return 'administrator'
@@ -10,7 +10,7 @@ const roleLabel = computed(() => {
 })
 
 const displayName = computed(() => {
-  const s = preview.state.value
+  const s = state.value
   if (!s) return ''
   return s.athleteName?.trim() || s.targetUsername
 })
@@ -21,7 +21,7 @@ async function exitPreview() {
   if (ending.value) return
   ending.value = true
   try {
-    await preview.endPreview()
+    await endPreviewAction()
   } finally {
     ending.value = false
   }
@@ -30,7 +30,7 @@ async function exitPreview() {
 
 <template>
   <div
-    v-if="preview.isActive.value"
+    v-if="isActive"
     class="role-preview-banner"
     role="status"
     aria-live="polite"
