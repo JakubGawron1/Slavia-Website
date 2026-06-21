@@ -5,8 +5,7 @@ import {
 } from '../../utils/panelBackendProxy'
 
 /**
- * GET /api/panel/athletes/me/dashboard → {apiBase}/api/athletes/me/dashboard
- * GET /api/panel/trainer/dashboard → {apiBase}/api/trainer/dashboard
+ * GET /api/panel/* → {apiBase}/api/* (whitelist w `panelBffPaths`).
  * Krótki cache prywatny (przeglądarka) — `routeRules` + nagłówki odpowiedzi.
  */
 export default defineEventHandler(async (event) => {

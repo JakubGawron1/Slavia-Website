@@ -7,7 +7,7 @@ export const PANEL_BFF_CACHE_CONTROL = 'private, max-age=10, stale-while-revalid
 
 /**
  * BFF GET panelu (zalogowany) → zewnętrzny backend z tokenem użytkownika.
- * Jawna whitelist (`panelBffPaths`) — m.in. dashboard zawodnika i trenera.
+ * Jawna whitelist (`panelBffPaths`) — dashboard, składki, frekwencja (UUID).
  * Bez tras publicznych i bez mutacji.
  */
 export function isPanelBackendProxyPath(apiPath: string): boolean {
@@ -23,8 +23,12 @@ export function isPanelBackendProxyPath(apiPath: string): boolean {
 
 function resolvePanelBackendPath(apiPath: string, previewUserId: string | undefined): string {
   const uid = previewUserId?.trim()
-  if (uid && apiPath === '/api/athletes/me/dashboard') {
+  if (!uid) return apiPath
+  if (apiPath === '/api/athletes/me/dashboard') {
     return `/api/system/role-preview/athlete-dashboard/${encodeURIComponent(uid)}`
+  }
+  if (apiPath === '/api/payments/my/status') {
+    return `/api/system/role-preview/payment-status/${encodeURIComponent(uid)}`
   }
   return apiPath
 }
