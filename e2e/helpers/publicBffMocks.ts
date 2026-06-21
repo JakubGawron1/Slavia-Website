@@ -1,4 +1,4 @@
-import { expect, test, type Page, type Route } from '@playwright/test'
+import { expect, type Page, type Route } from '@playwright/test'
 
 /** Minimalna kadra do smoke E2E — bez Rust API na :8080. */
 export const E2E_PUBLIC_ATHLETES = [

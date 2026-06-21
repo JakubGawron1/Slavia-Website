@@ -1,6 +1,6 @@
 /** Plain text for screen-reader announcements (markdown stripped, truncated). */
 export function chatPlainText(source: string, maxLength = 280): string {
-  let text = String(source ?? '')
+  const text = String(source ?? '')
     .replace(/```[\s\S]*?```/g, ' ')
     .replace(/`([^`]+)`/g, '$1')
     .replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1')

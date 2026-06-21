@@ -3,6 +3,15 @@ import type { CalendarEvent } from '~/types/models'
 
 const open = defineModel<boolean>('open', { required: true })
 const participantIds = defineModel<string[]>('participantIds', { required: true })
+const formState = defineModel<{
+  title: string
+  date: string
+  location: string
+  description: string
+  category: string
+  status: string
+  club_participates: boolean
+}>('formState', { required: true })
 
 defineProps<{
   title: string
@@ -12,15 +21,6 @@ defineProps<{
   bannerEvent: CalendarEvent | null
   canManageEvents: boolean
   isEditingClubRecurringTraining: boolean
-  formState: {
-    title: string
-    date: string
-    location: string
-    description: string
-    category: string
-    status: string
-    club_participates: boolean
-  }
   categories: Array<{ value: string, label: string, desc: string }>
   athletesPickList: Array<{ id: string, full_name: string }>
   canExportReadOnlyCompetitionIcs: boolean

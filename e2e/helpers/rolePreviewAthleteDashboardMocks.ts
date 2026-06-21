@@ -1,4 +1,4 @@
-import type { BrowserContext, Page, Route } from '@playwright/test'
+import type { BrowserContext, Page } from '@playwright/test'
 import {
   buildAthleteDashboardMockBody,
   dismissAthleteDashboardOverlays,

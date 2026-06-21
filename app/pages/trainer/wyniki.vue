@@ -355,7 +355,7 @@ watch([() => formAdd.snatch, () => formAdd.clean_and_jerk], () => {
   formAdd.total = formAdd.snatch + formAdd.clean_and_jerk
 })
 
-const copy = useSlaviaCopy()
+
 const pendingRows = computed(() => rows.value.filter(r => r.status === 'Pending'))
 const selectedPending = ref<string[]>([])
 
