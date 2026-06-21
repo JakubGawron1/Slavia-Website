@@ -125,8 +125,22 @@ const showAthleteMobileNav = computed(
     && isAthletePanelRoute(route.path)
 )
 
+const showTrainerMobileNav = computed(
+  () =>
+    auth.isLoggedIn.value
+    && auth.isTrainer.value
+    && isTrainerPanelRoute(route.path)
+)
+
+const showPanelMobileNav = computed(
+  () => showAthleteMobileNav.value || showTrainerMobileNav.value
+)
+
 const hideSiteFooter = computed(
-  () => showSidebarForRoute.value || isAthletePanelRoute(route.path)
+  () =>
+    showSidebarForRoute.value
+    || isAthletePanelRoute(route.path)
+    || isTrainerPanelRoute(route.path)
 )
 
 const { items: notifications, refresh: refreshNotifications } = useNotifications()
@@ -268,17 +282,18 @@ useHead({
         id="main-content"
         tabindex="-1"
         class="slavia-safe-x outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-        :class="{ 'slavia-main--athlete-mobile-nav': showAthleteMobileNav }"
+        :class="{ 'slavia-main--athlete-mobile-nav': showPanelMobileNav }"
       >
         <NuxtPage />
       </UMain>
 
       <AthleteMobileNav v-if="showAthleteMobileNav" />
+      <TrainerMobileNav v-if="showTrainerMobileNav" />
       <ClubSiteFooter v-if="!hideSiteFooter" />
       <SlaviaScrollToTop
         :panel="showSidebarForRoute"
         :panel-sidebar-collapsed="panelSidebarCollapsed"
-        :athlete-mobile-nav="showAthleteMobileNav"
+        :athlete-mobile-nav="showPanelMobileNav"
       />
       <ClubPublicAiAssistant v-if="showPublicAi" />
       <CmsGlobalEditToggle />
