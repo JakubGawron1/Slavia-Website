@@ -218,6 +218,14 @@ export const apiRoutes = {
     approve: (id: string) => `/api/submissions/${encodeURIComponent(id)}/approve`,
     one: (id: string) => `/api/submissions/${encodeURIComponent(id)}`
   },
+  boardDocuments: {
+    documents: '/api/board/documents',
+    document: (id: string) => `/api/board/documents/${encodeURIComponent(id)}`,
+    documentContent: (id: string) =>
+      `/api/board/documents/${encodeURIComponent(id)}/content`,
+    documentPreview: (id: string) =>
+      `/api/board/documents/${encodeURIComponent(id)}/preview`
+  },
   cms: {
     variables: '/api/cms/variables',
     variableCreate: '/api/cms/variable',

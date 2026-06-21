@@ -51,6 +51,7 @@ export function buildRouteRules(devDisableRootIsr: boolean) {
 
     '/ogloszenia': { ...panelNoStore },
     '/klub': panelNoStore,
+    '/klub/dokumenty/**': panelNoStore,
     [KLUB_SHARED_ROUTES.obecnosc]: panelNoStore,
     [KLUB_SHARED_ROUTES.czat]: panelNoStore,
     [KLUB_SHARED_ROUTES.powiadomienia]: panelNoStore,
