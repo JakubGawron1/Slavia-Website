@@ -5,12 +5,15 @@ const ATHLETE_UUID =
 export const PANEL_BFF_GET_PATHS = [
   '/api/athletes/me/dashboard',
   '/api/trainer/dashboard',
-  '/api/payments/my/status'
+  '/api/payments/my/status',
+  '/api/board/documents'
 ] as const
 
 /** Wzorce GET (np. UUID zawodnika) — ACL weryfikowany po stronie backendu. */
 export const PANEL_BFF_GET_PATTERNS: RegExp[] = [
-  new RegExp(`^/api/attendance/summary/${ATHLETE_UUID}$`, 'i')
+  new RegExp(`^/api/attendance/summary/${ATHLETE_UUID}$`, 'i'),
+  /^\/api\/board\/documents\/[^/]+$/,
+  /^\/api\/board\/documents\/[^/]+\/preview$/
 ]
 
 export type PanelBffGetPath = (typeof PANEL_BFF_GET_PATHS)[number]

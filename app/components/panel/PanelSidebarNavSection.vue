@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { PanelSidebarNavGroup } from '~/data/panelSidebarNavigation'
 import { sidebarGroupHasActiveRoute } from '~/data/panelSidebarNavigation'
+import type { DashboardModuleLink } from '~/utils/dashboardLink'
 
 const props = defineProps<{
   group: PanelSidebarNavGroup
