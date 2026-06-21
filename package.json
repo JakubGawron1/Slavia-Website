@@ -2,7 +2,7 @@
   "name": "Slavia-frontend",
   "private": true,
   "type": "module",
-  "version": "5.0.0",
+  "version": "5.1.0",
   "scripts": {
     "build": "node --max-old-space-size=8192 ./node_modules/nuxt/bin/nuxt.mjs build",
     "dev": "nuxt dev",
