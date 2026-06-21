@@ -155,8 +155,8 @@ export function useApi() {
     opts?: FetchOptions & ApiFetchOrEmptyOptions<T | null>
   ): Promise<T | null> => {
     const { fallback, toast: toastOpt, ...fetchOpts } = opts ?? {}
-    return apiFetchOrEmpty(
-      () => apiFetch<T>(url, fetchOpts),
+    return apiFetchOrEmpty<T>(
+      () => apiFetch<T>(url, fetchOpts) as Promise<T>,
       { fallback, toast: toastOpt },
       createApiFetchOrEmptyDeps((t) => toast.add(t))
     )

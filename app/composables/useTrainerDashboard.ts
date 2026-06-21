@@ -5,7 +5,9 @@ import type {
   TrainerDashboardResponse
 } from '~/types/models'
 import { apiRoutes } from '~/config/api'
-import { getApiErrorMessage } from '~/composables/useApi'
+import { API_PANEL_COLD_START_TIMEOUT_MS, getApiErrorMessage } from '~/composables/useApi'
+import { apiFetchOrEmpty } from '~/utils/apiFetchOrEmpty'
+import { fetchWithDashboardKpiRetry } from '~/utils/dashboardKpiLoadLogic'
 
 type AttendanceRecord = {
   id: string
@@ -19,20 +21,25 @@ export async function useTrainerDashboard() {
   const apiFetch = useApi()
   const toast = useToast()
 
-  const { data: athletes } = await useAsyncData(
-    'trainer-athletes',
-    async (): Promise<Athlete[]> => {
-      try {
-        return await apiFetch<Athlete[]>('/api/athletes/admin')
-      } catch {
-        return await apiFetch<Athlete[]>('/api/athletes').catch(() => [])
-      }
-    }
-  )
+  async function fetchDashboardBundle(): Promise<TrainerDashboardResponse | null> {
+    const fetcher = () =>
+      apiFetch<TrainerDashboardResponse>(apiRoutes.trainer.dashboard, {
+        timeout: API_PANEL_COLD_START_TIMEOUT_MS
+      })
+    return apiFetchOrEmpty(() =>
+      fetchWithDashboardKpiRetry(fetcher, {
+        maxAttempts: 2,
+        delaysMs: [1_000]
+      })
+    )
+  }
 
   const { data: dashboardBundle, refresh: refreshDashboard } = await useAsyncData(
     'trainer-dashboard-bundle',
-    () => apiFetch<TrainerDashboardResponse>(apiRoutes.trainer.dashboard).catch(() => null),
+    async () => {
+      await auth.ensureSession()
+      return fetchDashboardBundle()
+    },
     { default: () => null }
   )
 
@@ -49,9 +56,40 @@ export async function useTrainerDashboard() {
   }
 
   const currentMonthStr = new Date().toISOString().slice(0, 7)
+
+  const { data: athletes } = await useAsyncData(
+    'trainer-athletes',
+    async (): Promise<Athlete[]> => {
+      const adminList = await apiFetch.orEmpty<Athlete[]>('/api/athletes/admin')
+      if (adminList?.length) return adminList
+      return (await apiFetch.orEmpty<Athlete[]>('/api/athletes', { fallback: [] })) ?? []
+    },
+    { default: () => [] as Athlete[] }
+  )
+
   const { data: paymentsOverview } = await useAsyncData(
     'trainer-kpi-payments',
-    () => apiFetch<AthletePaymentOverviewRow[]>(`${apiRoutes.payments.overview}?month=${currentMonthStr}`).catch(() => [])
+    () =>
+      apiFetch.orEmpty<AthletePaymentOverviewRow[]>(
+        `${apiRoutes.payments.overview}?month=${currentMonthStr}`,
+        { fallback: [] }
+      ).then(rows => rows ?? []),
+    { default: () => [] as AthletePaymentOverviewRow[] }
+  )
+
+  const attendanceFromDate = (() => {
+    const d = new Date()
+    d.setDate(d.getDate() - 30)
+    return d.toISOString().slice(0, 10)
+  })()
+
+  const { data: recentAttendance } = await useAsyncData(
+    'trainer-kpi-attendance-recent',
+    () =>
+      apiFetch.orEmpty<AttendanceRecord[]>(`/api/attendance?from_date=${attendanceFromDate}`, {
+        fallback: []
+      }).then(rows => rows ?? []),
+    { default: () => [] as AttendanceRecord[] }
   )
 
   const paidCount = computed(() => (paymentsOverview.value || []).filter(r => r.has_approved).length)
@@ -66,16 +104,6 @@ export async function useTrainerDashboard() {
 
   const unpaidThisMonth = computed(() =>
     (paymentsOverview.value || []).filter(r => !r.has_approved).slice(0, 12)
-  )
-
-  const { data: recentAttendance } = await useAsyncData(
-    'trainer-kpi-attendance-recent',
-    () => {
-      const d = new Date()
-      d.setDate(d.getDate() - 30)
-      const from = d.toISOString().slice(0, 10)
-      return apiFetch<AttendanceRecord[]>(`/api/attendance?from_date=${from}`).catch(() => [])
-    }
   )
 
   const avgAttendance = computed(() => {
@@ -102,11 +130,11 @@ export async function useTrainerDashboard() {
   }
 
   const athletesCount = computed(() => {
-    const list = athletes.value
-    if (!Array.isArray(list)) {
-      return 0
+    const fromList = athletes.value
+    if (Array.isArray(fromList) && fromList.length > 0) {
+      return fromList.filter(a => a.is_active !== false).length
     }
-    return list.filter(a => a.is_active !== false).length
+    return monitoringSummary.value?.athletes_count ?? 0
   })
   const pendingCount = computed(() => (Array.isArray(pendingResults.value) ? pendingResults.value.length : 0))
   const pendingPaymentsCount = computed(() => (Array.isArray(pendingPayments.value) ? pendingPayments.value.length : 0))
