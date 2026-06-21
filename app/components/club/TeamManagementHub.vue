@@ -68,9 +68,17 @@ const headerCopy = computed(() => {
   }
 })
 
+const showPlayersManager = computed(() => tab.value === 'players')
+
 const showAdminsManager = computed(
   () => props.area !== 'trainer' && (auth.isAdmin.value || auth.isSuperAdmin.value)
 )
+
+const ClubPlayersManagerLazy = defineAsyncComponent({
+  loader: () => import('~/components/club/PlayersManager.vue'),
+  delay: 80,
+  timeout: 120_000
+})
 
 const AdminsManagerLazy = defineAsyncComponent({
   loader: () => import('~/components/club/AdminsManager.vue'),
@@ -142,8 +150,18 @@ const breadcrumbs = computed(() => {
       </button>
     </nav>
 
-    <div v-show="tab === 'players'">
-      <ClubPlayersManager />
+    <div v-if="showPlayersManager">
+      <Suspense>
+        <ClubPlayersManagerLazy />
+        <template #fallback>
+          <div class="flex justify-center py-16 text-muted">
+            <UIcon
+              name="i-lucide-loader-2"
+              class="size-8 animate-spin"
+            />
+          </div>
+        </template>
+      </Suspense>
     </div>
     <div v-if="tab === 'accounts'">
       <ClubTrainerTeamAccountsPanel v-if="area === 'trainer'" />
