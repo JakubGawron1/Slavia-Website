@@ -1,4 +1,9 @@
 import type { FetchError, FetchOptions } from 'ofetch'
+import {
+  apiFetchOrEmpty,
+  createApiFetchOrEmptyDeps,
+  type ApiFetchOrEmptyOptions
+} from '~/utils/apiFetchOrEmpty'
 import { markBackendAwake, notifyBackendWakingIfNeeded } from '~/utils/backendWakeNotice'
 import { isPanelBffPath, panelApiUrl } from '~/utils/panelBffPaths'
 import { rewriteRolePreviewApiUrl } from '~/utils/rolePreviewApiRewrite'
@@ -132,7 +137,7 @@ export function useApi() {
     }
   })
 
-  return <T>(url: string, opts?: FetchOptions) => {
+  const apiFetch = <T>(url: string, opts?: FetchOptions) => {
     const method = String(opts?.method || 'GET')
     const { path, query } = splitUrl(url)
     if (method.toUpperCase() === 'GET' && isPanelBffPath(path)) {
@@ -143,6 +148,22 @@ export function useApi() {
       isAthletePreview: rolePreview.isAthletePreview.value
     })
     return client<T>(rewritten, opts as Parameters<typeof client>[1])
+  }
+
+  const orEmpty = <T>(
+    url: string,
+    opts?: FetchOptions & ApiFetchOrEmptyOptions<T | null>
+  ): Promise<T | null> => {
+    const { fallback, toast: toastOpt, ...fetchOpts } = opts ?? {}
+    return apiFetchOrEmpty(
+      () => apiFetch<T>(url, fetchOpts),
+      { fallback, toast: toastOpt },
+      createApiFetchOrEmptyDeps((t) => toast.add(t))
+    )
+  }
+
+  return Object.assign(apiFetch, { orEmpty }) as typeof apiFetch & {
+    orEmpty: typeof orEmpty
   }
 }
 

@@ -31,6 +31,7 @@ import {
   writeAthleteDashboardCache
 } from '~/utils/athleteDashboardCache'
 import { scheduleIdleWork } from '~/utils/scheduleIdleWork'
+import { apiFetchOrEmpty } from '~/utils/apiFetchOrEmpty'
 import { API_PANEL_COLD_START_TIMEOUT_MS } from '~/composables/useApi'
 import { fetchWithDashboardKpiRetry } from '~/utils/dashboardKpiLoadLogic'
 
@@ -108,12 +109,14 @@ export async function useAthleteDashboard() {
       timeout: API_PANEL_COLD_START_TIMEOUT_MS
     })
     if (options?.coldStart) {
-      return await fetchWithDashboardKpiRetry(fetcher, {
-        maxAttempts: 2,
-        delaysMs: [1_000]
-      }).catch(() => null)
+      return apiFetchOrEmpty(
+        () => fetchWithDashboardKpiRetry(fetcher, {
+          maxAttempts: 2,
+          delaysMs: [1_000]
+        })
+      )
     }
-    return await fetcher().catch(() => null)
+    return apiFetchOrEmpty(fetcher)
   }
 
   function canUseAthleteDashboardCache(): boolean {
@@ -242,12 +245,9 @@ export async function useAthleteDashboard() {
   const latestRelease = ref<MobileReleaseInfo | null>(null)
 
   scheduleIdleWork(() => {
-    void apiFetch<MobileReleaseInfo>('/api/system/mobile-releases/latest')
+    void apiFetch.orEmpty<MobileReleaseInfo>('/api/system/mobile-releases/latest')
       .then((release) => {
         latestRelease.value = release
-      })
-      .catch(() => {
-        latestRelease.value = null
       })
   })
 

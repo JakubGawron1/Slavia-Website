@@ -1,4 +1,5 @@
 import { fetchWithDashboardKpiRetry } from '~/utils/dashboardKpiLoadLogic'
+import { apiFetchOrEmpty, type ApiFetchOrEmptyDeps } from '~/utils/apiFetchOrEmpty'
 
 /**
  * Lekki helper do KPI na dashboardzie — śledzi dane, ładowanie i błąd sieci/API.
@@ -14,6 +15,9 @@ export function useDashboardKpiLoad<T>(options?: {
   const loading = ref(options?.initialLoading ?? false)
   const failed = ref(false)
   const toast = options?.toastOnFailure ? useToast() : null
+  const toastDeps: ApiFetchOrEmptyDeps | undefined = toast
+    ? { addToast: (t) => toast.add(t) }
+    : undefined
 
   async function refresh(fetcher: () => Promise<T>, refreshOptions?: { skip?: boolean }) {
     if (refreshOptions?.skip) {
@@ -25,19 +29,22 @@ export function useDashboardKpiLoad<T>(options?: {
 
     loading.value = true
     failed.value = false
-    try {
-      data.value = await fetchWithDashboardKpiRetry(fetcher)
-    } catch {
-      data.value = null
-      failed.value = true
-      toast?.add({
-        title: 'KPI niedostępne',
-        description: 'Serwer odpowiada z opóźnieniem. Spróbuj odświeżyć za chwilę.',
-        color: 'warning'
-      })
-    } finally {
-      loading.value = false
-    }
+    const result = await apiFetchOrEmpty(
+      () => fetchWithDashboardKpiRetry(fetcher),
+      options?.toastOnFailure
+        ? {
+            toast: {
+              title: 'KPI niedostępne',
+              description: 'Serwer odpowiada z opóźnieniem. Spróbuj odświeżyć za chwilę.',
+              color: 'warning'
+            }
+          }
+        : undefined,
+      toastDeps
+    )
+    data.value = result
+    failed.value = result === null
+    loading.value = false
   }
 
   return { data, loading, failed, refresh }
