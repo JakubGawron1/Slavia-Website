@@ -1,4 +1,8 @@
+import { track } from '@vercel/analytics'
+
 export const BACKEND_WAKE_TOAST_ID = 'slavia-backend-waking'
+
+export const HF_COLD_START_ANALYTICS_EVENT = 'hf_cold_start'
 
 export const BACKEND_WAKE_MESSAGE = 'Serwer się uruchamia — spróbuj za chwilę'
 
@@ -38,6 +42,9 @@ export function notifyBackendWakingIfNeeded(status: number | undefined, toast: T
   if (!shouldShowBackendWakeNotice(status)) return
 
   state.episodeActive = true
+  if (import.meta.client) {
+    track(HF_COLD_START_ANALYTICS_EVENT)
+  }
   toast.add({
     id: BACKEND_WAKE_TOAST_ID,
     title: BACKEND_WAKE_MESSAGE,
