@@ -4,7 +4,7 @@ const ATHLETE_PUBLIC_PROFILE_OFFLINE_DENY_PATTERN = /^\/athlete\/[^/]*--[^/]*\/?
 export function buildPwaConfig(
   packageJsonVersion: string,
   formatPublicAppVersion: (raw: string) => string,
-  isProd: boolean
+  _isProd: boolean
 ) {
   return {
     registerType: 'autoUpdate' as const,
@@ -85,7 +85,8 @@ export function buildPwaConfig(
       ]
     },
     devOptions: {
-      enabled: !isProd,
+      // SW w dev podawał przestarzały shell (gołe przyciski, brak danych po hydracji).
+      enabled: false,
       type: 'module',
       navigateFallback: '/',
       suppressWarnings: true

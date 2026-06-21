@@ -29,25 +29,31 @@ function applyDevMobilePreviewFromStorage() {
   }
 }
 
-onMounted(async () => {
+let bootSafetyTimer: ReturnType<typeof setTimeout> | null = null
+
+onMounted(() => {
   if (import.meta.client && auth.token.value) {
-    await auth.fetchMe()
+    void auth.fetchMe()
   }
   appearance.hydrate()
   applyDevMobilePreviewFromStorage()
   requestAnimationFrame(() => {
     isAppLoading.value = false
   })
+  bootSafetyTimer = setTimeout(() => {
+    isAppLoading.value = false
+    document.documentElement.classList.remove('overflow-hidden')
+  }, 4_000)
 })
 
 watch(
   () => auth.token.value,
-  async (t) => {
+  (t) => {
     if (!import.meta.client) {
       return
     }
     if (t) {
-      await auth.fetchMe()
+      void auth.fetchMe()
     }
     appearance.hydrate()
   }
@@ -60,6 +66,7 @@ watch(isAppLoading, (loading) => {
 
 onBeforeUnmount(() => {
   if (!import.meta.client) return
+  if (bootSafetyTimer) clearTimeout(bootSafetyTimer)
   document.documentElement.classList.remove('overflow-hidden')
 })
 

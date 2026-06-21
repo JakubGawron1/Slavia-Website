@@ -53,11 +53,14 @@ export function usePublicLazyFetch<T>(
     key,
     async () => {
       try {
-        const result = (await $fetch(buildUrl())) as T
+        const result = (await $fetch(buildUrl(), { timeout: 12_000 })) as T
         publicFetchTimestamps.set(key.value, Date.now())
         return result
       } catch (err) {
-        if (import.meta.server && opts.default) {
+        if (opts.default) {
+          if (import.meta.dev) {
+            console.warn(`[public-api] ${buildUrl()} niedostępne, używam default()`, err)
+          }
           return opts.default()
         }
         throw err

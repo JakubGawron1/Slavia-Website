@@ -3,6 +3,9 @@ import { clearAthleteDashboardCache } from '~/utils/athleteDashboardCache'
 import type { AuthUser, LoginResponse, UserRole } from '~/types/models'
 import type { FetchError } from 'ofetch'
 
+/** Limit cold start HF — nie blokuj publicznych stron na wiszącym /auth/me. */
+export const AUTH_FETCH_ME_TIMEOUT_MS = 12_000
+
 const USER_STATE_KEY = 'slavia-auth-user'
 
 const ROLE_LABELS: Record<UserRole, string> = {
@@ -179,7 +182,8 @@ export function useAuth() {
     }
     try {
       const me = await $fetch<AuthUser>(`${apiBase.value}${apiRoutes.auth.me}`, {
-        headers: { Authorization: `Bearer ${token.value}` }
+        headers: { Authorization: `Bearer ${token.value}` },
+        timeout: AUTH_FETCH_ME_TIMEOUT_MS
       })
       user.value = { ...me, roles: normalizeUserRoles(me.roles) }
       return user.value
