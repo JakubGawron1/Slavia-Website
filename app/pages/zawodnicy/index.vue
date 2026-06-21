@@ -58,9 +58,30 @@ const {
   disconnectPrefetchContainers
 } = useAthletePublicProfilePrefetch()
 
+const ATHLETE_CARDS_VIRTUAL_THRESHOLD = 50
+
 const rankingTableRef = ref<HTMLElement | null>(null)
 const trainingRankingRef = ref<HTMLElement | null>(null)
 const athleteCardsRef = ref<HTMLElement | null>(null)
+
+const virtualAthleteCards = ref(false)
+const gridColumns = usePublicGridColumns()
+const useVirtualAthleteCards = computed(() => virtualAthleteCards.value)
+
+const {
+  virtualRows: athleteCardVirtualRows,
+  paddingTop: athleteCardsPaddingTop,
+  paddingBottom: athleteCardsPaddingBottom,
+  rowItems: athleteCardRowItems,
+  updateScrollMargin: updateAthleteCardsScrollMargin
+} = useVirtualScrollGrid({
+  items: mappedPlayers,
+  enabled: useVirtualAthleteCards,
+  columns: gridColumns,
+  listRef: athleteCardsRef,
+  estimateRowSize: 460,
+  overscan: 2
+})
 
 function rescanAthletePrefetch() {
   nextTick(() => {
@@ -68,9 +89,21 @@ function rescanAthletePrefetch() {
   })
 }
 
-watch([filteredRankings, trainingRanking, mappedPlayers], rescanAthletePrefetch)
+watch(
+  [filteredRankings, trainingRanking, mappedPlayers, athleteCardVirtualRows, gridColumns],
+  rescanAthletePrefetch
+)
 
-onMounted(rescanAthletePrefetch)
+onMounted(() => {
+  virtualAthleteCards.value = mappedPlayers.value.length > ATHLETE_CARDS_VIRTUAL_THRESHOLD
+  rescanAthletePrefetch()
+  nextTick(updateAthleteCardsScrollMargin)
+})
+
+watch(mappedPlayers, (players) => {
+  virtualAthleteCards.value = players.length > ATHLETE_CARDS_VIRTUAL_THRESHOLD
+})
+
 onBeforeUnmount(disconnectPrefetchContainers)
 
 </script>
@@ -660,6 +693,7 @@ onBeforeUnmount(disconnectPrefetchContainers)
         lead="Profile z wykresami progresu i najlepszymi wynikami z zatwierdzonych startów."
       />
       <div
+        v-if="!useVirtualAthleteCards"
         ref="athleteCardsRef"
         class="slavia-public-grid slavia-public-grid--stagger"
       >
@@ -675,6 +709,39 @@ onBeforeUnmount(disconnectPrefetchContainers)
             :record="zawodnikCardToHallRecordCard(player)"
           />
         </div>
+      </div>
+      <div
+        v-else
+        ref="athleteCardsRef"
+      >
+        <div
+          v-if="athleteCardsPaddingTop > 0"
+          aria-hidden="true"
+          :style="{ height: `${athleteCardsPaddingTop}px` }"
+        />
+        <div
+          v-for="virtualRow in athleteCardVirtualRows"
+          :key="virtualRow.key"
+          class="slavia-public-grid slavia-public-grid--stagger"
+        >
+          <div
+            v-for="player in athleteCardRowItems(virtualRow.index)"
+            :key="player.id"
+            v-bind="athletePrefetchHandlers(player.id, player.name)"
+            :data-athlete-prefetch-id="player.id"
+            :data-athlete-prefetch-name="player.name"
+            class="block"
+          >
+            <ClubHallOfFameRecordCard
+              :record="zawodnikCardToHallRecordCard(player)"
+            />
+          </div>
+        </div>
+        <div
+          v-if="athleteCardsPaddingBottom > 0"
+          aria-hidden="true"
+          :style="{ height: `${athleteCardsPaddingBottom}px` }"
+        />
       </div>
     </section>
 
