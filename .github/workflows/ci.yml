@@ -50,11 +50,20 @@ jobs:
         env:
           NUXT_PUBLIC_API_BASE_URL: http://127.0.0.1:8080
 
+      - name: Bundle size report
+        run: pnpm run bundle:report -- --fail
+        env:
+          SLAVIA_BUNDLE_JS_MAX_KB: '5500'
+
       - name: Install Playwright browsers
         run: pnpm exec playwright install chromium --with-deps
 
       - name: E2E smoke
-        run: pnpm run test:e2e
+        run: >-
+          pnpm exec playwright test
+          e2e/smoke.spec.ts
+          e2e/smoke-mobile.spec.ts
+          e2e/smoke-athlete-dashboard.spec.ts
         env:
           PLAYWRIGHT_START_SERVER: '1'
           CI: 'true'
