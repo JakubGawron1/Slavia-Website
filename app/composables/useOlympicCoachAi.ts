@@ -41,6 +41,9 @@ export interface OlympicCoachQuota {
   barbell_path_limit_per_day?: number
   barbell_path_used_this_minute?: number
   barbell_path_limit_per_minute?: number
+  club_used_this_month?: number
+  club_limit_per_month?: number
+  club_monthly_exhausted?: boolean
   applies_to_you?: boolean
 }
 
@@ -98,9 +101,20 @@ function quotaTone(used: number, limit: number): OlympicCoachQuotaTone {
   return 'ok'
 }
 
+function monthlyBlockedMessage(status: OlympicCoachStatus | null | undefined): string | null {
+  const q = status?.quota
+  if (!q || q.applies_to_you === false) return null
+  if (q.club_monthly_exhausted) {
+    return 'Miesięczny limit zapytań AI klubu został wyczerpany. Panelowy Trener AI wróci po odnowieniu limitu. Asystent publiczny nadal działa.'
+  }
+  return null
+}
+
 export function olympicCoachChatBlockedReason(
   status: OlympicCoachStatus | null | undefined
 ): string | null {
+  const monthly = monthlyBlockedMessage(status)
+  if (monthly) return monthly
   const q = status?.quota
   if (!q || q.applies_to_you === false) return null
   if (q.chat_used_today >= q.chat_limit_per_day) {
@@ -115,6 +129,8 @@ export function olympicCoachChatBlockedReason(
 export function barbellPathRefineBlockedReason(
   status: OlympicCoachStatus | null | undefined
 ): string | null {
+  const monthly = monthlyBlockedMessage(status)
+  if (monthly) return monthly
   const q = status?.quota
   if (!q || q.applies_to_you === false) return null
   const dayLimit = q.barbell_path_limit_per_day ?? 10
@@ -174,6 +190,8 @@ export function barbellPathQuotaMetrics(
 export function olympicCoachImportBlockedReason(
   status: OlympicCoachStatus | null | undefined
 ): string | null {
+  const monthly = monthlyBlockedMessage(status)
+  if (monthly) return monthly
   const q = status?.quota
   if (!q || q.applies_to_you === false) return null
   if (q.import_used_today >= q.import_limit_per_day) {
@@ -213,10 +231,23 @@ export function olympicCoachQuotaMetrics(
     }
   }
 
-  const metrics: OlympicCoachQuotaMetric[] = [
+  const metrics: OlympicCoachQuotaMetric[] = []
+
+  if (typeof q.club_limit_per_month === 'number' && q.club_limit_per_month > 0) {
+    metrics.push(
+      build(
+        'club_monthly',
+        'Klub / miesiąc',
+        q.club_used_this_month ?? 0,
+        q.club_limit_per_month
+      )
+    )
+  }
+
+  metrics.push(
     build('chat_daily', 'Wiadomości dziś', q.chat_used_today, q.chat_limit_per_day),
     build('chat_minute', 'Na minutę', q.chat_used_this_minute, q.chat_limit_per_minute)
-  ]
+  )
 
   if (options?.includeImport) {
     metrics.push(
@@ -233,10 +264,11 @@ export function olympicCoachQuotaMetrics(
   return metrics
 }
 
-export async function probeOlympicCoachStream(): Promise<OlympicCoachStreamMode> {
+export async function probeOlympicCoachStream(apiBase: string): Promise<OlympicCoachStreamMode> {
   if (!import.meta.client) return 'offline'
+  const base = apiBase.replace(/\/$/, '')
   try {
-    const body = await $fetch<string>(apiRoutes.aiCoach.stream, {
+    const body = await $fetch<string>(`${base}${apiRoutes.aiCoach.stream}`, {
       responseType: 'text',
       timeout: 8_000
     })
@@ -248,6 +280,7 @@ export async function probeOlympicCoachStream(): Promise<OlympicCoachStreamMode>
 
 export function useOlympicCoachAi() {
   const api = useApi()
+  const auth = useAuth()
 
   const status = ref<OlympicCoachStatus | null>(null)
   const statusLoading = ref(true)
@@ -274,7 +307,7 @@ export function useOlympicCoachAi() {
     try {
       const [nextStatus, nextStream] = await Promise.all([
         api<OlympicCoachStatus>(apiRoutes.aiCoach.status),
-        probeOlympicCoachStream()
+        probeOlympicCoachStream(auth.apiBase.value)
       ])
       status.value = nextStatus
       streamMode.value = nextStream
@@ -284,7 +317,7 @@ export function useOlympicCoachAi() {
         model: 'llama-3.1-70b-versatile',
         key_format_ok: false
       }
-      streamMode.value = await probeOlympicCoachStream().catch(() => 'offline' as const)
+      streamMode.value = await probeOlympicCoachStream(auth.apiBase.value).catch(() => 'offline' as const)
     } finally {
       statusLoading.value = false
     }

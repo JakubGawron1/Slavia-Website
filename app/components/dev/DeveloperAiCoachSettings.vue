@@ -16,6 +16,7 @@ export interface AiCoachSettingsStored {
   mode_supplements_hint?: string | null
   mode_recovery_hint?: string | null
   mode_barbell_path_hint?: string | null
+  monthly_limit?: number | null
   updated_at?: string | null
   updated_by?: string | null
 }
@@ -26,12 +27,15 @@ export interface AiCoachSettingsResponse {
     chat_temperature: number
     public_chat_temperature: number
     vision_chat_temperature: number
+    monthly_limit: number
     coach_instruction_preview: string
     public_instruction_preview: string
   }
   has_customizations: boolean
   effective_coach_instruction_chars: number
   effective_public_instruction_chars: number
+  club_used_this_month: number
+  club_monthly_resets_label: string
 }
 
 type SettingsTab = 'coach' | 'public' | 'params' | 'modes'
@@ -58,13 +62,14 @@ const form = reactive({
   mode_plan_hint: '',
   mode_supplements_hint: '',
   mode_recovery_hint: '',
-  mode_barbell_path_hint: ''
+  mode_barbell_path_hint: '',
+  monthly_limit: ''
 })
 
 const tabs: { id: SettingsTab, label: string, icon: string }[] = [
   { id: 'coach', label: 'Trener panel', icon: 'i-lucide-sparkles' },
   { id: 'public', label: 'Asystent WWW', icon: 'i-lucide-globe' },
-  { id: 'params', label: 'Temperatura', icon: 'i-lucide-sliders-horizontal' },
+  { id: 'params', label: 'Limity i temp.', icon: 'i-lucide-sliders-horizontal' },
   { id: 'modes', label: 'Tryby', icon: 'i-lucide-layers' }
 ]
 
@@ -85,6 +90,7 @@ function applyToForm(data: AiCoachSettingsResponse) {
   form.mode_supplements_hint = s.mode_supplements_hint ?? ''
   form.mode_recovery_hint = s.mode_recovery_hint ?? ''
   form.mode_barbell_path_hint = s.mode_barbell_path_hint ?? ''
+  form.monthly_limit = s.monthly_limit != null ? String(s.monthly_limit) : ''
   snapshot.value = formSnapshot()
 }
 
@@ -96,6 +102,25 @@ function parseTemp(raw: string): number | undefined {
   if (!Number.isFinite(n)) return undefined
   return Math.min(1, Math.max(0, n))
 }
+
+function parseMonthlyLimit(raw: string): number | undefined {
+  if (!raw.trim()) return undefined
+  const n = Number.parseInt(raw.trim(), 10)
+  if (!Number.isFinite(n) || n < 1) return undefined
+  return n
+}
+
+const effectiveMonthlyLimit = computed(() => {
+  const parsed = parseMonthlyLimit(form.monthly_limit)
+  return parsed ?? meta.value?.defaults.monthly_limit ?? 300
+})
+
+const monthlyUsagePercent = computed(() => {
+  if (!meta.value) return 0
+  const limit = effectiveMonthlyLimit.value
+  if (limit <= 0) return 0
+  return Math.min(100, Math.round((meta.value.club_used_this_month / limit) * 100))
+})
 
 function tempDisplay(raw: string, fallback: number) {
   const n = parseTemp(raw)
@@ -151,7 +176,8 @@ function buildPayload(reset = false) {
     mode_plan_hint: form.mode_plan_hint.trim() || null,
     mode_supplements_hint: form.mode_supplements_hint.trim() || null,
     mode_recovery_hint: form.mode_recovery_hint.trim() || null,
-    mode_barbell_path_hint: form.mode_barbell_path_hint.trim() || null
+    mode_barbell_path_hint: form.mode_barbell_path_hint.trim() || null,
+    monthly_limit: parseMonthlyLimit(form.monthly_limit) ?? null
   }
 }
 
@@ -402,6 +428,52 @@ onMounted(() => {
       </div>
 
       <div v-show="activeTab === 'params'">
+        <div class="dev-ai-coach__temp-card mb-4">
+          <div class="dev-ai-coach__temp-head">
+            <div>
+              <p class="dev-ai-coach__temp-label">
+                Miesięczny limit klubu (panelowe AI)
+              </p>
+              <p class="dev-ai-coach__temp-default">
+                Wspólna pula dla wszystkich ról. Puste pole = domyślnie {{ meta?.defaults.monthly_limit ?? 300 }}.
+                Asystent publiczny nie zużywa tej puli.
+              </p>
+            </div>
+            <span class="dev-ai-coach__temp-value">
+              {{ meta?.club_used_this_month ?? 0 }}/{{ effectiveMonthlyLimit }}
+            </span>
+          </div>
+          <div
+            class="dev-ai-coach__quota-track mb-3"
+            role="progressbar"
+            :aria-valuenow="monthlyUsagePercent"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            :aria-label="`Zużycie miesięczne: ${meta?.club_used_this_month ?? 0} z ${effectiveMonthlyLimit}`"
+          >
+            <div
+              class="dev-ai-coach__quota-fill"
+              :class="monthlyUsagePercent >= 100 ? 'dev-ai-coach__quota-fill--danger' : monthlyUsagePercent >= 75 ? 'dev-ai-coach__quota-fill--warn' : 'dev-ai-coach__quota-fill--ok'"
+              :style="{ width: `${monthlyUsagePercent}%` }"
+            />
+          </div>
+          <UFormField label="Limit zapytań / miesiąc">
+            <UInput
+              v-model="form.monthly_limit"
+              type="number"
+              min="1"
+              max="50000"
+              inputmode="numeric"
+              placeholder="np. 300"
+            />
+          </UFormField>
+          <p
+            v-if="meta?.club_monthly_resets_label"
+            class="mt-2 text-xs text-muted"
+          >
+            Odnowienie licznika: {{ meta.club_monthly_resets_label }}
+          </p>
+        </div>
         <p class="dev-ai-coach__panel-intro">
           Niższa temperatura = bardziej przewidywalne odpowiedzi. Wyższa = żywszy ton i więcej kreatywności. Puste pole = wartość domyślna.
         </p>
