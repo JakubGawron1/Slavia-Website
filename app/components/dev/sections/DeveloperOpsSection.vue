@@ -21,7 +21,7 @@ const d = useDeveloperPage()
             </UButton>
           </div>
           <p class="mt-1 text-sm text-muted">
-            BFF <code class="font-mono text-xs">/api/ai/public/status</code> → backend coach. Widget na stronach publicznych klubu.
+            Bezpośrednio <code class="font-mono text-xs">GET /api/ai/coach/public/status</code> na backendzie Rust. Widget na stronach publicznych klubu.
           </p>
           <div v-if="d.aiPublicStatusLoading && !d.aiPublicStatus" class="mt-2 text-xs text-muted">
             Ładowanie statusu…

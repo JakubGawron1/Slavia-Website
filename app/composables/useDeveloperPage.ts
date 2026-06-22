@@ -278,13 +278,16 @@ const aiCoachStatusLoading = ref(false)
 
 async function refreshAiPublicStatus() {
   aiPublicStatusLoading.value = true
+  const { backendUrl } = useBackendDirectUrl()
   try {
-    aiPublicStatus.value = await $fetch<AiPublicStatusDto>('/api/ai/public/status')
+    aiPublicStatus.value = await $fetch<AiPublicStatusDto>(backendUrl(apiRoutes.aiCoach.publicStatus), {
+      timeout: 12_000
+    })
   } catch (e) {
     aiPublicStatus.value = {
       enabled: false,
       model: '',
-      message: getApiErrorMessage(e, 'BFF /api/ai/public/status niedostępny')
+      message: getApiErrorMessage(e, 'GET /api/ai/coach/public/status niedostępny')
     }
   } finally {
     aiPublicStatusLoading.value = false

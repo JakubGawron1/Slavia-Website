@@ -174,7 +174,9 @@ export const apiRoutes = {
     chat: '/api/ai/coach/chat',
     stream: '/api/ai/coach/stream',
     importPlan: '/api/ai/coach/import-plan',
-    barbellPathRefine: '/api/ai/coach/barbell-path/refine'
+    barbellPathRefine: '/api/ai/coach/barbell-path/refine',
+    publicStatus: '/api/ai/coach/public/status',
+    publicChat: '/api/ai/coach/public/chat'
   },
   payments: {
     my: '/api/payments/my',

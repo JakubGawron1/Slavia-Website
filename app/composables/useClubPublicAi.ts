@@ -1,3 +1,4 @@
+import { apiRoutes } from '~/config/api'
 import { getApiErrorMessage } from '~/composables/useApi'
 
 export interface ClubPublicAiMessage {
@@ -15,6 +16,8 @@ const MAX_MESSAGE_LEN = 1200
 const MAX_HISTORY = 6
 
 export function useClubPublicAi() {
+  const { backendUrl } = useBackendDirectUrl()
+
   const messages = ref<ClubPublicAiMessage[]>([])
   const loading = ref(false)
   const enabled = ref(false)
@@ -23,7 +26,9 @@ export function useClubPublicAi() {
 
   async function refreshStatus() {
     try {
-      const res = await $fetch<ClubPublicAiStatus>('/api/ai/public/status')
+      const res = await $fetch<ClubPublicAiStatus>(backendUrl(apiRoutes.aiCoach.publicStatus), {
+        timeout: 12_000
+      })
       enabled.value = res.enabled === true
       model.value = res.model || model.value
     } catch {
@@ -53,11 +58,14 @@ export function useClubPublicAi() {
           content: m.content
         }))
 
-      const res = await $fetch<{ reply: string, model: string }>('/api/ai/public/chat', {
-        method: 'POST',
-        body: { message: trimmed, history },
-        timeout: 120_000
-      })
+      const res = await $fetch<{ reply: string, model: string }>(
+        backendUrl(apiRoutes.aiCoach.publicChat),
+        {
+          method: 'POST',
+          body: { message: trimmed, history },
+          timeout: 120_000
+        }
+      )
 
       messages.value.push({
         id: crypto.randomUUID(),

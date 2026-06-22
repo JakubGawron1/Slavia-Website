@@ -29,7 +29,6 @@ export function buildRouteRules(devDisableRootIsr: boolean) {
 
     '/api/public/**': publicBffCache,
     '/api/panel/**': panelBffCache,
-    '/api/ai/public/**': panelNoStore,
 
     '/': devDisableRootIsr ? { isr: false, prerender: true } : { isr: 600, prerender: true },
 

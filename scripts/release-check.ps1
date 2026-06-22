@@ -25,20 +25,20 @@ if ($ApiBase) {
 }
 
 $BffUrl = $env:SLAVIA_BFF_URL
-if ($BffUrl) {
-  Write-Host "[6/6] optional BFF AI public status"
-  $bff = $BffUrl.TrimEnd('/')
-  $r5 = Invoke-WebRequest -Uri "$bff/api/ai/public/status" -UseBasicParsing -TimeoutSec 20
+if ($ApiBase) {
+  Write-Host "[6/6] optional backend AI public status"
+  $base = $ApiBase.TrimEnd('/')
+  $r5 = Invoke-WebRequest -Uri "$base/api/ai/coach/public/status" -UseBasicParsing -TimeoutSec 20
   if ($r5.StatusCode -ne 200) {
-    throw "GET /api/ai/public/status (BFF) zwróciło $($r5.StatusCode)"
+    throw "GET /api/ai/coach/public/status zwróciło $($r5.StatusCode)"
   }
   $body = $r5.Content | ConvertFrom-Json
-  if ($null -eq $body.available) {
-    throw "BFF /api/ai/public/status — brak pola available w JSON"
+  if ($null -eq $body.enabled) {
+    throw "Backend /api/ai/coach/public/status — brak pola enabled w JSON"
   }
-  Write-Host "BFF AI status OK (available=$($body.available))"
+  Write-Host "Backend AI public status OK (enabled=$($body.enabled))"
 } else {
-  Write-Host "[6/6] skip BFF AI healthcheck (ustaw SLAVIA_BFF_URL=http://127.0.0.1:3000 aby włączyć)"
+  Write-Host "[6/6] skip backend AI public status (ustaw SLAVIA_API_BASE_URL aby włączyć)"
 }
 
 Write-Host "OK: frontend release check completed."

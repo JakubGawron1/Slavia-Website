@@ -153,13 +153,6 @@ test.describe('ochrona tras', () => {
 })
 
 test.describe('AI coach smoke', () => {
-  test('publiczny status asystenta przez BFF', async ({ request }) => {
-    const res = await request.get('/api/ai/public/status')
-    expect(res.ok()).toBeTruthy()
-    const body = await res.json() as { available?: boolean, reason?: string }
-    expect(typeof body.available).toBe('boolean')
-  })
-
   test('strona Trener AI ładuje shell po przekierowaniu na logowanie', async ({ page }) => {
     await page.goto('/trainer/ai-coach', gotoOpts)
     await page.waitForURL(/\/logowanie/, { timeout: 20_000 })
