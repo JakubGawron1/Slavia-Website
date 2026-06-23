@@ -2,6 +2,7 @@ name: ci
 
 on:
   push:
+  pull_request:
 
 jobs:
   ci:
@@ -11,12 +12,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Checkout Slavia-backend (latest main)
+      - name: Checkout Slavia-backend (matching branch)
+        env:
+          FE_BRANCH: ${{ github.head_ref || github.ref_name }}
         run: |
           DEST="${GITHUB_WORKSPACE}/../Slavia-backend"
           rm -rf "$DEST"
-          git clone --depth 1 --branch main https://github.com/JakubGawron1/Slavia-backend.git "$DEST"
-          echo "Slavia-backend @ $(git -C "$DEST" rev-parse HEAD)"
+          BRANCH="${FE_BRANCH:-main}"
+          if ! git clone --depth 1 --branch "$BRANCH" https://github.com/JakubGawron1/Slavia-backend.git "$DEST" 2>/dev/null; then
+            echo "Branch $BRANCH not found on Slavia-backend, falling back to main"
+            git clone --depth 1 --branch main https://github.com/JakubGawron1/Slavia-backend.git "$DEST"
+          fi
+          echo "Slavia-backend @ $(git -C "$DEST" rev-parse --abbrev-ref HEAD) $(git -C "$DEST" rev-parse HEAD)"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
