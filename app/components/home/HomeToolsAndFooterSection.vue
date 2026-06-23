@@ -94,16 +94,15 @@ import { HOME_CLUB_TOOLS, HOME_FAQ, HOME_TRAINING_DAYS } from '~/data/homePageCo
                 <p class="font-black text-highlighted">
                   Adres sali treningowej
                 </p>
-                <p class="mt-1 text-sm leading-relaxed text-muted">
+                <div class="mt-1 text-sm leading-relaxed text-muted">
                   <CmsEditable
                     page-name="home"
                     field-key="location_address"
                     type="html"
                     label="Adres"
-                    tag="span"
                     fallback="CKS Slavia Ruda Śląska<br>ul. Konopnickiej 13<br>41-700 Ruda Śląska"
                   />
-                </p>
+                </div>
               </div>
             </div>
           </div>
@@ -181,12 +180,12 @@ import { HOME_CLUB_TOOLS, HOME_FAQ, HOME_TRAINING_DAYS } from '~/data/homePageCo
             Pierwszy trening jest <strong class="text-highlighted">bez zobowiązań</strong>. Wpadnij na salę,
             poznaj trenerów i drużynę — a my pokażemy Ci, że ciężary są dla każdego, kto chce trochę popracować.
           </p>
-          <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-4">
+          <div class="slavia-public-cta-row">
             <UButton
               to="/kontakt"
               size="xl"
               trailing-icon="i-lucide-arrow-right"
-              class="min-h-12 justify-center font-bold sm:min-h-0"
+              class="font-bold"
             >
               Umów pierwszy trening
             </UButton>
@@ -194,9 +193,9 @@ import { HOME_CLUB_TOOLS, HOME_FAQ, HOME_TRAINING_DAYS } from '~/data/homePageCo
               to="/zawodnicy"
               size="xl"
               color="neutral"
-              variant="subtle"
+              variant="outline"
               icon="i-lucide-trophy"
-              class="min-h-12 justify-center font-bold sm:min-h-0"
+              class="font-bold"
             >
               Zobacz drużynę
             </UButton>

@@ -13,7 +13,7 @@ export default defineAppConfig({
     button: {
       slots: {
         base:
-          'rounded-xl font-semibold transition-[color,background-color,border-color,box-shadow,transform] duration-200 active:scale-[0.98]'
+          'rounded-xl font-semibold no-underline transition-[color,background-color,border-color,box-shadow,transform] duration-200 active:scale-[0.98]'
       },
       variants: {
         solid: {

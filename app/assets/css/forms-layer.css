@@ -173,11 +173,11 @@
     @apply mt-1 mb-0;
   }
 
-  .slavia-rich-content :where(a) {
+  .slavia-rich-content :where(a:not([data-slot='base'])) {
     @apply font-medium underline underline-offset-2;
   }
 
-  .slavia-rich-content :where(a):not([style*='color']) {
+  .slavia-rich-content :where(a:not([data-slot='base'])):not([style*='color']) {
     @apply text-primary;
   }
 

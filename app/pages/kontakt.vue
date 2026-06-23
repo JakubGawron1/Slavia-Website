@@ -119,16 +119,15 @@ async function submit() {
           <h2 class="text-lg font-bold text-highlighted">
             O klubie
           </h2>
-          <p class="mt-3 text-sm leading-relaxed text-muted sm:text-base">
+          <div class="mt-3 text-sm leading-relaxed text-muted sm:text-base">
             <CmsEditable
               page-name="kontakt"
               field-key="about_text"
               type="html"
               label="O klubie (bok)"
-              tag="span"
               fallback="CKS Slavia to sekcja podnoszenia ciężarów z Rudy Śląskiej — trenujemy młodzież i dorosłych, od bezpiecznej nauki techniki po starty w zawodach. Jeśli nie wiesz, od czego zacząć, napisz kilka słów o sobie i swoich planach — chętnie podpowiemy, jak wyglądają zapisy i pierwsze spotkanie na sali."
             />
-          </p>
+          </div>
         </div>
 
         <ul class="space-y-4 text-sm text-muted">

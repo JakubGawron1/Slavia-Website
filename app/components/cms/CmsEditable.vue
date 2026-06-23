@@ -147,11 +147,14 @@ async function createAndInsertVariable() {
 function bindExistingVariable(key: string) {
   draft.value = `{${key}}`
 }
+
+/** HTML z CMS renderuje blokowy `SlaviaSafeHtml` — nie owijaj w `<span>` (psuje DOM przy hydracji). */
+const wrapperTag = computed(() => (props.type === 'html' ? 'div' : props.tag))
 </script>
 
 <template>
   <component
-    :is="tag"
+    :is="wrapperTag"
     class="cms-editable"
     :class="{ 'cms-editable--interactive': isInteractive }"
     :data-cms-page="resolvedPageName"

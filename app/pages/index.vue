@@ -169,25 +169,24 @@ const { mobileDownloadHref, mobileDownloadLabel } = useMobileAppRelease()
             />
           </h1>
 
-          <p class="slavia-public-lead mt-6 max-w-3xl text-pretty sm:text-lg lg:text-xl">
+          <div class="slavia-public-lead mt-6 max-w-3xl text-pretty sm:text-lg lg:text-xl">
             <CmsEditable
               page-name="home"
               field-key="hero_subtitle"
               type="html"
               label="Podtytuł hero"
-              tag="span"
               fallback="Klub podnoszenia ciężarów z tradycją i pasją. Trenujemy młodzież i dorosłych — od pierwszych kroków na platformie po starty w zawodach ogólnopolskich. Zapraszamy do <strong>Rudy Śląskiej</strong>."
             />
-          </p>
+          </div>
 
-          <div class="mt-8 flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-center lg:gap-4">
+          <div class="slavia-public-cta-row">
             <UButton
               to="/zawodnicy"
               prefetch
               prefetch-on="interaction"
               size="xl"
               trailing-icon="i-lucide-arrow-right"
-              class="min-h-12 justify-center font-bold sm:min-h-0"
+              class="font-bold"
             >
               Poznaj zawodników
             </UButton>
@@ -197,9 +196,9 @@ const { mobileDownloadHref, mobileDownloadLabel } = useMobileAppRelease()
               prefetch-on="interaction"
               size="xl"
               color="neutral"
-              variant="subtle"
+              variant="outline"
               icon="i-lucide-newspaper"
-              class="min-h-12 justify-center font-bold sm:min-h-0"
+              class="font-bold"
             >
               Aktualności
             </UButton>
@@ -211,7 +210,7 @@ const { mobileDownloadHref, mobileDownloadLabel } = useMobileAppRelease()
               color="neutral"
               variant="outline"
               icon="i-lucide-mail"
-              class="min-h-12 justify-center font-bold sm:min-h-0"
+              class="font-bold"
             >
               Dołącz do nas
             </UButton>
@@ -223,9 +222,9 @@ const { mobileDownloadHref, mobileDownloadLabel } = useMobileAppRelease()
               rel="noopener noreferrer"
               size="xl"
               color="success"
-              variant="subtle"
+              variant="outline"
               icon="i-lucide-smartphone"
-              class="min-h-12 justify-center font-bold sm:min-h-0"
+              class="font-bold"
             >
               {{ mobileDownloadLabel }}
             </UButton>
