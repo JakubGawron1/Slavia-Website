@@ -50,7 +50,7 @@ const {
 
 const activePresetMeta = computed(() => {
   const id = themePreset.value
-  return themePresets.find(p => p.id === id)
+  return themePresets.value.find(p => p.id === id)
 })
 
 const domDataPresetAttr = ref<string | null>(null)
