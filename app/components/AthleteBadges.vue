@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { Athlete } from '~/types/models'
-import athleteBadgesData from '@slavia/shared/data/athlete-badges.json'
-import { getBadgeLevel, getBadgeProgressPercent } from '@slavia/shared/badge-helpers'
+import { getBadgeLevel, getBadgeProgressPercent } from '~/lib/slavia/badgeHelpers'
 import { sinclairTotal } from '~/utils/sinclair'
 
 const props = defineProps<{
@@ -10,6 +9,7 @@ const props = defineProps<{
 }>()
 
 const auth = useAuth()
+const { athleteBadges } = useSlaviaCatalogs()
 
 interface Badge {
   id: string
@@ -57,7 +57,7 @@ function currentForBadge(id: string): number {
 }
 
 const badges = computed<Badge[]>(() =>
-  athleteBadgesData.badges.map((meta) => {
+  athleteBadges.value.map((meta) => {
     const ui = badgeIconById[meta.id] ?? { icon: 'i-lucide-star', color: 'neutral' }
     return {
       id: meta.id,

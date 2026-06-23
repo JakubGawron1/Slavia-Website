@@ -1,14 +1,13 @@
 import type { AuthUser } from '~/types/models'
-import themePresetsData from '@slavia/shared/data/theme-presets.json'
+import {
+  type SlaviaThemePreset,
+  useSlaviaCatalogs
+} from '~/composables/useSlaviaCatalogs'
 
-export const SLAVIA_THEME_PRESETS = themePresetsData.presets as readonly {
-  id: string
-  label: string
-  description: string
-  experimental?: boolean
-}[]
-
-export type SlaviaThemePreset = (typeof SLAVIA_THEME_PRESETS)[number]['id']
+export {
+  DEFAULT_THEME_PRESETS as SLAVIA_THEME_PRESETS,
+  type SlaviaThemePreset
+} from '~/composables/useSlaviaCatalogs'
 
 export function isGlassThemePreset(id: string | null | undefined): boolean {
   return id === 'glass'
@@ -72,8 +71,8 @@ function modeKey(uid: string | number) {
   return slaviaAppearanceStorageKeys(uid).mode
 }
 
-function isValidPreset(id: string | null | undefined): id is SlaviaThemePreset {
-  return !!id && SLAVIA_THEME_PRESETS.some(x => x.id === id)
+function isValidPreset(id: string | null | undefined, presets: readonly { id: string }[]): id is SlaviaThemePreset {
+  return !!id && presets.some(x => x.id === id)
 }
 
 function defaultPresetByGender(gender: string | null | undefined): SlaviaThemePreset {
@@ -101,6 +100,7 @@ export function useSlaviaAppearance() {
   const auth = useAuth()
   const colorMode = useColorMode()
   const apiFetch = useApi()
+  const { themePresets } = useSlaviaCatalogs()
 
   const preset = ref<SlaviaThemePreset>('slavia')
   /** Pomija zapis na serwer przy programowej zmianie trybu (hydracja). */
@@ -168,7 +168,7 @@ export function useSlaviaAppearance() {
 
   function resolveFromUser(u: AuthUser): { preset: SlaviaThemePreset, colorModePref?: string } {
     let p: SlaviaThemePreset = defaultPresetByGender(u.athlete_gender)
-    if (isValidPreset(u.ui_theme_preset ?? undefined)) {
+    if (isValidPreset(u.ui_theme_preset ?? undefined, themePresets.value)) {
       p = u.ui_theme_preset as SlaviaThemePreset
     }
     const m = u.ui_color_mode
@@ -198,7 +198,7 @@ export function useSlaviaAppearance() {
       let nextPreset = fromApi.preset
       if (!u.ui_theme_preset) {
         const localP = localStorage.getItem(presetKey(uid))
-        if (isValidPreset(localP)) {
+        if (isValidPreset(localP, themePresets.value)) {
           nextPreset = localP
         }
       }
@@ -278,15 +278,15 @@ export function useSlaviaAppearance() {
   const presetLayoutClass = computed(() => slaviaPresetLayoutClass(preset.value))
 
   const standardPresets = computed(() =>
-    SLAVIA_THEME_PRESETS.filter(p => !('experimental' in p && p.experimental))
+    themePresets.value.filter(p => !('experimental' in p && p.experimental))
   )
   const experimentalPresets = computed(() =>
-    SLAVIA_THEME_PRESETS.filter(p => 'experimental' in p && p.experimental)
+    themePresets.value.filter(p => 'experimental' in p && p.experimental)
   )
 
   return {
     preset,
-    presets: SLAVIA_THEME_PRESETS,
+    presets: themePresets,
     standardPresets,
     experimentalPresets,
     setPreset,

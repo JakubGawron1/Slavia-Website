@@ -5,4 +5,4 @@ export {
   type ExerciseId,
   type RatioRange,
   type RatioResult
-} from '@slavia/shared/weightlifting-ratios'
+} from '~/lib/slavia/weightliftingRatios'

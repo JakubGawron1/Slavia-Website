@@ -1,7 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 
 import { buildPwaConfig } from './config/pwa'
-import { slaviaSharedRootFromConfigDir, slaviaSharedViteAliases } from './config/slaviaShared'
 
 import { prerenderIgnore, prerenderRoutes } from './config/prerender'
 
@@ -45,16 +44,7 @@ const buildApiHuggingface = (process.env.NUXT_PUBLIC_API_BASE_URL_HUGGINGFACE ||
 
 const devDisableRootIsr = !isProd
 
-const slaviaSharedRoot = slaviaSharedRootFromConfigDir()
-const slaviaSharedAliases = slaviaSharedViteAliases(slaviaSharedRoot)
-
 export default defineNuxtConfig({
-
-  alias: slaviaSharedAliases,
-
-  build: {
-    transpile: ['@slavia/shared']
-  },
 
   compatibilityDate: '2026-05-09',
 

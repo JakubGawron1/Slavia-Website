@@ -11,8 +11,7 @@ if (!source) {
   console.error(
     'Brak źródła OpenAPI.\n'
     + '  — lokalnie: sklonuj Slavia-backend obok frontendu, lub\n'
-    + '  — uruchom: pnpm openapi:snapshot (wymaga backendu), lub\n'
-    + '  — zainicjuj submodule: git submodule update --init --recursive'
+    + '  — CI: shallow clone Slavia-backend w workflow'
   )
   process.exit(1)
 }

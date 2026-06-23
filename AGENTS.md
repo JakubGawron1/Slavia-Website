@@ -2,7 +2,7 @@
 
 > **Język dokumentu:** polski. Wyjątek — sekcja [Commity Git](#commity-git): szablony wiadomości commitów i przykłady **muszą być po angielsku** (wymóg repozytorium).
 
-Aplikacja Nuxt 4 dla klubu CKS Slavia Ruda Śląska. Frontend współpracuje z backendem Rust (`../Slavia-backend`), paczką współdzieloną (`../Slavia-shared` → `@slavia/shared`) i z aplikacją mobilną (`../Slavia-mobile` — **tylko zawodnik/trener**, bez paneli Admin/SuperAdmin; szczegóły w [Slavia-mobile](#slavia-mobile-flutter)).
+Aplikacja Nuxt 4 dla klubu CKS Slavia Ruda Śląska. Frontend współpracuje z backendem Rust (`../Slavia-backend`) i z aplikacją mobilną (`../Slavia-mobile` — **tylko zawodnik/trener**, bez paneli Admin/SuperAdmin; szczegóły w [Slavia-mobile](#slavia-mobile-flutter)).
 
 ## Szybki start
 
@@ -10,7 +10,7 @@ Aplikacja Nuxt 4 dla klubu CKS Slavia Ruda Śląska. Frontend współpracuje z b
 pnpm install
 pnpm dev          # http://localhost:3000
 pnpm lint         # ESLint (m.in. zakaz v-html poza komponentami safe-html)
-pnpm test         # Vitest (sanitizeHtml, renderChatMarkdown, ranking)
+pnpm test         # Vitest (sanitizeHtml, renderChatMarkdown, logika w app/lib/slavia)
 pnpm typecheck    # vue-tsc przez Nuxt
 pnpm build        # produkcja (wymaga ~8 GB RAM — skrypt ustawia max-old-space-size)
 pnpm bundle:report  # F-13: raport chunków JS po buildzie (wymaga .output/public/_nuxt)
@@ -24,75 +24,54 @@ pnpm release:check  # pełna walidacja przed release (PowerShell)
 
 **Po deployu (HF + Vercel):** `pnpm smoke:post-deploy` — patrz `docs/deploy-hf-vercel.md` (`SLAVIA_HF_API_URL`, `SLAVIA_SITE_URL`).
 
-**Submodule shared:** po klonie: `git submodule update --init --recursive --remote` (Vercel/CI/ci.yml zawsze ściągają **latest `main`** z `Slavia-shared`). Lokalnie: `pnpm shared:pull`.
+**OpenAPI / backend obok:** CI i `pnpm openapi:types` wymagają `../Slavia-backend` (shallow clone w GitHub Actions).
 
 ---
 
-## Slavia-shared (`@slavia/shared`)
+## Kontrakt z backendem (bez Slavia-shared)
 
-Wspólny kontrakt API, katalogi JSON i czysta logika (Sinclair, tor sztangi, PZPC, proporcje, odznaki) dla **WWW** i **Flutter**.
+Katalogi statyczne i kontrakt API pochodzą z **Slavia-backend**:
 
-| Gdzie | Ścieżka |
-|-------|---------|
-| **Lokalny dev** | `../Slavia-shared/` — osobny klon repo (pełny folder projektu) |
-| **CI / Vercel** | `Slavia-frontend/Slavia-shared/` — submodule, zawsze **latest `main`** (`--remote`) |
-| Paczka npm (`package.json`) | `"@slavia/shared": "file:./Slavia-shared"` |
-| Import w runtime (`nuxt dev`) | alias → `../Slavia-shared` gdy istnieje (latest z Twojego klonu), inaczej submodule |
-| Mobile (Flutter) | `path: ../Slavia-shared/dart` (CI: shallow clone `main`) |
+| Zasób | Źródło |
+|-------|--------|
+| OpenAPI | `../Slavia-backend/src/embed/openapi.json` → `pnpm openapi:types` → `app/types/generated/openapi.types.ts` |
+| Presety motywu, PZPC, odznaki | `GET /api/system/theme-presets`, `pzpc-weight-classes`, `athlete-badges` (BFF: `useSlaviaCatalogs`) |
+| Logika kalkulatorów (Sinclair, proporcje, tor sztangi, markdown) | Lokalnie: [`app/lib/slavia/`](app/lib/slavia/) — re-eksporty w `app/utils/` |
 
 **Lokalny układ na dysku:**
 
 ```
 Desktop/
-  Slavia-shared/          ← tu edytujesz shared; push na main = źródło dla CI
+  Slavia-backend/     ← embed JSON, OpenAPI, katalogi API
   Slavia-frontend/
-    Slavia-shared/        ← submodule; pnpm install / shared:pull → latest main
   Slavia-mobile/
-  Slavia-backend/
 ```
 
-Po zmianie w shared: **push na `main` w repo Slavia-shared** — workflow `dispatch-dependents` uruchamia CI w Website i Mobile (`repository_dispatch`). Vercel: sekret `VERCEL_DEPLOY_HOOK` w repo frontendu (Deploy Hook z panelu Vercel).
-
-**Import w Nuxt** (preferuj re-eksporty w `app/utils/` dla stabilnych aliasów `~/utils/…`):
-
-```ts
-import { sinclairTotal } from '@slavia/shared/sinclair'
-import themePresets from '@slavia/shared/data/theme-presets.json'
-```
-
-**Skrypty:**
+**Skrypty OpenAPI:**
 
 ```bash
-pnpm shared:test          # vitest w Slavia-shared
-pnpm openapi:snapshot       # backend → Slavia-shared/openapi/
-pnpm openapi:types        # generuje app/types/generated/openapi.types.ts
-pnpm openapi:check        # CI: drift + SHA w submodule
+pnpm openapi:types        # generuje app/types/generated/openapi.types.ts z backendu
+pnpm openapi:check        # CI: drift typów względem embed backendu
 ```
 
-**Zmiana logiki współdzielonej:** edytuj `../Slavia-shared` (lub submodule), push na **`main`** w repo Slavia-shared. Nie trzeba commitować wskaźnika submodule w frontendzie — CI/Vercel używają `--remote`.
+Po zmianie API: commit embed w **Slavia-backend**, potem `pnpm openapi:types` we frontendzie.
 
-**Nie przenoś do shared:** composables Nuxt, BFF `server/`, UI, auth, cache — to warstwa platformowa.
+**Nie duplikuj w kliencie:** composables Nuxt, BFF `server/`, UI, auth, cache — to warstwa platformowa.
 
-### Backend (Rust) — co może korzystać ze shared
+### Backend (Rust) — embed i katalogi
 
-Backend **nie importuje** TypeScript — tylko pliki neutralne (JSON). Źródło OpenAPI pozostaje w Rust (`src/embed/openapi.json`); shared jest **lustrem** dla klientów.
-
-| Zasób w shared | Zastosowanie w backendzie | Priorytet |
-|----------------|---------------------------|-----------|
-| `data/theme-presets.json` | Walidacja `ui_theme_preset` (dziś hardcoded `ALLOW_PRESET` w `admins.rs`) | Wysoki |
-| `data/pzpc-weight-classes.json` | Format `weight_category`, seed, ewentualna walidacja przy zapisie zawodnika | Wysoki |
-| `data/athlete-badges.json` | Progi odznak, gdyby API zwracało poziomy server-side | Średni |
-| `test-vectors/sinclair.json` + stałe w JSON | Sinclair po stronie serwera (ranking, walidacja) — dziś tylko klienci | Średni |
-| `data/brand-defaults.json` | CORS / redirect URL w dev — opcjonalnie | Niski |
-| `data/weightlifting-exercises.json` | Tylko kalkulatory UI — **nie** dla API | Nie |
-
-Integracja Rust: `include_str!` / `build.rs` czytający `../Slavia-shared/data/*.json` przy `cargo build`, albo skrypt sync przed CI backendu.
+| Zasób w `src/embed/` | API |
+|----------------------|-----|
+| `theme-presets.json` | `GET /api/system/theme-presets` |
+| `pzpc-weight-classes.json` | `GET /api/system/pzpc-weight-classes` |
+| `athlete-badges.json` | `GET /api/system/athlete-badges` |
+| `openapi.json` | `GET /api/system/openapi.json` |
 
 ---
 
 ## Slavia-mobile (Flutter)
 
-Repozytorium: `../Slavia-mobile`. Współdzieli `@slavia/shared` (Dart) i ten sam backend Rust co WWW.
+Repozytorium: `../Slavia-mobile`. Ten sam backend Rust co WWW; katalogi z API, logika lokalna w `lib/utils/`.
 
 ### Zakres ról — tylko zawodnik i trener
 
@@ -213,7 +192,7 @@ Komponenty w `app/components/ui/` rejestrują się **bez** prefiksu `Ui` — wpi
 |-----------|-------------------|------------|
 | `SlaviaSafeHtml` | `~/utils/sanitizeRichHtml.ts` (DOMPurify, hooki img/style/link) | CMS, aktualności, dziennik, plany |
 | `SlaviaSimpleMarkdown` | `~/utils/renderSimpleMarkdown.ts` | Ogłoszenia klubowe |
-| `SlaviaChatMarkdown` | `~/utils/renderChatMarkdown.ts` + `@slavia/shared/markdown-inline` | Trener AI, czat publiczny |
+| `SlaviaChatMarkdown` | `~/utils/renderChatMarkdown.ts` + `~/lib/slavia/markdownInline` | Trener AI, czat publiczny |
 
 Przy **zapisie** do API (formularze) nadal wywołuj `sanitizeRichHtml` przed POST/PATCH — komponenty sanityzują tylko **wyświetlanie** (defense in depth przy podwójnej sanityzacji jest OK).
 
@@ -238,15 +217,15 @@ TensorFlow, kamera, QR, edytor WYSIWYG, podgląd viewportu — wszystko co wymag
 ## Typy API i kontrakt z backendem
 
 1. **Generuj embed (backend):** `cd ../Slavia-backend && node scripts/generate-openapi.mjs` → `src/embed/openapi.json` (~140 tras z `router.rs`)
-2. **Snapshot (po zmianie backendu):** `pnpm openapi:snapshot` → commit `Slavia-shared/openapi/` + generated
-3. **Generuj typy:** `pnpm openapi:types` (backend lokalnie lub `Slavia-shared/openapi/openapi.json` w CI)
-4. **Sprawdź drift:** `pnpm openapi:check` (fail w CI przy braku snapshotu lub rozjechanych typach)
+2. **Po zmianie backendu:** `pnpm openapi:types` → commit `app/types/generated/openapi.types.ts`
+3. **Sprawdź drift:** `pnpm openapi:check` (CI: shallow clone `../Slavia-backend`)
+4. **Sprawdź drift:** `pnpm openapi:check` (fail w CI przy rozjechanych typach)
 5. **Most typów:** `app/types/api.ts` — aliasy domenowe; stopniowa migracja z `models.ts` do OpenAPI
 6. **Ścieżki REST:** `app/config/api.ts` — trzymaj spójnie z `router.rs` w backendzie
 
 **Nowy endpoint backendu → frontend:**
 1. Rust route + wpis w OpenAPI embed
-2. `pnpm openapi:snapshot` + `pnpm openapi:types` + ewentualny alias w `api.ts`
+2. `pnpm openapi:types` + ewentualny alias w `api.ts`
 3. Wpis w `apiRoutes` jeśli to stała trasa aplikacji
 4. Jeśli publiczny GET → whitelist w `server/utils/publicBackendProxy.ts`
 
@@ -339,7 +318,7 @@ TensorFlow, kamera, QR, edytor WYSIWYG, podgląd viewportu — wszystko co wymag
 
 Kolejność w `.github/workflows/ci.yml`:
 
-`openapi:check` → `lint` → `pnpm test` (Vitest) → `shared:test` → `typecheck` → `build` → `bundle:report` → Playwright smoke
+`openapi:check` → `lint` → `pnpm test` (Vitest) → `typecheck` → `build` → `bundle:report` → Playwright smoke
 
 Lokalnie pełny check: `pnpm release:check` (zawiera `bundle:report` po buildzie).
 
@@ -393,7 +372,7 @@ Schemat bazy **nie żyje we frontendzie** — wszystkie tabele i migracje są w 
    - `DROP` w kolejności od liści do korzenia,
    - `CREATE` nowego schematu,
    - przed DDL zamknij kursory (`drop(rows)` po `PRAGMA` — inaczej SQLite może zablokować tabelę).
-4. **Endpoint + frontend** — po zmianie backendu: `pnpm openapi:snapshot` + `openapi:types`; publiczne GET → whitelist w `publicBackendProxy.ts`.
+4. **Endpoint + frontend** — po zmianie backendu: `pnpm openapi:types`; publiczne GET → whitelist w `publicBackendProxy.ts`.
 
 ### CMS — uwaga na stary schemat `dev-cms`
 
@@ -499,7 +478,7 @@ chore(openapi): regenerate types after backend snapshot
 
 - Jeden logiczny zestaw zmian na commit (funkcja, poprawka lub refaktor — nie mix niepowiązanych plików).
 - Stage tylko pliki z tej zmiany; nigdy `.env`, kluczy ani credentiali.
-- Po zmianie API backendu: najpierw commit embed OpenAPI w backendzie, potem snapshot w **Slavia-shared** + `openapi.types.ts` we frontendzie.
+- Po zmianie API backendu: commit embed OpenAPI w backendzie, potem `pnpm openapi:types` we frontendzie.
 - Przed commitem nietrywialnych zmian: `pnpm typecheck` (lub odpowiedni check dla zakresu).
 
 ### Bezpieczeństwo (agenci)
@@ -535,7 +514,7 @@ Po **większych zmianach** (nowy moduł panelu, publiczny endpoint, przełom API
 | Wersja | `package.json` → `version` | `Cargo.toml` → `version` |
 | Historia | `CHANGELOG.md` (sekcja `[X.Y.Z]`) | `CHANGELOG.md` |
 | UI admina | `app/pages/admin/changelog.vue` — wpis na górze listy | — |
-| Kontrakt API | `pnpm openapi:snapshot` → `Slavia-shared/openapi/` + `pnpm openapi:types` | `src/embed/openapi.json` (commit w backendzie **przed** snapshotem) |
+| Kontrakt API | `pnpm openapi:types` | `src/embed/openapi.json` (commit w backendzie **przed** generowaniem typów) |
 
 **Checklist przed merge / release:**
 

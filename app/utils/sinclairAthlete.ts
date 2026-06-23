@@ -1,4 +1,4 @@
 export {
   effectiveBodyweightKgForSinclair,
   parseWeightCategoryLimitKg
-} from '@slavia/shared/sinclair-athlete'
+} from '~/lib/slavia/sinclairAthlete'

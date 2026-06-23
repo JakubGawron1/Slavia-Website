@@ -1,0 +1,20 @@
+{
+  "cases": [
+    {
+      "input": "U20 M — 75 kg",
+      "expected": { "age": "U20", "gender": "male", "classLabel": "75" }
+    },
+    {
+      "input": "Senior K — +86 kg",
+      "expected": { "age": "Senior", "gender": "female", "classLabel": "+86" }
+    },
+    {
+      "input": "",
+      "expected": null
+    },
+    {
+      "input": "invalid",
+      "expected": null
+    }
+  ]
+}

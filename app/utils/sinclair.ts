@@ -3,4 +3,4 @@ export {
   sinclairCoefficient,
   sinclairTotal,
   type SinclairGender
-} from '@slavia/shared/sinclair'
+} from '~/lib/slavia/sinclair'

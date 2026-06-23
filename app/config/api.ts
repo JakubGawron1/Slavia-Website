@@ -138,6 +138,9 @@ export const apiRoutes = {
     rolePreviewChatMessages: (userId: string, threadId: string) =>
       `/api/system/role-preview/chat/threads/${encodeURIComponent(userId)}/${encodeURIComponent(threadId)}/messages`,
     ping: '/api/system/ping',
+    themePresets: '/api/system/theme-presets',
+    pzpcWeightClasses: '/api/system/pzpc-weight-classes',
+    athleteBadges: '/api/system/athlete-badges',
     backendProvider: '/api/system/backend-provider',
     auditLogs: '/api/system/audit-logs',
     featureAdoption: '/api/system/feature-adoption',

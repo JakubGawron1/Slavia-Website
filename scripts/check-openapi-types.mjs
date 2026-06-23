@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 /**
- * Weryfikuje drift typów OpenAPI względem backendu lub Slavia-shared (submodule).
- * CI nie wymaga sąsiedniego Slavia-backend — wystarczy Slavia-shared/openapi/openapi.json + .sha256.
+ * Weryfikuje drift typów OpenAPI względem backendu (`../Slavia-backend`).
  */
 import { execSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
@@ -10,9 +9,7 @@ import { fileURLToPath } from 'node:url'
 import {
   OPENAPI_PATHS,
   countOpenApiPaths,
-  readSnapshotSha,
-  resolveOpenApiSource,
-  sha256File
+  resolveOpenApiSource
 } from './openapi-source.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -32,7 +29,7 @@ function validateGenerated(ts, expectedPathCount) {
   if (ts.includes('schemas: never')) {
     console.warn(
       'UWAGA: OpenAPI nie definiuje components.schemas — typy domenowe nadal w models.ts.\n'
-      + '  Rozszerz embed openapi.json w backendzie, potem pnpm openapi:snapshot.'
+      + '  Rozszerz embed openapi.json w backendzie, potem pnpm openapi:types.'
     )
   }
 }
@@ -45,29 +42,11 @@ if (!existsSync(OPENAPI_PATHS.generated)) {
 const source = resolveOpenApiSource()
 if (!source) {
   console.error(
-    'Brak źródła OpenAPI (backend ani Slavia-shared/openapi/openapi.json).\n'
-    + 'CI: git submodule update --init --recursive\n'
-    + 'Lokalnie: pnpm openapi:snapshot (wymaga backendu obok)'
+    'Brak źródła OpenAPI (../Slavia-backend/src/embed/openapi.json).\n'
+    + 'CI: shallow clone Slavia-backend obok workspace.\n'
+    + 'Lokalnie: sklonuj backend obok frontendu.'
   )
   process.exit(1)
-}
-
-if (source.kind === 'shared') {
-  const expectedSha = readSnapshotSha()
-  if (!expectedSha) {
-    console.error('Brak Slavia-shared/openapi/openapi.sha256 — uruchom: pnpm openapi:snapshot')
-    process.exit(1)
-  }
-  const actualSha = sha256File(source.path)
-  if (actualSha !== expectedSha) {
-    console.error(
-      'Hash snapshotu OpenAPI nie zgadza się z Slavia-shared/openapi/openapi.sha256.\n'
-      + `  oczekiwano: ${expectedSha}\n`
-      + `  aktualny:   ${actualSha}\n`
-      + 'Uruchom: pnpm openapi:snapshot'
-    )
-    process.exit(1)
-  }
 }
 
 const expectedPathCount = countOpenApiPaths(source.path)
@@ -91,8 +70,8 @@ if (before !== after) {
   console.error(
     'Typy OpenAPI są niezsynchronizowane.\n'
     + 'Uruchom lokalnie: pnpm openapi:types\n'
-    + 'Jeśli zmienił się backend: pnpm openapi:snapshot && pnpm openapi:types\n'
-    + 'Zacommituj: Slavia-shared/openapi/ oraz app/types/generated/openapi.types.ts'
+    + 'Jeśli zmienił się backend: zaktualizuj embed w Slavia-backend, potem pnpm openapi:types\n'
+    + 'Zacommituj: app/types/generated/openapi.types.ts'
   )
   process.exit(1)
 }

@@ -1,0 +1,16 @@
+{
+  "metricsCases": [
+    {
+      "samples": [
+        { "t": 0, "barX": 0.5, "barY": 0.8, "hipMidX": 0.5, "shoulderMidX": 0.5 },
+        { "t": 0.1, "barX": 0.51, "barY": 0.7, "hipMidX": 0.5, "shoulderMidX": 0.5 },
+        { "t": 0.2, "barX": 0.52, "barY": 0.6, "hipMidX": 0.5, "shoulderMidX": 0.5 }
+      ],
+      "expected": {
+        "meanDeviationMin": 0,
+        "trajectoryLengthMin": 0.1,
+        "stabilityScoreMin": 50
+      }
+    }
+  ]
+}

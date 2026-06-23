@@ -5,4 +5,4 @@ export {
   smoothSamplesForFps,
   type BarbellSample,
   type BarbellTechniqueMetrics
-} from '@slavia/shared/barbell-path'
+} from '~/lib/slavia/barbellPathAnalysis'

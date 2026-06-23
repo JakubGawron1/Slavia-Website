@@ -1,8 +1,8 @@
 /**
  * Most typów API — migracja z ręcznego `models.ts` do OpenAPI.
  *
- * Źródło kontraktu: `Slavia-shared/openapi/openapi.json` (submodule, CI/Vercel) lub backend lokalnie.
- * Po zmianie backendu: `pnpm openapi:snapshot` → `pnpm openapi:types` → commit Slavia-shared + generated.
+ * Źródło kontraktu: `../Slavia-backend/src/embed/openapi.json`.
+ * Po zmianie backendu: `pnpm openapi:types` → commit `app/types/generated/openapi.types.ts`.
  *
  * Gdy backend opublikuje `components.schemas`, aliasy poniżej podmieniamy na `components['schemas']['…']`.
  */

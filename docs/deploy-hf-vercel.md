@@ -16,7 +16,7 @@ Typowy flow przy zmianie API:
 
 1. Merge + deploy **Slavia-backend** (`main` → GitHub Actions → HF Space).
 2. Smoke backendu: `pnpm smoke:post-deploy` (patrz [Post-deploy smoke](#post-deploy-smoke)) albo ręcznie `curl` na `/api/health`.
-3. W repo frontendu: `pnpm openapi:snapshot` + `pnpm openapi:types` + `pnpm openapi:check` (lokalnie lub w CI PR).
+3. W repo frontendu: `pnpm openapi:types` + `pnpm openapi:check` (lokalnie lub w CI PR).
 4. Merge + deploy **Slavia-frontend** (push `main` → Vercel).
 
 ---
@@ -52,7 +52,7 @@ Skrót: scope **Preview** w Vercel → `NUXT_PUBLIC_API_BASE_URL` i `NUXT_PUBLIC
 
 - [ ] Backend: trasa w `router.rs` + wpis w `src/embed/openapi.json`
 - [ ] Backend wdrożony na HF (endpoint live)
-- [ ] `pnpm openapi:snapshot` → `Slavia-shared/openapi/`
+- [ ] `pnpm openapi:types` → `app/types/generated/openapi.types.ts`
 - [ ] `pnpm openapi:types` → `app/types/generated/openapi.types.ts`
 - [ ] `pnpm openapi:check` przechodzi w CI
 - [ ] Nowa trasa w `app/config/api.ts` (`apiRoutes`) jeśli używana w panelu

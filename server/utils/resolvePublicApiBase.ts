@@ -80,5 +80,14 @@ export function emptyPublicApiFallback(apiPath: string): unknown {
   if (/\/cms\/page\/[^/]+$/.test(apiPath)) {
     return { id: '', page_name: 'home', fields: {}, created_at: '', updated_at: '' }
   }
+  if (apiPath === '/api/system/theme-presets') {
+    return { presets: [] }
+  }
+  if (apiPath === '/api/system/athlete-badges') {
+    return { badges: [] }
+  }
+  if (apiPath === '/api/system/pzpc-weight-classes') {
+    return { ageGroups: [], classesByAge: {} }
+  }
   return []
 }
