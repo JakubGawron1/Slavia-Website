@@ -1,241 +1,215 @@
-# TODO — gałąź `improvements/all`
+# TODO — funkcje AI (gałąź `feature/AI`)
 
-> **Ostatnia aktualizacja:** 2026-06-21 · fale **K–N** zsynchronizowane ze stanem git (3 repo).  
-> **Architektura:** Frontend Vercel ↔ Backend Hugging Face Spaces (`koliber-cks-slavia.hf.space`)
+> **Ostatnia aktualizacja:** 2026-06-22  
+> **Architektura:** Frontend Vercel ↔ Backend Hugging Face (`koliber-cks-slavia.hf.space`), bezpośrednie wywołania AI (bez BFF Nuxt)  
+> **Provider:** Groq (LLM + vision) · **Mobile:** tylko zawodnik/trener (parity panelowych trybów AI)
 
 ---
 
-## Status ogólny
+## Status fundamentu AI (`feature/AI`)
 
 | Element | Stan |
 |---------|------|
-| **Gałąź** | `improvements/all` we wszystkich repo (frontend, backend, shared) |
-| **PR shared** | [#1](https://github.com/JakubGawron1/Slavia-shared/pull/1) |
-| **PR backend** | [#2](https://github.com/JakubGawron1/Slavia-backend/pull/2) |
-| **PR frontend** | [#5](https://github.com/JakubGawron1/Slavia-Website/pull/5) |
-| **Kolejność merge** | **shared → backend → frontend** |
-| **Deploy** | **HF backend przed Vercel frontend** (`docs/deploy-hf-vercel.md`) |
-| **Agenci** | fale **K–N** w większości **commitowane lokalnie**; pozostało: **K-2**, **N-3** (+ push/rebase) |
+| Komunikacja panelowa | ✅ `useApi()` → Rust `/api/ai/coach/*` + JWT |
+| Asystent publiczny WWW | ✅ `useBackendDirectUrl()` → `/api/ai/coach/public/*` |
+| Miesięczna pula klubu (panel) | ✅ `ai_coach_monthly.rs` + licznik w `system_settings` |
+| Limit edytowalny z devtools | ✅ `monthly_limit` w `ai_coach_settings` (domyślnie 300) |
+| Publiczny AI przy wyczerpaniu puli | ✅ działa dalej; panel wyłączony do odnowienia miesiąca |
+| Prompty / temperatury SA | ✅ `/superadmin/developer` → Studio promptów |
+| Streaming LLM | 🔴 stub SSE — backlog |
+| Mobile Trener AI | 🔴 brak parity (MOB-P2) |
 
-### Stan git (2026-06-21)
+### Commity lokalne (feature/AI)
 
-| Repo | vs `origin/improvements/all` | Ostatnie commity lokalne | Niecommitowane |
-|------|------------------------------|--------------------------|----------------|
-| **Frontend** | **ahead ~17**, behind 1 | m.in. `7db4908`, `e240c41`, `5d73fa1`, `be04437`, `9acdef7` | **K-2** — `usePublicCalendarPage.ts`, `kalendarz.vue`, `PublicCalendarEventSheet.vue`; lint `PanelSidebarNavSection.vue` |
-| **Backend** | **ahead 5** | `875bf39`, `eaf6fca`, `efa6c90`, `eedca01`, `b938d11` | **N-3** — `athlete_dashboard_acl_integration_test.rs` `??`; drobne `M` w `lib.rs` / `middleware/mod.rs` |
-| **Shared** | **ahead 1** | `130d560` chore(openapi): sync health route | brak |
-
-**Co-authored-by:** wiele commitów lokalnych ma trailer `Co-authored-by: Cursor` — do usunięcia przed merge (AGENTS.md).
-
----
-
-## ✅ Ukończone (Fala 0 — Top 10)
-
-| # | Opis | Status |
-|---|------|--------|
-| 1 | Równoległe fetchowanie dashboardu → potem bundle `/me/dashboard` | ✅ `useAthleteDashboard`, backend `GET /api/athletes/me/dashboard` |
-| 2 | Lazy wykresy profilu publicznego | ✅ `defineAsyncComponent` na `/athlete/[slug]` |
-| 3 | `GET /api/athletes/me/dashboard` (backend) | ✅ `ca35616` backend |
-| 4 | Stany błędu KPI (`useDashboardKpiLoad`) | ✅ retry 502/503, exponential backoff |
-| 5 | Composable `useAthleteDashboard` + testy | ✅ `athleteDashboardLogic.ts` + Vitest |
-| 6 | `sinclairTotal` w celu sezonu | ✅ poprawna kalkulacja z `@slavia/shared` |
-| 7 | Glass bez blur na mobile (SCSS) | ✅ `_cards.scss` / tokeny mobile |
-| 8 | Skeletony KPI składka/frekwencja | ✅ `DashboardKpiCard` |
-| 9 | E2E smoke dashboardu zawodnika | ✅ `e2e/smoke-athlete-dashboard.spec.ts` + CI |
-| 10 | Cleanup `unwrap`/`expect` w backend routes | ✅ ~47+10 napraw w `src/routes/*` |
+| Repo | Commit | Opis |
+|------|--------|------|
+| **Backend** | `19becbd` | Miesięczna pula + konfiguracja w settings API |
+| **Frontend** | `d3ffc4f` | Bezpośredni backend zamiast BFF AI |
+| **Frontend** | `1c38308` | UI limitów miesięcznych (panel + devtools) |
 
 ---
 
-## ✅ Ukończone — Fale D–I (27 punktów)
+## Zasady na nowe funkcje AI
 
-### Fala D — deploy / integracja
+1. **Jeden provider, wiele trybów** — rozszerzaj `mode` w `POST /api/ai/coach/chat` (jak `plan`, `recovery`, `barbell_path`), zamiast osobnego mikroserwisu na każdą funkcję.
+2. **Kontekst z bazy** — AI dostaje tylko to, co backend już wie (dziennik, wyniki, plan, obecność). Kadra: ACL jak przy `athlete_id` (wątek czatu trenera).
+3. **Structured output** — gdy wynik trafia do UI/DB: JSON + walidacja schematu w Rust przed zapisem.
+4. **Limity warstwami** — miesięczna pula klubu (panel) · minutowe/dobowe (anti-abuse) · publiczne osobno.
+5. **Prompt jako konfiguracja** — nowy tryb = `mode_*_hint` w devtools + domyślny prompt w `ai_coach.rs`.
+6. **Mobile** — tylko zawodnik/trener; ten sam endpoint i kontrakt JSON, bez duplikacji logiki we Flutterze.
+7. **Bez BFF Nuxt dla AI** — wyłącznie frontend → Rust (CORS na HF).
 
-| ID | Opis | Status |
-|----|------|--------|
-| D-1 | Przełączenie composable na 1× `GET /me/dashboard` | ✅ |
-| D-2 | Docs kolejności deploy HF → Vercel | ✅ `docs/deploy-hf-vercel.md` |
-| D-3 | OpenAPI snapshot sync (shared + typy) | ✅ snapshoty w shared |
-| D-4 | Checklist PR readiness + draft body | ✅ `.cursor/improvements-all-pr.md` |
-
-### Fala E — sieć / HF cold start
-
-| ID | Opis | Status |
-|----|------|--------|
-| E-1 | BFF cache panel GET (`private max-age=10`) | ✅ `panelBackendProxy.ts` |
-| E-2 | Timeout 30s dla panelu (cold start HF) | ✅ `useApi.ts` |
-| E-3 | GitHub Action keep-warm co 5 min | ✅ `.github/workflows/keep-warm.yml` (backend) |
-| E-4 | Stagger loading — shell first, reszta idle | ✅ `scheduleIdleWork` / composable |
-| E-5 | Exponential backoff KPI przy 502/503 | ✅ `useDashboardKpiLoad` |
-
-### Fala F — wydajność strony
-
-| ID | Opis | Status |
-|----|------|--------|
-| F-11 | Lazy `OlympicCoachPanel`, dynamic AdminsManager | ✅ |
-| F-12 | Wirtualizacja listy wyników trenera | ✅ `TrainerWynikiResultsTable` |
-| F-13 | Bundle size report w CI | ✅ `scripts/bundle-report.mjs` |
-| F-14 | Prefetch ranking `/zawodnicy` (ISR) | ✅ `usePrefetchApi` |
-| F-15 | Lazy sekcje homepage poniżej hero | ✅ `index.vue` |
-
-### Fala G — UX
-
-| ID | Opis | Status |
-|----|------|--------|
-| G-1 | Banner „Serwer się uruchamia…” przy 502/503 | ✅ `useApi.ts` / plugin |
-| G-2 | Cache offline dashboardu (localStorage SWR) | ✅ `athleteDashboardCache.ts` |
-| G-3 | Mobile bottom nav zawodnika | ✅ `AthleteMobileNav.vue` |
-| G-4 | `aria-live` dla czatu i Trenera AI | ✅ `useChatLiveRegion` |
-
-### Fala H — backend HF
-
-| ID | Opis | Status |
-|----|------|--------|
-| H-1 | `GET /api/trainer/dashboard` bundle | ✅ `src/routes/trainer.rs` |
-| H-2 | Indeksy SQLite pod ranking | ✅ `db.rs` |
-| H-3 | Dalszy cleanup `unwrap`/`expect` w routes | ✅ 0 w handlerach |
-| H-4 | Prometheus `/metrics` stub | ✅ backend |
-| H-5 | Gzip/brotli compression (tower-http) | ✅ `lib.rs` |
-
-### Fala I — CI/CD
-
-| ID | Opis | Status |
-|----|------|--------|
-| I-1 | E2E dashboard w CI | ✅ `.github/workflows/ci.yml` |
-| I-2 | Naprawa flaky BFF E2E (porównanie, kontakt) | ✅ mocki Playwright |
-| I-3 | Docs preview env (Vercel → osobny HF Space) | ✅ `docs/preview-environments.md` |
-| I-4 | Post-deploy smoke script | ✅ `pnpm smoke:post-deploy` |
+```mermaid
+flowchart LR
+  subgraph panel [Panel zalogowany]
+    A[Trener / Zawodnik]
+  end
+  subgraph public [Publiczny]
+    B[Gość WWW]
+  end
+  subgraph rust [Backend HF 24/7]
+    C[ai_coach + limity]
+    D[Groq API]
+  end
+  A -->|JWT + miesięczna pula| C
+  B -->|bez JWT| C
+  C --> D
+```
 
 ---
 
-## ✅ Ukończone — Fala J (5/5)
+## Fala 0 — dokończyć fundament (przed nowymi trybami)
 
-| ID | Opis | Commit / PR |
-|----|------|-------------|
-| J-1 | Alias `GET /api/health` → ping | backend `ab62227` |
-| J-2 | BFF cache `/api/trainer/dashboard` | frontend `26f6f9c` |
-| J-3 | Docs preview HF Space + Vercel checklist | `docs/preview-environments.md`, `docs/deploy-hf-vercel.md` |
-| J-4 | Bundle baseline CI 5500 KiB | `b6cb973` |
-| J-5 | Push gałęzi + otwarcie PR-ów | PR #1 (shared), #2 (backend), #5 (frontend) |
+- [ ] Merge `feature/AI` → `main` (backend HF, potem frontend Vercel)
+- [ ] E2E happy-path: logowanie → `/trainer/ai-coach` lub `/athlete/ai-coach` → status + jedna wiadomość (mock Groq lub staging)
+- [ ] Mobile: ekran Trenera AI (`MOB-P2`) — ten sam API co WWW
+- [ ] OpenAPI: pola quota (`club_*_month`) + `monthly_limit` w settings
+- [ ] Devtools: opcjonalny wykres zużycia miesięcznego (tylko odczyt z API)
 
 ---
 
-## ✅ Ukończone — Fale K–N (17/19)
+## Fala A — szybkie wygrane (2–4 tyg.)
 
-| ID | Opis | Commit / stan git |
-|----|------|-------------------|
-| K-1 | `useTrainerDashboard` composable | ✅ `3619134`, `3132729` |
-| K-3 | Lazy `ClubPlayersManager` w `TeamManagementHub` | ✅ `90f24b2` |
-| K-4 | `TrainerMobileNav.vue` (mobile bottom nav trenera) | ✅ `ad12e95` |
-| K-5 | Rozszerzyć whitelist panel BFF (`panelBffPaths.ts`) | ✅ `229d2a3`, `ee9c64d` |
-| L-1 | Docs scrape Prometheus `/metrics` | ✅ `835d976` (FE), `efa6c90` (BE) |
-| L-2 | Vercel Analytics event `hf_cold_start` | ✅ `be04437` |
-| L-3 | `request_id` w structured logs (backend) | ✅ `875bf39` |
-| L-4 | GitHub Action alert error rate | ✅ `b938d11`, `eaf6fca` (BE) |
-| M-2 | Moduł `/klub/dokumenty` (Google Drive proxy) | ✅ `9acdef7`, `ee9c64d` (scaffold + BFF) |
-| M-3 | PWA offline shell panelu zawodnika | ✅ `e240c41` |
-| M-4 | Sticky mini-header profilu publicznego | ✅ `9dec7da`, `229d2a3` |
-| M-5 | Wirtualizacja siatki `/zawodnicy` (>50 kart) | ✅ `5d73fa1` |
-| N-1 | Helper `apiFetchOrEmpty` (dashboard scope) | ✅ `c6ff3b1` + testy |
-| N-2 | E2E role preview SuperAdmin | ✅ `7db4908` |
-| N-4 | Semver sync 5.1.0 (FE + BE + CHANGELOG) | ✅ `94e9fc9` (FE), `eedca01` (BE) |
+| ID | Funkcja | Dla kogo | Opis | Tryb / API |
+|----|---------|----------|------|------------|
+| A-1 | Podsumowanie tygodnia | Zawodnik | „Co zrobiłem, co zaplanowane, 1–2 wskazówki” z dziennika + kalendarza | `mode: week_summary` |
+| A-2 | Wyjaśnienie wyniku | Zawodnik / publiczny | Krótki komentarz przy profilu: trend Sinclair, ostatnie starty | kontekst public + cache lub chat |
+| A-3 | Szkic ogłoszenia | Admin (WWW) | Z bulletów → `SlaviaSimpleMarkdown` do edycji | `mode: announcement_draft` |
+| A-4 | Recovery z kontekstem | Zawodnik | Rozszerzyć `recovery` o sen/RPE z dziennika | istniejący tryb + `fetch_*_context` |
+| A-5 | Eskalacja do trenera | Public AI | Gdy pytanie wymaga człowieka → link `/klub/czat` | prompt + przycisk w `ClubPublicAiAssistant` |
 
-### Pozostałe (K–N)
+### Checklist per funkcja (A-*)
 
-| ID | Opis | Stan w git |
-|----|------|------------|
-| K-2 | `usePublicCalendarPage` + lazy `kalendarz.vue` | 🟡 pliki `??` / `M` — **do commita** |
-| M-1 | Mobile Flutter: `/api/athletes/me/dashboard` | 🔴 **Slavia-mobile** — poza scope gałęzi |
-| N-3 | Testy ACL `/me/dashboard` (backend) | 🟡 `athlete_dashboard_acl_integration_test.rs` `??` — **do commita** |
-
-**Legenda:** ✅ ukończone · 🟡 częściowo (commit lub WIP) · 🔴 brak / niezweryfikowane
+- [ ] **A-1** Backend: `fetch_week_summary_context()`, prompt, limit miesięczny
+- [ ] **A-1** Frontend: akcja na dashboardzie zawodnika lub w `ai-coach`
+- [ ] **A-1** Mobile: ten sam endpoint
+- [ ] **A-2** Backend: kontekst tylko danych publicznych (bez PII spoza profilu)
+- [ ] **A-3** Backend: JSON/markdown → walidacja przed zwrotem
+- [ ] **A-3** Frontend: przycisk w hubie ogłoszeń admina
+- [ ] **A-4** Backend: rozszerzyć kontekst zawodnika o ostatnie wpisy recovery
+- [ ] **A-5** Frontend: warunek w UI + copy PL
 
 ---
 
-## 📋 Do zrobienia przed merge
+## Fala B — średnia złożoność (1–2 mies.)
 
-- [ ] **Usunąć `Co-authored-by: Cursor`** ze wszystkich commitów (rebase / filter-branch) → `git push --force-with-lease` jeśli potrzeba
-- [ ] **Commit** pozostałe: **K-2**, **N-3**, fix lint `PanelSidebarNavSection.vue`
-- [ ] **Push** niezsynchronizowanych commitów:
-  - Frontend: ~17 commitów lokalnych (m.in. `7db4908` … `9acdef7`)
-  - Shared: `130d560`
-  - Backend: `875bf39`, `eaf6fca`, `efa6c90`, `eedca01`, `b938d11`
-- [ ] **Rebase/pull** frontend (behind 1 względem origin) — rozwiązać divergencję
-- [ ] **`pnpm openapi:check`** po merge shared snapshot
-- [ ] **`pnpm typecheck`** + **`pnpm test`** + **`pnpm lint`**
-- [ ] **Fix lint** `PanelSidebarNavSection.vue` — nieużywany import `DashboardModuleLink`
-- [ ] **Merge PR** w kolejności: shared #1 → backend #2 → frontend #5
-- [ ] **Deploy HF backend** przed Vercel frontend
-- [ ] **`pnpm smoke:post-deploy`** (`SLAVIA_HF_API_URL`, `SLAVIA_SITE_URL`)
-- [ ] **GitHub secret** `HF_API_BASE_URL` dla workflow keep-warm (backend)
+| ID | Funkcja | Dla kogo | Opis |
+|----|---------|----------|------|
+| B-1 | Import wyników ze zdjęcia | Kadra | Zdjęcie protokołu / tekst → propozycja wpisów `results` (człowiek zatwierdza) |
+| B-2 | Plan tygodniowy z kontekstu | Trener | Plan z obecności, wyników, kontuzji → import `training_plans` |
+| B-3 | Analiza obecności | Trener | „Kto zaniedbuje treningi” — LLM + agregaty SQL |
+| B-4 | Tor sztangi v2 | Zawodnik/trener | Cue techniczne + porównanie z poprzednimi nagraniami (historia DB) |
+| B-5 | Asystent CMS | Admin | Pomoc przy treści stron (bez auto-publish) |
+
+- [ ] **B-1** Vision pipeline (reuse `invoke_llm_with_attachments`)
+- [ ] **B-1** UI: podgląd propozycji + batch approve
+- [ ] **B-2** Rozszerzyć import planu o bogatszy kontekst kadry
+- [ ] **B-3** Endpoint tylko kadra; bez auto-wysyłki powiadomień
+- [ ] **B-4** Tabela historii analiz toru per zawodnik
+- [ ] **B-5** Tryb tylko SuperAdmin/Admin; sanityzacja jak CMS
 
 ---
 
-## 🚀 Proponowana Fala O+ (backlog na później)
+## Fala C — większe inwestycje
 
-| ID | Opis |
-|----|------|
-| O-1 | Pełny moduł dokumentów zarządu — GDrive prod credentials, OpenAPI final, E2E ACL |
-| O-2 | FCM push zamiast pollingu powiadomień (mobile + `docs/fcm-go-router-roadmap.md`) |
-| O-3 | SSE/streaming Trenera AI (pełny LLM stream; dziś stub) |
-| O-4 | Refaktor monolitów: `kalendarz.vue`, `AdminsManager`, `OlympicCoachPanel` |
-| O-5 | Centralizacja `.catch(() => [])` w całym frontendzie (~50 plików) |
-| O-6 | Grafana Cloud + alerty prod (rozszerzenie L-1/L-4) |
-| O-7 | Osobny HF Preview Space (checklist I-3) |
-| O-8 | Mobile parity: bottom nav trenera, dashboard bundle (M-1) |
-| O-9 | i18n prep (`config/i18n.ts`, `docs/i18n-deferred.md`) |
-| O-10 | Turso backup automation + RPO/RTO docs |
-| O-11 | Refaktor `athlete/[slug].vue` (~1300 ln) — lazy charts, schema.org |
-| O-12 | Distributed throttle + rate limit login/contact (backend BE-G7) |
+| ID | Funkcja | Uwagi |
+|----|---------|--------|
+| C-1 | RAG po dokumentach klubu | Regulamin, FAQ — embeddingi + wyszukiwanie; sensowne przy dużej bazie wiedzy |
+| C-2 | Powiadomienia proaktywne | Cron na HF: brak logów treningu → szkic wiadomości dla trenera |
+| C-3 | Głos / transkrypcja | Dyktowanie wpisu dziennika (Whisper lub inny provider) |
+| C-4 | Streaming odpowiedzi | Pełny SSE z Groq; dziś stub — UX, nie priorytet przy limitach tokenów |
+| C-5 | Tier puli miesięcznej | Np. public 50 + panel 250 zamiast jednego licznika |
+
+---
+
+## Checklist techniczny — nowa funkcja AI
+
+```
+1. Backend (Rust)
+   ├── mode w ai_coach.rs (+ opcjonalny hint w ai_coach_settings)
+   ├── fetch_*_context() z DB + ACL
+   ├── enforce_authenticated_ai_monthly() dla panelu
+   ├── walidacja JSON przed zapisem (jeśli mutacja)
+   └── router.rs + OpenAPI embed
+
+2. Frontend (Nuxt)
+   ├── composable useXxxAi.ts (status, blockedReason, quota)
+   ├── komponent lub akcja w istniejącym ekranie
+   ├── SlaviaChatMarkdown / SlaviaSafeHtml do wyświetlania
+   └── useExperimentalFlag() przy rollout stopniowym
+
+3. Mobile (Flutter) — jeśli panel zawodnik/trener
+   └── ten sam endpoint, ten sam kontrakt JSON
+
+4. Devtools
+   └── hint trybu + dokumentacja w Ops
+```
+
+**Pliki referencyjne:** `ai_coach.rs`, `ai_coach_monthly.rs`, `ai_coach_settings.rs`, `useOlympicCoachAi.ts`, `DeveloperAiCoachSettings.vue`, `post_throttle.rs`
+
+---
+
+## Koszt i jakość
+
+| Mechanizm | Stan | Propozycja |
+|-----------|------|------------|
+| Limit miesięczny klubu | ✅ devtools | Dostosować pod budżet Groq po pierwszym miesiącu prod |
+| Limity burst (min/dzień) | ✅ `post_throttle` | Bez zmian |
+| Kill switch | ✅ flaga `olympic_coach` | Nowe tryby — osobne flagi eksperymentalne |
+| Monitoring zużycia | 🟡 tylko licznik | Wykres w devtools + opcjonalny alert przy 80% |
+| Jakość promptów | 🟡 | Wektory testowe (jak `test-vectors` w shared) |
+| PII / logi | ✅ `is_ai_content_path` | Bez logowania treści żądań AI |
+| Parser MD | 🟡 niepełny | Vitest rozszerzyć przy nowych formatach LLM |
+
+---
+
+## Czego nie robić na start
+
+- Własny fine-tuning modelu — Groq + prompty + kontekst z DB wystarczą.
+- AI w panelach Admin/SA poza devtools i szkicami CMS (mobile ich nie ma).
+- Auto-zapis bez review człowieka (plany, wyniki, ogłoszenia).
+- Wiele providerów równolegle (OpenAI + Groq + …) — jeden Groq + fallback modelu.
+- Powrót do BFF Nuxt dla AI.
+- Duplikacja limitów i promptów we Flutterze.
+
+---
+
+## Sugerowana kolejność prac
+
+1. **Merge `feature/AI`** + deploy HF → Vercel + smoke
+2. **A-1** Podsumowanie tygodnia (zawodnik) — pierwszy nowy tryb, małe ryzyko
+3. **Mobile parity** Trenera AI
+4. **B-1** Import wyników ze zdjęcia (naturalne rozszerzenie vision)
+5. **C-1 / C-2** dopiero przy stabilnym zużyciu i feedbacku z fal A–B
 
 ---
 
 ## Komendy pomocnicze (PowerShell)
 
 ```powershell
-# Status gałęzi (wszystkie repo)
-cd C:\Users\jakub\Desktop\Slavia-frontend; git status -sb; git log -5 --oneline
-cd C:\Users\jakub\Desktop\Slavia-backend;  git status -sb; git log -5 --oneline
-cd C:\Users\jakub\Desktop\Slavia-shared;   git status -sb; git log -5 --oneline
+# Gałąź feature/AI
+cd C:\Users\jakub\Desktop\Slavia-frontend; git checkout feature/AI; git log -5 --oneline
+cd C:\Users\jakub\Desktop\Slavia-backend;  git checkout feature/AI; git log -5 --oneline
 
-# Niepushowane commity
-cd C:\Users\jakub\Desktop\Slavia-frontend; git log origin/improvements/all..HEAD --oneline
-cd C:\Users\jakub\Desktop\Slavia-backend;  git log origin/improvements/all..HEAD --oneline
-cd C:\Users\jakub\Desktop\Slavia-shared;   git log origin/improvements/all..HEAD --oneline
-
-# Szukaj Co-authored-by w lokalnych commitach
-cd C:\Users\jakub\Desktop\Slavia-frontend
-git log origin/improvements/all..HEAD --format="%h %s" | ForEach-Object { $_ }
-git log -15 --format="%B---" | Select-String "Co-authored-by"
-
-# Walidacja frontend
+# Walidacja
 cd C:\Users\jakub\Desktop\Slavia-frontend
 pnpm typecheck
 pnpm test
 pnpm lint
-pnpm openapi:check
 
-# Backend
 cd C:\Users\jakub\Desktop\Slavia-backend
-cargo check
+cargo test ai_coach
 
-# Smoke po deployu
+# Smoke backend AI (publiczny status)
 cd C:\Users\jakub\Desktop\Slavia-frontend
-$env:SLAVIA_HF_API_URL = "https://koliber-cks-slavia.hf.space"
-$env:SLAVIA_SITE_URL = "https://cksslavia.vercel.app"
-pnpm smoke:post-deploy
-
-# Push (po rebase bez Co-authored-by)
-cd C:\Users\jakub\Desktop\Slavia-shared;   git push -u origin improvements/all
-cd C:\Users\jakub\Desktop\Slavia-backend;  git push -u origin improvements/all
-cd C:\Users\jakub\Desktop\Slavia-frontend; git push --force-with-lease origin improvements/all
+pnpm smoke:backend
+# lub: GET https://koliber-cks-slavia.hf.space/api/ai/coach/public/status
 ```
 
 ---
 
 ## Notatki
 
-- Draft PR body: `.cursor/improvements-all-pr.md`
-- Plan dokumentów zarządu: `.cursor/plans/zarzad-dokumenty_a5bb3b64.plan.md` (**nie commitować** `.cursor/`)
-- Docs deploy: `docs/deploy-hf-vercel.md` · observability: `docs/observability.md`
-- Wersja release: **5.1.0** (FE `package.json`, BE `Cargo.toml`)
-- **Nie commitować:** `.cursor/`, sekrety, `.env`, `todo.md` (chyba że świadomie)
+- Szczegółowy audyt modułu AI: `improve.md` §5, `BE-AI*`, `AI-K*`
+- Deploy: `docs/deploy-hf-vercel.md`
+- Agenci: `AGENTS.md` — commity po angielsku, bez `Co-authored-by`

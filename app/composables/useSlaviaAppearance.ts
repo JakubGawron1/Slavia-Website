@@ -4,8 +4,6 @@ import {
   useSlaviaCatalogs
 } from '~/composables/useSlaviaCatalogs'
 
-export type { SlaviaThemePreset } from '~/composables/useSlaviaCatalogs'
-
 export function isGlassThemePreset(id: string | null | undefined): boolean {
   return id === 'glass'
 }

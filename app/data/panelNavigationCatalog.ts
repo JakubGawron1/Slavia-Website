@@ -1,7 +1,7 @@
-import { KLUB_SHARED_ROUTES, PUBLIC_ROUTES } from '~/config/klubRoutes'
+import { KLUB_BOARD_ROUTES, KLUB_SHARED_ROUTES, PUBLIC_ROUTES } from '~/config/klubRoutes'
 import { dashboardLink, type DashboardModuleLink } from '~/utils/dashboardLink'
 
-export type PanelNavRole = 'admin' | 'trainer' | 'athlete'
+export type PanelNavRole = 'admin' | 'trainer' | 'athlete' | 'board'
 
 export const PANEL_NAV_FLAG_PREFIX = 'panel_nav_'
 
@@ -100,7 +100,12 @@ export const PANEL_NAV_MODULES: PanelNavModuleDef[] = [
   mod('admin', 'ranking', 'Treści publiczne', 'Ranking zawodników', 'Wyniki publiczne', 'i-lucide-trophy', PUBLIC_ROUTES.zawodnicy, 'text-yellow-500', 'bg-yellow-500/10'),
   mod('admin', 'wyzwania', 'Treści publiczne', 'Wyzwania miesiąca', 'Aktywność w klubie', 'i-lucide-flame', KLUB_SHARED_ROUTES.wyzwania, 'text-orange-500', 'bg-orange-500/10'),
   mod('admin', 'kalendarz', 'Treści publiczne', 'Kalendarz', 'Wydarzenia', 'i-lucide-calendar', PUBLIC_ROUTES.kalendarz, 'text-purple-500', 'bg-purple-500/10'),
-  mod('admin', 'proporcje', 'Konto i narzędzia', 'Proporcje (ratio)', 'Kalkulator bojów', 'i-lucide-sigma', PUBLIC_ROUTES.proporcje, 'text-success', 'bg-success/12')
+  mod('admin', 'proporcje', 'Konto i narzędzia', 'Proporcje (ratio)', 'Kalkulator bojów', 'i-lucide-sigma', PUBLIC_ROUTES.proporcje, 'text-success', 'bg-success/12'),
+
+  // —— Zarząd (board) ——
+  mod('board', 'dokumenty', 'Dokumenty klubu', 'Repozytorium', 'Pliki w Slavia-cms (board/)', 'i-lucide-folder-lock', KLUB_BOARD_ROUTES.dokumenty, 'text-emerald-600', 'bg-emerald-500/12', true),
+  mod('board', 'generator', 'Dokumenty klubu', 'Generator', 'Raporty i listy startowe', 'i-lucide-wand-sparkles', KLUB_BOARD_ROUTES.generator, 'text-violet-600', 'bg-violet-500/12', true),
+  mod('board', 'typy', 'Dokumenty klubu', 'Typy dokumentów', 'Katalog i typy własne', 'i-lucide-tags', KLUB_BOARD_ROUTES.typy, 'text-sky-600', 'bg-sky-500/12', true)
 ]
 
 export type PanelModuleGroup = { title: string, items: DashboardModuleLink[] }
@@ -129,13 +134,15 @@ export function buildPanelModuleGroups(role: PanelNavRole): PanelModuleGroup[] {
 export const PANEL_NAV_ROLE_LABELS: Record<PanelNavRole, string> = {
   admin: 'Panel admina',
   trainer: 'Panel trenera',
-  athlete: 'Panel zawodnika'
+  athlete: 'Panel zawodnika',
+  board: 'Panel zarządu'
 }
 
 export const PANEL_NAV_ROLE_SHORT: Record<PanelNavRole, string> = {
   admin: 'Admin',
   trainer: 'Trener',
-  athlete: 'Zawodnik'
+  athlete: 'Zawodnik',
+  board: 'Zarząd'
 }
 
 /** Ścieżki w głównym pasku nawigacji (belka „Strony klubu”). */
@@ -176,6 +183,13 @@ export function panelNavRolesForUserRoles(roles: string[]): PanelNavRole[] {
   if (roles.includes('Admin') || roles.includes('SuperAdmin')) list.push('admin')
   if (roles.includes('Trainer') || roles.includes('SuperAdmin')) list.push('trainer')
   if (roles.includes('Athlete') || roles.includes('SuperAdmin')) list.push('athlete')
+  if (
+    roles.includes('BoardMember')
+    || roles.includes('BoardDocsFullAccess')
+    || roles.includes('SuperAdmin')
+  ) {
+    list.push('board')
+  }
   return list
 }
 

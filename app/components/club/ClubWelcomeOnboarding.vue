@@ -88,13 +88,24 @@ watch(
             <span><NuxtLink class="font-semibold text-primary underline-offset-2 hover:underline" to="/athlete/kalendarz" @click="markStepDone('calendar')">Kalendarz startów</NuxtLink> — przypisania od kadry</span>
           </li>
         </ul>
-        <div class="flex flex-col gap-2 border-t border-default/60 pt-4 sm:flex-row sm:justify-end">
+        <div class="flex flex-col gap-2 border-t border-default/60 pt-4 sm:flex-row sm:justify-between">
           <UButton color="neutral" variant="ghost" @click="dismiss('athlete')">
             Nie pokazuj więcej
           </UButton>
-          <UButton :to="accountSettingsPath" @click="open = false">
-            Przejdź do profilu
-          </UButton>
+          <div class="flex flex-col gap-2 sm:flex-row">
+            <UButton
+              to="/klub/samouczek"
+              variant="outline"
+              color="primary"
+              icon="i-lucide-graduation-cap"
+              @click="open = false"
+            >
+              Pełny samouczek
+            </UButton>
+            <UButton :to="accountSettingsPath" @click="open = false">
+              Przejdź do profilu
+            </UButton>
+          </div>
         </div>
       </div>
 
@@ -117,13 +128,24 @@ watch(
             <span>Baza zawodników — z menu lub kafelka na dashboardzie</span>
           </li>
         </ul>
-        <div class="flex flex-col gap-2 border-t border-default/60 pt-4 sm:flex-row sm:justify-end">
+        <div class="flex flex-col gap-2 border-t border-default/60 pt-4 sm:flex-row sm:justify-between">
           <UButton color="neutral" variant="ghost" @click="dismiss('staff')">
             Nie pokazuj więcej
           </UButton>
-          <UButton color="neutral" variant="outline" @click="open = false">
-            Zamknij
-          </UButton>
+          <div class="flex flex-col gap-2 sm:flex-row">
+            <UButton
+              to="/klub/samouczek"
+              variant="outline"
+              color="primary"
+              icon="i-lucide-graduation-cap"
+              @click="open = false"
+            >
+              Pełny samouczek
+            </UButton>
+            <UButton color="neutral" variant="outline" @click="open = false">
+              Zamknij
+            </UButton>
+          </div>
         </div>
       </div>
 

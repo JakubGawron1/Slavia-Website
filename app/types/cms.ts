@@ -25,7 +25,7 @@ export interface CmsPage {
 
 export interface CmsNavigationItem {
   id: string
-  role: 'admin' | 'trainer' | 'athlete' | 'superadmin'
+  role: 'admin' | 'trainer' | 'athlete' | 'superadmin' | 'board'
   label: string
   icon: string
   url: string

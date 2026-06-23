@@ -24,7 +24,7 @@ const panelNav = usePanelNavigationFlags()
 await panelNav.hydrateFromApi(true)
 
 const activeTab = ref<'global' | 'account'>('global')
-const roles: PanelNavRole[] = ['athlete', 'trainer', 'admin']
+const roles: PanelNavRole[] = ['athlete', 'trainer', 'admin', 'board']
 const activeGlobalRole = ref<PanelNavRole>('admin')
 const activeAccountRole = ref<PanelNavRole>('athlete')
 
@@ -32,7 +32,14 @@ const globalRoleTabItems = computed(() =>
   roles.map(role => ({
     label: PANEL_NAV_ROLE_LABELS[role],
     value: role,
-    icon: role === 'athlete' ? 'i-lucide-user' : role === 'trainer' ? 'i-lucide-whistle' : 'i-lucide-shield'
+    icon:
+      role === 'athlete'
+        ? 'i-lucide-user'
+        : role === 'trainer'
+          ? 'i-lucide-whistle'
+          : role === 'board'
+            ? 'i-lucide-landmark'
+            : 'i-lucide-shield'
   }))
 )
 
@@ -98,7 +105,7 @@ const accountRoleTabItems = computed(() => {
     .map(role => ({
       label: PANEL_NAV_ROLE_LABELS[role],
       value: role,
-      icon: role === 'athlete' ? 'i-lucide-user' : role === 'trainer' ? 'i-lucide-whistle' : 'i-lucide-shield'
+      icon: role === 'athlete' ? 'i-lucide-user' : role === 'trainer' ? 'i-lucide-whistle' : role === 'board' ? 'i-lucide-landmark' : 'i-lucide-shield'
     }))
 })
 

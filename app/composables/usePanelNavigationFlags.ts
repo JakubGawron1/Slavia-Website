@@ -33,6 +33,13 @@ function userHasRole(roles: string[], role: PanelNavRole): boolean {
   if (role === 'admin') return roles.includes('Admin') || roles.includes('SuperAdmin')
   if (role === 'trainer') return roles.includes('Trainer') || roles.includes('SuperAdmin')
   if (role === 'athlete') return roles.includes('Athlete') || roles.includes('SuperAdmin')
+  if (role === 'board') {
+    return (
+      roles.includes('BoardMember')
+      || roles.includes('BoardDocsFullAccess')
+      || roles.includes('SuperAdmin')
+    )
+  }
   return false
 }
 

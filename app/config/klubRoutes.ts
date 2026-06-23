@@ -18,13 +18,25 @@ export const KLUB_SHARED_ROUTES = {
   czat: '/klub/czat',
   powiadomienia: '/klub/powiadomienia',
   wyzwania: '/klub/wyzwania',
-  rekordy: '/klub/rekordy'
+  rekordy: '/klub/rekordy',
+  samouczek: '/klub/samouczek'
+} as const
+
+/** Moduły dokumentów zarządu — repozytorium Slavia-cms (`board/`). */
+export const KLUB_BOARD_ROUTES = {
+  dokumenty: '/klub/dokumenty',
+  generator: '/klub/dokumenty/generator',
+  typy: '/klub/dokumenty/typy'
 } as const
 
 /** Trasy /klub/ wymagające logowania (CSR, no-store). */
 export const KLUB_AUTH_PATHS = [
   KLUB_SHARED_ROUTES.obecnosc,
   KLUB_SHARED_ROUTES.czat,
-  KLUB_SHARED_ROUTES.powiadomienia
+  KLUB_SHARED_ROUTES.powiadomienia,
+  KLUB_SHARED_ROUTES.samouczek,
+  KLUB_BOARD_ROUTES.dokumenty,
+  KLUB_BOARD_ROUTES.generator,
+  KLUB_BOARD_ROUTES.typy
 ] as const
-
+

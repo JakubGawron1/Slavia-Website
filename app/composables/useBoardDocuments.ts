@@ -1,33 +1,26 @@
 import { apiRoutes } from '~/config/api'
 import { getApiErrorMessage } from '~/composables/useApi'
+import type {
+  BoardDocumentEntry,
+  BoardDocumentManifest,
+  BoardDocumentPreviewMeta,
+  BoardDocsStatus,
+  DeleteBoardDocumentRequest,
+  GenerateBoardDocumentRequest,
+  GenerateBoardDocumentResponse,
+  SaveBoardDocumentRequest
+} from '~/types/boardDocuments'
 
-export type BoardDocumentVersion = {
-  version_no: number
-  created_at: string
-  created_by?: string | null
-  edit_source?: 'native' | 'iframe' | 'upload' | 'generator' | null
-  generator_params?: Record<string, unknown> | null
-}
-
-export type BoardDocumentEntry = {
-  id: string
-  title: string
-  doc_type?: string | null
-  folder?: string | null
-  mime_type?: string | null
-  updated_at?: string | null
-  versions?: BoardDocumentVersion[]
-}
-
-export type BoardDocumentManifest = {
-  documents: BoardDocumentEntry[]
-}
-
-export type BoardDocumentPreviewMeta = {
-  mime_type: string
-  edit_mode: 'native' | 'iframe' | 'download_only'
-  iframe_url?: string | null
-}
+export type {
+  BoardDocumentEntry,
+  BoardDocumentManifest,
+  BoardDocumentPreviewMeta,
+  BoardDocumentVersion,
+  BoardDocsStatus,
+  GenerateBoardDocumentRequest,
+  GenerateBoardDocumentResponse,
+  SaveBoardDocumentRequest
+} from '~/types/boardDocuments'
 
 export function useBoardDocuments() {
   const api = useApi()
@@ -36,6 +29,7 @@ export function useBoardDocuments() {
   const manifest = ref<BoardDocumentManifest | null>(null)
   const pending = ref(false)
   const error = ref<string | null>(null)
+  const boardStatus = ref<BoardDocsStatus | null>(null)
 
   const documents = computed(() => manifest.value?.documents ?? [])
   const backendUnavailable = computed(() => Boolean(error.value))
@@ -46,7 +40,9 @@ export function useBoardDocuments() {
     try {
       const res = await api<BoardDocumentManifest>(apiRoutes.boardDocuments.documents)
       manifest.value = {
-        documents: Array.isArray(res?.documents) ? res.documents : []
+        documents: Array.isArray(res?.documents) ? res.documents : [],
+        updated_at: res?.updated_at ?? null,
+        custom_types: Array.isArray(res?.custom_types) ? res.custom_types : []
       }
       return manifest.value
     } catch (e) {
@@ -58,12 +54,25 @@ export function useBoardDocuments() {
     }
   }
 
+  async function fetchBoardStatus() {
+    try {
+      boardStatus.value = await api<BoardDocsStatus>(apiRoutes.boardDocuments.boardDocsStatus)
+      return boardStatus.value
+    } catch (e) {
+      boardStatus.value = null
+      throw e
+    }
+  }
+
   async function fetchDocument(id: string) {
     return api<BoardDocumentEntry>(apiRoutes.boardDocuments.document(id))
   }
 
   async function fetchContent(id: string) {
-    return api<string>(apiRoutes.boardDocuments.documentContent(id))
+    return api<string>(apiRoutes.boardDocuments.documentContent(id), {
+      responseType: 'text',
+      headers: { Accept: 'text/plain, text/html, text/csv, application/json, */*' }
+    })
   }
 
   async function getPreviewMeta(id: string) {
@@ -80,16 +89,48 @@ export function useBoardDocuments() {
     })
   }
 
+  async function generateDocument(body: GenerateBoardDocumentRequest) {
+    return api<GenerateBoardDocumentResponse>(apiRoutes.boardDocuments.generate, {
+      method: 'POST',
+      body
+    })
+  }
+
+  async function saveDocument(body: SaveBoardDocumentRequest) {
+    if (!auth.isBoardDocsFullAccess.value) {
+      throw new Error('Brak uprawnień do zapisu dokumentów zarządu.')
+    }
+    return api<BoardDocumentEntry>(apiRoutes.boardDocuments.save, {
+      method: 'POST',
+      body
+    })
+  }
+
+  async function deleteDocument(body: DeleteBoardDocumentRequest) {
+    if (!auth.isBoardDocsFullAccess.value) {
+      throw new Error('Brak uprawnień do usuwania dokumentów zarządu.')
+    }
+    return api(apiRoutes.boardDocuments.delete, {
+      method: 'POST',
+      body
+    })
+  }
+
   return {
     manifest,
     documents,
+    boardStatus,
     pending,
     error,
     backendUnavailable,
     fetchManifest,
+    fetchBoardStatus,
     fetchDocument,
     fetchContent,
     getPreviewMeta,
-    saveContent
+    saveContent,
+    generateDocument,
+    saveDocument,
+    deleteDocument
   }
 }

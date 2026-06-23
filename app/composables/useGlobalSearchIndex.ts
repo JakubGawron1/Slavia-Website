@@ -48,6 +48,7 @@ type SearchContext = {
 }
 
 function panelRoleToAudience(role: PanelNavRole): GlobalSearchAudience {
+  if (role === 'board') return 'board'
   return role
 }
 
@@ -70,6 +71,12 @@ function matchesAudience(audiences: GlobalSearchAudience[], ctx: SearchContext):
         return ctx.roles.has('Editor') || ctx.roles.has('Admin') || ctx.isSuperAdmin
       case 'superadmin':
         return ctx.isSuperAdmin
+      case 'board':
+        return (
+          ctx.roles.has('BoardMember')
+          || ctx.roles.has('BoardDocsFullAccess')
+          || ctx.isSuperAdmin
+        )
       default:
         return false
     }

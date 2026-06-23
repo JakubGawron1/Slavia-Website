@@ -1,7 +1,19 @@
-import { KLUB_SHARED_ROUTES, PUBLIC_ROUTES } from '~/config/klubRoutes'
+import { KLUB_BOARD_ROUTES, KLUB_SHARED_ROUTES, PUBLIC_ROUTES } from '~/config/klubRoutes'
 import type { PanelNavRole } from '~/data/panelNavigationCatalog'
+import { panelModuleLinkFromDef, panelNavModulesForRole } from '~/data/panelNavigationCatalog'
 import { dashboardLink } from '~/utils/dashboardLink'
 import type { DashboardModuleLink } from '~/utils/dashboardLink'
+
+const KLUB_UTILITY_TILES: DashboardModuleLink[] = [
+  dashboardLink(
+    'Samouczek aplikacji',
+    'Interaktywny przewodnik po panelach i modułach',
+    'i-lucide-graduation-cap',
+    KLUB_SHARED_ROUTES.samouczek,
+    'text-sky-600',
+    'bg-sky-500/12'
+  )
+]
 
 const KLUB_PUBLIC_TILES: DashboardModuleLink[] = [
   dashboardLink('Kalendarz klubu', 'Treningi i zawody', 'i-lucide-calendar-days', PUBLIC_ROUTES.kalendarz, 'text-purple-600', 'bg-purple-500/12'),
@@ -13,12 +25,16 @@ const KLUB_PUBLIC_TILES: DashboardModuleLink[] = [
 
 function isKlubModulePath(to: string) {
   const path = to.split('?')[0] ?? to
-  return path.startsWith('/klub') || Object.values(PUBLIC_ROUTES).includes(path as typeof PUBLIC_ROUTES[keyof typeof PUBLIC_ROUTES])
+  return (
+    path.startsWith('/klub')
+    || Object.values(PUBLIC_ROUTES).includes(path as typeof PUBLIC_ROUTES[keyof typeof PUBLIC_ROUTES])
+    || Object.values(KLUB_BOARD_ROUTES).includes(path as typeof KLUB_BOARD_ROUTES[keyof typeof KLUB_BOARD_ROUTES])
+  )
 }
 
 export function useKlubDashboardNav() {
   const auth = useAuth()
-  const { moduleGroupsForRole } = usePanelNavigationFlags()
+  const { moduleGroupsForRole, isEnabled } = usePanelNavigationFlags()
 
   const panelRole = computed<PanelNavRole>(() => {
     if (auth.isAdmin.value || auth.isSuperAdmin.value) return 'admin'
@@ -39,6 +55,21 @@ export function useKlubDashboardNav() {
       }
     }
 
+    if (auth.isBoardMember.value) {
+      for (const def of panelNavModulesForRole('board')) {
+        if (!isEnabled(def.id)) continue
+        if (seen.has(def.to)) continue
+        seen.add(def.to)
+        items.push(panelModuleLinkFromDef(def))
+      }
+    }
+
+    for (const tile of KLUB_UTILITY_TILES) {
+      if (seen.has(tile.to)) continue
+      seen.add(tile.to)
+      items.push(tile)
+    }
+
     for (const tile of KLUB_PUBLIC_TILES) {
       if (seen.has(tile.to)) continue
       seen.add(tile.to)
@@ -46,6 +77,7 @@ export function useKlubDashboardNav() {
     }
 
     for (const path of Object.values(KLUB_SHARED_ROUTES)) {
+      if (path === KLUB_SHARED_ROUTES.samouczek) continue
       if (seen.has(path)) continue
       const label = path.replace('/klub/', '')
       items.push(

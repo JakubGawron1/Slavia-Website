@@ -11,6 +11,7 @@ export type GlobalSearchAudience =
   | 'admin'
   | 'editor'
   | 'superadmin'
+  | 'board'
 
 export type GlobalSearchGroupId =
   | 'pages'

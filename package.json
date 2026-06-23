@@ -49,6 +49,7 @@
     "html5-qrcode": "^2.3.8",
     "isomorphic-dompurify": "^3.13.0",
     "nuxt": "^4.4.5",
+    "pdfjs-dist": "^6.0.227",
     "qrcode": "^1.5.4",
     "tailwindcss": "^4.3.0"
   },

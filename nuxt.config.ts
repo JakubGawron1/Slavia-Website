@@ -368,6 +368,22 @@ export default defineNuxtConfig({
 
     },
 
+    {
+
+      path: '~/components/tutorial',
+
+      pathPrefix: false
+
+    },
+
+    {
+
+      path: '~/components/klub/board',
+
+      pathPrefix: false
+
+    },
+
   {
 
     path: '~/components/ui',

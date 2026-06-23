@@ -11,9 +11,9 @@ import {
 import type { ExperimentalFeatureId } from '~/data/experimentalFeaturesCatalog'
 import {
   slaviaAppearanceStorageKeys,
-  useSlaviaAppearance,
-  type SlaviaThemePreset
+  useSlaviaAppearance
 } from '~/composables/useSlaviaAppearance'
+import type { SlaviaThemePreset } from '~/composables/useSlaviaCatalogs'
 import { getApiDetailedErrorMessage, getApiErrorMessage } from '~/composables/useApi'
 import { apiRoutes } from '~/config/api'
 import type { CompetitionResult } from '~/types/models'

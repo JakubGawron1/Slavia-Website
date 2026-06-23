@@ -24,6 +24,15 @@ export const GLOBAL_SEARCH_EXTRAS: GlobalSearchExtraEntry[] = [
     keywords: 'hub klub moduły'
   },
   {
+    id: 'klub-samouczek',
+    label: 'Samouczek aplikacji',
+    description: 'Interaktywny przewodnik po panelach i modułach klubu',
+    to: '/klub/samouczek',
+    icon: 'i-lucide-graduation-cap',
+    audiences: ['loggedIn'],
+    keywords: 'samouczek pomoc tutorial przewodnik help'
+  },
+  {
     id: 'athlete-dashboard',
     label: 'Panel zawodnika',
     description: 'Dashboard — starty, składki, dziennik i plany',

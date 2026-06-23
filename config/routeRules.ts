@@ -1,4 +1,4 @@
-import { KLUB_SHARED_ROUTES } from '../app/config/klubRoutes'
+import { KLUB_BOARD_ROUTES, KLUB_SHARED_ROUTES } from '../app/config/klubRoutes'
 import { slaviaSecurityHeaders, withSecurityHeaders } from './securityHeaders'
 
 /** Trasy panelu — CSR (SPA), bez SSR, bez prerenderu i bez cache CDN. */
@@ -50,10 +50,14 @@ export function buildRouteRules(devDisableRootIsr: boolean) {
 
     '/ogloszenia': { ...panelNoStore },
     '/klub': panelNoStore,
+    [KLUB_BOARD_ROUTES.dokumenty]: panelNoStore,
+    [KLUB_BOARD_ROUTES.generator]: panelNoStore,
+    [KLUB_BOARD_ROUTES.typy]: panelNoStore,
     '/klub/dokumenty/**': panelNoStore,
     [KLUB_SHARED_ROUTES.obecnosc]: panelNoStore,
     [KLUB_SHARED_ROUTES.czat]: panelNoStore,
     [KLUB_SHARED_ROUTES.powiadomienia]: panelNoStore,
+    [KLUB_SHARED_ROUTES.samouczek]: panelNoStore,
 
     '/athlete/**': panelNoStore,
     '/trainer/**': panelNoStore,

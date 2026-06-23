@@ -229,7 +229,14 @@ export const apiRoutes = {
     documentContent: (id: string) =>
       `/api/board/documents/${encodeURIComponent(id)}/content`,
     documentPreview: (id: string) =>
-      `/api/board/documents/${encodeURIComponent(id)}/preview`
+      `/api/board/documents/${encodeURIComponent(id)}/preview`,
+    generate: '/api/board/documents/generate',
+    save: '/api/board/documents/save',
+    delete: '/api/board/documents/delete',
+    documentTypes: '/api/board/document-types',
+    template: (docType: string) =>
+      `/api/board/templates/${encodeURIComponent(docType)}`,
+    boardDocsStatus: '/api/system/board-docs-status'
   },
   cms: {
     variables: '/api/cms/variables',

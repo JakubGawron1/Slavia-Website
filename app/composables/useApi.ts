@@ -57,7 +57,14 @@ export function useApi() {
         headers.set('X-Slavia-Role-Preview', rolePreview.state.value.targetUserId)
       }
       if (!headers.has('Accept')) {
-        headers.set('Accept', 'application/json')
+        const rt = (options as { responseType?: string }).responseType
+        if (rt === 'text') {
+          headers.set('Accept', 'text/plain, text/html, text/csv, application/json, */*')
+        } else if (rt === 'blob' || rt === 'arrayBuffer') {
+          headers.set('Accept', '*/*')
+        } else {
+          headers.set('Accept', 'application/json')
+        }
       }
       if (options.body instanceof FormData) {
         headers.delete('Content-Type')
@@ -111,7 +118,14 @@ export function useApi() {
         headers.set('X-Slavia-Role-Preview', rolePreview.state.value.targetUserId)
       }
       if (!headers.has('Accept')) {
-        headers.set('Accept', 'application/json')
+        const rt = (options as { responseType?: string }).responseType
+        if (rt === 'text') {
+          headers.set('Accept', 'text/plain, text/html, text/csv, application/json, */*')
+        } else if (rt === 'blob' || rt === 'arrayBuffer') {
+          headers.set('Accept', '*/*')
+        } else {
+          headers.set('Accept', 'application/json')
+        }
       }
       options.headers = headers
     },
@@ -162,8 +176,23 @@ export function useApi() {
     )
   }
 
-  return Object.assign(apiFetch, { orEmpty }) as typeof apiFetch & {
+  return Object.assign(apiFetch, {
+    orEmpty,
+    raw: (url: string, opts?: FetchOptions) => {
+      const method = String(opts?.method || 'GET')
+      const { path, query } = splitUrl(url)
+      if (method.toUpperCase() === 'GET' && isPanelBffPath(path)) {
+        return panelClient.raw(`${panelApiUrl(path)}${query}`, opts as Parameters<typeof panelClient.raw>[1])
+      }
+      const rewritten = rewriteRolePreviewApiUrl(url, method, rolePreview.state.value, {
+        isActive: rolePreview.isActive.value,
+        isAthletePreview: rolePreview.isAthletePreview.value
+      })
+      return client.raw(rewritten, opts as Parameters<typeof client.raw>[1])
+    }
+  }) as typeof apiFetch & {
     orEmpty: typeof orEmpty
+    raw: typeof client.raw
   }
 }
 
