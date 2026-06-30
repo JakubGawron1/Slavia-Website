@@ -67,7 +67,7 @@ function previewType(type: BoardDocumentTypeDefinition | { id: string }) {
     <div class="mb-4 flex flex-wrap items-center gap-2">
       <UBadge color="neutral" variant="subtle" size="sm">
         Źródło typów własnych: {{
-          source === 'api' ? 'manifest Slavia-cms' : source === 'cache' ? 'pamięć podręczna (offline)' : 'brak'
+          source === 'api' ? 'manifest Slavia-cms' : 'brak'
         }}
       </UBadge>
       <UButton size="xs" variant="ghost" color="neutral" icon="i-lucide-refresh-cw" :loading="pending" @click="refresh">

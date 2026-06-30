@@ -1,5 +1,12 @@
 import type { AthletePublicProfile, CompetitionResult } from '~/types/models'
+import { publicApiUrl } from '~/composables/usePublicFetch'
 import { parseSlugId } from '~/utils/slug'
+
+const PUBLIC_PROFILE_FETCH = {
+  timeout: 12_000,
+  cache: 'no-store' as const,
+  headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' }
+}
 
 /** Dane i uprawnienia profilu publicznego zawodnika (`/athlete/[slug]`). */
 export async function useAthletePublicProfilePage() {
@@ -29,8 +36,9 @@ export async function useAthletePublicProfilePage() {
     athleteDetailKey,
     async () => {
       if (!athleteId.value) return null
-      return await apiFetch<AthletePublicProfile>(
-        `/api/athletes/${encodeURIComponent(athleteId.value)}`
+      return await $fetch<AthletePublicProfile>(
+        publicApiUrl(`athletes/${encodeURIComponent(athleteId.value)}`),
+        PUBLIC_PROFILE_FETCH
       )
     },
     { watch: [athleteId] }
@@ -41,9 +49,10 @@ export async function useAthletePublicProfilePage() {
     athleteResultsKey,
     async () => {
       if (!athleteId.value) return []
-      return await apiFetch<CompetitionResult[]>(
-        `/api/results/athlete/${encodeURIComponent(athleteId.value)}`
-      )
+      return await $fetch<CompetitionResult[]>(
+        publicApiUrl(`results/athlete/${encodeURIComponent(athleteId.value)}`),
+        PUBLIC_PROFILE_FETCH
+      ).catch(() => [] as CompetitionResult[])
     },
     { watch: [athleteId], default: () => [] }
   )

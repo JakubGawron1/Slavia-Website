@@ -1,5 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "ignoreCommand": "bash scripts/vercel-ignore-build.sh",
-  "installCommand": "git submodule update --init --recursive --remote && pnpm install"
+  "installCommand": "git submodule update --init --recursive --remote && pnpm install",
+  "env": {
+    "NODE_OPTIONS": "--experimental-require-module"
+  }
 }

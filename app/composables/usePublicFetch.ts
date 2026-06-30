@@ -3,37 +3,45 @@ export function usePublicApiBase(): string {
   return '/api/public'
 }
 
-const publicFetchTimestamps = new Map<string, number>()
-
 /** Pełny URL do publicznego proxy, np. `/api/public/athletes`. */
 export function publicApiUrl(path: string): string {
   const normalized = path.replace(/^\/?api\//, '').replace(/^\//, '')
   return `${usePublicApiBase()}/${normalized}`
 }
 
-function readPublicPayloadCache<T>(nuxtApp: ReturnType<typeof useNuxtApp>, cacheKey: string): T | undefined {
+function readSsrPayload<T>(nuxtApp: ReturnType<typeof useNuxtApp>, cacheKey: string): T | undefined {
   const entry = nuxtApp.payload.data[cacheKey] ?? nuxtApp.static.data[cacheKey]
   return entry !== undefined ? (entry as T) : undefined
+}
+
+/** Tylko hydracja SSR → klient; bez cache między nawigacjami. */
+function readHydrationPayload<T>(nuxtApp: ReturnType<typeof useNuxtApp>, cacheKey: string): T | undefined {
+  if (import.meta.server || nuxtApp.isHydrating) {
+    return readSsrPayload<T>(nuxtApp, cacheKey)
+  }
+  return undefined
 }
 
 type PublicLazyFetchOpts<T> = {
   key?: string
   default?: () => T
-  /** Po stronie klienta — nie odświeżaj danych przez N ms (SWR w pamięci). */
-  staleTimeMs?: number
   query?: MaybeRef<Record<string, string | undefined>>
   /** Przekazywane do `useAsyncData` — np. `false` dla danych tylko po logowaniu. */
   server?: boolean
 }
 
+const PUBLIC_FETCH_OPTIONS = {
+  cache: 'no-store' as const,
+  headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' }
+}
+
 /**
- * Publiczne dane przez BFF `/api/public/*` — lazy `useAsyncData` (SSR).
+ * Publiczne dane przez BFF `/api/public/*` — lazy `useAsyncData` (SSR, zawsze świeże z backendu).
  */
 export function usePublicLazyFetch<T>(
   apiPath: string,
   opts: PublicLazyFetchOpts<T> = {}
 ) {
-  const staleTimeMs = opts.staleTimeMs ?? 60_000
   const queryRef = computed(() => toValue(opts.query) ?? {})
   const key = computed(() => {
     const q = queryRef.value
@@ -57,16 +65,12 @@ export function usePublicLazyFetch<T>(
   return useAsyncData<T>(
     key,
     async () => {
-      const nuxtApp = useNuxtApp()
       try {
-        const result = (await $fetch(buildUrl(), { timeout: 12_000 })) as T
-        publicFetchTimestamps.set(key.value, Date.now())
-        return result
+        return (await $fetch(buildUrl(), {
+          timeout: 12_000,
+          ...PUBLIC_FETCH_OPTIONS
+        })) as T
       } catch (err) {
-        const existing = readPublicPayloadCache<T>(nuxtApp, key.value)
-        if (existing !== undefined) {
-          return existing
-        }
         if (opts.default) {
           if (import.meta.dev) {
             console.warn(`[public-api] ${buildUrl()} niedostępne, używam default()`, err)
@@ -80,33 +84,12 @@ export function usePublicLazyFetch<T>(
       server: opts.server ?? true,
       lazy: true,
       default: opts.default,
-      dedupe: 'defer',
+      dedupe: 'cancel',
       getCachedData: (cacheKey, nuxtApp, ctx) => {
         if (ctx.cause === 'refresh:manual') {
           return undefined
         }
-
-        const fromPayload = readPublicPayloadCache<T>(nuxtApp, cacheKey)
-        if (fromPayload === undefined) {
-          return undefined
-        }
-
-        if (!import.meta.client || staleTimeMs <= 0) {
-          return fromPayload
-        }
-
-        const fetchedAt = publicFetchTimestamps.get(cacheKey)
-        if (!fetchedAt) {
-          // Hydracja klienta — zachowaj dane z SSR, nie nadpisuj default() przed fetch.
-          publicFetchTimestamps.set(cacheKey, Date.now())
-          return fromPayload
-        }
-
-        if (Date.now() - fetchedAt < staleTimeMs) {
-          return fromPayload
-        }
-
-        return undefined
+        return readHydrationPayload<T>(nuxtApp, cacheKey)
       }
     }
   )

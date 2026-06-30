@@ -26,11 +26,14 @@ function readPayloadCache(nuxtApp: ReturnType<typeof useNuxtApp>, key: string) {
 export function useMobileAppRelease() {
   const { data: mobileRelease } = useAsyncData(
     MOBILE_RELEASE_KEY,
-    () => $fetch<MobileLatestRelease>('/api/mobile/latest-release'),
+    () => $fetch<MobileLatestRelease>('/api/mobile/latest-release', { cache: 'no-store' }),
     {
       default: (): MobileLatestRelease => ({ configured: false }),
       getCachedData(key, nuxtApp) {
-        return readPayloadCache(nuxtApp, key)
+        if (import.meta.server || nuxtApp.isHydrating) {
+          return readPayloadCache(nuxtApp, key)
+        }
+        return undefined
       }
     }
   )

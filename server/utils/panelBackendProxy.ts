@@ -3,7 +3,7 @@ import { isPanelBffPath } from '~/utils/panelBffPaths'
 import { isPublicBackendProxyPath } from './publicBackendProxy'
 import { resolvePublicApiBase } from './resolvePublicApiBase'
 
-export const PANEL_BFF_CACHE_CONTROL = 'private, max-age=10, stale-while-revalidate=30'
+export const PANEL_BFF_CACHE_CONTROL = 'private, no-store'
 
 /**
  * BFF GET panelu (zalogowany) → zewnętrzny backend z tokenem użytkownika.

@@ -105,7 +105,7 @@ Nowe funkcje trenera/zawodnika w mobile: tak. Nowe funkcje admin/superadmin: tyl
 
 ## Architektura renderowania — SSR + CSR only
 
-**Zasada:** witryna używa wyłącznie **SSR** (strony publiczne) i **CSR** (panele po logowaniu). Brak SSG, prerenderu i ISR — bez cache edge Vercel na HTML i publicznym BFF (`no-store`).
+**Zasada:** witryna używa wyłącznie **SSR** (strony publiczne) i **CSR** (panele po logowaniu). Brak SSG, prerenderu i ISR — bez cache edge Vercel na HTML i BFF (`no-store`). Dane API nie są buforowane w pamięci klienta ani localStorage (wyjątek: preferencje UI, token auth, onboarding).
 
 | Tryb | Trasy | `routeRules` |
 |------|-------|--------------|

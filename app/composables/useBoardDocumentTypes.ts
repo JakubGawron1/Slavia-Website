@@ -10,29 +10,6 @@ import type {
   BoardDocumentTypeDefinition
 } from '~/types/boardDocuments'
 
-const CUSTOM_TYPES_CACHE_KEY = 'slavia-board-custom-document-types-cache'
-
-function readCachedCustomTypes(): BoardCustomDocumentType[] {
-  if (!import.meta.client) return []
-  try {
-    const raw = localStorage.getItem(CUSTOM_TYPES_CACHE_KEY)
-    if (!raw) return []
-    const parsed = JSON.parse(raw) as BoardCustomDocumentType[]
-    return Array.isArray(parsed) ? parsed : []
-  } catch {
-    return []
-  }
-}
-
-function writeCachedCustomTypes(types: BoardCustomDocumentType[]) {
-  if (!import.meta.client) return
-  try {
-    localStorage.setItem(CUSTOM_TYPES_CACHE_KEY, JSON.stringify(types))
-  } catch {
-    /* ignore */
-  }
-}
-
 function customToDefinition(custom: BoardCustomDocumentType): BoardDocumentTypeDefinition {
   return {
     id: custom.id,
@@ -47,7 +24,7 @@ function customToDefinition(custom: BoardCustomDocumentType): BoardDocumentTypeD
   }
 }
 
-export type BoardDocumentTypesSource = 'api' | 'cache' | 'empty'
+export type BoardDocumentTypesSource = 'api' | 'empty'
 
 export function useBoardDocumentTypes() {
   const api = useApi()
@@ -72,30 +49,18 @@ export function useBoardDocumentTypes() {
     return typeMap.value.get(id) ?? BUILTIN_BOARD_DOCUMENT_TYPE_MAP.get(id)
   }
 
-  function applyCustomTypes(fromApi: BoardCustomDocumentType[], origin: BoardDocumentTypesSource) {
-    customTypes.value = fromApi
-    source.value = origin
-    if (origin === 'api') {
-      writeCachedCustomTypes(fromApi)
-    }
-  }
-
   async function loadCustomTypes() {
     pending.value = true
     error.value = null
     try {
       const manifest = await api<BoardDocumentManifest>(apiRoutes.boardDocuments.documents)
       const fromManifest = Array.isArray(manifest?.custom_types) ? manifest.custom_types : []
-      applyCustomTypes(fromManifest, 'api')
+      customTypes.value = fromManifest
+      source.value = fromManifest.length ? 'api' : 'empty'
       return customTypes.value
     } catch (e) {
-      const cached = readCachedCustomTypes()
-      if (cached.length) {
-        applyCustomTypes(cached, 'cache')
-      } else {
-        customTypes.value = []
-        source.value = 'empty'
-      }
+      customTypes.value = []
+      source.value = 'empty'
       error.value = getApiErrorMessage(e)
       return customTypes.value
     } finally {
@@ -121,7 +86,6 @@ export function useBoardDocumentTypes() {
     })
     customTypes.value = [...customTypes.value.filter(t => t.id !== saved.id), saved]
     source.value = 'api'
-    writeCachedCustomTypes(customTypes.value)
     return saved
   }
 

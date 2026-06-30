@@ -32,8 +32,7 @@ const { data, pending, error, refresh } = usePublicLazyFetch<ApiResponse>(
   {
     key: 'klub-wyzwania',
     query: monthQuery,
-    default: () => ({ month: '', metric: '', leaderboard: [] }),
-    staleTimeMs: 120_000
+    default: () => ({ month: '', metric: '', leaderboard: [] })
   }
 )
 

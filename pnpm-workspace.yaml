@@ -2,6 +2,8 @@ packages:
   - '.'
 
 overrides:
+  # jsdom@29 → html-encoding-sniffer@6 → require(ESM @exodus/bytes); Vercel też wymaga NODE_OPTIONS.
+  jsdom: 26.1.0
   '@exodus/bytes': 1.14.0
   '@tiptap/core': 3.23.4
   '@tiptap/pm': 3.23.4

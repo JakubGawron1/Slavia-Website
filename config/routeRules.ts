@@ -1,5 +1,9 @@
 import { KLUB_BOARD_ROUTES, KLUB_SHARED_ROUTES } from '../app/config/klubRoutes'
 
+import { ATHLETE_PANEL_CSR_PATHS } from '../config/athletePanelCsrPaths'
+
+
+
 import { withSecurityHeaders } from './securityHeaders'
 
 
@@ -18,9 +22,7 @@ export const panelNoStore = {
 
 
 
-/** Publiczny BFF — bez cache CDN (dane zawsze świeże z HF). */
-
-export const publicBffNoStore = {
+const apiNoStore = {
 
   headers: withSecurityHeaders({
 
@@ -32,21 +34,21 @@ export const publicBffNoStore = {
 
 
 
-/** Panelowy BFF — tylko prywatny cache przeglądarki (Bearer), bez współdzielonego CDN. */
+/** Publiczny BFF — bez cache (dane zawsze świeże z HF). */
 
-export const panelBffCache = {
-
-  headers: withSecurityHeaders({
-
-    'cache-control': 'private, max-age=10, stale-while-revalidate=30',
-
-    vary: 'Authorization'
-
-  })
-
-}
+export const publicBffNoStore = apiNoStore
 
 
+
+/** Panelowy BFF — bez cache przeglądarki (Bearer). */
+
+export const panelBffNoStore = apiNoStore
+
+
+
+const athletePanelRouteRules = Object.fromEntries(
+  ATHLETE_PANEL_CSR_PATHS.map(path => [path, panelNoStore])
+) as Record<string, typeof panelNoStore>
 
 export function buildRouteRules() {
 
@@ -64,7 +66,7 @@ export function buildRouteRules() {
 
     '/api/public/**': publicBffNoStore,
 
-    '/api/panel/**': panelBffCache,
+    '/api/panel/**': panelBffNoStore,
 
 
 
@@ -90,7 +92,7 @@ export function buildRouteRules() {
 
 
 
-    '/athlete/**': panelNoStore,
+    ...athletePanelRouteRules,
 
     '/trainer/**': panelNoStore,
 
@@ -99,5 +101,7 @@ export function buildRouteRules() {
     '/superadmin/**': panelNoStore
 
   } as const
+
 }
+
 

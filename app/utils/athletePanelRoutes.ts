@@ -1,4 +1,7 @@
 import { panelNavNormalizePath } from '~/data/panelNavigationCatalog'
+import { ATHLETE_PANEL_CSR_PATHS } from '../../config/athletePanelCsrPaths'
+
+export { ATHLETE_PANEL_CSR_PATHS }
 
 const ATHLETE_PANEL_PRIMARY_PATHS = [
   '/athlete',

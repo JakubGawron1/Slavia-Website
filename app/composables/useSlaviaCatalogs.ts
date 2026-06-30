@@ -71,24 +71,21 @@ const DEFAULT_PZPC_CATALOG: PzpcCatalog = {
 }
 
 /**
- * Katalogi statyczne z backendu (`GET /api/system/*`) — cache BFF + fallback offline.
+ * Katalogi statyczne z backendu (`GET /api/system/*`) — zawsze świeże z API.
  */
 export function useSlaviaCatalogs() {
   const { data: themeRaw } = usePublicLazyFetch<ThemePresetsResponse>('system/theme-presets', {
     key: 'catalog:theme-presets',
-    staleTimeMs: 86_400_000,
     default: () => ({ presets: [...DEFAULT_THEME_PRESETS] })
   })
 
   const { data: badgesRaw } = usePublicLazyFetch<AthleteBadgesResponse>('system/athlete-badges', {
     key: 'catalog:athlete-badges',
-    staleTimeMs: 86_400_000,
     default: () => ({ badges: [...DEFAULT_ATHLETE_BADGES] })
   })
 
   const { data: pzpcRaw } = usePublicLazyFetch<PzpcCatalog>('system/pzpc-weight-classes', {
     key: 'catalog:pzpc-weight-classes',
-    staleTimeMs: 86_400_000,
     default: () => DEFAULT_PZPC_CATALOG
   })
 

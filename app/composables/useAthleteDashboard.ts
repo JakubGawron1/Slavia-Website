@@ -23,13 +23,6 @@ import {
   type GoalMode,
   type SeasonGoalData
 } from '~/utils/athleteDashboardLogic'
-import {
-  canPersistAthleteDashboardCache,
-  clearAthleteDashboardCache,
-  peekAthleteDashboardCache,
-  readAthleteDashboardCache,
-  writeAthleteDashboardCache
-} from '~/utils/athleteDashboardCache'
 import { scheduleIdleWork } from '~/utils/scheduleIdleWork'
 import { apiFetchOrEmpty } from '~/utils/apiFetchOrEmpty'
 import { API_PANEL_COLD_START_TIMEOUT_MS } from '~/composables/useApi'
@@ -119,37 +112,6 @@ export async function useAthleteDashboard() {
     return apiFetchOrEmpty(fetcher)
   }
 
-  function canUseAthleteDashboardCache(): boolean {
-    return canPersistAthleteDashboardCache(
-      auth.isAthlete.value,
-      rolePreviewState.isActive.value,
-      auth.user.value?.id
-    )
-  }
-
-  function readCachedDashboardBundle(): AthleteBundle | null {
-    if (!import.meta.client) return null
-    const month = paymentMonth.value
-    const userId = auth.user.value?.id
-    const entry = userId
-      ? readAthleteDashboardCache(userId, month)
-      : peekAthleteDashboardCache(month)
-    if (!entry) return null
-    if (userId && entry.userId !== userId) {
-      clearAthleteDashboardCache(entry.userId)
-      return null
-    }
-    return mapDashboardToBundle(entry.data)
-  }
-
-  function persistDashboardCache(dashboard: AthleteDashboardResponse) {
-    const userId = auth.user.value?.id
-    if (!canUseAthleteDashboardCache() || !userId) return
-    writeAthleteDashboardCache(userId, paymentMonth.value, dashboard)
-  }
-
-  const cachedBundlePreview = readCachedDashboardBundle()
-
   const { data: bundle, pending: bundlePending } = await useAsyncData(
     () => `athlete-page-bundle-${paymentMonth.value}`,
     async () => {
@@ -158,23 +120,14 @@ export async function useAthleteDashboard() {
       if (!roles.includes('Athlete') && !roles.includes('SuperAdmin')) {
         return emptyAthleteBundle()
       }
-      const userId = auth.user.value?.id
       const dashboard = await fetchDashboardPayload({ coldStart: true })
-      if (dashboard) {
-        persistDashboardCache(dashboard)
-        return mapDashboardToBundle(dashboard)
-      }
-      if (userId) {
-        const cached = readAthleteDashboardCache(userId, paymentMonth.value)
-        if (cached) return mapDashboardToBundle(cached.data)
-      }
-      return cachedBundlePreview ?? emptyAthleteBundle()
+      return dashboard ? mapDashboardToBundle(dashboard) : emptyAthleteBundle()
     },
-    { default: () => cachedBundlePreview ?? emptyAthleteBundle() }
+    { default: () => emptyAthleteBundle() }
   )
 
   const resultsPending = computed(
-    () => bundlePending.value && !cachedBundlePreview && !bundle.value?.athlete?.id
+    () => bundlePending.value && !bundle.value?.athlete?.id
   )
 
   const athlete = computed(() => bundle.value?.athlete ?? null)
@@ -224,7 +177,6 @@ export async function useAthleteDashboard() {
       if (!dashboard?.attendance_summary) {
         throw new Error('Brak podsumowania frekwencji')
       }
-      persistDashboardCache(dashboard)
       bundle.value = mapDashboardToBundle(dashboard)
       return dashboard.attendance_summary
     }, { skip: !shouldLoadAttendanceKpi.value })
@@ -236,7 +188,6 @@ export async function useAthleteDashboard() {
       if (!dashboard?.payment_status) {
         throw new Error('Brak statusu składki')
       }
-      persistDashboardCache(dashboard)
       bundle.value = mapDashboardToBundle(dashboard)
       return dashboard.payment_status
     }, { skip: !shouldLoadPaymentKpi.value })

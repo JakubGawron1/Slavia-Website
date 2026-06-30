@@ -25,6 +25,13 @@ function splitUrl(url: string): { path: string, query: string } {
   return { path: url.slice(0, q), query: url.slice(q) }
 }
 
+function applyNoStoreGetHeaders(headers: Headers, method: string) {
+  const m = method.toUpperCase()
+  if (m !== 'GET' && m !== 'HEAD') return
+  headers.set('Cache-Control', 'no-cache')
+  headers.set('Pragma', 'no-cache')
+}
+
 export function useApi() {
   const auth = useAuth()
   const expBanRedirect = useExperimentalFlag('ban_redirect_on_403')
@@ -69,7 +76,11 @@ export function useApi() {
       if (options.body instanceof FormData) {
         headers.delete('Content-Type')
       }
+      applyNoStoreGetHeaders(headers, method)
       options.headers = headers
+      if (method === 'GET' || method === 'HEAD') {
+        options.cache = 'no-store'
+      }
     },
     onRequestError({ error }) {
       console.error('[api] request error', error)
@@ -127,7 +138,11 @@ export function useApi() {
           headers.set('Accept', 'application/json')
         }
       }
+      applyNoStoreGetHeaders(headers, method)
       options.headers = headers
+      if (method === 'GET' || method === 'HEAD') {
+        options.cache = 'no-store'
+      }
     },
     onResponse({ response }) {
       if (import.meta.client && response.ok) {

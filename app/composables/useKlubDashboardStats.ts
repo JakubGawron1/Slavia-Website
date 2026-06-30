@@ -33,26 +33,22 @@ export function useKlubDashboardStats() {
 
   const { data: athletes, pending: athletesPending } = usePublicLazyFetch<Athlete[]>('athletes', {
     key: 'klub-stats-athletes',
-    default: () => [],
-    staleTimeMs: 120_000
+    default: () => []
   })
 
   const { data: competitions, pending: competitionsPending } = usePublicLazyFetch<Competition[]>('competitions', {
     key: 'klub-stats-competitions',
-    default: () => [],
-    staleTimeMs: 120_000
+    default: () => []
   })
 
   const { data: posts, pending: postsPending } = usePublicLazyFetch<BlogPost[]>('posts', {
     key: 'klub-stats-posts',
-    default: () => [],
-    staleTimeMs: 120_000
+    default: () => []
   })
 
   const { data: photos, pending: photosPending } = usePublicLazyFetch<GalleryPhoto[]>('gallery', {
     key: 'klub-stats-gallery',
-    default: () => [],
-    staleTimeMs: 180_000
+    default: () => []
   })
 
   const { data: challenge, pending: challengePending } = usePublicLazyFetch<{
@@ -60,8 +56,7 @@ export function useKlubDashboardStats() {
     leaderboard: ChallengeRow[]
   }>('challenges/monthly-training-sessions', {
     key: 'klub-stats-challenge',
-    default: () => ({ month: '', leaderboard: [] }),
-    staleTimeMs: 120_000
+    default: () => ({ month: '', leaderboard: [] })
   })
 
   const { data: roleStats, pending: rolePending } = useAsyncData(

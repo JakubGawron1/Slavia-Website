@@ -6,7 +6,7 @@ import {
 
 /**
  * GET /api/panel/* → {apiBase}/api/* (whitelist w `panelBffPaths`).
- * Krótki cache prywatny (przeglądarka) — `routeRules` + nagłówki odpowiedzi.
+ * Bez cache — `routeRules` + nagłówki odpowiedzi (`no-store`).
  */
 export default defineEventHandler(async (event) => {
   const segments = getRouterParam(event, 'path')?.split('/').filter(Boolean) ?? []
