@@ -74,15 +74,23 @@ export function useZawodnicyPage() {
     trainingByAthlete.value = {}
     if (!auth.isLoggedIn.value || players.value.length === 0) return
 
+    const fetchTraining = async (athleteId: string) =>
+      apiFetch<CompetitionResult[]>(apiRoutes.results.athlete(athleteId, 'training')).catch(
+        () => [] as CompetitionResult[]
+      )
+
+    const batchSize = 3
     if (canSeeClubTrainingRanking.value) {
       const out: Record<string, CompetitionResult[]> = {}
-      await Promise.all(
-        players.value.map(async (p) => {
-          out[p.id] = await apiFetch<CompetitionResult[]>(
-            apiRoutes.results.athlete(p.id, 'training')
-          ).catch(() => [] as CompetitionResult[])
-        })
-      )
+      const list = players.value
+      for (let i = 0; i < list.length; i += batchSize) {
+        const batch = list.slice(i, i + batchSize)
+        await Promise.all(
+          batch.map(async (p) => {
+            out[p.id] = await fetchTraining(p.id)
+          })
+        )
+      }
       trainingByAthlete.value = out
       return
     }
@@ -90,9 +98,7 @@ export function useZawodnicyPage() {
     await auth.ensureSession()
     const myAthleteId = auth.user.value?.athlete_id
     if (!myAthleteId) return
-    const rows = await apiFetch<CompetitionResult[]>(
-      apiRoutes.results.athlete(myAthleteId, 'training')
-    ).catch(() => [] as CompetitionResult[])
+    const rows = await fetchTraining(myAthleteId)
     trainingByAthlete.value = { [myAthleteId]: rows }
   }
 

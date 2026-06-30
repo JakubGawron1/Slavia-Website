@@ -6,9 +6,12 @@ const VIEWPORT_IO = { rootMargin: '160px 0px', threshold: 0.01, once: true } as 
 /**
  * Prefetch profilu publicznego zawodnika — dane przez BFF `/api/public/*`
  * oraz preload komponentu trasy `/athlete/[slug]`.
+ *
+ * `includeResults` — domyślnie false (na liście zawodników wyniki są w public-board).
  */
-export function useAthletePublicProfilePrefetch() {
-  const scheduler = createPrefetchScheduler({ debounceMs: 140, maxConcurrent: 3 })
+export function useAthletePublicProfilePrefetch(opts?: { includeResults?: boolean }) {
+  const includeResults = opts?.includeResults ?? false
+  const scheduler = createPrefetchScheduler({ debounceMs: 140, maxConcurrent: 2 })
   const prefetchedRoutes = new Set<string>()
 
   function athleteDetailKey(id: string) {
@@ -40,7 +43,9 @@ export function useAthletePublicProfilePrefetch() {
   function prefetchAthleteProfile(id?: string | null, name?: string | null) {
     if (!id) return
     scheduler.schedule(athleteDetailKey(id), () => fetchAthleteDetail(id))
-    scheduler.schedule(athleteResultsKey(id), () => fetchAthleteResults(id))
+    if (includeResults) {
+      scheduler.schedule(athleteResultsKey(id), () => fetchAthleteResults(id))
+    }
     if (name) prefetchRoute(name, id)
   }
 
@@ -62,7 +67,9 @@ export function useAthletePublicProfilePrefetch() {
   function observeAthleteCard(el: Element | null | undefined, id?: string | null, name?: string | null) {
     if (!id) return
     scheduler.observeViewport(el, athleteDetailKey(id), () => fetchAthleteDetail(id), VIEWPORT_IO)
-    scheduler.observeViewport(el, athleteResultsKey(id), () => fetchAthleteResults(id), VIEWPORT_IO)
+    if (includeResults) {
+      scheduler.observeViewport(el, athleteResultsKey(id), () => fetchAthleteResults(id), VIEWPORT_IO)
+    }
     if (name) {
       scheduler.observeViewport(
         el,
