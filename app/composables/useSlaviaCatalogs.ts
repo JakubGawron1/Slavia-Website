@@ -18,7 +18,7 @@ export type AthleteBadgeMeta = {
 type ThemePresetsResponse = { presets: ThemePresetMeta[] }
 type AthleteBadgesResponse = { badges: AthleteBadgeMeta[] }
 
-/** Fallback offline / prerender — zgodny z backend `embed/theme-presets.json`. */
+/** Fallback offline (dev) — zgodny z backend `embed/theme-presets.json`. */
 export const DEFAULT_THEME_PRESETS: readonly ThemePresetMeta[] = [
   { id: 'pink', label: 'Pink — athlete', description: 'Akcent różowy dla kont zawodniczek (domyślny wg płci).' },
   { id: 'dark', label: 'Dark — athlete', description: 'Mocny ciemny preset dla kont zawodników (domyślny wg płci).' },

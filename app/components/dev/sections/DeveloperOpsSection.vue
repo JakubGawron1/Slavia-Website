@@ -241,9 +241,9 @@ const d = useDeveloperPage()
           <div class="space-y-3 rounded-xl border border-default/50 bg-muted/10 p-4">
             <h3 class="text-xs font-bold uppercase tracking-widest text-primary">routeRules (skrót)</h3>
             <ul class="list-disc space-y-1 ps-4 text-xs text-muted">
-              <li>Panele <code>/athlete/**</code>, <code>/trainer/**</code>, <code>/admin/**</code> — <code>no-store</code>.</li>
-              <li>Publiczne ISR: <code>/</code>, <code>/aktualnosci</code>, <code>/galeria</code>, <code>/zawodnicy</code>.</li>
-              <li>BFF <code>/api/public/*</code> — whitelist w <code>publicBackendProxy.ts</code>.</li>
+              <li>Panele <code>/athlete/**</code>, <code>/trainer/**</code>, <code>/admin/**</code> — CSR (<code>ssr: false</code>), <code>no-store</code>.</li>
+              <li>Publiczne strony — SSR (<code>no-store</code>, bez ISR/CDN cache).</li>
+              <li>BFF <code>/api/public/*</code> — whitelist w <code>publicBackendProxy.ts</code>, <code>no-store</code>.</li>
               <li>Nowa trasa: dopisz regułę w <code>config/routeRules.ts</code> przed merge.</li>
             </ul>
           </div>

@@ -19,7 +19,7 @@ function normalizeBase(url: string | undefined): string {
 }
 
 /**
- * Bazowy URL backendu dla BFF / sitemap / prerender.
+ * Bazowy URL backendu dla BFF / sitemap.
  * Na Vercel: Hugging Face (domyślnie / Preview) lub Render (deprecated).
  */
 export async function resolvePublicApiBase(): Promise<string> {
@@ -58,15 +58,6 @@ export async function resolvePublicApiBase(): Promise<string> {
   }
 
   return primary
-}
-
-/** Nitro prerender / build — brak API nie powinien wywalać całego buildu. */
-export function isPrerenderPass(): boolean {
-  return (
-    import.meta.prerender === true
-    || process.env.NITRO_PRERENDER === 'true'
-    || process.env.NUXT_PRERENDER === 'true'
-  )
 }
 
 /** Pusta odpowiedź zgodna z kształtem publicznego GET (lista vs pojedynczy wpis). */

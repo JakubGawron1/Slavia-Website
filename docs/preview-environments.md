@@ -93,7 +93,7 @@ NUXT_PUBLIC_API_BASE_URL_HUGGINGFACE=https://koliber-cks-slavia-dev.hf.space
 
 > Nazwa `koliber-cks-slavia-dev` to konwencja — utwórz własny Docker Space (np. `koliber/cks-slavia-dev`) i użyj publicznego URL `https://{user}-{space}.hf.space`.
 
-`NUXT_PUBLIC_API_BASE_URL` jest fallbackiem i źródłem dla `config.public.apiBase`; na Preview musi wskazywać **preview Space**, bo BFF (`/api/public/*`), prerender i panele (`useApi()` → `activeApiBase`) korzystają z tego samego łańcucha env co HF provider.
+`NUXT_PUBLIC_API_BASE_URL` jest fallbackiem i źródłem dla `config.public.apiBase`; na Preview musi wskazywać **preview Space**, bo BFF (`/api/public/*`) i panele (`useApi()` → `activeApiBase`) korzystają z tego samego łańcucha env co HF provider.
 
 ### HF Space — sekrety (preview)
 
@@ -186,7 +186,7 @@ Kod już zakłada izolację Preview od globalnego przełącznika prod:
 |-----------|------|-------------------------------------|
 | Provider wymuszony na HF | `app/utils/backendProviderTypes.ts` | `backendProviderFromEnv()` → `huggingface` |
 | Brak odczytu Vercel Blob provider | `server/utils/backendProviderStore.ts` | `getGlobalBackendProvider()` → `huggingface` (ignoruje Blob prod) |
-| BFF / prerender | `server/utils/resolvePublicApiBase.ts` | `apiBaseForBackendProvider('huggingface', …)` → `NUXT_PUBLIC_API_BASE_URL_HUGGINGFACE` |
+| BFF (SSR) | `server/utils/resolvePublicApiBase.ts` | `apiBaseForBackendProvider('huggingface', …)` → `NUXT_PUBLIC_API_BASE_URL_HUGGINGFACE` |
 | Build-time base | `config/site.ts` → `resolveBuildTimeApiBase()` | Na Vercel pomija localhost; bierze HF z env |
 
 **Wniosek:** sam kod **nie** rozdziela prod vs preview Space — rozdzielasz je **wyłącznie** zmiennymi Vercel w scope Preview. Jeśli Preview dziedziczy prod URL, cały ruch PR idzie na Turso prod.

@@ -79,7 +79,7 @@ export const DEV_TOOL_STACK_GROUP: DevToolLinkGroup = {
     {
       to: 'https://nuxt.com/docs/4.x/getting-started/introduction',
       label: 'Nuxt 4',
-      description: 'Framework aplikacji (SSR, ISR, BFF)',
+      description: 'Framework aplikacji (SSR, CSR, BFF)',
       icon: 'i-lucide-book-open'
     },
     {
@@ -170,7 +170,7 @@ export const DEV_TOOL_EXTERNAL_DOCS_GROUP: DevToolLinkGroup = {
     {
       to: 'https://vercel.com/docs',
       label: 'Vercel',
-      description: 'Deploy frontendu, ISR, env',
+      description: 'Deploy frontendu (SSR), env',
       icon: 'i-lucide-cloud'
     }
   ]

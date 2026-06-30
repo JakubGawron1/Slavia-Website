@@ -103,11 +103,22 @@ Nowe funkcje trenera/zawodnika w mobile: tak. Nowe funkcje admin/superadmin: tyl
 
 ---
 
+## Architektura renderowania — SSR + CSR only
+
+**Zasada:** witryna używa wyłącznie **SSR** (strony publiczne) i **CSR** (panele po logowaniu). Brak SSG, prerenderu i ISR — bez cache edge Vercel na HTML i publicznym BFF (`no-store`).
+
+| Tryb | Trasy | `routeRules` |
+|------|-------|--------------|
+| **SSR** | `/`, `/zawodnicy`, `/aktualnosci`, `/galeria`, kalkulatory, CMS publiczny… | domyślnie `/**` |
+| **CSR** | `/athlete/**`, `/trainer/**`, `/admin/**`, `/superadmin/**`, chronione `/klub/*` | `ssr: false` (`panelNoStore`) |
+
+---
+
 ## Architektura — trzy warstwy danych
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  Strony publiczne (SSG/ISR)                                 │
+│  Strony publiczne (SSR, no-store)                           │
 │  usePublicLazyFetch('athletes') → /api/public/* → Rust GET  │
 └─────────────────────────────────────────────────────────────┘
 ┌─────────────────────────────────────────────────────────────┐
@@ -122,7 +133,7 @@ Nowe funkcje trenera/zawodnika w mobile: tak. Nowe funkcje admin/superadmin: tyl
 
 | Warstwa | Composable / URL | Kiedy |
 |---------|------------------|-------|
-| Publiczne GET (cache CDN) | `usePublicLazyFetch`, `publicApiUrl()` | Ranking, galeria, aktualności, kalendarz publiczny |
+| Publiczne GET (SSR + BFF) | `usePublicLazyFetch`, `publicApiUrl()` | Ranking, galeria, aktualności, kalendarz publiczny |
 | Autoryzowane mutacje/GET | `useApi()` | Panele admin/trener/zawodnik, czat, dziennik |
 | Wyszukiwarka w belce | `publicApiUrl()` | Zawsze BFF — nigdy `config.public.apiBase` z klienta |
 | Provider backendu | `useBackendProvider()` | Hydracja w `plugins/00.auth.ts`; przełącznik Hugging Face ↔ Render (deprecated) |
@@ -198,7 +209,7 @@ Przy **zapisie** do API (formularze) nadal wywołuj `sanitizeRichHtml` przed POS
 
 Testy regresji: `app/utils/sanitizeHtml.test.ts`, `renderChatMarkdown.test.ts` — uruchamiane przez `pnpm test`.
 
-**Nagłówki HTTP** (clickjacking, MIME sniffing): `config/securityHeaders.ts` — dołączane do wszystkich tras w `config/routeRules.ts` (`/**` + `panelNoStore` / `publicBffCache` przez `withSecurityHeaders`).
+**Nagłówki HTTP** (clickjacking, MIME sniffing): `config/securityHeaders.ts` — dołączane do wszystkich tras w `config/routeRules.ts` (`/**` + `panelNoStore` / `publicBffNoStore` przez `withSecurityHeaders`).
 
 **BFF:** formularz kontaktu → `server/api/contact.post.ts` (honeypot); publiczny czat AI → rate limit w `server/utils/publicAiRateLimit.ts`.
 
@@ -233,14 +244,14 @@ TensorFlow, kamera, QR, edytor WYSIWYG, podgląd viewportu — wszystko co wymag
 
 ## Checklisty
 
-### Nowa trasa publiczna (SSG/ISR)
+### Nowa trasa publiczna (SSR)
 
-1. `config/prerender.ts` — jeśli SSG (`prerenderRoutes` / `prerenderIgnore`)
-2. `config/routeRules.ts` — ISR TTL (`isr: N`, `prerender: true`)
-3. `nuxt.config.ts` → `robots` / `sitemap` exclude (panele już wykluczone)
-4. `server/utils/publicBackendProxy.ts` — whitelist BFF (jeśli publiczny GET)
-5. Strona: `usePublicLazyFetch('…')` z sensownym `default` dla prerenderu offline
-6. Smoke E2E w `e2e/smoke.spec.ts` (+ `smoke-mobile.spec.ts` dla viewportu mobile)
+1. `nuxt.config.ts` → `robots` / `sitemap` exclude (panele już wykluczone)
+2. `server/utils/publicBackendProxy.ts` — whitelist BFF (jeśli publiczny GET)
+3. Strona: `usePublicLazyFetch('…')` — dane z BFF przy każdym żądaniu (opcjonalny `default` przy błędzie API)
+4. Smoke E2E w `e2e/smoke.spec.ts` (+ `smoke-mobile.spec.ts` dla viewportu mobile)
+
+Publiczne strony dziedziczą `/**` → `cache-control: private, no-store` (bez ISR/CDN cache Vercel).
 
 ### Nowy moduł panelu (admin / trener / zawodnik)
 
@@ -302,15 +313,12 @@ TensorFlow, kamera, QR, edytor WYSIWYG, podgląd viewportu — wszystko co wymag
 | Plik | Odpowiedzialność |
 |------|------------------|
 | `nuxt.config.ts` | moduły, runtimeConfig, import reguł z `config/` |
-| `config/routeRules.ts` | ISR vs CSR, cache-control paneli i BFF, nagłówki bezpieczeństwa |
+| `config/routeRules.ts` | SSR vs CSR (`ssr: false` panele), cache-control, nagłówki bezpieczeństwa |
 | `config/securityHeaders.ts` | `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy` |
-| `config/prerender.ts` | trasy SSG, ignore |
 | `improve.md` | audyt techniczny i backlog fal 0–4 (✅ = zrobione) |
 | `config/site.ts` | URL produkcyjny, wersja z package.json |
 | `config/pwa.ts` | manifest PWA |
 | `app/config/api.ts` | kanoniczne ścieżki REST |
-
-**Windows dev:** ISR na `/` wyłączone poza prod (`devDisableRootIsr`) — unika `EISDIR` z payloadCache/unstorage.
 
 ---
 
@@ -437,7 +445,7 @@ app/
   plugins/        # 00.auth (hydracja), panel-nav-bootstrap, error-reporting
   types/          # api.ts, models.ts, generated/openapi.types.ts
   utils/          # funkcje czyste (ranking, SEO, kalkulatory)
-config/           # routeRules, prerender, pwa, site
+config/           # routeRules, pwa, site
 server/           # BFF routes, public proxy, backend-provider store
 e2e/              # Playwright smoke
 scripts/          # openapi check, release-check, bundle-report, split developer page

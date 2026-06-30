@@ -1,6 +1,6 @@
 /**
  * Kategorie wagowe PZPC — dane z API `GET /api/system/pzpc-weight-classes`.
- * Domyślny katalog (fallback offline / prerender) zgodny z backend embed.
+ * Domyślny katalog (fallback offline w dev) zgodny z backend embed.
  */
 export type PzpcAgeGroupId = 'U15' | 'U17' | 'U20' | 'U23' | 'Senior'
 

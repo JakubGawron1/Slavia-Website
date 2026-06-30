@@ -22,7 +22,7 @@ function applySlaviaRevealSSR(el: HTMLElement, binding: SlaviaRevealBinding) {
 }
 
 /**
- * Scroll reveal — działa na kliencie (IntersectionObserver) i przy SSR/prerender
+ * Scroll reveal — działa na kliencie (IntersectionObserver) i przy SSR
  * (treść widoczna od razu, bez wywołania getSSRProps na undefined).
  */
 const slaviaRevealDirective: ObjectDirective<HTMLElement, SlaviaRevealBinding> = {

@@ -26,8 +26,6 @@ import {
 
 import type { DeveloperPageContext } from '~/composables/developer/types'
 import { buildAutoRouteGroups, routeChipLabel } from '~/composables/developer/routeMapUtils'
-import { useDeveloperVercelCache } from '~/composables/developer/useDeveloperVercelCache'
-
 export type { DeveloperPageContext }
 
 export const DEVELOPER_PAGE_KEY: InjectionKey<DeveloperPageContext> = Symbol('developer-page')
@@ -105,15 +103,6 @@ async function runChatPrune() {
     chatPruneRunning.value = false
   }
 }
-
-const {
-  vercelCacheStatus,
-  vercelCacheStatusLoading,
-  vercelCachePurgeRunning,
-  vercelCachePurgeLastResult,
-  refreshVercelCacheStatus,
-  purgeVercelCache
-} = useDeveloperVercelCache()
 
 function refreshDomPresetAttr() {
   if (!import.meta.client) {
@@ -400,7 +389,6 @@ onMounted(() => {
   void refreshBanUsersCatalog()
   void refreshGithubMediaStatus()
   void refreshFeatureAdoption()
-  void refreshVercelCacheStatus()
   void refreshAiPublicStatus()
   void refreshAiCoachStatus()
   void $fetch<{ active_provider: BackendProviderId, updated_at?: string | null }>('/api/system/backend-provider', {
@@ -1127,12 +1115,6 @@ function toastStorageApisAvailability() {
     chatPruneRunning,
     chatPruneLastResult,
     runChatPrune,
-    vercelCacheStatus,
-    vercelCacheStatusLoading,
-    vercelCachePurgeRunning,
-    vercelCachePurgeLastResult,
-    refreshVercelCacheStatus,
-    purgeVercelCache,
     refreshDomPresetAttr,
     copyThemeDiagnosticsJson,
     clearLocalAppearanceMirror,

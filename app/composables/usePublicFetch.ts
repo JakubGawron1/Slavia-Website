@@ -1,4 +1,4 @@
-/** Bazowy URL publicznego BFF (ten sam na SSR i kliencie — spójna hydracja + cache Vercel). */
+/** Bazowy URL publicznego BFF (ten sam na SSR i kliencie — spójna hydracja). */
 export function usePublicApiBase(): string {
   return '/api/public'
 }
@@ -27,7 +27,7 @@ type PublicLazyFetchOpts<T> = {
 }
 
 /**
- * Publiczne dane przez BFF `/api/public/*` — lazy `useAsyncData` (SSG/ISR, cache Vercel).
+ * Publiczne dane przez BFF `/api/public/*` — lazy `useAsyncData` (SSR).
  */
 export function usePublicLazyFetch<T>(
   apiPath: string,
@@ -97,7 +97,7 @@ export function usePublicLazyFetch<T>(
 
         const fetchedAt = publicFetchTimestamps.get(cacheKey)
         if (!fetchedAt) {
-          // Hydracja klienta — zachowaj dane z SSR/ISR, nie nadpisuj default() przed fetch.
+          // Hydracja klienta — zachowaj dane z SSR, nie nadpisuj default() przed fetch.
           publicFetchTimestamps.set(cacheKey, Date.now())
           return fromPayload
         }

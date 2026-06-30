@@ -28,7 +28,7 @@ interface BlogPost {
   image_url?: string
 }
 
-// SSR zawsze renderuje wersję publiczną wpisu (cache/ISR bez ryzyka per-user).
+// SSR renderuje wersję publiczną wpisu (bez per-user cache).
 const { data: post, pending, refresh: refreshPublic } = await usePublicLazyFetch<BlogPost>(
   `posts/${encodeURIComponent(String(postId))}`,
   {

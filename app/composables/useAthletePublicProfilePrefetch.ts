@@ -4,7 +4,7 @@ import { athleteProfilePath } from '~/utils/slug'
 const VIEWPORT_IO = { rootMargin: '160px 0px', threshold: 0.01, once: true } as const
 
 /**
- * Prefetch profilu publicznego zawodnika — dane przez BFF `/api/public/*` (cache Vercel ISR)
+ * Prefetch profilu publicznego zawodnika — dane przez BFF `/api/public/*`
  * oraz preload komponentu trasy `/athlete/[slug]`.
  */
 export function useAthletePublicProfilePrefetch() {

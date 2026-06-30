@@ -1,12 +1,11 @@
 import {
   emptyPublicApiFallback,
   isLocalApiBase,
-  isPrerenderPass,
   resolvePublicApiBase
 } from './resolvePublicApiBase'
 
 /**
- * BFF GET → zewnętrzny backend (SSG/ISR/SSR na Vercel).
+ * BFF GET → zewnętrzny backend (SSR na Vercel).
  * Tylko jawna whitelist ścieżek — bez tokenów i bez tras administracyjnych.
  */
 const ATHLETE_UUID =
@@ -53,12 +52,10 @@ export async function proxyPublicBackendGet(
   }
 
   const base = await resolvePublicApiBase()
-  if (isLocalApiBase(base) && (process.env.VERCEL || isPrerenderPass())) {
-    if (isPrerenderPass()) {
-      console.warn(
-        `[public-api] Prerender: pominięto ${apiPath} — ustaw NUXT_PUBLIC_API_BASE_URL_HUGGINGFACE lub _RENDER na Vercel.`
-      )
-    }
+  if (isLocalApiBase(base) && process.env.VERCEL) {
+    console.warn(
+      `[public-api] Vercel: pominięto ${apiPath} — ustaw NUXT_PUBLIC_API_BASE_URL_HUGGINGFACE na HF Space.`
+    )
     return emptyPublicApiFallback(apiPath)
   }
 
@@ -74,17 +71,9 @@ export async function proxyPublicBackendGet(
     }
   }
 
-  try {
-    return await $fetch(url.toString(), {
-      method: 'GET',
-      timeout: 12_000,
-      headers: { Accept: 'application/json' }
-    })
-  } catch (err) {
-    if (isPrerenderPass()) {
-      console.warn(`[public-api] Prerender: ${apiPath} → ${url} niedostępne, używam pustych danych.`, err)
-      return emptyPublicApiFallback(apiPath)
-    }
-    throw err
-  }
+  return await $fetch(url.toString(), {
+    method: 'GET',
+    timeout: 12_000,
+    headers: { Accept: 'application/json' }
+  })
 }

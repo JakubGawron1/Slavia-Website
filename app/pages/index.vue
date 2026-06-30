@@ -23,7 +23,7 @@ interface BlogPost {
   published?: boolean
 }
 
-/** Strona główna — publiczny BFF (`/api/public/*`) pod SSG/ISR na Vercel. */
+/** Strona główna — publiczny BFF (`/api/public/*`), SSR. */
 const {
   data: athletes,
   pending: _athletesPending
@@ -291,7 +291,7 @@ const { mobileDownloadHref, mobileDownloadLabel } = useMobileAppRelease()
       </UContainer>
     </section>
 
-    <!-- Sekcje poniżej hero — lazy hydrate (SSG HTML + IntersectionObserver) -->
+    <!-- Sekcje poniżej hero — lazy hydrate (SSR HTML + IntersectionObserver) -->
     <LazyHomePillarsHistoryGroupsSection
       hydrate-on-visible
       data-home-section="pillars-history-groups"

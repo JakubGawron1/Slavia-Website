@@ -2,7 +2,7 @@ import { isPublicBackendProxyPath, proxyPublicBackendGet } from '../../utils/pub
 
 /**
  * GET /api/public/athletes → {apiBase}/api/athletes
- * Cache przez routeRules (`s-maxage` + SWR na Vercel).
+ * Bez cache CDN — `routeRules` ustawia `no-store`.
  */
 export default defineEventHandler(async (event) => {
   const segments = getRouterParam(event, 'path')?.split('/').filter(Boolean) ?? []

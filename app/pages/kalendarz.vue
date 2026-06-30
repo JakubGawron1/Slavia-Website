@@ -55,7 +55,7 @@ const canSyncExternalCalendars = computed(() => auth.isAdmin.value || auth.isSup
 
 const syncLoading = ref(false)
 
-/** Publiczny BFF — SSG/ISR + hydracja bez bezpośredniego CORS do backendu. */
+/** Publiczny BFF — SSR + hydracja bez bezpośredniego CORS do backendu. */
 const {
   data: competitions,
   refresh,

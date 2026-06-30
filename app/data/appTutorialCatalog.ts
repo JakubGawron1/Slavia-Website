@@ -489,7 +489,7 @@ export const APP_TUTORIAL_TRACKS: TutorialTrack[] = [
         summary: 'Jak edytować stronę krok po kroku.',
         paragraphs: [
           'Wybierz stronę z listy (np. home). Pola formularza odpowiadają sekcjom na stronie publicznej. Rich HTML przechodzi przez sanityzację przy zapisie i wyświetlaniu.',
-          'Zakładka Nawigacja pozwala układać linki w menu — zmiany są widoczne po odświeżeniu strony (cache ISR może opóźnić podgląd o kilka minut na produkcji).'
+          'Zakładka Nawigacja pozwala układać linki w menu — zmiany są widoczne po odświeżeniu strony publicznej (SSR, bez cache CDN).'
         ],
         demo: 'cms',
         actionTo: '/admin/cms',
