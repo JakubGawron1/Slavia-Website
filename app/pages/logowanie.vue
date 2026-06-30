@@ -41,7 +41,7 @@ async function submit() {
       typeof raw === 'string' && raw.startsWith('/') && !raw.startsWith('//')
         ? raw
         : undefined
-    await navigateTo(redirect ?? pickPostLoginPath(user?.roles ?? []))
+    await navigateTo(redirect ?? pickPostLoginPath(user?.roles ?? []), { replace: true })
   } catch (e) {
     const msg = getApiErrorMessage(e, '')
     if (!totpStep.value && msg === 'totp_required') {

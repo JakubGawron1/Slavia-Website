@@ -6,7 +6,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return navigateTo({ path: '/logowanie', query: { redirect: to.fullPath } })
   }
 
-  const roles = auth.user.value.roles ?? []
+  const roles = auth.roles.value
   const allowed =
     roles.includes('Athlete')
     || roles.includes('Trainer')

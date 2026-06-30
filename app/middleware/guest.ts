@@ -20,5 +20,5 @@ export default defineNuxtRouteMiddleware(async (to) => {
   }
 
   const redirect = safeInternalRedirect(to.query.redirect)
-  return navigateTo(redirect ?? pickPostLoginPath(auth.roles.value))
+  return navigateTo(redirect ?? pickPostLoginPath(auth.roles.value), { replace: true })
 })

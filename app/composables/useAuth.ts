@@ -1,4 +1,4 @@
-import { apiRoutes } from '~/config/api'
+import { KLUB_BOARD_ROUTES } from '~/config/klubRoutes'
 import { clearAthleteDashboardCache } from '~/utils/athleteDashboardCache'
 import type { AuthUser, LoginResponse, UserRole } from '~/types/models'
 import type { FetchError } from 'ofetch'
@@ -67,6 +67,7 @@ export function pickPostLoginPath(roleList: UserRole[]): string {
   if (r.has('Editor')) return '/admin/cms'
   if (r.has('Trainer')) return '/trainer'
   if (r.has('Athlete')) return '/athlete'
+  if (r.has('BoardDocsFullAccess') || r.has('BoardMember')) return KLUB_BOARD_ROUTES.dokumenty
   return '/'
 }
 
@@ -181,7 +182,7 @@ export function useAuth() {
       return null
     }
     try {
-      const me = await $fetch<AuthUser>(`${apiBase.value}${apiRoutes.auth.me}`, {
+      const me = await $fetch<AuthUser>('/api/auth/me', {
         headers: { Authorization: `Bearer ${token.value}` },
         timeout: AUTH_FETCH_ME_TIMEOUT_MS
       })
@@ -209,13 +210,14 @@ export function useAuth() {
 
   async function login(username: string, password: string, totpCode?: string | null) {
     const code = totpCode?.trim()
-    const res = await $fetch<LoginResponse>(`${apiBase.value}${apiRoutes.auth.login}`, {
+    const res = await $fetch<LoginResponse>('/api/auth/login', {
       method: 'POST',
       body: {
         username,
         password,
         ...(code ? { totp_code: code } : {})
-      }
+      },
+      timeout: 25_000
     })
     token.value = res.token
 
@@ -243,7 +245,8 @@ export function useAuth() {
       user.value = null
       return
     }
-    if (!options?.force && user.value && isAdmin.value) return
+    // Po logowaniu mamy już role z POST /login — nie nadpisuj sesji przy chwilowych 5xx /auth/me.
+    if (!options?.force && user.value) return
     await fetchMe()
   }
 

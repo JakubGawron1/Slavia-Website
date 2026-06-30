@@ -468,26 +468,6 @@ export default defineNuxtConfig({
 
     preset: process.env.NITRO_PRESET || (process.env.VERCEL ? 'vercel' : undefined),
 
-
-
-    /** Vercel bytecode: jsdom → html-encoding-sniffer require() ESM @exodus/bytes (DOMPurify SSR). */
-
-    vercel: {
-
-      config: {
-
-        env: {
-
-          NODE_OPTIONS: '--experimental-require-module'
-
-        }
-
-      }
-
-    },
-
-
-
     sourceMap: process.env.NUXT_SOURCEMAP === '1',
 
 

@@ -66,6 +66,8 @@ export function buildRouteRules() {
 
     '/api/public/**': publicBffNoStore,
 
+    '/api/auth/**': panelBffNoStore,
+
     '/api/panel/**': panelBffNoStore,
 
 
