@@ -74,7 +74,7 @@ export default defineNuxtConfig({
 
 
 
-  compatibilityDate: '2026-05-09',
+  compatibilityDate: '2026-06-30',
 
 
 
@@ -96,7 +96,7 @@ export default defineNuxtConfig({
 
   modules: [
 
-
+    '@vercel/speed-insights',
 
     '@nuxt/eslint',
 
@@ -688,19 +688,19 @@ export default defineNuxtConfig({
 
 
 
-  {
+    {
 
 
 
-    path: '~/components/ui',
+      path: '~/components/ui',
 
 
 
-    pathPrefix: false
+      pathPrefix: false
 
 
 
-  }
+    }
 
 
 

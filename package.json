@@ -45,6 +45,7 @@
     "@tiptap/vue-3": "^3.23.4",
     "@vercel/analytics": "^2.0.1",
     "@vercel/blob": "^2.3.3",
+    "@vercel/speed-insights": "^2.0.0",
     "date-fns": "^4.1.0",
     "html5-qrcode": "^2.3.8",
     "isomorphic-dompurify": "^3.13.0",

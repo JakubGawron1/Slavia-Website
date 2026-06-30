@@ -1,19 +1,19 @@
 ---
 name: Zarzad-Dokumenty
-overview: Rozszerzamy system o rolę członka zarządu z podziałem uprawnień (prezes/wice vs pozostali). Dokumenty klubu przechowujemy w prywatnym folderze na Google Drive. Sekcja `/klub/dokumenty` — repozytorium, katalog typów, generator raportów i list startowych; podgląd i edycja treści w aplikacji (natywnie lub przez iframe Google); ACL po stronie backendu.
+overview: Rozszerzamy system o rolę członka zarządu z podziałem uprawnień (prezes/wice vs pozostali). Dokumenty klubu przechowujemy w prywatnym repozytorium Slavia-cms na GitHubie (folder `board/`). Sekcja `/klub/dokumenty` — repozytorium, katalog typów, generator raportów i list startowych; podgląd i edycja treści w aplikacji (CSV/HTML natywnie, PDF przez proxy); ACL i odczyt plików wyłącznie po stronie backendu (GitHub Contents API + PAT).
 todos:
   - id: backend-role-board
-    content: Dodaj nowe role w Rust (`Role`) i middleware dla `board` oraz `board full access`, wraz z aktualizacją logiki deser/FromStr w `src/models.rs` i `src/middleware/auth.rs`.
+    content: Dodaj nowe role w Rust (`BoardMember`, `BoardDocsFullAccess`) i middleware `RequireBoardOrSuperAdmin` / `RequireBoardDocsFullAccessOrSuperAdmin` w `src/models.rs` i `src/middleware/auth.rs`.
     status: completed
-  - id: backend-gdrive-board-storage
-    content: "Dodaj integrację Google Drive do backendu: utwórz helper `src/gdrive_documents.rs` (lub `src/gdrive.rs`) do: listowania repo (foldery/katalogi), odczytu plików i ich wersji (revisions), zapisu (update/upload) oraz odczytu manifestu `_manifest.json` w folderze zarządu."
+  - id: backend-cms-board-storage
+    content: "Rozszerz `src/cms_github.rs` (lub dodaj `src/board_documents_github.rs` reużywając klienta GitHub): odczyt/zapis/listowanie plików w `board/` repo Slavia-cms, odczyt `_manifest.json`, historia commitów per ścieżka. Env: `GITHUB_TOKEN` (scope repo), `SLAVIA_CMS_REPO`, opcjonalnie `SLAVIA_BOARD_DOCS_ROOT=board`."
     status: completed
   - id: backend-board-docs-routes
-    content: Dodaj `src/routes/board_documents.rs` + nest w `router.rs`. Endpointy proxy (manifest, content, preview, save, generate) z ACL board; bez tabel SQLite na treść.
+    content: Dodaj `src/routes/board_documents.rs` + nest w `router.rs`. Endpointy proxy (manifest, content, preview, save, generate) z ACL board; bez tabel SQLite na treść. Klient nigdy nie dostaje publicznego URL raw GitHub dla dokumentów zarządu.
     status: completed
   - id: backend-openapi-update
     content: Zaktualizuj `src/embed/openapi.json` przez generator i odpal `pnpm openapi:snapshot` + `pnpm openapi:types` w ramach ścieżki projektowej.
-    status: pending
+    status: completed
   - id: frontend-auth-board-role
     content: Rozszerz `UserRole` i `useAuth.ts` o `isBoardMember` oraz `isBoardDocsFullAccess`.
     status: completed
@@ -21,19 +21,22 @@ todos:
     content: Dodaj `board` do `PanelNavRole`, katalogu `PANEL_NAV_MODULES` i mapowania w `usePanelNavigationFlags.ts`. Wstaw moduły dla `/klub/dokumenty*` z `panel_nav_board_*` oraz `gateRoute` tam gdzie trzeba.
     status: completed
   - id: frontend-klub-pages-docs
-    content: Dodaj nowe strony w `app/pages/klub/dokumenty/*` (repozytorium, generator, typy, szczegóły) oraz composable do wywołań API. Utrzymaj zasady safe rendering (np. `SlaviaSafeHtml` jeśli będzie HTML).
+    content: Dokończ strony `app/pages/klub/dokumenty/*` (repozytorium, generator, typy, szczegóły) oraz composable do wywołań API. Usuń odniesienia do Google Drive z copy UI. Utrzymaj zasady safe rendering (`SlaviaSafeHtml` dla HTML).
     status: completed
   - id: superadmin-ui-board
     content: Zaktualizuj `app/pages/superadmin/nawigacja-paneli.vue` o tab/rolę `board` i upewnij się, że Superadmin konfiguruje flagi modułów `panel_nav_board_*`.
     status: completed
   - id: frontend-doc-preview-edit
-    content: "Frontend: podgląd szkieletu/treści dokumentu w panelu (CSV tabela, HTML przez SlaviaSafeHtml, PDF przez pdf.js) oraz edycja natywna (CSV/HTML) lub osadzenie iframe Google Docs/Sheets dla plików Workspace."
+    content: "Frontend: podgląd szkieletu/treści dokumentu w panelu (CSV tabela, HTML przez SlaviaSafeHtml, PDF przez pdf.js ze streamu backendu) oraz edycja natywna CSV/HTML. Bez iframe Google Docs — formaty docelowe to pliki w repo Git."
     status: completed
   - id: backend-doc-content-api
-    content: "Backend: endpointy GET .../content i GET .../preview (stream/metadata) oraz PATCH/POST .../save z walidacją (CSV, sanitizeRichHtml), pessimistic lock opcjonalnie; brak bezpośredniego dostępu klienta do Drive."
+    content: "Backend: endpointy GET .../content i GET .../preview (stream/metadata) oraz PATCH/POST .../save z walidacją (CSV, sanitizeRichHtml); pessimistic lock opcjonalnie; odczyt/zapis przez GitHub API z PAT."
     status: completed
   - id: frontend-doc-type-catalog
-    content: Katalog ~55 typów dokumentów (sport + zarząd), strona /klub/dokumenty/typy, typy własne (prototyp localStorage → docelowo API).
+    content: Katalog ~55 typów dokumentów (sport + zarząd), strona /klub/dokumenty/typy, typy własne (prototyp localStorage → docelowo zapis w `_manifest.json` przez API).
+    status: completed
+  - id: slavia-cms-repo-bootstrap
+    content: "W repozytorium Slavia-cms utworzyć gałąź `board/` z `_manifest.json` (`{ \"documents\": [] }`), podfolderami kategorii i `templates/`. Repo może być prywatne — backend wymaga PAT ze scope `repo`."
     status: completed
   - id: dev-checks
     content: Uruchom `pnpm lint`, `pnpm typecheck` i `pnpm test` (oraz e2e smoke jeśli zmiana dotyka tras/ACL).
@@ -48,115 +51,159 @@ isProject: false
   - „pozostali członkowie zarządu”: mogą generować dokumenty podstawowe (np. raporty na zebrania + dokumenty dostępne „dla każdego”), ale bez zapisywania/wersjonowania repozytorium.
 - Superadmin: dostęp do wszystkiego.
 
+## Decyzja architektoniczna: Slavia-cms zamiast Google Drive
+
+**Repozytorium dokumentów zarządu = folder `board/` w istniejącym repo [Slavia-cms](https://github.com/JakubGawron1/Slavia-cms)** (ten sam GitHub co media galerii/bloga, ale **osobna przestrzeń ścieżek** i **inna polityka dostępu**).
+
+| Aspekt | Media klubowe (`media/`) | Dokumenty zarządu (`board/`) |
+|--------|--------------------------|------------------------------|
+| Widoczność | Publiczne URL (`NUXT_PUBLIC_CMS_BASE_URL`) | **Tylko proxy backendu** (PAT + ACL JWT) |
+| Integracja | `cms_github.rs` — upload/delete | Rozszerzenie tego modułu — read/write/list/history |
+| Repo | `SLAVIA_CMS_REPO` | Ten sam repo, root `SLAVIA_BOARD_DOCS_ROOT` (domyślnie `board`) |
+| Auth GitHub | `GITHUB_TOKEN` (scope `repo` przy prywatnym repo) | Ten sam PAT |
+
+**Dlaczego nie Google Drive:** jeden stack (Git + PAT już na produkcji), wersjonowanie natywne (commity Git), brak service account Google, spójność z mediami klubowymi w jednym repo.
+
+**Dlaczego nie publiczny raw URL dla `board/`:** dokumenty zarządu (finanse, kadry, RODO) muszą być chronione — backend nigdy nie zwraca klientowi bezpośredniego linku `raw.githubusercontent.com` do plików z `board/`.
+
 ## Proponowany model techniczny
-- W backendzie dodajemy nowe role w JWT/DB, najlepiej jako:
+- W backendzie dodajemy nowe role w JWT/DB:
   - rola bazowa: `BoardMember` (członek zarządu)
-  - dodatkowa rola/flag (uprawnienie): `BoardDocsFullAccess` (pełne zarządzanie repozytorium i generatorami startowymi)
-- Na potrzeby frontendowego panelu dodajemy nowy „panel role” `board` (osobny zestaw modułów w katalogu panelu), ale zabezpieczenia finalnie i tak egzekwujemy po stronie backendu (HTTP 403).
+  - dodatkowa rola/flag: `BoardDocsFullAccess` (pełne zarządzanie repozytorium i generatorami startowymi)
+- Na potrzeby frontendowego panelu dodajemy nowy „panel role” `board` (osobny zestaw modułów w katalogu panelu), ale zabezpieczenia finalnie egzekwujemy po stronie backendu (HTTP 403).
+
+## Struktura w repozytorium Slavia-cms
+
+```
+Slavia-cms/  (repo — może być prywatne)
+  media/                          # istniejące — galeria, blog, ogłoszenia (publiczne)
+    gallery/
+    blog/
+    announcements/
+  board/                          # NOWE — dokumenty zarządu (prywatne, tylko przez API)
+    _manifest.json                # indeks: lista dokumentów + metadane + app_versions + doc_type
+    athletes/                     # dokumenty zawodników
+    coaches/                      # dokumenty trenerskie
+    competitions/                 # zawody (regulaminy, protokoły…)
+    start-lists/                  # listy startowe (generator)
+    equipment/                    # sprzęt
+    meeting-reports/              # raporty / protokoły zarządu (generator)
+    organizational/               # statut, uchwały, regulaminy
+    financial/                    # składki, faktury, dotacje
+    hr/                           # kadry, BHP
+    legal/                        # RODO, ubezpieczenia
+    marketing/                    # promocja, wizerunek
+    templates/                    # szablony HTML/CSV (szkielet do podglądu i edycji)
+    archive/                      # archiwum (opcjonalnie)
+```
+
+**Katalog typów dokumentów (V1):**
+- ~55 wbudowanych typów w `app/data/boardDocumentCatalog.ts` (sport: zawodnicy, trenerzy, zawody, sprzęt; zarząd: organizacyjne, finansowe, kadrowe, prawne, marketing).
+- Strona `/klub/dokumenty/typy` — przegląd katalogu + dodawanie typów własnych (`custom_*`; prototyp: localStorage → docelowo zapis w `_manifest.json` przez API).
+- Pole `doc_type` w `_manifest.json` odnosi się do id typu z katalogu.
+
+**Wersjonowanie (Git + manifest):**
+- **Git (natywne):** każdy zapis przez Contents API = commit na gałęzi `SLAVIA_CMS_BRANCH` (domyślnie `main`); historia przez GitHub Commits API / listę SHA z manifestu.
+- **App-level versions** w `_manifest.json`: backend inkrementuje `version_no` i dopisuje wpis (kto, kiedy, parametry generatora) — to UI pokazuje jako „wersje” niezależnie od szczegółów Git.
+
+**Bez nowych tabel w SQLite:** cała lista/manifest i mapowanie wersji opieramy o `_manifest.json` w repo. (SQLite zostaje tylko do logów/audytu, jeśli już istnieje; ewentualnie lekki pessimistic lock na edycję).
 
 ## Backend (Rust)
-1. Uprawnienia i middleware
-   - Rozszerzamy `Role` o `BoardMember` i `BoardDocsFullAccess` w `[Slavia-backend/src/models.rs](C:/Users/jakub/Desktop/Slavia-backend/src/models.rs)`.
-   - Dodajemy middleware/extractory w `[Slavia-backend/src/middleware/auth.rs](C:/Users/jakub/Desktop/Slavia-backend/src/middleware/auth.rs)`:
-     - `RequireBoardOrSuperAdmin`
-     - `RequireBoardDocsFullAccessOrSuperAdmin`
-   - Dla „generatorów startowych” i operacji „zapis do repozytorium/wersjonowanie” używamy wariantu `RequireBoardDocsFullAccessOrSuperAdmin`.
-   - Dla „raportów podstawowych” (widoczne dla zarządu bez pełnych uprawnień) używamy `RequireBoardOrSuperAdmin`.
 
-2. Przechowywanie w Google Drive (prywatny folder) — bez nowych tabel SQLite
+### 1. Uprawnienia i middleware
+- Rozszerzamy `Role` o `BoardMember` i `BoardDocsFullAccess` w `[Slavia-backend/src/models.rs](../Slavia-backend/src/models.rs)`.
+- Dodajemy middleware/extractory w `[Slavia-backend/src/middleware/auth.rs](../Slavia-backend/src/middleware/auth.rs)`:
+  - `RequireBoardOrSuperAdmin`
+  - `RequireBoardDocsFullAccessOrSuperAdmin`
+- Dla „generatorów startowych” i operacji „zapis do repozytorium/wersjonowanie” → `RequireBoardDocsFullAccessOrSuperAdmin`.
+- Dla „raportów podstawowych” (widoczne dla zarządu bez pełnych uprawnień) → `RequireBoardOrSuperAdmin`.
 
-   **Decyzja:** repozytorium dokumentów zarządu = prywatny folder na Google Drive, do którego dostęp ma tylko backend (konto serwisowe/service account). Backend nigdy nie zwraca bezpośrednich publicznych URL do plików.
+### 2. Integracja GitHub (Slavia-cms) — rozszerzenie `cms_github.rs`
 
-   Proponowana struktura w Drive:
-   ```
-   /SlaviaBoardDocs/ (folder bazowy; private)
-     _manifest.json                  # indeks: lista dokumentów + metadane + app_versions + doc_type
-     athletes/                       # dokumenty zawodników
-     coaches/                        # dokumenty trenerskie
-     competitions/                   # zawody (regulaminy, protokoły…)
-     start-lists/                    # listy startowe (generator)
-     equipment/                      # sprzęt
-     meeting-reports/                # raporty / protokoły zarządu (generator)
-     organizational/                 # statut, uchwały, regulaminy
-     financial/                      # składki, faktury, dotacje
-     hr/                             # kadry, BHP
-     legal/                          # RODO, ubezpieczenia
-     marketing/                      # promocja, wizerunek
-     templates/                      # szablony HTML/CSV (szkielet do podglądu i edycji)
-     archive/                        # archiwum (opcjonalnie)
-   ```
+Istniejący moduł `[Slavia-backend/src/cms_github.rs](../Slavia-backend/src/cms_github.rs)` obsługuje upload/delete mediów do `media/`. Dla dokumentów zarządu dodajemy (w tym samym pliku lub `board_documents_github.rs`):
 
-   **Katalog typów dokumentów (V1 — zrobione w prototypie UI):**
-   - ~55 wbudowanych typów w `app/data/boardDocumentCatalog.ts` (sport: zawodnicy, trenerzy, zawody, sprzęt; zarząd: organizacyjne, finansowe, kadrowe, prawne, marketing).
-   - Strona `/klub/dokumenty/typy` — przegląd katalogu + dodawanie typów własnych (`custom_*`; prototyp: localStorage → docelowo zapis w manifest/API).
-   - Pole `doc_type` w `_manifest.json` odnosi się do id typu z katalogu.
+| Funkcja | GitHub API | Uwagi |
+|---------|------------|-------|
+| `read_file_text` / `read_file_bytes` | `GET /repos/{repo}/contents/{path}` | Dekodowanie base64 z odpowiedzi |
+| `write_file_at_path` | `PUT /repos/{repo}/contents/{path}` | Jawna ścieżka (nie UUID jak przy uploadzie galerii); wymaga `sha` przy update |
+| `delete_board_path` | `DELETE` Contents API | Analogicznie do `delete_path` |
+| `list_directory` | `GET contents` (tablica) | Listowanie podfolderów / plików w `board/` |
+| `commits_for_path` | `GET /repos/{repo}/commits?path=…` | Historia wersji Git (opcjonalnie V2) |
 
-   **Wersjonowanie A+B:**
-   - natywne `revisions` Drive: przy zapisie „aktualizujemy” plik „current”, przez co Drive tworzy rewizje,
-   - historia „app-level versions” w `_manifest.json`: backend inkrementuje `version_no` i dopisuje wpis (kto/ kiedy/ parametry generatora) — to jest to, co UI pokazuje jako „wersje” niezależnie od szczegółów Drive.
+Walidacja ścieżek board: tylko prefiks `board/` (lub `SLAVIA_BOARD_DOCS_ROOT`), bez `..`, bez wyjścia poza root — **osobna funkcja** `is_board_docs_path`, nie mylić z `is_cms_storage_path` (media publiczne).
 
-   **Bez nowych tabel w SQLite:** cała lista/manifest i mapowanie wersji opieramy o `_manifest.json` w Drive. (SQLite zostaje tylko do logów/audytu, jeśli już istnieje). 
+Konfiguracja (reuse):
+```toml
+# Secrets.toml / env na HF
+GITHUB_TOKEN = "ghp_..."           # scope repo — wymagany przy prywatnym Slavia-cms
+SLAVIA_CMS_REPO = "JakubGawron1/Slavia-cms"
+SLAVIA_CMS_BRANCH = "main"
+SLAVIA_BOARD_DOCS_ROOT = "board"   # opcjonalnie, domyślnie board
+```
 
-3. Endpoints API (OpenAPI)
-   - Dodajemy nowy moduł tras, np. `[Slavia-backend/src/routes/board_documents.rs](C:/Users/jakub/Desktop/Slavia-backend/src/routes/board_documents.rs)` oraz rejestrujemy go w `[Slavia-backend/src/router.rs](C:/Users/jakub/Desktop/Slavia-backend/src/router.rs)`.
-   - Proponowane endpointy (proxy do Google Drive + generatory):
-     - `GET /api/board/documents` — odczyt `_manifest.json` (`RequireBoardOrSuperAdmin`)
-     - `GET /api/board/documents/{id}` — metadane pojedynczego dokumentu + lista wersji app-level
-     - `GET /api/board/documents/{id}/content` — pobranie treści bieżącej wersji (stream; `text/csv`, `text/html`, `application/pdf`…)
-     - `GET /api/board/documents/{id}/preview` — metadane podglądu: `mime_type`, `edit_mode` (`native` | `iframe` | `download_only`), opcjonalnie `iframe_url` / `webViewLink` (tylko dla uprawnionych; **nigdy** publiczny link bez auth)
-     - `PATCH /api/board/documents/{id}/content` — zapis treści po edycji natywnej w Slavii (`RequireBoardDocsFullAccessOrSuperAdmin`); walidacja CSV / `sanitizeRichHtml` dla HTML
-     - `POST /api/board/documents/save` — zapis/update „current” w Drive + aktualizacja `_manifest.json` (`RequireBoardDocsFullAccessOrSuperAdmin`)
-     - `POST /api/board/documents/delete` — archiwizacja/usunięcie (`RequireBoardDocsFullAccessOrSuperAdmin`)
-     - `POST /api/board/documents/generate` — generator w pamięci; opcjonalnie zapis do Drive (zaktualizowanie pliku „current” + nowa app-version w `_manifest.json`)
-       - `meeting_report` → `BoardMember` (generuj + pobierz; zapis do repo tylko jeśli `save_to_repo`)
-       - `competition_start_list` → `BoardDocsFullAccess` (generuj; zapis domyślnie do `start-lists/` i nowe `version_no`)
-     - `GET /api/board/document-types` — lista typów (builtin + custom z manifestu) — opcjonalnie w V2
-     - `POST /api/board/document-types` — dodanie typu własnego (prezes/wice) — opcjonalnie w V2
-    - `GET /api/system/gdrive-status` — endpoint statusu integracji Google Drive (analogicznie do istniejącego `cms-status` dla mediów)
-   - Start listy
-     - Bazujemy na istniejących modelach: `competitions`, `competition_participants` i `athletes` (w backendzie już jest `list_participants` w `[Slavia-backend/src/routes/competition_participants.rs](C:/Users/jakub/Desktop/Slavia-backend/src/routes/competition_participants.rs)`), więc generator start list może pobierać listę uczestników i dane zawodników.
-   - Raporty na zebrania
-     - Zakładamy, że „zebrania” są powiązane z datą (np. jako wydarzenie na kalendarzu / jako sesje obecności). Na bazie tego generator złoży:
-       - tabelę obecności (z `attendance_records` dla daty lub zakresu)
-       - statystyki (present/absent/pending) — backend już liczy summary per-athlete w `[Slavia-backend/src/routes/attendance.rs](C:/Users/jakub/Desktop/Slavia-backend/src/routes/attendance.rs)`; w tej iteracji dodajemy ewentualnie nową funkcję „summary per date” jeśli będzie potrzebna.
+Status integracji: rozszerzyć istniejący `GET /api/system/cms-status` o pola `board_docs_ready` / `board_root` albo dodać `GET /api/system/board-docs-status` (analogicznie do sekcji w Developer Ops).
 
-4. Integracja OpenAPI
-   - Po dodaniu tras i DTO generujemy snapshot i typy zgodnie z AGENTS: `pnpm openapi:snapshot` + `pnpm openapi:types`.
+### 3. Endpoints API (OpenAPI)
 
-## Podgląd i edycja dokumentów (Google Drive + Slavia UI)
+Moduł `[Slavia-backend/src/routes/board_documents.rs](../Slavia-backend/src/routes/board_documents.rs)` + nest w `router.rs`.
 
-**Zasada:** klient **nigdy** nie komunikuje się z Google Drive bezpośrednio — tylko przez backend (service account). Podgląd i edycja odbywają się w panelu `/klub/dokumenty`, ale pliki fizycznie leżą na Drive.
+| Endpoint | ACL | Opis |
+|----------|-----|------|
+| `GET /api/board/documents` | Board+ | Odczyt `_manifest.json` z `board/` |
+| `GET /api/board/documents/{id}` | Board+ | Metadane + lista wersji app-level |
+| `GET /api/board/documents/{id}/content` | Board+ | Stream treści bieżącej wersji (backend → GitHub API) |
+| `GET /api/board/documents/{id}/preview` | Board+ | `mime_type`, `edit_mode` (`native` \| `download_only`) |
+| `PATCH /api/board/documents/{id}/content` | Full access | Zapis po edycji natywnej; walidacja CSV / `sanitizeRichHtml` |
+| `POST /api/board/documents/save` | Full access | Zapis pliku + aktualizacja `_manifest.json` |
+| `POST /api/board/documents/delete` | Full access | Archiwizacja/usunięcie w repo |
+| `POST /api/board/documents/generate` | zależnie od typu | Generator w pamięci; opcjonalny zapis do `board/` |
+| `GET /api/board/document-types` | Board+ | Builtin + custom z manifestu (V2) |
+| `POST /api/board/document-types` | Full access | Typ własny (V2) |
 
-### Strategia per format (decyzja produktowa)
+Generatory:
+- `meeting_report` → `BoardMember` (generuj + pobierz; zapis tylko z `save_to_repo` + full access)
+- `competition_start_list` → `BoardDocsFullAccess` (zapis domyślnie do `board/start-lists/`)
 
-| Format | Podgląd szkieletu w aplikacji | Edycja w Slavii | Uwagi |
-|--------|------------------------------|-----------------|-------|
-| **CSV** (raporty, listy startowe) | Tak — tabela + podgląd surowy | **Tak — natywnie** (edytor tekstu / siatka) | Priorytet V1; generator tworzy szkielet → użytkownik dopina/edytuje → zapis na Drive |
-| **HTML** (szablony uchwał, protokoły) | Tak — `SlaviaSafeHtml` | **Tak — natywnie** (TipTap + `sanitizeRichHtml` przy zapisie) | Szablony w `templates/`; szkielet = plik z placeholderami |
-| **Tekst / JSON** (`_manifest.json`) | Tak | Tak (edytor kodu, tylko SA/prezes) | Manifest edytowany głównie przez backend |
-| **PDF** (licencje PZPC, skany) | Tak — `pdf.js` lub stream z backendu | **Nie inline** — podgląd + „wgraj nową wersję” | Brak sensownego WYSIWYG PDF w przeglądarce |
-| **DOCX / XLSX** | Ograniczony podgląd | Raczej poza app lub konwersja | Unikać jako format docelowy szablonów |
-| **Google Docs / Sheets / Slides** | Tak — iframe | **Tak — przez iframe Google** | `https://docs.google.com/document/d/{fileId}/edit?embedded=true` (lub Sheets/Slides); UX toolbar Google, ale użytkownik zostaje w Slavii |
+Dane źródłowe generatorów (bez zmian względem poprzedniego planu):
+- Listy startowe: `competitions`, `competition_participants`, `athletes`
+- Raporty na zebrania: `attendance_records` (+ ewentualnie summary per date)
+
+### 4. Integracja OpenAPI
+Po dodaniu tras i DTO: `pnpm openapi:snapshot` + `pnpm openapi:types` (AGENTS.md).
+
+## Podgląd i edycja dokumentów (Slavia-cms + Slavia UI)
+
+**Zasada:** klient **nigdy** nie komunikuje się z GitHubem bezpośrednio — tylko przez backend (`GITHUB_TOKEN`). W przeciwieństwie do `media/gallery`, **nie używamy** `NUXT_PUBLIC_CMS_BASE_URL` dla plików z `board/`.
+
+### Strategia per format
+
+| Format | Podgląd w aplikacji | Edycja w Slavii | Uwagi |
+|--------|---------------------|-----------------|-------|
+| **CSV** (raporty, listy startowe) | Tak — tabela + podgląd surowy | **Tak — natywnie** | Priorytet V1 |
+| **HTML** (szablony uchwał, protokoły) | Tak — `SlaviaSafeHtml` | **Tak — natywnie** (TipTap + `sanitizeRichHtml`) | Szablony w `board/templates/` |
+| **Tekst / JSON** (`_manifest.json`) | Tak | Tak (edytor, tylko SA/prezes) | Głównie backend |
+| **PDF** (licencje, skany) | Tak — `pdf.js` ze streamu backendu | Podgląd + „wgraj nową wersję” | `edit_mode: download_only` |
+| **DOCX / XLSX** | Ograniczony / brak | Unikać jako format docelowy | Konwersja do CSV/HTML opcjonalnie V2+ |
+
+**Usunięte względem wersji Drive:** edycja przez iframe Google Docs/Sheets — nie dotyczy plików w repo Git. Formaty docelowe: CSV, HTML, PDF.
 
 ### Tryby edycji (`edit_mode` w API preview)
 
-- `native` — treść pobrana przez `GET .../content`, edycja w komponencie Slavii, zapis przez `PATCH .../content`.
-- `iframe` — backend zwraca `file_id` Drive + bezpieczny URL embed; frontend renderuje `<iframe>` w `KlubPageShell` / dedykowanym `BoardDocumentEditorFrame.vue`. Edycja = rewizje Drive po stronie Google; Slavia po zamknięciu iframe odświeża manifest / `version_no` (webhook lub ręczne „Zapisano — odśwież wersje”).
-- `download_only` — PDF i pliki binarne: podgląd + pobranie + upload nowej wersji (prezes/wice).
+- `native` — treść z `GET .../content`, edycja w Slavii, zapis przez `PATCH .../content` → commit w Slavia-cms.
+- `download_only` — PDF i pliki binarne: podgląd stream + pobranie + upload nowej wersji (prezes/wice).
 
 ### Podgląd szkieletu (szablony)
 
-- Generator lub „Utwórz z szablonu” kopiuje plik z `templates/{doc_type}.html` lub `.csv` do folderu docelowego jako wersja 1.
+- Generator lub „Utwórz z szablonu” kopiuje plik z `board/templates/{doc_type}.html` lub `.csv` do folderu docelowego jako wersja 1.
 - UI na `/klub/dokumenty/[id]`: zakładki **Podgląd** | **Edytuj** | **Historia wersji**.
-- Podgląd szkieletu przed pierwszym zapisem: generator zwraca blob → modal podglądu → „Zapisz do repozytorium” (pełne uprawnienia).
+- Podgląd szkieletu przed pierwszym zapisem: generator zwraca blob → modal → „Zapisz do repozytorium” (pełne uprawnienia).
 
-### Ważne ograniczenia i decyzje techniczne
+### Ważne ograniczenia
 
-- **Brak live collaboration** dla CSV/HTML — przy równoległej edycji: pessimistic lock (`locked_by`, `locked_at` w manifeście lub krótki lease w SQLite tylko na lock, nie na treść) albo komunikat o konflikcie wersji przy zapisie.
-- **Google Docs API** (programowa zmiana akapitów) — tylko dla automatycznych generatorów, **nie** jako główny edytor ręczny.
-- **Bezpieczeństwo HTML:** wyświetlanie przez `SlaviaSafeHtml`; zapis przez `sanitizeRichHtml`; zakaz `v-html` poza whitelistą ESLint.
-- **Audyt:** każdy zapis = wpis w `versions[]` (kto, kiedy, `generator_params` lub `edit_source: native|iframe|upload`).
-- **ACL:** podgląd tylko dokumentów udostępnionych danej roli; edycja/zapis tylko `BoardDocsFullAccess` + SuperAdmin (zgodnie z założeniami uprawnień).
+- **Brak live collaboration** — pessimistic lock (`locked_by` w manifeście) lub konflikt wersji przy zapisie (wymaga aktualnego `sha` z GitHub).
+- **Bezpieczeństwo HTML:** `SlaviaSafeHtml` + `sanitizeRichHtml`; zakaz `v-html` poza whitelistą ESLint.
+- **Audyt:** każdy zapis = wpis w `versions[]` + commit message w Git (`Slavia board: …`).
+- **ACL:** podgląd tylko dla `BoardMember`+; edycja/zapis tylko `BoardDocsFullAccess` + SuperAdmin.
 
 ```mermaid
 flowchart TD
@@ -164,92 +211,76 @@ flowchart TD
     List[Lista dokumentów]
     Detail["[id] Podgląd / Edycja"]
     NativeEdit[Edytor CSV lub TipTap HTML]
-    IframeEdit["iframe Google Docs/Sheets"]
   end
   subgraph api [Backend /api/board]
     Preview[GET preview]
     Content[GET/PATCH content]
     Save[POST save]
   end
-  subgraph drive [Google Drive]
-    File[current file]
-    Revisions[revisions]
+  subgraph gh [Slavia-cms GitHub]
+    Manifest["_manifest.json"]
+    Files["board/**/*.csv/html/pdf"]
+    Commits[Git commits]
   end
   List --> Preview
   Detail --> Preview
   Preview -->|edit_mode native| Content
-  Preview -->|edit_mode iframe| IframeEdit
   Content --> NativeEdit
   NativeEdit --> Content
-  IframeEdit -->|user saves in Google UI| File
   Content --> Save
-  Save --> File
-  File --> Revisions
+  Save -->|Contents API + PAT| Files
+  Save --> Manifest
+  Files --> Commits
 ```
 
 ## Frontend (Nuxt)
 
-1. Rola i bramka w `useAuth`
-   - Rozszerzamy typy `UserRole` w `[Slavia-frontend/app/types/models.ts](C:/Users/jakub/Desktop/Slavia-frontend/app/types/models.ts)` o nowe role.
-   - W `[Slavia-frontend/app/composables/useAuth.ts](C:/Users/jakub/Desktop/Slavia-frontend/app/composables/useAuth.ts)` dodajemy computed flags:
-     - `isBoardMember`
-     - `isBoardDocsFullAccess`
+### Stan implementacji (2026-06)
 
-2. Nowa „panel role” w katalogu modułów
-   - W `[Slavia-frontend/app/data/panelNavigationCatalog.ts](C:/Users/jakub/Desktop/Slavia-frontend/app/data/panelNavigationCatalog.ts)`:
-     - dodajemy `PanelNavRole = 'admin' | 'trainer' | 'athlete' | 'board'`
-     - dodajemy nowe moduły z flagami `panel_nav_board_*` dla URL w ramach `/klub`, np.:
-       - `/klub/dokumenty` (repozytorium)
-       - `/klub/dokumenty/generator` (generator)
-       - `/klub/dokumenty/typy` (katalog typów dokumentów)
-     - moduły oznaczamy `gateRoute: true` dla elementów, które mają być blokowane po wyłączeniu flag.
-   - Aktualizujemy `rolesForUserRoles` i logikę mapowania w `[Slavia-frontend/app/composables/usePanelNavigationFlags.ts](C:/Users/jakub/Desktop/Slavia-frontend/app/composables/usePanelNavigationFlags.ts)` (funkcja `userHasRole` oraz `panelNavRolesForUserRoles`).
+| Element | Status |
+|---------|--------|
+| `useAuth` — `isBoardMember`, `isBoardDocsFullAccess` | ✅ |
+| `useBoardDocuments` composable + `apiRoutes.boardDocuments` | ✅ |
+| `middleware/board-member.ts` | ✅ |
+| `pages/klub/dokumenty/index.vue` (lista, bez podstron) | 🟡 — copy nadal wspomina Google Drive → do poprawy |
+| `boardDocumentCatalog.ts`, generator, typy, `[id]` | ❌ |
+| Panel nav `board`, SuperAdmin flagi | ❌ |
+| Komponenty preview/edit | ❌ |
 
-3. `/klub` jako hub dla zarządu
-   - W `[Slavia-frontend/app/composables/useKlubDashboardNav.ts](C:/Users/jakub/Desktop/Slavia-frontend/app/composables/useKlubDashboardNav.ts)` dodajemy logikę `panelRole` dla zarządu.
-   - W `[Slavia-frontend/app/pages/klub/index.vue](C:/Users/jakub/Desktop/Slavia-frontend/app/pages/klub/index.vue)` nic fundamentalnego, ale efektem będzie to, że pojawią się nowe grupy modułów dla roli `board`.
+### 1. Rola i bramka w `useAuth`
+- Typy `UserRole` w `app/types/models.ts` — `BoardMember`, `BoardDocsFullAccess` (już są).
+- Computed w `useAuth.ts` (już są).
 
-4. Strony UI dla dokumentów i generatorów
-   - **Stan prototypu (zrobione):** `klub/dokumenty/index.vue`, `generator.vue`, `typy.vue`, `[id].vue`; mock manifest; katalog typów; flaga `board_documents_prototype`.
-   - **Do zrobienia po backendzie:**
-     - `klub/dokumenty/[id].vue` — rozszerzyć o zakładki Podgląd | Edytuj | Wersje
-     - `BoardDocumentPreview.vue` — CSV (tabela), HTML (`SlaviaSafeHtml`), PDF (`pdf.js`)
-     - `BoardDocumentNativeEditor.vue` — CSV textarea / siatka; HTML TipTap
-     - `BoardDocumentEditorFrame.vue` — iframe Google Docs/Sheets (`edit_mode: iframe`)
-   - Komponenty:
-     - wykorzystujemy istniejące layouty panelowe (`KlubPageShell`, `PanelPageLayout`) oraz zasady safe rendering (`SlaviaSafeHtml`, sanityzacja przy zapisie).
-   - Komunikacja:
-     - composable `useBoardDocuments` — manifest, `fetchContent`, `saveContent`, `getPreviewMeta`
-     - composable `useBoardDocumentGenerator` — generatory + podgląd szkieletu przed zapisem
-     - composable `useBoardDocumentTypes` — już w prototypie; docelowo sync z API
-   - Status storage: `GET /api/system/gdrive-status` przed zapisem (analogicznie do `cms-status`)
+### 2. Panel role w katalogu modułów
+- `PanelNavRole` += `'board'` w `panelNavigationCatalog.ts`
+- Moduły `panel_nav_board_*`: `/klub/dokumenty`, `/klub/dokumenty/generator`, `/klub/dokumenty/typy`
+- Mapowanie w `usePanelNavigationFlags.ts`
 
-5. Superadmin: zarządzanie flagami modułów
-   - W `[Slavia-frontend/app/pages/superadmin/nawigacja-paneli.vue](C:/Users/jakub/Desktop/Slavia-frontend/app/pages/superadmin/nawigacja-paneli.vue)` dodajemy tab dla `board` do konfiguracji `panel_nav_board_*`.
+### 3. Strony UI
+- `klub/dokumenty/index.vue` — lista z API (jest)
+- `klub/dokumenty/generator.vue`, `typy.vue`, `[id].vue` — do dodania
+- Komponenty: `BoardDocumentPreview.vue`, `BoardDocumentNativeEditor.vue`
+- Composables: `useBoardDocumentGenerator`, `useBoardDocumentTypes`
+- Status: `GET /api/system/cms-status` lub `board-docs-status` przed zapisem
 
-## Proponowane „przydatne narzędzia” dla zarządu w `/klub` (V1)
-- Panel dokumentów:
-  - szybki dostęp do repozytorium + filtry po domenie/kategorii/typie
-  - lista ostatnich dokumentów z podglądem typu z katalogu
-- Generator:
-  - listy startowe (CSV) — pełne uprawnienia + zapis do repo
-  - raport na zebranie (CSV) — podstawowe uprawnienia; zapis opcjonalny
-  - **podgląd szkieletu** przed zapisem do Drive
-- Edycja i szablony:
-  - szablony HTML/CSV w `templates/` — podgląd i edycja natywna w Slavii
-  - dokumenty Google Docs/Sheets — edycja przez **iframe** w panelu
-  - PDF — podgląd + wgranie nowej wersji
-- Katalog typów (`/klub/dokumenty/typy`):
-  - 55+ znanych rodzajów dokumentów klubu
-  - typy własne (prezes/wice)
+### 4. Superadmin
+- Tab `board` w `nawigacja-paneli.vue` dla flag `panel_nav_board_*`
+
+## Proponowane narzędzia V1 w `/klub`
+- Panel dokumentów: filtry po kategorii/typie, ostatnie dokumenty
+- Generator: listy startowe (CSV, full access), raport na zebranie (CSV, podstawowy dostęp)
+- Edycja: szablony HTML/CSV w `board/templates/` — podgląd i edycja natywna
+- PDF: podgląd stream + wgranie nowej wersji
+- Katalog typów: 55+ rodzajów + typy własne (prezes/wice)
 
 ## Plan wdrożenia etapami
-- **Etap 1:** role + Google Drive + endpointy manifest/list/download + UI listy + generator raportów (pobranie bez zapisu) + status `gdrive-status`
-- **Etap 2:** zapis na Drive, revisions + app-version w `_manifest.json`, listy startowe dla prezes/wice, **podgląd treści** (`GET content/preview`)
-- **Etap 3:** **edycja natywna** CSV/HTML w aplikacji (`PATCH content`), szablony w `templates/`, podgląd szkieletu z generatora
-- **Etap 4:** **edycja przez iframe** Google Docs/Sheets, typy własne przez API, lock wersji / konflikty, panel nav `board` + SuperAdmin flagi
+- **Etap 1:** role backend + rozszerzenie `cms_github` (read/list) + endpointy manifest/list + bootstrap folderu `board/` w Slavia-cms + UI listy + status cms/board
+- **Etap 2:** zapis do repo (PUT Contents API), app-version w `_manifest.json`, generator raportów (pobranie), listy startowe dla prezes/wice
+- **Etap 3:** `GET content/preview`, edycja natywna CSV/HTML (`PATCH content`), szablony, strona `[id]`
+- **Etap 4:** historia Git w UI, typy własne przez API, lock wersji, panel nav `board` + SuperAdmin flagi, e2e smoke ACL
 
-## Mermaid — przepływ danych (Google Drive)
+## Mermaid — przepływ danych (Slavia-cms)
+
 ```mermaid
 flowchart TD
   User[Użytkownik zarządu] --> Front["/klub/dokumenty"]
@@ -258,27 +289,37 @@ flowchart TD
   Authz -->|403| Denied[Brak dostępu]
   Authz -->|ok| Gen[Generator CSV/HTML]
   Authz -->|ok| PreviewEdit[content / preview / PATCH]
-  Authz -->|ok| GDriveHub[gdrive_documents.rs]
-  Gen -->|opcjonalny zapis| GDriveHub
-  PreviewEdit --> GDriveHub
-  GDriveHub -->|Google Drive API| DriveRepo["Private Drive folder /SlaviaBoardDocs/"]
-  DriveRepo -->|stream| Download[Pobranie pliku przez backend]
+  Authz -->|ok| CmsHub[cms_github / board_docs]
+  Gen -->|opcjonalny zapis| CmsHub
+  PreviewEdit --> CmsHub
+  CmsHub -->|Contents API + PAT| Repo["Slavia-cms /board/"]
+  Repo -->|stream przez backend| Download[Pobranie / podgląd]
 ```
 
 ## Wymagania środowiskowe (deploy)
-- Dostęp dla backendu do prywatnego folderu na Google Drive:
-  - `SLAVIA_BOARD_GDRIVE_ROOT_FOLDER_ID` (ID folderu bazowego)
-  - `SLAVIA_BOARD_GDRIVE_SERVICE_ACCOUNT_JSON` (JSON key service account) lub ustawienie przez `GOOGLE_APPLICATION_CREDENTIALS`
-  - opcjonalnie: `SLAVIA_BOARD_GDRIVE_APP_NAME` / `SLAVIA_BOARD_GDRIVE_TEMPLATE_FOLDER_ID` jeśli nie chcemy polegać na rekurencji po nazwach.
-- W folderze Drive utworzyć `/SlaviaBoardDocs/` + początkowy `_manifest.json` (np. `{ "documents": [] }` lub `[ ]` zależnie od finalnego formatu).
+
+| Zmienna | Gdzie | Opis |
+|---------|-------|------|
+| `GITHUB_TOKEN` | Backend (HF) | PAT ze scope **`repo`** — wymagany przy prywatnym Slavia-cms |
+| `SLAVIA_CMS_REPO` | Backend | np. `JakubGawron1/Slavia-cms` |
+| `SLAVIA_CMS_BRANCH` | Backend | domyślnie `main` |
+| `SLAVIA_BOARD_DOCS_ROOT` | Backend | domyślnie `board` |
+| `NUXT_PUBLIC_CMS_BASE_URL` | Frontend | **tylko dla `media/`** — nie używać dla dokumentów zarządu |
+
+**Bootstrap repo:** w Slavia-cms commitnąć strukturę `board/` + początkowy `_manifest.json`:
+```json
+{ "documents": [] }
+```
+
+**Prywatne repo:** upload i odczyt dokumentów zarządu działają przez backend z PAT. Publiczne zdjęcia galerii nadal mogą iść przez GitHub Pages lub raw URL (osobna ścieżka `media/`).
 
 ## Kryteria akceptacji (minimum)
-- Użytkownik z rolą „członek zarządu” widzi moduł dokumentów w `/klub` i może generować raporty podstawowe (pobranie pliku + **podgląd szkieletu**).
-- Użytkownik z pełnymi uprawnieniami (prezes/wice) może aktualizować dokumenty na Google Drive, **edytować CSV/HTML w aplikacji** oraz otwierać **Google Docs/Sheets w iframe**; przegląda historię wersji (Drive revisions + app-level versions).
-- Dokumenty nie trafiają do SQLite — źródło prawdy to pliki w prywatnym folderze Google Drive (+ ewentualnie lekki lock w SQLite, nie treść).
-- Klient nie otrzymuje publicznych URL Drive — wyłącznie stream/proxy przez backend.
-- Przy braku poprawnej konfiguracji Google Drive backend zwraca czytelny błąd.
-- Zablokowane operacje → `403` z backendu.
+- Użytkownik z rolą „członek zarządu” widzi moduł dokumentów w `/klub` i może generować raporty podstawowe (pobranie + podgląd szkieletu).
+- Użytkownik z pełnymi uprawnieniami może aktualizować pliki w `board/` Slavia-cms, edytować CSV/HTML w aplikacji i przeglądać historię wersji (Git + app-level w manifeście).
+- Dokumenty nie trafiają do SQLite — źródło prawdy to pliki w repo Git (+ ewentualnie lekki lock).
+- Klient nie otrzymuje publicznych URL do plików `board/` — wyłącznie stream/proxy przez backend.
+- Przy braku `GITHUB_TOKEN` lub PAT bez scope `repo` backend zwraca czytelny błąd (jak przy uploadzie galerii do prywatnego repo).
+- Zablokowane operacje → `403`.
 - Superadmin: pełny dostęp + flagi `panel_nav_board_*`.
-- HTML: wyświetlanie i zapis zgodnie z zasadami XSS (`SlaviaSafeHtml`, `sanitizeRichHtml`).
+- HTML: `SlaviaSafeHtml`, `sanitizeRichHtml`.
 - OpenAPI snapshot i typy frontendu bez driftu.
