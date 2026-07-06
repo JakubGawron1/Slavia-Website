@@ -24,16 +24,14 @@ function isEntryMine(e: TrainingLogEntry) {
 
 type DiaryBundle = { athlete: Athlete | null, entries: TrainingLogEntry[] }
 
-const { data: bundle, pending, refresh } = await useAsyncData(
+const { data: bundle, pending, error: loadError, refresh } = await useAsyncData(
   'athlete-diary-bundle',
   async (): Promise<DiaryBundle> => {
-    const athlete = await apiFetch<Athlete>('/api/athletes/me').catch(() => null)
+    const athlete = await apiFetch<Athlete>('/api/athletes/me')
     if (!athlete?.id) {
       return { athlete: null, entries: [] }
     }
-    const entries = await apiFetch<TrainingLogEntry[]>(`/api/athletes/${athlete.id}/training-log`).catch(
-      () => [] as TrainingLogEntry[]
-    )
+    const entries = await apiFetch<TrainingLogEntry[]>(`/api/athletes/${athlete.id}/training-log`)
     return { athlete, entries }
   },
   { default: () => ({ athlete: null, entries: [] }) }
@@ -125,6 +123,21 @@ async function removeEntry(e: TrainingLogEntry) {
       :count="4"
       label="Ładowanie dziennika…"
     />
+
+    <UAlert
+      v-else-if="loadError"
+      color="error"
+      variant="subtle"
+      icon="i-lucide-cloud-off"
+      title="Nie udało się załadować dziennika"
+      :description="getApiErrorMessage(loadError)"
+    >
+      <template #actions>
+        <UButton size="sm" color="error" variant="soft" @click="refresh()">
+          Spróbuj ponownie
+        </UButton>
+      </template>
+    </UAlert>
 
     <UAlert
       v-else-if="!meAthlete"

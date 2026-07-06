@@ -2,6 +2,7 @@
 import { format, parseISO } from 'date-fns'
 import { pl } from 'date-fns/locale'
 import { getApiErrorMessage } from '~/composables/useApi'
+import { useFormDirtyGuard } from '~/composables/useFormDirtyGuard'
 const { accountSettingsPath } = useRoleDashboardNav()
 
 interface Announcement {
@@ -51,6 +52,32 @@ const draft = reactive({
   published: true
 })
 
+const announcementDirtyGuard = useFormDirtyGuard(() => ({
+  title: draft.title,
+  body: draft.body,
+  pinned: draft.pinned,
+  sort_order: draft.sort_order,
+  published: draft.published
+}))
+
+watch(modalOpen, (open, wasOpen) => {
+  if (open) {
+    nextTick(() => announcementDirtyGuard.captureBaseline())
+    return
+  }
+  if (wasOpen && announcementDirtyGuard.isDirty.value) {
+    if (!announcementDirtyGuard.confirmDiscard()) {
+      modalOpen.value = true
+    } else {
+      announcementDirtyGuard.resetBaseline()
+    }
+  }
+})
+
+function requestCloseModal() {
+  modalOpen.value = false
+}
+
 function openCreate() {
   editingId.value = null
   draft.title = ''
@@ -71,8 +98,11 @@ function openEdit(a: Announcement) {
   modalOpen.value = true
 }
 
+const saving = ref(false)
+
 async function save() {
   if (!canManage.value) return
+  if (saving.value) return
   const title = draft.title.trim()
   const body = draft.body.trim()
   if (!title || !body) {
@@ -80,6 +110,7 @@ async function save() {
     return
   }
   try {
+    saving.value = true
     if (editingId.value) {
       await apiFetch(`/api/announcements/${editingId.value}`, {
         method: 'PATCH',
@@ -106,6 +137,7 @@ async function save() {
       toast.add({ title: 'Dodano ogłoszenie', color: 'success' })
     }
     modalOpen.value = false
+    announcementDirtyGuard.markClean()
     await refresh()
   } catch (e) {
     toast.add({
@@ -113,6 +145,8 @@ async function save() {
       description: getApiErrorMessage(e),
       color: 'error'
     })
+  } finally {
+    saving.value = false
   }
 }
 
@@ -440,12 +474,14 @@ function bodyPreview(text: string, max = 100) {
             <UButton
               variant="ghost"
               color="neutral"
-              @click="modalOpen = false"
+              @click="requestCloseModal"
             >
               Anuluj
             </UButton>
             <UButton
               color="primary"
+              :loading="saving"
+              :disabled="saving"
               @click="save"
             >
               Zapisz

@@ -70,9 +70,17 @@ export function useZawodnicyPage() {
     return out
   })
 
+  const trainingFetchGen = ref(0)
+
   async function refreshTrainingResults() {
-    trainingByAthlete.value = {}
-    if (!auth.isLoggedIn.value || players.value.length === 0) return
+    const gen = ++trainingFetchGen.value
+    const list = players.value
+    if (!auth.isLoggedIn.value || list.length === 0) {
+      if (gen === trainingFetchGen.value) {
+        trainingByAthlete.value = {}
+      }
+      return
+    }
 
     const fetchTraining = async (athleteId: string) =>
       apiFetch<CompetitionResult[]>(apiRoutes.results.athlete(athleteId, 'training')).catch(
@@ -82,8 +90,8 @@ export function useZawodnicyPage() {
     const batchSize = 3
     if (canSeeClubTrainingRanking.value) {
       const out: Record<string, CompetitionResult[]> = {}
-      const list = players.value
       for (let i = 0; i < list.length; i += batchSize) {
+        if (gen !== trainingFetchGen.value) return
         const batch = list.slice(i, i + batchSize)
         await Promise.all(
           batch.map(async (p) => {
@@ -91,15 +99,19 @@ export function useZawodnicyPage() {
           })
         )
       }
-      trainingByAthlete.value = out
+      if (gen === trainingFetchGen.value) {
+        trainingByAthlete.value = out
+      }
       return
     }
 
     await auth.ensureSession()
     const myAthleteId = auth.user.value?.athlete_id
-    if (!myAthleteId) return
+    if (!myAthleteId || gen !== trainingFetchGen.value) return
     const rows = await fetchTraining(myAthleteId)
-    trainingByAthlete.value = { [myAthleteId]: rows }
+    if (gen === trainingFetchGen.value) {
+      trainingByAthlete.value = { [myAthleteId]: rows }
+    }
   }
 
   watch(

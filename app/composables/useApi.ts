@@ -19,6 +19,22 @@ export const API_PANEL_COLD_START_TIMEOUT_MS = 30_000
 
 export const API_UPLOAD_TIMEOUT_MS = 120_000
 
+function handleSessionExpired(auth: ReturnType<typeof useAuth>, toast: ReturnType<typeof useToast>) {
+  if (!import.meta.client) return
+  const hadSession = !!auth.token.value
+  auth.logout()
+  if (!hadSession) return
+  toast.add({
+    title: 'Sesja wygasła',
+    description: 'Zaloguj się ponownie, aby kontynuować.',
+    color: 'warning'
+  })
+  queueMicrotask(() => {
+    const path = window.location.pathname + window.location.search
+    void navigateTo({ path: '/logowanie', query: path !== '/logowanie' ? { redirect: path } : undefined })
+  })
+}
+
 function splitUrl(url: string): { path: string, query: string } {
   const q = url.indexOf('?')
   if (q === -1) return { path: url, query: '' }
@@ -98,7 +114,7 @@ export function useApi() {
         notifyBackendWakingIfNeeded(response?.status, toast)
       }
       if (response?.status === 401) {
-        auth.logout()
+        handleSessionExpired(auth, toast)
       }
       if (response?.status === 403) {
         if (expBanRedirect.value && !auth.isSuperAdmin.value) {
@@ -160,7 +176,7 @@ export function useApi() {
         notifyBackendWakingIfNeeded(response?.status, toast)
       }
       if (response?.status === 401) {
-        auth.logout()
+        handleSessionExpired(auth, toast)
       }
       if (response?.status === 403) {
         if (expBanRedirect.value && !auth.isSuperAdmin.value) {

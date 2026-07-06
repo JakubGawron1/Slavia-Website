@@ -119,6 +119,8 @@ export function useAuth() {
     }
   }
   const user = useState<AuthUser | null>(USER_STATE_KEY, () => null)
+  /** Token jest, ale GET /auth/me nie powiódł się (sieć/5xx) — nie traktuj jak wylogowania. */
+  const sessionLoadError = useState<boolean>('slavia-auth-session-load-error', () => false)
 
   const apiBase = computed(() => backendProvider.activeApiBase.value)
 
@@ -179,33 +181,42 @@ export function useAuth() {
   async function fetchMe(): Promise<AuthUser | null> {
     if (!token.value) {
       user.value = null
+      sessionLoadError.value = false
       return null
     }
-    try {
-      const me = await $fetch<AuthUser>('/api/auth/me', {
-        headers: { Authorization: `Bearer ${token.value}` },
-        timeout: AUTH_FETCH_ME_TIMEOUT_MS
-      })
-      user.value = { ...me, roles: normalizeUserRoles(me.roles) }
-      return user.value
-    } catch (e) {
-      // Na produkcji najczęstsze przypadki to:
-      // - 401/403: token jest zły / JWT_SECRET się nie zgadza / konto zbanowane → wyloguj
-      // - sieć/5xx: chwilowy problem backendu → nie kasuj tokena, bo wygląda jak „nie da się zalogować”
-      const err = e as FetchError
-      const status = (typeof err?.statusCode === 'number' ? err.statusCode : (err as unknown as { status?: number })?.status)
-      if (status === 401 || status === 403) {
-        token.value = null
-        user.value = null
-      } else {
+    const maxAttempts = 3
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const me = await $fetch<AuthUser>('/api/auth/me', {
+          headers: { Authorization: `Bearer ${token.value}` },
+          timeout: AUTH_FETCH_ME_TIMEOUT_MS
+        })
+        user.value = { ...me, roles: normalizeUserRoles(me.roles) }
+        sessionLoadError.value = false
+        return user.value
+      } catch (e) {
+        const err = e as FetchError
+        const status = (typeof err?.statusCode === 'number' ? err.statusCode : (err as unknown as { status?: number })?.status)
+        if (status === 401 || status === 403) {
+          token.value = null
+          user.value = null
+          sessionLoadError.value = false
+          return null
+        }
+        if (attempt < maxAttempts) {
+          await new Promise(r => setTimeout(r, 800 * attempt))
+          continue
+        }
+        sessionLoadError.value = true
         console.error('[auth] fetchMe failed (keeping token)', {
           apiBase: apiBase.value,
           status,
           message: String(err?.message || e)
         })
+        return null
       }
-      return null
     }
+    return null
   }
 
   async function login(username: string, password: string, totpCode?: string | null) {
@@ -237,6 +248,7 @@ export function useAuth() {
     clearAthleteDashboardCache()
     token.value = null
     user.value = null
+    sessionLoadError.value = false
   }
 
   /** Używane w middleware: odśwież sesję jeśli jest token. */
@@ -257,6 +269,7 @@ export function useAuth() {
   return {
     token,
     user,
+    sessionLoadError,
     apiBase,
     roles,
     isLoggedIn,

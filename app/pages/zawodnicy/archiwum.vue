@@ -12,7 +12,8 @@ definePageMeta({
 const {
   data: archivedRaw,
   pending,
-  error
+  error,
+  refresh: refreshArchive
 } = await usePublicLazyFetch<AthleteModel[]>('athletes/archive', {
   key: 'players-public-archived',
   default: () => [] as AthleteModel[]
@@ -80,13 +81,11 @@ useSeoMeta({
         </p>
       </div>
 
-      <UAlert
+      <PublicApiErrorBanner
         v-if="error"
-        color="error"
-        variant="subtle"
-        title="Nie udało się wczytać archiwum"
-        description="Spróbuj odświeżyć stronę za chwilę."
+        :error="error"
         class="mb-8"
+        @retry="refreshArchive()"
       />
 
       <div

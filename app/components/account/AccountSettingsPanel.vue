@@ -85,7 +85,11 @@ async function fetchAthleteProfile() {
     form.birth_year = res.birth_year ?? null
     form.gender = res.gender === 'female' ? 'female' : 'male'
   } catch (err) {
-    console.error('Failed to fetch athlete profile', err)
+    toast.add({
+      title: 'Nie udało się załadować profilu zawodnika',
+      description: getApiErrorMessage(err),
+      color: 'error'
+    })
   } finally {
     athleteLoading.value = false
   }

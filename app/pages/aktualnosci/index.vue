@@ -35,7 +35,7 @@ function postImageSrc(url?: string) {
 }
 
 // SSR zawsze renderuje publiczną listę (bez ryzyka cache per-user).
-const { data: posts, refresh: refreshPublic, pending } = await usePublicLazyFetch<BlogPost[]>('posts', {
+const { data: posts, refresh: refreshPublic, pending, error: postsError } = await usePublicLazyFetch<BlogPost[]>('posts', {
   key: 'aktualnosci-posts-public',
   default: () => [] as BlogPost[]
 })
@@ -141,6 +141,11 @@ function editPostUrl(post: BlogPost) {
     </PublicPageHeader>
 
     <div class="slavia-content-well slavia-public-section">
+    <PublicApiErrorBanner
+      v-if="postsError"
+      :error="postsError"
+      @retry="refreshPublic()"
+    />
     <div
       v-if="pending"
       class="py-10"
@@ -167,7 +172,7 @@ function editPostUrl(post: BlogPost) {
     </div>
 
     <PublicEmptyState
-      v-else-if="!posts || posts.length === 0"
+      v-else-if="(!posts || posts.length === 0) && !postsError"
       icon="i-lucide-newspaper"
       title="Brak wpisów"
       description="Zaglądaj tu wkrótce po relacje z zawodów, komunikaty i życie sekcji na sali."

@@ -6,6 +6,7 @@ import { parseLiveNumber } from '~/utils/liveNumber'
 
 const auth = useAuth()
 const apiFetch = useApi()
+const toast = useToast()
 const { accountSettingsPath } = useRoleDashboardNav()
 
 const gender = ref<SinclairGender>((auth.user.value?.athlete_gender as SinclairGender) || 'male')
@@ -65,6 +66,11 @@ onMounted(() => {
     const saved = localStorage.getItem('slavia_sinclair_scenarios')
     if (saved) scenarios.value = JSON.parse(saved)
   } catch (e) {
+    toast.add({
+      title: 'Nie udało się wczytać scenariuszy',
+      description: 'Zapisane warianty mogły zostać usunięte lub przeglądarka blokuje pamięć lokalną.',
+      color: 'warning'
+    })
     console.error('Failed to load scenarios', e)
   }
 })
@@ -73,6 +79,11 @@ watch(scenarios, (newVal) => {
   try {
     localStorage.setItem('slavia_sinclair_scenarios', JSON.stringify(newVal))
   } catch (e) {
+    toast.add({
+      title: 'Nie udało się zapisać scenariuszy',
+      description: 'Sprawdź miejsce w pamięci przeglądarki lub tryb prywatny.',
+      color: 'warning'
+    })
     console.error('Failed to save scenarios', e)
   }
 }, { deep: true })

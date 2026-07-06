@@ -1,5 +1,7 @@
 <script setup lang="ts">
 const { presetLayoutClass } = useSlaviaAppearance()
+const auth = useAuth()
+const toast = useToast()
 
 const props = withDefaults(
   defineProps<{
@@ -31,6 +33,17 @@ const containerClass = computed(() => {
   if (layoutClass) c.push(layoutClass)
   return c
 })
+
+async function retrySession() {
+  await auth.refreshSession()
+  if (auth.sessionLoadError.value) {
+    toast.add({
+      title: 'Brak połączenia',
+      description: 'Nie udało się odświeżyć sesji. Spróbuj ponownie za chwilę.',
+      color: 'error'
+    })
+  }
+}
 </script>
 
 <template>
@@ -40,6 +53,21 @@ const containerClass = computed(() => {
   >
     <UContainer :class="containerClass">
       <div class="slavia-page-flow">
+        <UAlert
+          v-if="auth.sessionLoadError.value"
+          class="mb-4"
+          color="warning"
+          variant="subtle"
+          icon="i-lucide-cloud-off"
+          title="Nie udało się załadować sesji"
+          description="Backend może się budzić lub wystąpił chwilowy błąd sieci. Możesz spróbować ponownie bez wylogowywania."
+        >
+          <template #actions>
+            <UButton size="sm" color="warning" variant="soft" @click="retrySession">
+              Spróbuj ponownie
+            </UButton>
+          </template>
+        </UAlert>
         <slot />
       </div>
     </UContainer>
@@ -49,6 +77,21 @@ const containerClass = computed(() => {
     :class="containerClass"
   >
     <div class="slavia-page-flow">
+      <UAlert
+        v-if="auth.sessionLoadError.value"
+        class="mb-4"
+        color="warning"
+        variant="subtle"
+        icon="i-lucide-cloud-off"
+        title="Nie udało się załadować sesji"
+        description="Backend może się budzić lub wystąpił chwilowy błąd sieci. Możesz spróbować ponownie bez wylogowywania."
+      >
+        <template #actions>
+          <UButton size="sm" color="warning" variant="soft" @click="retrySession">
+            Spróbuj ponownie
+          </UButton>
+        </template>
+      </UAlert>
       <slot />
     </div>
   </UContainer>

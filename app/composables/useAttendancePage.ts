@@ -160,7 +160,7 @@ export function useAttendancePage() {
     let pending = 0
     for (const r of records.value) {
       if (r.verification_state === 'pending') pending++
-      else if (r.status === 'obecny') present++
+      else if (r.status === 'obecny' || r.status === 'spozniony') present++
       else if (r.status === 'nieobecny') absent++
     }
     return { present, absent, pending }
@@ -206,8 +206,10 @@ export function useAttendancePage() {
   function openDay(date: Date) {
     sessionDate.value = format(date, 'yyyy-MM-dd')
     const rec = recordsByDate.value.get(sessionDate.value)
-    if (rec?.status === 'obecny' || rec?.status === 'nieobecny') {
-      status.value = rec.status
+    if (rec?.status === 'nieobecny') {
+      status.value = 'nieobecny'
+    } else if (rec?.status === 'obecny' || rec?.status === 'spozniony') {
+      status.value = 'obecny'
     } else {
       status.value = 'obecny'
     }
@@ -240,12 +242,14 @@ export function useAttendancePage() {
 
   function statusColor(s: string) {
     if (s === 'obecny') return 'success'
+    if (s === 'spozniony') return 'warning'
     if (s === 'nieobecny') return 'error'
     return 'neutral'
   }
 
   function statusLabelPl(s: string) {
     if (s === 'obecny') return 'Obecny'
+    if (s === 'spozniony') return 'Spóźniony'
     if (s === 'nieobecny') return 'Nieobecny'
     return s || '—'
   }
@@ -274,7 +278,7 @@ export function useAttendancePage() {
 
     if (tStatus !== 'scheduled') return `${base} ring-1 ring-warning/25`
     if (rec?.verification_state === 'pending') return `${base} ring-2 ring-warning/45 bg-warning/8`
-    if (rec?.status === 'obecny') return `${base} ring-1 ring-success/30 bg-success/8`
+    if (rec?.status === 'obecny' || rec?.status === 'spozniony') return `${base} ring-1 ring-success/30 bg-success/8`
     if (rec?.status === 'nieobecny') return `${base} ring-1 ring-error/25 bg-error/8`
     return `${base} ring-1 ring-primary/20 bg-primary/5`
   }
@@ -380,7 +384,8 @@ export function useAttendancePage() {
   }
 
   async function submitAttendance(): Promise<boolean> {
-    if (!selectedAthleteId.value) return false
+    if (!selectedAthleteId.value || savingAttendance.value) return false
+    savingAttendance.value = true
     try {
       await api(apiRoutes.attendance.collection, {
         method: 'POST',
@@ -398,24 +403,26 @@ export function useAttendancePage() {
     } catch (e) {
       toast.add({ title: 'Nie udało się zapisać obecności', description: getApiErrorMessage(e), color: 'error' })
       return false
+    } finally {
+      savingAttendance.value = false
     }
   }
 
   async function saveAttendanceFromModal() {
     if (savingAttendance.value) return
-    savingAttendance.value = true
-    try {
-      const pending = activePendingForSession.value
-      if (isStaff.value && pending) {
+    const pending = activePendingForSession.value
+    if (isStaff.value && pending) {
+      savingAttendance.value = true
+      try {
         await approvePendingRecord(pending)
-        return
+      } finally {
+        savingAttendance.value = false
       }
-      const ok = await submitAttendance()
-      if (ok) {
-        attendanceModalOpen.value = false
-      }
-    } finally {
-      savingAttendance.value = false
+      return
+    }
+    const ok = await submitAttendance()
+    if (ok) {
+      attendanceModalOpen.value = false
     }
   }
 

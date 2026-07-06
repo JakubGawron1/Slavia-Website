@@ -6,6 +6,7 @@ export default defineNuxtPlugin(() => {
 
   let navTimer: number | null = null
   let lastHardRecoverAt = 0
+  let lastRejectionToastAt = 0
 
   function clearNavTimer() {
     if (navTimer != null) {
@@ -48,8 +49,31 @@ export default defineNuxtPlugin(() => {
   })
 
   window.addEventListener('unhandledrejection', (ev) => {
-    // Nie spamujemy — ale przynajmniej mamy sygnał gdy obietnica wysypie się w tle.
     console.error('[app] unhandledrejection', ev.reason)
+    const reason = ev.reason as { message?: string, name?: string } | string | undefined
+    const msg = String(
+      typeof reason === 'object' && reason && 'message' in reason
+        ? reason.message
+        : reason ?? ''
+    )
+    const lower = msg.toLowerCase()
+    if (
+      lower.includes('role_preview_readonly')
+      || lower.includes('cancelled')
+      || lower.includes('canceled')
+      || lower.includes('aborted')
+      || lower.includes('navigation')
+    ) {
+      return
+    }
+    const now = Date.now()
+    if (now - lastRejectionToastAt < 8_000) return
+    lastRejectionToastAt = now
+    toast.add({
+      title: 'Nieoczekiwany błąd',
+      description: 'Operacja w tle nie powiodła się. Odśwież stronę, jeśli problem się powtarza.',
+      color: 'error'
+    })
   })
 
   window.addEventListener('error', (ev) => {

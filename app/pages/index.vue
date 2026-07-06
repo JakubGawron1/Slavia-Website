@@ -26,7 +26,9 @@ interface BlogPost {
 /** Strona główna — publiczny BFF (`/api/public/*`), SSR. */
 const {
   data: athletes,
-  pending: _athletesPending
+  pending: _athletesPending,
+  error: athletesError,
+  refresh: refreshAthletes
 } = await usePublicLazyFetch<Athlete[]>('athletes', {
   key: 'home-athletes',
   default: () => [] as Athlete[]
@@ -34,7 +36,9 @@ const {
 
 const {
   data: posts,
-  pending: _postsPending
+  pending: _postsPending,
+  error: postsError,
+  refresh: refreshPosts
 } = await usePublicLazyFetch<BlogPost[]>('posts', {
   key: 'home-posts',
   default: () => [] as BlogPost[]
@@ -134,6 +138,18 @@ const { mobileDownloadHref, mobileDownloadLabel } = useMobileAppRelease()
     <!-- HERO -->
     <section class="relative pb-12 pt-16 sm:pt-20 lg:pt-24 lg:pb-16">
       <UContainer>
+        <PublicApiErrorBanner
+          v-if="athletesError"
+          :error="athletesError"
+          class="mb-6"
+          @retry="refreshAthletes()"
+        />
+        <PublicApiErrorBanner
+          v-if="postsError"
+          :error="postsError"
+          class="mb-6"
+          @retry="refreshPosts()"
+        />
         <div class="mx-auto flex max-w-5xl flex-col items-center text-center">
           <div class="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.22em] text-primary backdrop-blur">
             <span class="relative flex size-2">
@@ -303,6 +319,23 @@ const { mobileDownloadHref, mobileDownloadLabel } = useMobileAppRelease()
       data-home-section="ranking"
       :champions="champions"
     />
+    <section
+      v-else-if="_athletesPending"
+      class="slavia-content-well slavia-public-section py-12"
+      aria-busy="true"
+      aria-label="Ładowanie rankingu"
+    >
+      <div class="mx-auto max-w-5xl space-y-4">
+        <SlaviaShimmerText block width="12rem" height="1.25rem" />
+        <div class="grid gap-4 sm:grid-cols-3">
+          <div
+            v-for="i in 3"
+            :key="`home-champ-skel-${i}`"
+            class="h-48 animate-pulse rounded-2xl border border-default/40 bg-muted/20"
+          />
+        </div>
+      </div>
+    </section>
 
     <LazyHomeNewsSection
       v-if="latestPosts.length > 0"
@@ -310,6 +343,23 @@ const { mobileDownloadHref, mobileDownloadLabel } = useMobileAppRelease()
       data-home-section="news"
       :posts="latestPosts"
     />
+    <section
+      v-else-if="_postsPending"
+      class="slavia-content-well slavia-public-section py-12"
+      aria-busy="true"
+      aria-label="Ładowanie aktualności"
+    >
+      <div class="mx-auto max-w-5xl space-y-4">
+        <SlaviaShimmerText block width="10rem" height="1.25rem" />
+        <div class="grid gap-4 sm:grid-cols-3">
+          <div
+            v-for="i in 3"
+            :key="`home-news-skel-${i}`"
+            class="h-56 animate-pulse rounded-2xl border border-default/40 bg-muted/20"
+          />
+        </div>
+      </div>
+    </section>
 
     <LazyHomeToolsAndFooterSection
       hydrate-on-visible

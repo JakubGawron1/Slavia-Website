@@ -152,13 +152,10 @@ function podiumAccent(idx: number) {
         <p>Wczytywanie rankingu…</p>
       </div>
 
-      <UAlert
+      <PublicApiErrorBanner
         v-else-if="error"
-        color="error"
-        variant="subtle"
-        icon="i-lucide-cloud-off"
-        title="Nie udało się pobrać rankingu"
-        description="Sprawdź połączenie lub popraw format miesiąca."
+        :error="error"
+        @retry="refresh()"
       />
 
       <PublicEmptyState

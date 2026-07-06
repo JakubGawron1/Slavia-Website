@@ -100,11 +100,14 @@ onMounted(() => {
   applySinclairQueryFromRoute()
 })
 
+const isSubmitting = ref(false)
+
 async function submitResult() {
   if (!athlete.value) {
     toast.add({ title: 'Brak profilu zawodnika', color: 'warning' })
     return
   }
+  if (isSubmitting.value) return
   const hasOly =
     (resultForm.snatch != null && resultForm.snatch > 0)
     || (resultForm.clean_and_jerk != null && resultForm.clean_and_jerk > 0)
@@ -114,6 +117,7 @@ async function submitResult() {
   }
 
   try {
+    isSubmitting.value = true
     const body: Record<string, unknown> = {
       athlete_id: athlete.value.id,
       date: resultForm.date,
@@ -152,6 +156,8 @@ async function submitResult() {
     }
   } catch (e) {
     toast.add({ title: 'Błąd zgłoszenia', description: getApiErrorMessage(e), color: 'error' })
+  } finally {
+    isSubmitting.value = false
   }
 }
 </script>
@@ -255,7 +261,7 @@ async function submitResult() {
             </div>
           </div>
           <div class="slavia-form-actions border-t border-default/60 pt-5">
-            <UButton color="primary" size="lg" icon="i-lucide-send" @click="submitResult">
+            <UButton color="primary" size="lg" icon="i-lucide-send" :loading="isSubmitting" :disabled="isSubmitting" @click="submitResult">
               Zgłoś wynik
             </UButton>
           </div>

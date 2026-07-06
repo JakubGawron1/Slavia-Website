@@ -188,7 +188,7 @@ const {
         </UFormField>
       </div>
       <div class="mt-4">
-        <UButton icon="i-lucide-send" size="lg" @click="() => { void submitAttendance() }">
+        <UButton icon="i-lucide-send" size="lg" :loading="savingAttendance" :disabled="savingAttendance" @click="() => { void submitAttendance() }">
           Wyślij zgłoszenie
         </UButton>
       </div>

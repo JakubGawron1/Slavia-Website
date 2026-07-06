@@ -59,7 +59,8 @@ const syncLoading = ref(false)
 const {
   data: competitions,
   refresh,
-  pending: competitionsPending
+  pending: competitionsPending,
+  error: competitionsError
 } = await usePublicLazyFetch<Competition[]>('competitions', {
   key: 'competitions-public',
   default: () => []
@@ -666,6 +667,13 @@ function handleDayClick(day: Date) {
         (w tym wpisy dodane ręcznie).
       </p>
     </div>
+
+    <PublicApiErrorBanner
+      v-if="competitionsError"
+      :error="competitionsError"
+      class="mb-4"
+      @retry="refresh()"
+    />
 
     <div
       v-if="competitionsPending"

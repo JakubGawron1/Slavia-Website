@@ -23,6 +23,7 @@ const {
   trainingPodium,
   exportKind,
   downloadRankingCsv,
+  refreshPlayersPublic,
   canSeeClubTrainingRanking
 } = await useZawodnicyPage()
 
@@ -121,6 +122,10 @@ onBeforeUnmount(disconnectPrefetchContainers)
         Elita <span class="text-primary">Slavii</span>
       </template>
     </PublicPageHeader>
+
+    <UContainer v-if="error" class="mb-6">
+      <PublicApiErrorBanner :error="error" @retry="refreshPlayersPublic()" />
+    </UContainer>
 
     <!-- Podium Section -->
     <div

@@ -64,6 +64,7 @@ export function usePanelNavigationFlags() {
   const userOverrides = useState<Record<string, boolean>>(USER_OVERRIDES_KEY, () => ({}))
   const managedUserOverrides = useState<Record<string, boolean>>(MANAGED_USER_OVERRIDES_KEY, () => ({}))
   const hydratedFromApi = useState<boolean>(HYDRATED_FROM_API_KEY, () => false)
+  const flagsLoadFailed = useState<boolean>('slavia-panel-nav-load-failed', () => false)
   const savingKeys = useState<Set<string>>('slavia-panel-nav-saving', () => new Set())
 
   const bypassFilter = computed(() => auth.isSuperAdmin.value)
@@ -106,6 +107,10 @@ export function usePanelNavigationFlags() {
   /** Widoczność na dashboardzie (SuperAdmin omija filtr). */
   function isEnabled(flagId: string): boolean {
     if (bypassFilter.value) return true
+    if (flagsLoadFailed.value) {
+      const gated = PANEL_NAV_MODULES.find(def => def.id === flagId && def.gateRoute)
+      if (gated) return false
+    }
     return effectiveEnabled(flagId)
   }
 
@@ -197,8 +202,9 @@ export function usePanelNavigationFlags() {
       } else {
         userOverrides.value = {}
       }
+      flagsLoadFailed.value = false
     } catch {
-      /* domyślnie włączone */
+      flagsLoadFailed.value = true
     } finally {
       hydratedFromApi.value = true
     }
@@ -266,6 +272,15 @@ export function usePanelNavigationFlags() {
 
   function canAccessPath(path: string): boolean {
     if (bypassFilter.value || !auth.isLoggedIn.value) return true
+    if (flagsLoadFailed.value) {
+      const normalized = normalizePath(path)
+      const gated = PANEL_NAV_MODULES.some(def => {
+        if (!def.gateRoute) return false
+        const target = normalizePath(def.to)
+        return normalized === target || normalized.startsWith(`${target}/`)
+      })
+      if (gated) return false
+    }
     const roles = auth.user.value?.roles ?? []
     const normalized = normalizePath(path)
 
@@ -299,6 +314,7 @@ export function usePanelNavigationFlags() {
     userOverrides,
     managedUserOverrides,
     hydratedFromApi,
+    flagsLoadFailed,
     enabledMap,
     isEnabled,
     rawIsEnabled,

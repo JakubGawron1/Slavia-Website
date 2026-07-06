@@ -43,6 +43,11 @@ async function submit() {
         : undefined
     await navigateTo(redirect ?? pickPostLoginPath(user?.roles ?? []), { replace: true })
   } catch (e) {
+    const err = e as { data?: { code?: string }, response?: { status?: number } }
+    if (err?.response?.status === 403 && err?.data?.code === 'account_banned') {
+      await navigateTo('/banned', { replace: true })
+      return
+    }
     const msg = getApiErrorMessage(e, '')
     if (!totpStep.value && msg === 'totp_required') {
       totpStep.value = true

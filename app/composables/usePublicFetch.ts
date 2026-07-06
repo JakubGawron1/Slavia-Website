@@ -65,20 +65,10 @@ export function usePublicLazyFetch<T>(
   return useAsyncData<T>(
     key,
     async () => {
-      try {
-        return (await $fetch(buildUrl(), {
-          timeout: 12_000,
-          ...PUBLIC_FETCH_OPTIONS
-        })) as T
-      } catch (err) {
-        if (opts.default) {
-          if (import.meta.dev) {
-            console.warn(`[public-api] ${buildUrl()} niedostępne, używam default()`, err)
-          }
-          return opts.default()
-        }
-        throw err
-      }
+      return (await $fetch(buildUrl(), {
+        timeout: 12_000,
+        ...PUBLIC_FETCH_OPTIONS
+      })) as T
     },
     {
       server: opts.server ?? true,

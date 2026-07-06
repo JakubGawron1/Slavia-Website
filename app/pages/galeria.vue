@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { getApiErrorMessage } from '~/composables/useApi'
+import { useFormDirtyGuard } from '~/composables/useFormDirtyGuard'
 import { buildUploadFormData } from '~/utils/uploadFormData'
 import { resolveGalleryImageUrl } from '~/utils/cmsAssets'
 
@@ -31,7 +32,7 @@ function gallerySrc(url: string) {
 }
 
 // SSR zawsze renderuje publiczną galerię (bez ryzyka cache per-user).
-const { data: photos, refresh: refreshPublic, pending } = await usePublicLazyFetch<GalleryPhoto[]>('gallery', {
+const { data: photos, refresh: refreshPublic, pending, error: photosError } = await usePublicLazyFetch<GalleryPhoto[]>('gallery', {
   key: 'club-gallery-public',
   default: () => [] as GalleryPhoto[]
 })
@@ -65,6 +66,32 @@ const uploadLoading = ref(false)
 const fileInputRef = ref<HTMLInputElement | null>(null)
 const mediaPreviewOpen = ref(false)
 const mediaPreviewItem = ref<GalleryPhoto | null>(null)
+
+const galleryDirtyGuard = useFormDirtyGuard(() => ({
+  image_url: draft.image_url,
+  media_type: draft.media_type,
+  caption: draft.caption,
+  sort_order: draft.sort_order,
+  published: draft.published
+}))
+
+watch(modalOpen, (open, wasOpen) => {
+  if (open) {
+    nextTick(() => galleryDirtyGuard.captureBaseline())
+    return
+  }
+  if (wasOpen && galleryDirtyGuard.isDirty.value) {
+    if (!galleryDirtyGuard.confirmDiscard()) {
+      modalOpen.value = true
+    } else {
+      galleryDirtyGuard.resetBaseline()
+    }
+  }
+})
+
+function requestCloseModal() {
+  modalOpen.value = false
+}
 
 function videoPoster(url: string) {
   if (!url.includes('/video/upload/')) return ''
@@ -137,14 +164,18 @@ async function onFileChange(e: Event) {
   }
 }
 
+const saving = ref(false)
+
 async function save() {
   if (!canManage.value) return
+  if (saving.value) return
   const image_url = draft.image_url.trim()
   if (!image_url) {
     toast.add({ title: 'Prześlij zdjęcie', color: 'warning' })
     return
   }
   try {
+    saving.value = true
     const cap = draft.caption.trim()
     if (editingId.value) {
       await apiFetch(`/api/gallery/${editingId.value}`, {
@@ -172,6 +203,7 @@ async function save() {
       toast.add({ title: 'Dodano zdjęcie', color: 'success' })
     }
     modalOpen.value = false
+    galleryDirtyGuard.markClean()
     await refreshList()
   } catch (e) {
     console.error('[gallery] save failed', e)
@@ -180,6 +212,8 @@ async function save() {
       description: getApiErrorMessage(e),
       color: 'error'
     })
+  } finally {
+    saving.value = false
   }
 }
 
@@ -241,6 +275,11 @@ const publishedPhotosCount = computed(
     </PublicPageHeader>
 
     <div class="slavia-content-well slavia-public-section">
+    <PublicApiErrorBanner
+      v-if="photosError"
+      :error="photosError"
+      @retry="refreshPublic()"
+    />
     <div
       v-if="pending"
       class="py-14"
@@ -263,7 +302,7 @@ const publishedPhotosCount = computed(
     </div>
 
     <PublicEmptyState
-      v-else-if="!sortedPhotos.length"
+      v-else-if="!sortedPhotos.length && !photosError"
       icon="i-lucide-images"
       title="Galeria jest pusta"
       description="Tu pojawią się zdjęcia i filmy z treningów, zawodów i życia klubu."
@@ -493,12 +532,14 @@ const publishedPhotosCount = computed(
             <UButton
               variant="ghost"
               color="neutral"
-              @click="modalOpen = false"
+              @click="requestCloseModal"
             >
               Anuluj
             </UButton>
             <UButton
               color="primary"
+              :loading="saving"
+              :disabled="saving"
               @click="save"
             >
               Zapisz

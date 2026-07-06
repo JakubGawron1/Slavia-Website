@@ -8,12 +8,8 @@ export function useClubContentAdmin() {
 
   const canManage = computed(() => auth.canManageClubContent.value)
 
-  /** Przyciski edycji widoczne od razu po zalogowaniu (zanim GET /me odświeży role). */
-  const showManageActions = computed(() => {
-    if (canManage.value) return true
-    if (!import.meta.client) return false
-    return Boolean(auth.token.value) && !sessionReady.value
-  })
+  /** Przyciski edycji tylko po potwierdzeniu roli z GET /me. */
+  const showManageActions = computed(() => canManage.value)
 
   async function hydrateSession() {
     if (!import.meta.client) return
