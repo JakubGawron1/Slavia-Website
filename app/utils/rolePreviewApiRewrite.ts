@@ -3,6 +3,8 @@ import type { RolePreviewState } from '~/composables/useRolePreviewState'
 export type RolePreviewRewriteFlags = {
   isActive: boolean
   isAthletePreview: boolean
+  /** Zalogowany użytkownik — bez przepisywania „moje dane” na siebie w podglądzie roli. */
+  currentUserId?: string | null
 }
 
 function splitUrl(url: string): { path: string, query: string } {
@@ -23,6 +25,9 @@ export function rewriteRolePreviewApiUrl(
   const m = method.toUpperCase()
   if (m !== 'GET' && m !== 'HEAD') return url
   if (!state?.targetUserId) return url
+
+  const selfId = flags.currentUserId?.trim()
+  if (selfId && state.targetUserId === selfId) return url
 
   const { path, query } = splitUrl(url)
   const uid = encodeURIComponent(state.targetUserId)

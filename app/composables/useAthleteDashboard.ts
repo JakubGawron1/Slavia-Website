@@ -116,8 +116,7 @@ export async function useAthleteDashboard() {
     () => `athlete-page-bundle-${paymentMonth.value}`,
     async () => {
       await auth.ensureSession()
-      const roles = auth.user.value?.roles ?? []
-      if (!roles.includes('Athlete') && !roles.includes('SuperAdmin')) {
+      if (!auth.canAccessAthletePortal.value) {
         return emptyAthleteBundle()
       }
       const dashboard = await fetchDashboardPayload({ coldStart: true })

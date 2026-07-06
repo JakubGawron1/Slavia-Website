@@ -61,7 +61,10 @@ export function useApi() {
         headers.set('Authorization', `Bearer ${auth.token.value}`)
       }
       if (rolePreview.isActive.value && rolePreview.state.value?.targetUserId) {
-        headers.set('X-Slavia-Role-Preview', rolePreview.state.value.targetUserId)
+        const previewTarget = rolePreview.state.value.targetUserId
+        if (previewTarget !== auth.user.value?.id) {
+          headers.set('X-Slavia-Role-Preview', previewTarget)
+        }
       }
       if (!headers.has('Accept')) {
         const rt = (options as { responseType?: string }).responseType
@@ -126,7 +129,10 @@ export function useApi() {
         headers.set('Authorization', `Bearer ${auth.token.value}`)
       }
       if (rolePreview.isActive.value && rolePreview.state.value?.targetUserId) {
-        headers.set('X-Slavia-Role-Preview', rolePreview.state.value.targetUserId)
+        const previewTarget = rolePreview.state.value.targetUserId
+        if (previewTarget !== auth.user.value?.id) {
+          headers.set('X-Slavia-Role-Preview', previewTarget)
+        }
       }
       if (!headers.has('Accept')) {
         const rt = (options as { responseType?: string }).responseType
@@ -174,7 +180,8 @@ export function useApi() {
     }
     const rewritten = rewriteRolePreviewApiUrl(url, method, rolePreview.state.value, {
       isActive: rolePreview.isActive.value,
-      isAthletePreview: rolePreview.isAthletePreview.value
+      isAthletePreview: rolePreview.isAthletePreview.value,
+      currentUserId: auth.user.value?.id ?? null
     })
     return client<T>(rewritten, opts as Parameters<typeof client>[1])
   }
@@ -201,7 +208,8 @@ export function useApi() {
       }
       const rewritten = rewriteRolePreviewApiUrl(url, method, rolePreview.state.value, {
         isActive: rolePreview.isActive.value,
-        isAthletePreview: rolePreview.isAthletePreview.value
+        isAthletePreview: rolePreview.isAthletePreview.value,
+        currentUserId: auth.user.value?.id ?? null
       })
       return client.raw(rewritten, opts as Parameters<typeof client.raw>[1])
     }

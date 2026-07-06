@@ -12,8 +12,7 @@ const { data: bundle, refresh } = await useAsyncData(
   'athlete-results-panel',
   async () => {
     await auth.ensureSession()
-    const roles = auth.user.value?.roles ?? []
-    if (!roles.includes('Athlete') && !roles.includes('SuperAdmin')) {
+    if (!auth.canAccessAthletePortal.value) {
       return { athlete: null as Athlete | null, results: [] as CompetitionResult[] }
     }
     const athlete = await apiFetch<Athlete | null>('/api/athletes/me').catch(() => null)
@@ -24,6 +23,22 @@ const { data: bundle, refresh } = await useAsyncData(
   },
   { default: () => ({ athlete: null, results: [] }) }
 )
+
+watch(
+  () => [
+    rolePreviewState.isAthletePreview.value,
+    rolePreviewState.state.value?.targetUserId ?? null
+  ],
+  () => {
+    void refresh()
+  }
+)
+
+async function refreshSubmissionsFor(athleteId: string) {
+  return apiFetch<CompetitionResult[]>(`/api/results/athlete/${athleteId}/submissions`).catch(
+    () => bundle.value?.results ?? []
+  )
+}
 
 const athlete = computed(() => bundle.value?.athlete ?? null)
 const results = computed(() => bundle.value?.results ?? [])
@@ -117,7 +132,9 @@ async function submitResult() {
     await apiFetch('/api/results', { method: 'POST', body })
     toast.add({
       title: 'Zgłoszono wynik',
-      description: 'Kadra zatwierdzi wpis w systemie.',
+      description: auth.isTrainer.value || auth.isAdmin.value || auth.isSuperAdmin.value
+        ? 'Wpis kadry jest od razu zatwierdzany — bez kolejki oczekujących.'
+        : 'Kadra zatwierdzi wpis w systemie.',
       color: 'success'
     })
     resultForm.snatch = null
@@ -126,7 +143,13 @@ async function submitResult() {
     resultForm.date = new Date().toISOString().substring(0, 10)
     resultForm.kind = 'competition'
     resultForm.location = ''
-    await refresh()
+    const keepAthlete = athlete.value
+    if (keepAthlete?.id) {
+      const results = await refreshSubmissionsFor(keepAthlete.id)
+      bundle.value = { athlete: keepAthlete, results }
+    } else {
+      await refresh()
+    }
   } catch (e) {
     toast.add({ title: 'Błąd zgłoszenia', description: getApiErrorMessage(e), color: 'error' })
   }
