@@ -1,10 +1,9 @@
 /** Dziennik treningów — zawodnik lub SuperAdmin; kadra bez roli zawodnika → panel trenera. */
 export default defineNuxtRouteMiddleware(async (to) => {
   const auth = useAuth()
-  await auth.ensureSession()
-  if (!auth.user.value) {
-    return navigateTo({ path: '/logowanie', query: { redirect: to.fullPath } })
-  }
+  const blocked = await guardAuthenticatedRoute(auth, to)
+  if (blocked) return blocked
+  if (!auth.user.value) return
   if (!auth.canAccessAthletePortal.value) {
     if (auth.isTrainer.value) {
       return navigateTo('/trainer/dziennik')

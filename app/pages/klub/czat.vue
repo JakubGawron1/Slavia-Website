@@ -28,6 +28,7 @@ const chatViewerUserId = computed(() =>
 )
 
 const messageDraft = ref('')
+const sendingMessage = ref(false)
 const selectedAthleteId = ref('')
 const messagesContainerRef = ref<HTMLElement | null>(null)
 const newThreadTitle = ref('')
@@ -38,9 +39,9 @@ const threadPreviews = ref<Record<string, { body: string, at: string }>>({})
 
 const READ_AT_KEY = 'slavia-chat-read-at'
 
-const { data: athleteCandidates } = await useAsyncData('chat-athlete-candidates', async (): Promise<Athlete[]> => {
+const { data: athleteCandidates, error: athleteCandidatesError } = await useAsyncData('chat-athlete-candidates', async (): Promise<Athlete[]> => {
   if (!auth.isTrainer.value && !auth.isAdmin.value && !auth.isSuperAdmin.value) return []
-  return api<Athlete[]>('/api/athletes/admin').catch(() => [])
+  return api<Athlete[]>('/api/athletes/admin')
 })
 
 const canManageThreads = computed(
@@ -252,12 +253,15 @@ async function deleteActiveThread() {
 }
 
 async function sendMessage() {
-  if (!messageDraft.value.trim()) return
+  if (!messageDraft.value.trim() || sendingMessage.value) return
+  sendingMessage.value = true
   try {
     await chat.sendMessage(messageDraft.value)
     messageDraft.value = ''
   } catch (e) {
     toast.add({ title: 'Nie udało się wysłać wiadomości', description: getApiErrorMessage(e), color: 'error' })
+  } finally {
+    sendingMessage.value = false
   }
 }
 
@@ -310,6 +314,32 @@ const { announcement: chatLiveAnnouncement } = useChatLiveRegion(chatLiveItems, 
         </UButton>
       </template>
     </PanelPageHeader>
+
+    <UAlert
+      v-if="chat.threadsLoadError.value"
+      class="mb-4"
+      color="error"
+      variant="subtle"
+      icon="i-lucide-wifi-off"
+      title="Nie udało się wczytać konwersacji"
+      :description="chat.threadsLoadError.value"
+    >
+      <template #actions>
+        <UButton size="sm" color="error" variant="soft" @click="() => chat.refreshThreads()">
+          Spróbuj ponownie
+        </UButton>
+      </template>
+    </UAlert>
+
+    <UAlert
+      v-if="athleteCandidatesError"
+      class="mb-4"
+      color="warning"
+      variant="subtle"
+      icon="i-lucide-users"
+      title="Nie udało się wczytać listy zawodników"
+      :description="getApiErrorMessage(athleteCandidatesError)"
+    />
 
     <UAlert
       v-if="rolePreviewState.isReadOnly.value"
@@ -462,6 +492,21 @@ const { announcement: chatLiveAnnouncement } = useChatLiveRegion(chatLiveItems, 
           </div>
 
           <div ref="messagesContainerRef" class="slavia-messenger__messages">
+            <UAlert
+              v-if="chat.messagesLoadError.value"
+              class="m-4"
+              color="error"
+              variant="subtle"
+              icon="i-lucide-wifi-off"
+              title="Nie udało się wczytać wiadomości"
+              :description="chat.messagesLoadError.value"
+            >
+              <template #actions>
+                <UButton size="sm" color="error" variant="soft" @click="() => chat.refreshMessages()">
+                  Spróbuj ponownie
+                </UButton>
+              </template>
+            </UAlert>
             <div
               class="sr-only"
               aria-live="polite"
@@ -527,7 +572,7 @@ const { announcement: chatLiveAnnouncement } = useChatLiveRegion(chatLiveItems, 
               />
             </div>
             <SlaviaEmptyState
-              v-if="chat.messages.value.length === 0"
+              v-if="chat.messages.value.length === 0 && !chat.messagesLoadError.value"
               icon="i-lucide-message-circle"
               title="Brak wiadomości"
               description="Napisz coś, aby rozpocząć rozmowę."
@@ -552,7 +597,8 @@ const { announcement: chatLiveAnnouncement } = useChatLiveRegion(chatLiveItems, 
                 size="md"
                 square
                 class="slavia-messenger__send"
-                :disabled="!messageDraft.trim()"
+                :disabled="!messageDraft.trim() || sendingMessage"
+                :loading="sendingMessage"
                 aria-label="Wyślij wiadomość"
                 @click="sendMessage"
               />

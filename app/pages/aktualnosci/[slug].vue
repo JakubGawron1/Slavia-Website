@@ -29,7 +29,7 @@ interface BlogPost {
 }
 
 // SSR renderuje wersję publiczną wpisu (bez per-user cache).
-const { data: post, pending, refresh: refreshPublic } = await usePublicLazyFetch<BlogPost>(
+const { data: post, pending, error: postError, refresh: refreshPublic } = await usePublicLazyFetch<BlogPost>(
   `posts/${encodeURIComponent(String(postId))}`,
   {
     key: `aktualnosci-post-public-${String(postId)}`
@@ -187,6 +187,12 @@ function formatDate(dateStr: string) {
           <div class="h-4 w-[78%] rounded bg-muted/30 animate-pulse" />
         </div>
       </div>
+
+      <PublicApiErrorBanner
+        v-else-if="postError"
+        :error="postError"
+        @retry="refreshPublic()"
+      />
 
       <PublicEmptyState
         v-else-if="!post"

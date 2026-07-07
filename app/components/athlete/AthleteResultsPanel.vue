@@ -8,18 +8,27 @@ const apiFetch = useApi()
 const toast = useToast()
 const route = useRoute()
 
+const loadError = ref<string | null>(null)
+
 const { data: bundle, refresh } = await useAsyncData(
   'athlete-results-panel',
   async () => {
     await auth.ensureSession()
     if (!auth.canAccessAthletePortal.value) {
+      loadError.value = null
       return { athlete: null as Athlete | null, results: [] as CompetitionResult[] }
     }
-    const athlete = await apiFetch<Athlete | null>('/api/athletes/me').catch(() => null)
-    const results = athlete?.id
-      ? await apiFetch<CompetitionResult[]>(`/api/results/athlete/${athlete.id}/submissions`).catch(() => [])
-      : []
-    return { athlete, results }
+    try {
+      const athlete = await apiFetch<Athlete | null>('/api/athletes/me')
+      const results = athlete?.id
+        ? await apiFetch<CompetitionResult[]>(`/api/results/athlete/${athlete.id}/submissions`)
+        : []
+      loadError.value = null
+      return { athlete, results }
+    } catch (e) {
+      loadError.value = getApiErrorMessage(e)
+      return { athlete: null as Athlete | null, results: [] as CompetitionResult[] }
+    }
   },
   { default: () => ({ athlete: null, results: [] }) }
 )
@@ -35,9 +44,7 @@ watch(
 )
 
 async function refreshSubmissionsFor(athleteId: string) {
-  return apiFetch<CompetitionResult[]>(`/api/results/athlete/${athleteId}/submissions`).catch(
-    () => bundle.value?.results ?? []
-  )
+  return apiFetch<CompetitionResult[]>(`/api/results/athlete/${athleteId}/submissions`)
 }
 
 const athlete = computed(() => bundle.value?.athlete ?? null)
@@ -166,6 +173,22 @@ async function submitResult() {
   <div v-if="!auth.canAccessAthletePortal" class="rounded-2xl border border-warning/30 bg-warning/5 p-6">
     <p class="text-sm text-muted">Brak dostępu do panelu zawodnika.</p>
   </div>
+
+  <UAlert
+    v-else-if="loadError"
+    icon="i-lucide-wifi-off"
+    title="Nie udało się wczytać danych"
+    :description="loadError"
+    color="error"
+    variant="subtle"
+    class="rounded-2xl"
+  >
+    <template #actions>
+      <UButton size="sm" color="error" variant="soft" @click="() => refresh()">
+        Spróbuj ponownie
+      </UButton>
+    </template>
+  </UAlert>
 
   <UAlert
     v-else-if="!athlete"
@@ -300,7 +323,7 @@ async function submitResult() {
         </table>
       </UCard>
       <PublicEmptyState
-        v-else
+        v-else-if="!recentResults.length"
         compact
         icon="i-lucide-trophy"
         title="Brak zgłoszeń"

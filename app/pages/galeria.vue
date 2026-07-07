@@ -75,13 +75,20 @@ const galleryDirtyGuard = useFormDirtyGuard(() => ({
   published: draft.published
 }))
 
+const skipGalleryBaselineCapture = ref(false)
+
 watch(modalOpen, (open, wasOpen) => {
   if (open) {
+    if (skipGalleryBaselineCapture.value) {
+      skipGalleryBaselineCapture.value = false
+      return
+    }
     nextTick(() => galleryDirtyGuard.captureBaseline())
     return
   }
   if (wasOpen && galleryDirtyGuard.isDirty.value) {
     if (!galleryDirtyGuard.confirmDiscard()) {
+      skipGalleryBaselineCapture.value = true
       modalOpen.value = true
     } else {
       galleryDirtyGuard.resetBaseline()

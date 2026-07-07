@@ -102,6 +102,7 @@ watch(wpisId, (id) => {
 const pageTitle = computed(() => (wpisId.value ? 'Edycja wpisu' : 'Nowy wpis'))
 
 async function save() {
+  if (saving.value) return
   const aid = athleteId.value
   if (!aid) {
     toast.add({ title: 'Brak profilu zawodnika', color: 'warning' })

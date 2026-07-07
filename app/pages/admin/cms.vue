@@ -88,7 +88,7 @@ async function onImageUpload(e: Event, target: 'new' | CmsVariable) {
 }
 
 async function createVariable() {
-  if (!newVarKey.value.trim()) return
+  if (!newVarKey.value.trim() || saving.value) return
   saving.value = true
   try {
     await cms.saveVariable(newVarKey.value.trim(), newVarValue.value, newVarType.value, true)
@@ -103,6 +103,7 @@ async function createVariable() {
 }
 
 async function updateVariable(v: CmsVariable) {
+  if (saving.value) return
   saving.value = true
   try {
     await cms.saveVariable(v.key, v.value, v.type, false)
@@ -134,6 +135,7 @@ async function loadPageEditor() {
 }
 
 async function savePageEditor() {
+  if (saving.value) return
   saving.value = true
   try {
     const out: Record<string, { type: CmsVariableType, value: string | number | boolean, label: string }> = {}

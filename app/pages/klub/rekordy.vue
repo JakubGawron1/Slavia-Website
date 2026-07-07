@@ -32,12 +32,12 @@ useSeoMeta({
 const period = ref<'all' | 'year'>('all')
 const currentYear = new Date().getFullYear()
 
-const { data: athletesRaw } = await usePublicLazyFetch<Athlete[]>('athletes', {
+const { data: athletesRaw, error: athletesError, refresh: refreshAthletes } = await usePublicLazyFetch<Athlete[]>('athletes', {
   key: 'hall-of-fame-athletes',
   default: () => [] as Athlete[]
 })
 
-const { data: publicBoardRaw } = await usePublicLazyFetch<PublicBoardRow[]>('results/public-board', {
+const { data: publicBoardRaw, error: boardError, refresh: refreshBoard } = await usePublicLazyFetch<PublicBoardRow[]>('results/public-board', {
   key: 'hall-of-fame-public-board',
   default: () => [] as PublicBoardRow[]
 })
@@ -300,6 +300,19 @@ function toRecordCard(row: RecordRow): ClubHallOfFameRecordCardData {
         : periodChartHint"
     />
 
+    <PublicApiErrorBanner
+      v-if="athletesError"
+      :error="athletesError"
+      class="mb-6"
+      @retry="refreshAthletes()"
+    />
+    <PublicApiErrorBanner
+      v-if="boardError"
+      :error="boardError"
+      class="mb-6"
+      @retry="refreshBoard()"
+    />
+
     <template
       v-for="section in [
         { gender: 'male', rows: maleRecords },
@@ -329,7 +342,7 @@ function toRecordCard(row: RecordRow): ClubHallOfFameRecordCardData {
     </template>
 
     <PublicEmptyState
-      v-if="!recordBoard.length"
+      v-if="!recordBoard.length && !athletesError && !boardError"
       class="mt-8"
       icon="i-lucide-trophy"
       title="Brak rekordów"

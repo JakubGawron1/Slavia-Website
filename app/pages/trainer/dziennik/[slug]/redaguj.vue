@@ -103,6 +103,7 @@ watch(wpisId, (id) => {
 const pageTitle = computed(() => (wpisId.value ? 'Edycja wpisu' : 'Nowy wpis'))
 
 async function save() {
+  if (saving.value) return
   if (!athleteId.value) {
     return
   }

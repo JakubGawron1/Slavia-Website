@@ -410,6 +410,7 @@ async function openModal(date?: Date, event?: CalendarEvent) {
 }
 
 async function saveEvent() {
+  if (isSubmitting.value) return
   if (!canManageEvents.value) {
     toast.add({ title: 'Brak uprawnień', color: 'error' })
     return

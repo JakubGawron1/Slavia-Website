@@ -7,7 +7,7 @@ definePageMeta({
   backLabel: 'Wróć do listy i rankingu'
 })
 
-const { data: playersRaw, pending } = await usePublicLazyFetch<AthleteModel[]>('athletes', {
+const { data: playersRaw, pending, error: playersError, refresh: refreshPlayers } = await usePublicLazyFetch<AthleteModel[]>('athletes', {
   key: 'compare-athletes-list',
   default: () => [] as AthleteModel[]
 })
@@ -50,6 +50,12 @@ useSeoMeta({
     />
 
     <div class="slavia-content-well slavia-public-section">
+      <PublicApiErrorBanner
+        v-if="playersError"
+        :error="playersError"
+        class="mb-6"
+        @retry="refreshPlayers()"
+      />
       <UCard class="slavia-page-card slavia-public-card slavia-public-card--flat mb-8">
         <div class="max-h-80 space-y-1 overflow-y-auto p-3 sm:p-4">
           <div v-if="pending" class="text-sm text-muted">

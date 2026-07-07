@@ -15,6 +15,17 @@ export default defineNuxtRouteMiddleware(async to => {
   const redirect = panelNav.redirectPathForBlockedRoute(to.path)
   if (normalizePath(to.path) === normalizePath(redirect)) return
 
+  const toast = useToast()
+  toast.add({
+    title: panelNav.flagsLoadFailed.value
+      ? 'Nie udało się zweryfikować dostępu do modułu'
+      : 'Moduł jest wyłączony',
+    description: panelNav.flagsLoadFailed.value
+      ? 'Przekierowano na dashboard. Spróbuj ponownie za chwilę.'
+      : 'Ta sekcja panelu została wyłączona przez administrację.',
+    color: 'warning'
+  })
+
   return navigateTo(redirect)
 })
 

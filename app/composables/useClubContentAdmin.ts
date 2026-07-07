@@ -8,22 +8,28 @@ export function useClubContentAdmin() {
 
   const canManage = computed(() => auth.canManageClubContent.value)
 
-  /** Przyciski edycji tylko po potwierdzeniu roli z GET /me. */
-  const showManageActions = computed(() => canManage.value)
+  const showManageActions = computed(() => canManage.value && sessionReady.value)
+
+  let hydrateInFlight: Promise<void> | null = null
 
   async function hydrateSession() {
     if (!import.meta.client) return
-    if (auth.token.value) {
-      await auth.refreshSession()
-    }
-    sessionReady.value = true
+    if (hydrateInFlight) return hydrateInFlight
+    hydrateInFlight = (async () => {
+      try {
+        if (auth.token.value) {
+          await auth.refreshSession()
+        }
+      } finally {
+        sessionReady.value = true
+        hydrateInFlight = null
+      }
+    })()
+    return hydrateInFlight
   }
 
   if (import.meta.client) {
     onBeforeMount(() => {
-      void hydrateSession()
-    })
-    onNuxtReady(() => {
       void hydrateSession()
     })
     watch(
@@ -32,13 +38,6 @@ export function useClubContentAdmin() {
         if (t) void hydrateSession()
         else sessionReady.value = true
       }
-    )
-    watch(
-      () => auth.roles.value,
-      () => {
-        sessionReady.value = true
-      },
-      { deep: true }
     )
   }
 

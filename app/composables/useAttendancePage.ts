@@ -90,10 +90,11 @@ export function useAttendancePage() {
   const selectedTrainingDay = ref<Date | null>(null)
   const recurringOverrides = ref<Array<{ session_date: string, status: string }>>([])
   const savingAttendance = ref(false)
+  const pageLoadError = ref<unknown>(null)
 
   const { data: calendarCompetitions, refresh: refreshCalendarCompetitions } = useLazyAsyncData(
     'attendance-calendar-competitions',
-    () => api<CompetitionRow[]>(apiRoutes.competitions.collection).catch(() => []),
+    () => api<CompetitionRow[]>(apiRoutes.competitions.collection),
     { default: () => [], server: false }
   )
 
@@ -288,7 +289,7 @@ export function useAttendancePage() {
       records.value = []
       return
     }
-    records.value = await api<AttendanceRecord[]>(apiRoutes.attendance.athlete(selectedAthleteId.value)).catch(() => [])
+    records.value = await api<AttendanceRecord[]>(apiRoutes.attendance.athlete(selectedAthleteId.value))
   }
 
   async function refreshPendingQueue() {
@@ -300,7 +301,7 @@ export function useAttendancePage() {
     try {
       pendingQueue.value = await api<AttendanceRecord[]>(
         `${apiRoutes.attendance.collection}?verification_state=pending`
-      ).catch(() => [])
+      )
     } finally {
       pendingLoading.value = false
     }
@@ -309,16 +310,21 @@ export function useAttendancePage() {
   async function refreshTrainingOverrides() {
     recurringOverrides.value = await api<Array<{ session_date: string, status: string }>>(
       apiRoutes.competitions.recurringTrainingCancellations
-    ).catch(() => [])
+    )
   }
 
   async function refreshAll() {
-    await Promise.all([
-      refreshHistory(),
-      refreshPendingQueue(),
-      refreshTrainingOverrides(),
-      refreshCalendarCompetitions()
-    ])
+    pageLoadError.value = null
+    try {
+      await Promise.all([
+        refreshHistory(),
+        refreshPendingQueue(),
+        refreshTrainingOverrides(),
+        refreshCalendarCompetitions()
+      ])
+    } catch (e) {
+      pageLoadError.value = e
+    }
   }
 
   watch(selectedAthleteId, () => {
@@ -477,7 +483,9 @@ export function useAttendancePage() {
     approveAllPending,
     submitAttendance,
     saveAttendanceFromModal,
-    savingAttendance
+    savingAttendance,
+    pageLoadError,
+    refreshAll
   }
 }
 

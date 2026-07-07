@@ -135,9 +135,11 @@ export function useZawodnicyPage() {
     'players-payment-statuses',
     async () => {
       await auth.ensureSession()
-      if (!auth.isLoggedIn.value) return [] as AthletePaymentStatusRow[]
+      if (!auth.isLoggedIn.value || !(auth.isTrainer.value || auth.isAdmin.value)) {
+        return [] as AthletePaymentStatusRow[]
+      }
       const q = `?month=${encodeURIComponent(currentMonth())}`
-      return await apiFetch<AthletePaymentStatusRow[]>(`${apiRoutes.payments.status}${q}`).catch(() => [])
+      return await apiFetch<AthletePaymentStatusRow[]>(`${apiRoutes.payments.status}${q}`)
     },
     { default: () => [] as AthletePaymentStatusRow[] }
   )

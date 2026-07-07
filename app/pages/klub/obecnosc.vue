@@ -1,6 +1,8 @@
 <script setup lang="ts">
 definePageMeta({ middleware: 'auth' })
 
+import { getApiErrorMessage } from '~/composables/useApi'
+
 useSlaviaSeo({
   title: 'Obecność',
   description: 'Kalendarz treningowy i zgłaszanie obecności w klubie Slavia.',
@@ -54,7 +56,9 @@ const {
   approveAllPending,
   submitAttendance,
   saveAttendanceFromModal,
-  savingAttendance
+  savingAttendance,
+  pageLoadError,
+  refreshAll
 } = useAttendancePage()
 </script>
 
@@ -68,6 +72,22 @@ const {
     athlete-title="Moja obecność"
     athlete-description="Kalendarz treningów, ręczne zgłoszenie lub skaner QR na sali."
   >
+    <UAlert
+      v-if="pageLoadError"
+      class="mb-4"
+      color="error"
+      variant="subtle"
+      icon="i-lucide-cloud-off"
+      title="Nie udało się załadować danych obecności"
+      :description="getApiErrorMessage(pageLoadError)"
+    >
+      <template #actions>
+        <UButton size="sm" color="error" variant="soft" @click="refreshAll">
+          Spróbuj ponownie
+        </UButton>
+      </template>
+    </UAlert>
+
     <template v-if="attendanceViews.length > 1" #subnav>
       <UButton
         v-for="v in attendanceViews"

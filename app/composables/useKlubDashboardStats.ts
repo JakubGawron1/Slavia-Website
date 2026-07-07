@@ -31,27 +31,27 @@ export function useKlubDashboardStats() {
   const auth = useAuth()
   const api = useApi()
 
-  const { data: athletes, pending: athletesPending } = usePublicLazyFetch<Athlete[]>('athletes', {
+  const { data: athletes, pending: athletesPending, error: athletesError, refresh: refreshAthletes } = usePublicLazyFetch<Athlete[]>('athletes', {
     key: 'klub-stats-athletes',
     default: () => []
   })
 
-  const { data: competitions, pending: competitionsPending } = usePublicLazyFetch<Competition[]>('competitions', {
+  const { data: competitions, pending: competitionsPending, error: competitionsError, refresh: refreshCompetitions } = usePublicLazyFetch<Competition[]>('competitions', {
     key: 'klub-stats-competitions',
     default: () => []
   })
 
-  const { data: posts, pending: postsPending } = usePublicLazyFetch<BlogPost[]>('posts', {
+  const { data: posts, pending: postsPending, error: postsError, refresh: refreshPosts } = usePublicLazyFetch<BlogPost[]>('posts', {
     key: 'klub-stats-posts',
     default: () => []
   })
 
-  const { data: photos, pending: photosPending } = usePublicLazyFetch<GalleryPhoto[]>('gallery', {
+  const { data: photos, pending: photosPending, error: photosError, refresh: refreshPhotos } = usePublicLazyFetch<GalleryPhoto[]>('gallery', {
     key: 'klub-stats-gallery',
     default: () => []
   })
 
-  const { data: challenge, pending: challengePending } = usePublicLazyFetch<{
+  const { data: challenge, pending: challengePending, error: challengeError, refresh: refreshChallenge } = usePublicLazyFetch<{
     month: string
     leaderboard: ChallengeRow[]
   }>('challenges/monthly-training-sessions', {
@@ -59,20 +59,39 @@ export function useKlubDashboardStats() {
     default: () => ({ month: '', leaderboard: [] })
   })
 
-  const { data: roleStats, pending: rolePending } = useAsyncData(
+  const publicLoadError = computed(
+    () =>
+      athletesError.value
+      || competitionsError.value
+      || postsError.value
+      || photosError.value
+      || challengeError.value
+  )
+
+  function retryPublicStats() {
+    void Promise.all([
+      refreshAthletes(),
+      refreshCompetitions(),
+      refreshPosts(),
+      refreshPhotos(),
+      refreshChallenge()
+    ])
+  }
+
+  const { data: roleStats, pending: rolePending, error: roleStatsError, refresh: refreshRoleStats } = useAsyncData(
     'klub-stats-role',
     async () => {
       await auth.ensureSession()
       if (auth.isAthlete.value && auth.user.value?.athlete_id) {
         const summary = await api<AttendanceSummary>(
           `/api/attendance/summary/${auth.user.value.athlete_id}`
-        ).catch(() => null)
+        )
         return { kind: 'athlete' as const, summary }
       }
       if (auth.isTrainer.value || auth.isAdmin.value || auth.isSuperAdmin.value) {
         const pending = await api<{ id: string }[]>(
           '/api/attendance?verification_state=pending'
-        ).catch(() => [])
+        )
         return { kind: 'staff' as const, pendingCount: pending.length }
       }
       return { kind: 'none' as const }
@@ -204,5 +223,5 @@ export function useKlubDashboardStats() {
     return cards
   })
 
-  return { statCards, pending }
+  return { statCards, pending, publicLoadError, roleStatsError, retryPublicStats, refreshRoleStats }
 }

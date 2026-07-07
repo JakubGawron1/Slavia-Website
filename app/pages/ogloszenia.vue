@@ -31,13 +31,13 @@ async function fetchList(): Promise<Announcement[]> {
     try {
       return await apiFetch<Announcement[]>('/api/announcements/manage')
     } catch {
-      return await apiFetch<Announcement[]>('/api/announcements').catch(() => [])
+      return await apiFetch<Announcement[]>('/api/announcements')
     }
   }
-  return await apiFetch<Announcement[]>('/api/announcements').catch(() => [])
+  return await apiFetch<Announcement[]>('/api/announcements')
 }
 
-const { data: items, refresh, pending } = await useAsyncData('club-announcements', fetchList, {
+const { data: items, refresh, pending, error: listError } = await useAsyncData('club-announcements', fetchList, {
   watch: [() => canManage.value, () => auth.token.value],
   default: () => [] as Announcement[]
 })
@@ -60,13 +60,20 @@ const announcementDirtyGuard = useFormDirtyGuard(() => ({
   published: draft.published
 }))
 
+const skipAnnouncementBaselineCapture = ref(false)
+
 watch(modalOpen, (open, wasOpen) => {
   if (open) {
+    if (skipAnnouncementBaselineCapture.value) {
+      skipAnnouncementBaselineCapture.value = false
+      return
+    }
     nextTick(() => announcementDirtyGuard.captureBaseline())
     return
   }
   if (wasOpen && announcementDirtyGuard.isDirty.value) {
     if (!announcementDirtyGuard.confirmDiscard()) {
+      skipAnnouncementBaselineCapture.value = true
       modalOpen.value = true
     } else {
       announcementDirtyGuard.resetBaseline()
@@ -237,6 +244,11 @@ function bodyPreview(text: string, max = 100) {
     </PublicPageHeader>
 
     <div class="slavia-content-well slavia-public-section">
+    <PublicApiErrorBanner
+      v-if="listError"
+      :error="listError"
+      @retry="refresh()"
+    />
     <div
       v-if="pending"
       class="py-14"
@@ -262,7 +274,7 @@ function bodyPreview(text: string, max = 100) {
     </div>
 
     <PublicEmptyState
-      v-else-if="!sortedPublic.length"
+      v-else-if="!sortedPublic.length && !listError"
       icon="i-lucide-megaphone"
       title="Brak ogłoszeń"
       description="Gdy pojawią się komunikaty organizacyjne, zobaczysz je tutaj na pierwszym planie."

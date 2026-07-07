@@ -1,4 +1,5 @@
 import { apiRoutes } from '~/config/api'
+import { getApiErrorMessage } from '~/composables/useApi'
 
 export interface ChatThread {
   id: string
@@ -36,6 +37,8 @@ export function useChat() {
   const activeThreadId = ref<string | null>(null)
   const messages = ref<ChatMessage[]>([])
   const loading = ref(false)
+  const threadsLoadError = ref<string | null>(null)
+  const messagesLoadError = ref<string | null>(null)
   let presenceTimer: ReturnType<typeof setInterval> | null = null
 
   function stopPresencePing() {
@@ -56,11 +59,14 @@ export function useChat() {
 
   async function refreshThreads() {
     loading.value = true
+    threadsLoadError.value = null
     try {
-      threads.value = await api<ChatThread[]>(apiRoutes.chat.threads).catch(() => [])
+      threads.value = await api<ChatThread[]>(apiRoutes.chat.threads)
       if (!activeThreadId.value && threads.value.length > 0) {
         activeThreadId.value = threads.value[0]!.id
       }
+    } catch (e) {
+      threadsLoadError.value = getApiErrorMessage(e)
     } finally {
       loading.value = false
     }
@@ -84,10 +90,16 @@ export function useChat() {
   async function refreshMessages() {
     if (!activeThreadId.value) {
       messages.value = []
+      messagesLoadError.value = null
       return
     }
-    messages.value = await api<ChatMessage[]>(apiRoutes.chat.messages(activeThreadId.value)).catch(() => [])
-    startPresencePing()
+    messagesLoadError.value = null
+    try {
+      messages.value = await api<ChatMessage[]>(apiRoutes.chat.messages(activeThreadId.value))
+      startPresencePing()
+    } catch (e) {
+      messagesLoadError.value = getApiErrorMessage(e)
+    }
   }
 
   async function toggleReaction(messageId: string, emoji: string) {
@@ -144,6 +156,8 @@ export function useChat() {
     activeThread,
     messages,
     loading,
+    threadsLoadError,
+    messagesLoadError,
     chatPresenceOn,
     chatReactionsOn,
     refreshThreads,

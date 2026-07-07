@@ -8,7 +8,7 @@ const { primaryDashboardPath } = useRoleDashboardNav()
 const { moduleGroups, panelRole } = useKlubDashboardNav()
 const { moduleGroupsForRole } = usePanelNavigationFlags()
 const fullRoleModuleGroups = computed(() => moduleGroupsForRole(panelRole.value))
-const { statCards } = useKlubDashboardStats()
+const { statCards, publicLoadError, roleStatsError, retryPublicStats, refreshRoleStats } = useKlubDashboardStats()
 
 provideDashboardSections()
 
@@ -49,6 +49,36 @@ function toneFromBg(bg?: string): 'primary' | 'success' | 'warning' | 'error' | 
       </UButton>
     </template>
     <DashboardSectionsToolbar class="mb-6" />
+
+    <UAlert
+      v-if="publicLoadError"
+      class="mb-4"
+      color="error"
+      variant="subtle"
+      icon="i-lucide-cloud-off"
+      title="Nie udało się załadować statystyk klubu"
+      description="Część danych może być nieaktualna lub pusta."
+    >
+      <template #actions>
+        <UButton size="sm" color="error" variant="soft" @click="retryPublicStats">
+          Spróbuj ponownie
+        </UButton>
+      </template>
+    </UAlert>
+    <UAlert
+      v-else-if="roleStatsError"
+      class="mb-4"
+      color="warning"
+      variant="subtle"
+      icon="i-lucide-cloud-off"
+      title="Nie udało się załadować statystyk Twojej roli"
+    >
+      <template #actions>
+        <UButton size="sm" color="warning" variant="soft" @click="() => refreshRoleStats()">
+          Spróbuj ponownie
+        </UButton>
+      </template>
+    </UAlert>
 
     <PanelCollapsibleSection
       section-id="stats"

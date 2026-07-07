@@ -2,6 +2,7 @@
 const { presetLayoutClass } = useSlaviaAppearance()
 const auth = useAuth()
 const toast = useToast()
+const panelNav = usePanelNavigationFlags()
 
 const props = withDefaults(
   defineProps<{
@@ -44,6 +45,17 @@ async function retrySession() {
     })
   }
 }
+
+async function retryPanelNavFlags() {
+  await panelNav.hydrateFromApi(true)
+  if (panelNav.flagsLoadFailed.value) {
+    toast.add({
+      title: 'Brak połączenia',
+      description: 'Nie udało się wczytać ustawień modułów panelu.',
+      color: 'error'
+    })
+  }
+}
 </script>
 
 <template>
@@ -68,6 +80,21 @@ async function retrySession() {
             </UButton>
           </template>
         </UAlert>
+        <UAlert
+          v-if="panelNav.flagsLoadFailed.value"
+          class="mb-4"
+          color="warning"
+          variant="subtle"
+          icon="i-lucide-shield-off"
+          title="Nie udało się wczytać ustawień modułów"
+          description="Dostęp do wyłączonych modułów jest tymczasowo zablokowany. Spróbuj ponownie."
+        >
+          <template #actions>
+            <UButton size="sm" color="warning" variant="soft" @click="retryPanelNavFlags">
+              Spróbuj ponownie
+            </UButton>
+          </template>
+        </UAlert>
         <slot />
       </div>
     </UContainer>
@@ -88,6 +115,21 @@ async function retrySession() {
       >
         <template #actions>
           <UButton size="sm" color="warning" variant="soft" @click="retrySession">
+            Spróbuj ponownie
+          </UButton>
+        </template>
+      </UAlert>
+      <UAlert
+        v-if="panelNav.flagsLoadFailed.value"
+        class="mb-4"
+        color="warning"
+        variant="subtle"
+        icon="i-lucide-shield-off"
+        title="Nie udało się wczytać ustawień modułów"
+        description="Dostęp do wyłączonych modułów jest tymczasowo zablokowany. Spróbuj ponownie."
+      >
+        <template #actions>
+          <UButton size="sm" color="warning" variant="soft" @click="retryPanelNavFlags">
             Spróbuj ponownie
           </UButton>
         </template>
