@@ -14,10 +14,12 @@ const props = withDefaults(
 )
 
 const { copy, featuredStats, quickLinks, hasQuickLinks, pending, hubPath } = useKlubHub(props.context)
+const clubHubOn = useExperimentalFlag('club_hub')
 </script>
 
 <template>
   <section
+    v-if="clubHubOn"
     class="klub-hub-section"
     :class="props.class"
     aria-label="Hub klubu"

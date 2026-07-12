@@ -1,4 +1,4 @@
-import { KLUB_BOARD_ROUTES, KLUB_SHARED_ROUTES, PUBLIC_ROUTES } from '~/config/klubRoutes'
+import { KLUB_BOARD_ROUTES, KLUB_SHARED_ROUTES, PUBLIC_ROUTES, isClubHubExperimentalPath } from '~/config/klubRoutes'
 import type { PanelNavRole } from '~/data/panelNavigationCatalog'
 import { panelModuleLinkFromDef, panelNavModulesForRole } from '~/data/panelNavigationCatalog'
 import { dashboardLink } from '~/utils/dashboardLink'
@@ -34,6 +34,7 @@ function isKlubModulePath(to: string) {
 
 export function useKlubDashboardNav() {
   const auth = useAuth()
+  const clubHubOn = useExperimentalFlag('club_hub')
   const { moduleGroupsForRole, isEnabled } = usePanelNavigationFlags()
 
   const panelRole = computed<PanelNavRole>(() => {
@@ -49,13 +50,14 @@ export function useKlubDashboardNav() {
     for (const group of moduleGroupsForRole(panelRole.value)) {
       for (const item of group.items) {
         if (!isKlubModulePath(item.to)) continue
+        if (!clubHubOn.value && isClubHubExperimentalPath(item.to)) continue
         if (seen.has(item.to)) continue
         seen.add(item.to)
         items.push(item)
       }
     }
 
-    if (auth.isBoardMember.value) {
+    if (clubHubOn.value && auth.isBoardMember.value) {
       for (const def of panelNavModulesForRole('board')) {
         if (!isEnabled(def.id)) continue
         if (seen.has(def.to)) continue
@@ -64,10 +66,12 @@ export function useKlubDashboardNav() {
       }
     }
 
-    for (const tile of KLUB_UTILITY_TILES) {
-      if (seen.has(tile.to)) continue
-      seen.add(tile.to)
-      items.push(tile)
+    if (clubHubOn.value) {
+      for (const tile of KLUB_UTILITY_TILES) {
+        if (seen.has(tile.to)) continue
+        seen.add(tile.to)
+        items.push(tile)
+      }
     }
 
     for (const tile of KLUB_PUBLIC_TILES) {

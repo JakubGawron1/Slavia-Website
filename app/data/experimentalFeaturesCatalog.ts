@@ -216,6 +216,14 @@ export const EXPERIMENTAL_FEATURES: ExperimentalFeatureDefinition[] = [
       'Przycisk „Edytuj” na stronach, pasek pól CMS, podgląd {zmiennych} po zapisie. Panel /admin/cms działa niezależnie od tej flagi.',
     defaultEnabled: false,
     group: 'cms'
+  },
+  {
+    id: 'club_hub',
+    label: 'Strefa klubu (/klub) i dokumenty zarządu',
+    description:
+      'Hub modułów klubu (/klub), samouczek aplikacji oraz repozytorium, generator i typy dokumentów (/klub/dokumenty/**). Role zarządu pozostają na koncie — ukrywa tylko UI i trasy.',
+    defaultEnabled: false,
+    group: 'club'
   }
 ]
 
@@ -242,3 +250,4 @@ export type ExperimentalFeatureId =
   | 'olympic_coach'
   | 'mobile_foldable_two_pane'
   | 'cms_inline_edit'
+  | 'club_hub'

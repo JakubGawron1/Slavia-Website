@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { pickPostLoginPath } from '~/composables/useAuth'
+import { resolvePostLoginPath } from '~/composables/useAuth'
 import { getApiErrorMessage } from '~/composables/useApi'
 
 definePageMeta({
@@ -7,6 +7,7 @@ definePageMeta({
 })
 
 const auth = useAuth()
+const clubHubOn = useExperimentalFlag('club_hub')
 const { accountSettingsPath } = useRoleDashboardNav()
 const route = useRoute()
 const toast = useToast()
@@ -41,7 +42,10 @@ async function submit() {
       typeof raw === 'string' && raw.startsWith('/') && !raw.startsWith('//')
         ? raw
         : undefined
-    await navigateTo(redirect ?? pickPostLoginPath(user?.roles ?? []), { replace: true })
+    await navigateTo(
+      redirect ?? resolvePostLoginPath(user?.roles ?? [], clubHubOn.value),
+      { replace: true }
+    )
   } catch (e) {
     const err = e as { data?: { code?: string }, response?: { status?: number } }
     if (err?.response?.status === 403 && err?.data?.code === 'account_banned') {

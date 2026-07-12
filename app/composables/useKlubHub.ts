@@ -1,4 +1,4 @@
-import { KLUB_SHARED_ROUTES, PUBLIC_ROUTES } from '~/config/klubRoutes'
+import { KLUB_SHARED_ROUTES, PUBLIC_ROUTES, isClubHubExperimentalPath } from '~/config/klubRoutes'
 import type { KlubStatCard } from '~/composables/useKlubDashboardStats'
 import type { DashboardModuleLink } from '~/utils/dashboardLink'
 
@@ -149,6 +149,7 @@ export function resolveKlubHubContext(explicit?: KlubHubContext | null): KlubHub
 
 export function useKlubHub(explicitContext?: KlubHubContext | null) {
   const context = computed(() => resolveKlubHubContext(explicitContext))
+  const clubHubOn = useExperimentalFlag('club_hub')
   const { statCards, pending } = useKlubDashboardStats()
   const { moduleGroups } = useKlubDashboardNav()
 
@@ -160,7 +161,9 @@ export function useKlubHub(explicitContext?: KlubHubContext | null) {
 
   const quickLinks = computed(() => {
     const items = moduleGroups.value.flatMap(g => g.items)
-    return pickQuickLinks(items, context.value)
+    const links = pickQuickLinks(items, context.value)
+    if (clubHubOn.value) return links
+    return links.filter(link => !isClubHubExperimentalPath(link.to))
   })
 
   const hasQuickLinks = computed(() => quickLinks.value.length > 0)

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-definePageMeta({ middleware: 'auth' })
-
 import { getApiErrorMessage } from '~/composables/useApi'
+
+definePageMeta({ middleware: 'auth' })
 
 useSlaviaSeo({
   title: 'Obecność',

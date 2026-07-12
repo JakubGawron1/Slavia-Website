@@ -4,6 +4,11 @@ export default defineNuxtRouteMiddleware(async (to) => {
   if (blocked) return blocked
   if (!auth.user.value) return
   if (!auth.isBoardMember.value) {
-    return navigateTo('/klub')
+    const clubHubOn = useExperimentalFlag('club_hub')
+    if (clubHubOn.value) {
+      return navigateTo('/klub')
+    }
+    const { primaryDashboardPath } = useRoleDashboardNav()
+    return navigateTo(primaryDashboardPath.value)
   }
 })

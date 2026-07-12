@@ -1,4 +1,4 @@
-import { pickPostLoginPath } from '~/composables/useAuth'
+import { resolvePostLoginPath } from '~/composables/useAuth'
 
 function safeInternalRedirect(raw: unknown): string | undefined {
   if (typeof raw !== 'string' || !raw.startsWith('/') || raw.startsWith('//')) {
@@ -20,5 +20,9 @@ export default defineNuxtRouteMiddleware(async (to) => {
   }
 
   const redirect = safeInternalRedirect(to.query.redirect)
-  return navigateTo(redirect ?? pickPostLoginPath(auth.roles.value), { replace: true })
+  const clubHubOn = useExperimentalFlag('club_hub')
+  return navigateTo(
+    redirect ?? resolvePostLoginPath(auth.roles.value, clubHubOn.value),
+    { replace: true }
+  )
 })

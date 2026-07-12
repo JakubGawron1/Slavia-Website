@@ -1,4 +1,4 @@
-import { KLUB_BOARD_ROUTES } from '~/config/klubRoutes'
+import { KLUB_BOARD_ROUTES, isClubHubExperimentalPath } from '~/config/klubRoutes'
 import { clearAthleteDashboardCache } from '~/utils/athleteDashboardCache'
 import type { AuthUser, LoginResponse, UserRole } from '~/types/models'
 import type { FetchError } from 'ofetch'
@@ -68,6 +68,19 @@ export function pickPostLoginPath(roleList: UserRole[]): string {
   if (r.has('Trainer')) return '/trainer'
   if (r.has('Athlete')) return '/athlete'
   if (r.has('BoardDocsFullAccess') || r.has('BoardMember')) return KLUB_BOARD_ROUTES.dokumenty
+  return '/'
+}
+
+/** Uwzględnia flagę eksperymentalną `club_hub` — nie kieruje na wyłączone trasy /klub. */
+export function resolvePostLoginPath(roleList: UserRole[], clubHubEnabled: boolean): string {
+  const path = pickPostLoginPath(roleList)
+  if (clubHubEnabled || !isClubHubExperimentalPath(path)) return path
+  const r = new Set(roleList)
+  if (r.has('SuperAdmin')) return '/superadmin'
+  if (r.has('Admin')) return '/admin'
+  if (r.has('Editor')) return '/admin/cms'
+  if (r.has('Trainer')) return '/trainer'
+  if (r.has('Athlete')) return '/athlete'
   return '/'
 }
 
