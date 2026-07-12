@@ -290,7 +290,7 @@ async function refreshAiCoachStatus() {
   } catch (e) {
     aiCoachStatus.value = {
       configured: false,
-      model: 'llama-3.1-70b-versatile',
+      model: 'llama-3.3-70b-versatile',
       setup_hint: getApiErrorMessage(e, 'GET /api/ai/coach/status niedostępny')
     }
   } finally {
@@ -574,10 +574,10 @@ const {
   pending: developerStatusPending
 } = await useAsyncData('superadmin-developer-status', async () => {
   const [posts, athletes, competitions, pending] = await Promise.all([
-    apiFetch('/api/posts').catch(() => []),
-    apiFetch('/api/athletes/admin').catch(() => []),
-    apiFetch('/api/competitions').catch(() => []),
-    apiFetch<CompetitionResult[]>('/api/results/pending').catch(() => [])
+    apiFetch.orEmpty('/api/posts', { fallback: [], toast: true }),
+    apiFetch.orEmpty('/api/athletes/admin', { fallback: [], toast: true }),
+    apiFetch.orEmpty('/api/competitions', { fallback: [], toast: true }),
+    apiFetch.orEmpty<CompetitionResult[]>('/api/results/pending', { fallback: [], toast: true })
   ])
 
   return {

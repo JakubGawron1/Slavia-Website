@@ -6,6 +6,7 @@ import DashboardWeekPreview from '~/components/dashboard/DashboardWeekPreview.vu
 
 definePageMeta({ middleware: 'auth' })
 
+const clubHubOn = useExperimentalFlag('club_hub')
 const { isAccountView } = useDashboardAccountView()
 
 const {
@@ -268,7 +269,7 @@ provideDashboardSections()
     </PanelCollapsibleSection>
 
     <PanelCollapsibleSection
-      v-if="auth.canAccessAthletePortal && athlete"
+      v-if="clubHubOn && auth.canAccessAthletePortal && athlete"
       section-id="klub-hub"
       title="Strefa klubu"
       icon="i-lucide-users"

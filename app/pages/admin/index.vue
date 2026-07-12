@@ -13,31 +13,45 @@ useSeoMeta({
 })
 
 const auth = useAuth()
+const clubHubOn = useExperimentalFlag('club_hub')
 const { isAccountView } = useDashboardAccountView()
 const { accountSettingsPath } = useRoleDashboardNav()
 const apiFetch = useApi()
 const { data: athletes } = await useAsyncData(
   'dashboard-athletes',
   async (): Promise<Athlete[]> => {
-    try {
-      return await apiFetch<Athlete[]>('/api/athletes/admin')
-    } catch {
-      return await apiFetch<Athlete[]>('/api/athletes')
-    }
-  }
+    const adminList = await apiFetch.orEmpty<Athlete[]>('/api/athletes/admin', { fallback: [], toast: true })
+    if (adminList?.length) return adminList
+    return (await apiFetch.orEmpty<Athlete[]>('/api/athletes', { fallback: [], toast: true })) ?? []
+  },
+  { default: () => [] as Athlete[] }
 )
 const { data: pendingResults, refresh: refreshPending } = await useAsyncData(
   'dashboard-pending',
-  async (): Promise<CompetitionResult[]> =>
-    apiFetch<CompetitionResult[]>('/api/results/pending').catch(() => [])
+  () =>
+    apiFetch
+      .orEmpty<CompetitionResult[]>('/api/results/pending', { fallback: [], toast: true })
+      .then(rows => rows ?? []),
+  { default: () => [] as CompetitionResult[] }
 )
-const { data: competitions } = await useAsyncData('dashboard-competitions', () => apiFetch('/api/competitions').catch(() => []))
+const { data: competitions } = await useAsyncData(
+  'dashboard-competitions',
+  () => apiFetch.orEmpty('/api/competitions', { fallback: [], toast: true }).then(rows => rows ?? []),
+  { default: () => [] }
+)
 
 /** KPI Summary Data (Extended) */
 const currentMonthStr = new Date().toISOString().slice(0, 7)
 const { data: paymentsOverview } = await useAsyncData(
   'admin-kpi-payments',
-  () => apiFetch<AthletePaymentOverviewRow[]>('/api/payments/overview?month=' + currentMonthStr).catch(() => [])
+  () =>
+    apiFetch
+      .orEmpty<AthletePaymentOverviewRow[]>(`/api/payments/overview?month=${currentMonthStr}`, {
+        fallback: [],
+        toast: true
+      })
+      .then(rows => rows ?? []),
+  { default: () => [] as AthletePaymentOverviewRow[] }
 )
 
 const paidCount = computed(() => (paymentsOverview.value || []).filter(r => r.has_approved).length)
@@ -56,8 +70,11 @@ const { data: recentAttendance } = await useAsyncData(
     const d = new Date()
     d.setDate(d.getDate() - 30)
     const from = d.toISOString().slice(0, 10)
-    return apiFetch<{ status: string }[]>(`/api/attendance?from_date=${from}`).catch(() => [])
-  }
+    return apiFetch
+      .orEmpty<{ status: string }[]>(`/api/attendance?from_date=${from}`, { fallback: [], toast: true })
+      .then(rows => rows ?? [])
+  },
+  { default: () => [] as { status: string }[] }
 )
 
 const avgAttendance = computed(() => {
@@ -197,6 +214,7 @@ const summaryMetrics = computed(() => [
     </PanelCollapsibleSection>
 
     <PanelCollapsibleSection
+      v-if="clubHubOn"
       section-id="klub-hub"
       title="Strefa klubu"
       icon="i-lucide-users"

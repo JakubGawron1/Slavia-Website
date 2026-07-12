@@ -6,6 +6,8 @@ import DashboardMonthlySummary from '~/components/dashboard/DashboardMonthlySumm
 
 definePageMeta({ middleware: 'trainer' })
 
+const clubHubOn = useExperimentalFlag('club_hub')
+
 useSeoMeta({
   title: 'Panel trenera — Dashboard',
   robots: 'noindex, nofollow'
@@ -99,6 +101,7 @@ provideDashboardSections()
     </PanelCollapsibleSection>
 
     <PanelCollapsibleSection
+      v-if="clubHubOn"
       section-id="klub-hub"
       title="Strefa klubu"
       icon="i-lucide-users"

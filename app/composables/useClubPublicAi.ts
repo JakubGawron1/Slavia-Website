@@ -21,7 +21,7 @@ export function useClubPublicAi() {
   const messages = ref<ClubPublicAiMessage[]>([])
   const loading = ref(false)
   const enabled = ref(false)
-  const model = ref('llama-3.1-70b-versatile')
+  const model = ref('llama-3.3-70b-versatile')
   const statusLoaded = ref(false)
 
   async function refreshStatus() {

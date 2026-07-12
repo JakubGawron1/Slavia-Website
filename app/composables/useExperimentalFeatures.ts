@@ -15,9 +15,30 @@ type RemoteFlag = {
   updated_at: string
 }
 
+/** Lekkie żądania flag — bez `useApi()` (unikamy cyklu z `useExperimentalFlag` w interceptorze HTTP). */
+function useFeatureFlagFetch() {
+  const auth = useAuth()
+  return async function featureFlagFetch<T>(
+    url: string,
+    opts?: { method?: 'GET' | 'POST', body?: Record<string, unknown> }
+  ): Promise<T> {
+    const headers: Record<string, string> = {}
+    if (auth.token.value) {
+      headers.Authorization = `Bearer ${auth.token.value}`
+    }
+    return (await $fetch(url, {
+      baseURL: auth.apiBase.value,
+      method: opts?.method ?? 'GET',
+      body: opts?.body,
+      headers
+    })) as T
+  }
+}
+
 export function useExperimentalFeatures() {
   const runtimeConfig = useRuntimeConfig()
   const auth = useAuth()
+  const featureFlagFetch = useFeatureFlagFetch()
   const overrides = useState<Record<string, boolean>>(OVERRIDES_STATE_KEY, () => ({}))
   const hydratedFromApi = useState<boolean>(HYDRATED_FROM_API_KEY, () => false)
 
@@ -62,11 +83,8 @@ export function useExperimentalFeatures() {
     if (!auth.isLoggedIn.value || !auth.token.value) {
       return
     }
-    await $fetch(`${auth.apiBase.value}/api/system/feature-flags/${encodeURIComponent(id)}`, {
+    await featureFlagFetch(`/api/system/feature-flags/${encodeURIComponent(id)}`, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${auth.token.value}`
-      },
       body: { value: enabled }
     })
   }
@@ -75,9 +93,7 @@ export function useExperimentalFeatures() {
     if (!import.meta.client || !auth.isLoggedIn.value) return
     if (hydratedFromApi.value && !force) return
     try {
-      const remote = await $fetch<RemoteFlag[]>(`${auth.apiBase.value}/api/system/feature-flags`, {
-        headers: auth.token.value ? { Authorization: `Bearer ${auth.token.value}` } : undefined
-      })
+      const remote = await featureFlagFetch<RemoteFlag[]>('/api/system/feature-flags')
       const next = { ...overrides.value }
       for (const row of remote || []) {
         if (!EXPERIMENTAL_FEATURES.find(def => def.id === row.name)) continue

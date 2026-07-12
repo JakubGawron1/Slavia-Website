@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { AthletePaymentOverviewRow } from '~/types/models'
+import type { AthletePaymentOverviewRow, Athlete } from '~/types/models'
 import DashboardHero from '~/components/dashboard/DashboardHero.vue'
 import DashboardMonthlySummary from '~/components/dashboard/DashboardMonthlySummary.vue'
 
@@ -11,6 +11,7 @@ useSeoMeta({
 })
 
 const auth = useAuth()
+const clubHubOn = useExperimentalFlag('club_hub')
 const { isAccountView } = useDashboardAccountView()
 const { accountSettingsPath } = useRoleDashboardNav()
 const apiFetch = useApi()
@@ -18,23 +19,43 @@ const apiFetch = useApi()
 // Pobieranie podstawowych statystyk
 const currentMonthStr = new Date().toISOString().slice(0, 7)
 
-const { data: athletes } = await useAsyncData('super-dashboard-athletes', () => apiFetch('/api/athletes/admin').catch(() => []))
+const { data: athletes } = await useAsyncData(
+  'super-dashboard-athletes',
+  () =>
+    apiFetch
+      .orEmpty<Athlete[]>('/api/athletes/admin', { fallback: [], toast: true })
+      .then(rows => rows ?? []),
+  { default: () => [] as Athlete[] }
+)
 const { data: adminsGrouped } = await useAsyncData(
   'super-dashboard-admins-grouped',
   () =>
-    apiFetch<{ admins: unknown[], trainers: unknown[], athletes: unknown[] }>('/api/admins/grouped').catch(() => ({
-      admins: [],
-      trainers: [],
-      athletes: []
-    }))
+    apiFetch
+      .orEmpty<{ admins: unknown[], trainers: unknown[], athletes: unknown[] }>(
+        '/api/admins/grouped',
+        {
+          fallback: { admins: [], trainers: [], athletes: [] },
+          toast: true
+        }
+      )
+      .then(rows => rows ?? { admins: [], trainers: [], athletes: [] }),
+  { default: () => ({ admins: [], trainers: [], athletes: [] }) }
 )
 const { data: paymentsOverview } = await useAsyncData(
   'super-kpi-payments',
-  () => apiFetch<AthletePaymentOverviewRow[]>(`/api/payments/overview?month=${currentMonthStr}`).catch(() => [])
+  () =>
+    apiFetch
+      .orEmpty<AthletePaymentOverviewRow[]>(`/api/payments/overview?month=${currentMonthStr}`, {
+        fallback: [],
+        toast: true
+      })
+      .then(rows => rows ?? []),
+  { default: () => [] as AthletePaymentOverviewRow[] }
 )
 const { data: pendingResults } = await useAsyncData(
   'super-dashboard-pending',
-  () => apiFetch<unknown[]>('/api/results/pending').catch(() => [])
+  () => apiFetch.orEmpty<unknown[]>('/api/results/pending', { fallback: [], toast: true }).then(rows => rows ?? []),
+  { default: () => [] }
 )
 const { data: recentAttendance } = await useAsyncData(
   'super-kpi-attendance-recent',
@@ -42,8 +63,11 @@ const { data: recentAttendance } = await useAsyncData(
     const d = new Date()
     d.setDate(d.getDate() - 30)
     const from = d.toISOString().slice(0, 10)
-    return apiFetch<{ status: string }[]>(`/api/attendance?from_date=${from}`).catch(() => [])
-  }
+    return apiFetch
+      .orEmpty<{ status: string }[]>(`/api/attendance?from_date=${from}`, { fallback: [], toast: true })
+      .then(rows => rows ?? [])
+  },
+  { default: () => [] as { status: string }[] }
 )
 
 const paidCount = computed(() => (paymentsOverview.value || []).filter(r => r.has_approved).length)
@@ -172,6 +196,7 @@ const summaryMetrics = computed(() => [
     </PanelCollapsibleSection>
 
     <PanelCollapsibleSection
+      v-if="clubHubOn"
       section-id="klub-hub"
       title="Strefa klubu"
       icon="i-lucide-users"

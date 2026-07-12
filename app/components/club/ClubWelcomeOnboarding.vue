@@ -10,6 +10,7 @@ import {
 
 const auth = useAuth()
 const route = useRoute()
+const clubHubOn = useExperimentalFlag('club_hub')
 const { accountSettingsPath } = useRoleDashboardNav()
 
 const open = ref(false)
@@ -94,6 +95,7 @@ watch(
           </UButton>
           <div class="flex flex-col gap-2 sm:flex-row">
             <UButton
+              v-if="clubHubOn"
               to="/klub/samouczek"
               variant="outline"
               color="primary"
@@ -134,6 +136,7 @@ watch(
           </UButton>
           <div class="flex flex-col gap-2 sm:flex-row">
             <UButton
+              v-if="clubHubOn"
               to="/klub/samouczek"
               variant="outline"
               color="primary"

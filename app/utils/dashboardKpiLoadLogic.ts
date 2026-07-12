@@ -6,7 +6,7 @@ export const DASHBOARD_KPI_MAX_ATTEMPTS = 3
 export function isDashboardKpiRetryableError(error: unknown): boolean {
   const err = error as { response?: { status?: number }, statusCode?: number }
   const status = err?.response?.status ?? err?.statusCode
-  return status === 502 || status === 503
+  return status === 500 || status === 502 || status === 503
 }
 
 export type DashboardKpiFetchRetryOptions = {

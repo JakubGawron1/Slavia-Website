@@ -9,6 +9,7 @@ import {
   type PanelModuleGroup,
   type PanelNavRole
 } from '~/data/panelNavigationCatalog'
+import { isClubHubExperimentalPath } from '~/config/klubRoutes'
 import { cmsNavGroupsFromItems } from '~/composables/useCmsDashboardNav'
 
 const GLOBAL_OVERRIDES_KEY = 'slavia-panel-nav-global'
@@ -60,6 +61,8 @@ function parsePanelNavRows(rows: RemoteFlag[], userId?: string | null): Record<s
 
 export function usePanelNavigationFlags() {
   const auth = useAuth()
+  const apiFetch = useApi()
+  const clubHubOn = useExperimentalFlag('club_hub')
   const globalOverrides = useState<Record<string, boolean>>(GLOBAL_OVERRIDES_KEY, () => ({}))
   const userOverrides = useState<Record<string, boolean>>(USER_OVERRIDES_KEY, () => ({}))
   const managedUserOverrides = useState<Record<string, boolean>>(MANAGED_USER_OVERRIDES_KEY, () => ({}))
@@ -127,11 +130,16 @@ export function usePanelNavigationFlags() {
   }
 
   function filterModuleGroups(role: PanelNavRole, groups: PanelModuleGroup[]): PanelModuleGroup[] {
-    if (bypassFilter.value) return groups
+    const filterItem = (item: PanelModuleGroup['items'][number]) => {
+      const path = item.to.split('?')[0] ?? item.to
+      if (!clubHubOn.value && isClubHubExperimentalPath(path)) return false
+      if (bypassFilter.value) return true
+      return !item.panelNavId || isEnabled(item.panelNavId)
+    }
     return groups
       .map(g => ({
         title: g.title,
-        items: g.items.filter(item => !item.panelNavId || isEnabled(item.panelNavId))
+        items: g.items.filter(filterItem)
       }))
       .filter(g => g.items.length > 0)
   }
@@ -148,9 +156,7 @@ export function usePanelNavigationFlags() {
 
   async function fetchFlags(userId?: string): Promise<RemoteFlag[]> {
     const query = userId ? `?user_id=${encodeURIComponent(userId)}` : ''
-    return $fetch<RemoteFlag[]>(`${auth.apiBase.value}/api/system/feature-flags${query}`, {
-      headers: auth.token.value ? { Authorization: `Bearer ${auth.token.value}` } : undefined
-    })
+    return apiFetch<RemoteFlag[]>(`/api/system/feature-flags${query}`)
   }
 
   async function persistRemote(flagId: string, enabled: boolean, scope: PanelNavFlagScope) {
@@ -158,9 +164,8 @@ export function usePanelNavigationFlags() {
     const key = savingKey(flagId, scope)
     savingKeys.value = new Set(savingKeys.value).add(key)
     try {
-      await $fetch(`${auth.apiBase.value}/api/system/feature-flags/${encodeURIComponent(flagId)}`, {
+      await apiFetch(`/api/system/feature-flags/${encodeURIComponent(flagId)}`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${auth.token.value}` },
         body: scope.type === 'user'
           ? { value: enabled, user_id: scope.userId }
           : { value: enabled }
@@ -178,9 +183,8 @@ export function usePanelNavigationFlags() {
     savingKeys.value = new Set(savingKeys.value).add(key)
     try {
       const query = scope.type === 'user' ? `?user_id=${encodeURIComponent(scope.userId)}` : ''
-      await $fetch(`${auth.apiBase.value}/api/system/feature-flags/${encodeURIComponent(flagId)}${query}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${auth.token.value}` }
+      await apiFetch(`/api/system/feature-flags/${encodeURIComponent(flagId)}${query}`, {
+        method: 'DELETE'
       })
     } finally {
       const next = new Set(savingKeys.value)
@@ -271,9 +275,10 @@ export function usePanelNavigationFlags() {
   }
 
   function canAccessPath(path: string): boolean {
+    const normalized = normalizePath(path)
+    if (!clubHubOn.value && isClubHubExperimentalPath(normalized)) return false
     if (bypassFilter.value || !auth.isLoggedIn.value) return true
     if (flagsLoadFailed.value) {
-      const normalized = normalizePath(path)
       const gated = PANEL_NAV_MODULES.some(def => {
         if (!def.gateRoute) return false
         const target = normalizePath(def.to)
@@ -282,7 +287,6 @@ export function usePanelNavigationFlags() {
       if (gated) return false
     }
     const roles = auth.user.value?.roles ?? []
-    const normalized = normalizePath(path)
 
     const gated = PANEL_NAV_MODULES.filter(def => {
       if (!def.gateRoute) return false

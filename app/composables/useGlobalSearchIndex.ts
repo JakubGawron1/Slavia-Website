@@ -1,4 +1,5 @@
 import { GLOBAL_SEARCH_EXTRAS } from '~/data/globalSearchExtras'
+import { isClubHubExperimentalPath } from '~/config/klubRoutes'
 import {
   PANEL_NAV_MODULES,
   panelNavRolesForUserRoles,
@@ -109,6 +110,7 @@ export function useGlobalSearchIndex() {
   const auth = useAuth()
   const router = useRouter()
   const panelNav = usePanelNavigationFlags()
+  const clubHubOn = useExperimentalFlag('club_hub')
   const { accountSettingsPath } = useRoleDashboardNav()
 
   const loading = ref(false)
@@ -127,6 +129,8 @@ export function useGlobalSearchIndex() {
   function isItemVisible(item: Pick<GlobalSearchItem, 'audiences' | 'panelNavId' | 'gateRoute' | 'to'>): boolean {
     const ctx = searchContext()
     if (!matchesAudience(item.audiences, ctx)) return false
+    const itemPath = pathFromRoute(item.to)
+    if (!clubHubOn.value && isClubHubExperimentalPath(itemPath)) return false
     if (item.panelNavId && !panelNav.isEnabled(item.panelNavId) && !ctx.isSuperAdmin) return false
     if (item.gateRoute && auth.isLoggedIn.value && !panelNav.canAccessPath(pathFromRoute(item.to)) && !ctx.isSuperAdmin) {
       return false

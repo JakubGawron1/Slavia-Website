@@ -7,6 +7,7 @@ import {
 import { markBackendAwake, notifyBackendWakingIfNeeded } from '~/utils/backendWakeNotice'
 import { isPanelBffPath, panelApiUrl } from '~/utils/panelBffPaths'
 import { rewriteRolePreviewApiUrl } from '~/utils/rolePreviewApiRewrite'
+import { fetchWithDashboardKpiRetry } from '~/utils/dashboardKpiLoadLogic'
 
 /** Domyślny timeout panelowych żądań JSON (ms). */
 export const API_DEFAULT_TIMEOUT_MS = 20_000
@@ -191,15 +192,22 @@ export function useApi() {
   const apiFetch = <T>(url: string, opts?: FetchOptions) => {
     const method = String(opts?.method || 'GET')
     const { path, query } = splitUrl(url)
-    if (method.toUpperCase() === 'GET' && isPanelBffPath(path)) {
-      return panelClient<T>(`${panelApiUrl(path)}${query}`, opts as Parameters<typeof panelClient>[1])
+    const runFetch = (): Promise<T> => {
+      if (method.toUpperCase() === 'GET' && isPanelBffPath(path)) {
+        return panelClient<T>(`${panelApiUrl(path)}${query}`, opts as Parameters<typeof panelClient>[1]) as Promise<T>
+      }
+      const rewritten = rewriteRolePreviewApiUrl(url, method, rolePreview.state.value, {
+        isActive: rolePreview.isActive.value,
+        isAthletePreview: rolePreview.isAthletePreview.value,
+        currentUserId: auth.user.value?.id ?? null
+      })
+      return client<T>(rewritten, opts as Parameters<typeof client>[1]) as Promise<T>
     }
-    const rewritten = rewriteRolePreviewApiUrl(url, method, rolePreview.state.value, {
-      isActive: rolePreview.isActive.value,
-      isAthletePreview: rolePreview.isAthletePreview.value,
-      currentUserId: auth.user.value?.id ?? null
-    })
-    return client<T>(rewritten, opts as Parameters<typeof client>[1])
+    const m = method.toUpperCase()
+    if (m === 'GET' || m === 'HEAD') {
+      return fetchWithDashboardKpiRetry(runFetch)
+    }
+    return runFetch()
   }
 
   const orEmpty = <T>(

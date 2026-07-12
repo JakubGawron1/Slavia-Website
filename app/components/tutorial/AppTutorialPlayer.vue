@@ -22,7 +22,6 @@ const {
 } = useAppTutorial()
 
 const auth = useAuth()
-const { primaryDashboardPath } = useRoleDashboardNav()
 
 const showAllTracks = ref(false)
 
