@@ -41,7 +41,6 @@ export const SUPERADMIN_SEARCH_CATALOG: SuperadminSearchEntry[] = [
   link('sa-panel-nav', 'Nawigacja paneli', 'Widoczność modułów ról', 'i-lucide-layout-grid', '/superadmin/nawigacja-paneli', 'text-sky-500', 'bg-sky-500/10', 'feature flags moduły'),
   link('sa-import', 'Import danych', 'Federacje i CSV', 'i-lucide-file-up', '/superadmin/import', 'text-cyan-600', 'bg-cyan-500/10'),
   link('sa-athletes', 'Baza zawodników', 'Pełna edycja profili', 'i-lucide-users', '/superadmin/zawodnicy', 'text-blue-500', 'bg-blue-500/10'),
-  link('sa-barbell', 'Barbell Lab', 'Eksperymenty wizji', 'i-lucide-beaker', '/superadmin/barbell-lab', 'text-pink-500', 'bg-pink-500/10', 'analiza sztangi wideo'),
   // Administracja treści
   link('sa-contact', 'Wiadomości (kontakt)', 'Formularz publiczny', 'i-lucide-mail', '/admin/kontakt-wiadomosci', 'text-info', 'bg-info/12'),
   link('sa-changelog', 'Changelog', 'Historia wydań', 'i-lucide-file-text', '/admin/changelog', 'text-success', 'bg-success/12'),

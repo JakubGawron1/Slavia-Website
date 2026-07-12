@@ -314,7 +314,7 @@ export function useOlympicCoachAi() {
     } catch {
       status.value = {
         configured: false,
-        model: 'llama-3.1-70b-versatile',
+        model: 'llama-3.3-70b-versatile',
         key_format_ok: false
       }
       streamMode.value = await probeOlympicCoachStream(auth.apiBase.value).catch(() => 'offline' as const)

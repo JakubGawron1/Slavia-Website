@@ -49,12 +49,6 @@ export const DEV_TOOL_SUPERADMIN_GROUP: DevToolLinkGroup = {
       icon: 'i-lucide-file-up'
     },
     {
-      to: '/superadmin/barbell-lab',
-      label: 'Barbell Lab',
-      description: 'Eksperymenty wizji / pose',
-      icon: 'i-lucide-beaker'
-    },
-    {
       to: '/admin/changelog',
       label: 'Changelog',
       description: 'Historia wydań aplikacji',

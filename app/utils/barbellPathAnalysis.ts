@@ -1,8 +1,25 @@
 export {
+  assessCameraQuality,
   buildBiomechanicalFeedback,
   buildTechniqueMetrics,
+  computePathVelocities,
+  detectLiftPhases,
+  maxPathSpeed,
+  projectToLiftPlane,
+  resamplePathSpline,
   smoothSamples,
   smoothSamplesForFps,
+  samplesUntilTime,
+  toProfileRelativeSamples,
+  velocityColor,
   type BarbellSample,
-  type BarbellTechniqueMetrics
+  type BarbellTechniqueMetrics,
+  type CameraAngleKind,
+  type CameraQualityAssessment,
+  type LiftPhaseAnalysis,
+  type LiftPhaseKind,
+  type LiftPhaseSegment,
+  type PathVelocitySample,
+  MAX_PATH_SAMPLES,
+  clampPathSamples
 } from '~/lib/slavia/barbellPathAnalysis'

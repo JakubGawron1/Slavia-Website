@@ -7,7 +7,7 @@ import {
 import type { BarbellSample, BarbellTechniqueMetrics } from '~/utils/barbellPathAnalysis'
 import {
   compactSamplesForApi,
-  sanitizeRefinedSamples,
+  normalizeRefinedSamples,
   type BarbellPathRefineProvider,
   type BarbellPathRefineResponse
 } from '~/utils/barbellPathRefine'
@@ -144,6 +144,20 @@ async function interpretWithGroqCoach(
   })
 }
 
+function trimFramesForApi(frames?: BarbellVideoFrame[]): BarbellVideoFrame[] | undefined {
+  if (!frames?.length) return undefined
+  const maxTotalB64 = 1_800_000
+  const out: BarbellVideoFrame[] = []
+  let total = 0
+  for (const f of frames) {
+    const len = f.jpegBase64.length
+    if (total + len > maxTotalB64) break
+    out.push(f)
+    total += len
+  }
+  return out.length ? out : undefined
+}
+
 export function useBarbellPathAi() {
   const api = useApi()
 
@@ -192,19 +206,24 @@ export function useBarbellPathAi() {
     lastRefineMeta.value = null
 
     try {
+      const apiFrames = trimFramesForApi(input.frames)
       const res = await api<BarbellPathRefineResponse>(apiRoutes.aiCoach.barbellPathRefine, {
         method: 'POST',
         body: {
           rawSamples: compactSamplesForApi(input.rawSamples),
-          frames: input.frames?.map(f => ({ t: f.t, jpegBase64: f.jpegBase64 })),
+          frames: apiFrames?.map(f => ({ t: f.t, jpegBase64: f.jpegBase64 })),
           liftType: input.liftType ?? 'unknown',
           provider: trackingProvider.value
         },
-        timeout: 180_000
+        timeout: 90_000
       })
 
       const mapped = mapRefineResponse(res)
-      const sanitized = sanitizeRefinedSamples(input.rawSamples, mapped) ?? mapped
+      const sanitized = normalizeRefinedSamples(input.rawSamples, mapped)
+      if (!sanitized) {
+        refineError.value = 'AI zwróciło nieprawidłowy tor — użyto detekcji MoveNet.'
+        return null
+      }
 
       lastRefineMeta.value = {
         model: res.model,

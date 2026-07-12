@@ -1,21 +1,28 @@
 <script setup lang="ts">
 import type { Pose } from '@tensorflow-models/pose-detection'
 import { loadPoseDetector, MODEL_PROGRESS_READY, type PoseDetector } from '~/utils/loadPoseDetector'
-import { buildBiomechanicalFeedback, buildTechniqueMetrics, smoothSamplesForFps, type BarbellSample, type BarbellTechniqueMetrics } from '~/utils/barbellPathAnalysis'
+import { buildBiomechanicalFeedback, buildTechniqueMetrics, clampPathSamples, projectToLiftPlane, assessCameraQuality, samplesUntilTime, smoothSamplesForFps, type BarbellSample, type BarbellTechniqueMetrics, type CameraQualityAssessment } from '~/utils/barbellPathAnalysis'
+import { drawPremiumBarbellOverlay, drawVelocityColoredPath } from '~/utils/barbellPathDraw'
 import { useBarbellPathAi, type BarbellPathTrackingProviderId } from '~/composables/useBarbellPathAi'
-import { captureVideoFrames, pickFrameTimesFromSamples } from '~/utils/barbellVideoFrames'
+import { pickFrameTimesFromSamples } from '~/utils/barbellVideoFrames'
 
 const props = withDefaults(
   defineProps<{
-    /** Osadzenie w Barbell Lab — ukrywa karty heurystyk (pokazuje je panel lab). */
-    labEmbed?: boolean
+    /** Osadzenie w panelu AI — ukrywa karty heurystyk (pokazuje je panel nadrzędny). */
+    aiPanelEmbed?: boolean
+    /** Osadzenie w BarbellAnalysisPanel — kompaktowy układ bez duplikatów metryk. */
+    panelEmbed?: boolean
+    /** Pełny overlay Torokhtiy (gradient, fazy, panel boczny). Domyślnie włączony. */
+    premiumOverlay?: boolean
     /** Po detekcji MoveNet — AI koryguje tor (vision + numeric). */
     aiRefinePath?: boolean
     liftType?: 'snatch' | 'clean_jerk' | 'unknown'
     trackingProvider?: BarbellPathTrackingProviderId
   }>(),
   {
-    labEmbed: false,
+    aiPanelEmbed: false,
+    panelEmbed: false,
+    premiumOverlay: true,
     aiRefinePath: false,
     liftType: 'unknown',
     trackingProvider: 'auto'
@@ -31,6 +38,7 @@ const emit = defineEmits<{
     pathSource: 'ai' | 'algorithm'
     refineMeta?: { model: string; provider: string; method: string } | null
     refineNotes?: string | null
+    cameraQuality?: CameraQualityAssessment | null
   }]
   playbackTime: [t: number]
 }>()
@@ -66,8 +74,34 @@ const analyzedSamples = ref<BarbellSample[]>([])
 const rawAlgorithmSamples = ref<BarbellSample[]>([])
 const pathSource = ref<'ai' | 'algorithm'>('algorithm')
 const metrics = ref<BarbellTechniqueMetrics | null>(null)
+const cameraQuality = ref<CameraQualityAssessment | null>(null)
 const stabilizeToHips = ref(true)
+const currentPlaybackSec = ref<number | undefined>(undefined)
 const playbackReady = computed(() => analyzedSamples.value.length >= 2 && !!videoRef.value)
+const pathPlaybackRange = ref<{ start: number, end: number } | null>(null)
+const isPlaybackPlaying = ref(false)
+
+/** Tempo odtwarzania wideo (HTML5 `playbackRate`). */
+const playbackSpeed = ref(0.5)
+const playbackSpeedItems = [
+  { label: '0,25× — bardzo wolno', value: 0.25 },
+  { label: '0,33×', value: 0.33 },
+  { label: '0,5× — wolno', value: 0.5 },
+  { label: '0,75×', value: 0.75 },
+  { label: '1× — normalnie', value: 1 }
+] as const
+
+function applyVideoPlaybackSpeed(v: HTMLVideoElement | null | undefined = videoRef.value) {
+  if (!v) return
+  try {
+    v.playbackRate = playbackSpeed.value
+    v.defaultPlaybackRate = playbackSpeed.value
+  } catch {
+    /* ignore — starsze WebView */
+  }
+}
+
+watch(playbackSpeed, () => applyVideoPlaybackSpeed())
 
 type TrackingMode =
   | 'bar_center'
@@ -146,6 +180,9 @@ function onVideoFile(e: Event) {
   progress.value = 0
   phaseStep.value = 0
   frameProgress.value = { current: 0, total: 0 }
+  pathPlaybackRange.value = null
+  isPlaybackPlaying.value = false
+  stopPlaybackOverlayLoop()
   nextTick(() => {
     const v = videoRef.value
     if (!v || !clipUrl.value) {
@@ -165,6 +202,7 @@ function resizeCanvasToVideo() {
   const rect = v.getBoundingClientRect()
   const dpr = Math.min(window.devicePixelRatio || 1, 2)
   c.style.width = `${rect.width}px`
+  applyVideoPlaybackSpeed(v)
   c.style.height = `${rect.height}px`
   c.width = Math.round(rect.width * dpr)
   c.height = Math.round(rect.height * dpr)
@@ -210,23 +248,11 @@ function drawPath(
   if (!v || !c || samples.length < 2) {
     return
   }
-  const visibleRaw = typeof untilSec === 'number'
-    ? samples.filter(s => s.t <= untilSec)
+
+  const isSyncPlayback = typeof untilSec === 'number'
+  const visibleRaw = isSyncPlayback
+    ? samplesUntilTime(samples, untilSec)
     : samples
-  if (visibleRaw.length < 2) return
-
-  const estimatedFps = visibleRaw.length >= 2
-    ? Math.min(120, Math.max(12, Math.round((visibleRaw.length - 1) / Math.max(0.001, visibleRaw[visibleRaw.length - 1]!.t - visibleRaw[0]!.t))))
-    : 30
-  const visible = smoothSamplesForFps(visibleRaw, estimatedFps)
-
-  let refVisible: BarbellSample[] = []
-  if (referenceSamples && referenceSamples.length >= 2) {
-    const refRaw = typeof untilSec === 'number'
-      ? referenceSamples.filter(s => s.t <= untilSec)
-      : referenceSamples
-    refVisible = refRaw.length >= 2 ? smoothSamplesForFps(refRaw, estimatedFps) : []
-  }
 
   resizeCanvasToVideo()
   const ctx = c.getContext('2d')
@@ -237,6 +263,42 @@ function drawPath(
   const h = v.clientHeight
   const box = videoContentBox(v)
   ctx.clearRect(0, 0, w, h)
+
+  if (visibleRaw.length === 0) {
+    return
+  }
+
+  const estimatedFps = samples.length >= 2
+    ? Math.min(120, Math.max(12, Math.round((samples.length - 1) / Math.max(0.001, samples[samples.length - 1]!.t - samples[0]!.t))))
+    : 30
+  const visible = visibleRaw.length >= 2
+    ? smoothSamplesForFps(visibleRaw, estimatedFps)
+    : visibleRaw
+
+  let refVisible: BarbellSample[] = []
+  if (referenceSamples && referenceSamples.length >= 2) {
+    const refRaw = isSyncPlayback
+      ? samplesUntilTime(referenceSamples, untilSec)
+      : referenceSamples
+    refVisible = refRaw.length >= 2 ? smoothSamplesForFps(refRaw, estimatedFps) : []
+  }
+
+  if (props.premiumOverlay) {
+    drawPremiumBarbellOverlay(ctx, visible, box, {
+      liftType: props.liftType,
+      referenceSamples: refVisible.length >= 2 ? refVisible : undefined,
+      fullSamplesForPhases: isSyncPlayback ? samples : undefined,
+      showSidePanel: props.aiPanelEmbed || props.premiumOverlay,
+      showLegend: true,
+      lineWidth: props.aiPanelEmbed ? 7 : 6,
+      playbackHead: isSyncPlayback
+    })
+    return
+  }
+
+  if (visible.length < 2) {
+    return
+  }
 
   ctx.strokeStyle = 'rgba(34, 197, 94, 0.45)'
   ctx.lineWidth = 2
@@ -267,24 +329,33 @@ function drawPath(
   ctx.strokeStyle = 'rgba(250, 204, 21, 0.95)'
   ctx.lineWidth = 3
   ctx.lineJoin = 'round'
-  ctx.beginPath()
-  for (let i = 0; i < visible.length; i++) {
-    const pt = visible[i]!
-    const x = box.x + pt.barX * box.w
-    const y = box.y + pt.barY * box.h
-    if (i === 0) {
-      ctx.moveTo(x, y)
-    } else {
-      ctx.lineTo(x, y)
+  if (props.aiPanelEmbed) {
+    drawVelocityColoredPath(ctx, visible, box, {
+      lineWidth: 7,
+      shadowBlur: 14
+    })
+  } else {
+    ctx.beginPath()
+    for (let i = 0; i < visible.length; i++) {
+      const pt = visible[i]!
+      const x = box.x + pt.barX * box.w
+      const y = box.y + pt.barY * box.h
+      if (i === 0) {
+        ctx.moveTo(x, y)
+      } else {
+        ctx.lineTo(x, y)
+      }
     }
+    ctx.stroke()
   }
-  ctx.stroke()
 
   ctx.fillStyle = 'rgba(251, 191, 36, 0.9)'
   const last = visible[visible.length - 1]!
-  ctx.beginPath()
-  ctx.arc(box.x + last.barX * box.w, box.y + last.barY * box.h, 6, 0, Math.PI * 2)
-  ctx.fill()
+  if (!props.aiPanelEmbed) {
+    ctx.beginPath()
+    ctx.arc(box.x + last.barX * box.w, box.y + last.barY * box.h, 6, 0, Math.PI * 2)
+    ctx.fill()
+  }
 }
 
 function mid(a: number, b: number) {
@@ -300,21 +371,53 @@ function extractSample(pose: Pose, videoW: number, videoH: number): BarbellSampl
   const rs = pose.keypoints.find(k => k.name === 'right_shoulder')
   const le = pose.keypoints.find(k => k.name === 'left_elbow')
   const re = pose.keypoints.find(k => k.name === 'right_elbow')
-  if (!lw || !rw || !lh || !rh) {
+  if (!lh || !rh) {
     return null
   }
-  if ((lw.score ?? 0) < 0.22 || (rw.score ?? 0) < 0.22) {
-    return null
-  }
-  const wristMidX = mid(lw.x, rw.x) / videoW
-  const wristMidY = mid(lw.y, rw.y) / videoH
-  const barX = wristMidX
-  const barY = wristMidY
+
   const hipMidX = mid(lh.x, rh.x) / videoW
   const shoulderMidX = ls && rs ? mid(ls.x, rs.x) / videoW : hipMidX
   const shoulderMidY = ls && rs ? mid(ls.y, rs.y) / videoH : undefined
   const elbowMidX = le && re ? mid(le.x, re.x) / videoW : undefined
   const elbowMidY = le && re ? mid(le.y, re.y) / videoH : undefined
+
+  const lwScore = lw?.score ?? 0
+  const rwScore = rw?.score ?? 0
+  const leScore = le?.score ?? 0
+  const reScore = re?.score ?? 0
+  const lsScore = ls?.score ?? 0
+  const rsScore = rs?.score ?? 0
+
+  let barX: number
+  let barY: number
+  let wristSpread: number | undefined
+  let wristMidX: number | undefined
+  let wristMidY: number | undefined
+
+  const wristMinScore = 0.14
+  if (lw && rw && lwScore >= wristMinScore && rwScore >= wristMinScore) {
+    wristMidX = mid(lw.x, rw.x) / videoW
+    wristMidY = mid(lw.y, rw.y) / videoH
+    wristSpread = Math.abs(lw.x - rw.x) / videoW
+    barX = wristMidX
+    barY = wristMidY
+  } else if (le && re && leScore >= 0.18 && reScore >= 0.18) {
+    barX = mid(le.x, re.x) / videoW
+    barY = mid(le.y, re.y) / videoH - 0.012
+    wristSpread = Math.abs(le.x - re.x) / videoW * 1.05
+    wristMidX = barX
+    wristMidY = barY
+  } else if (ls && rs && lsScore >= 0.2 && rsScore >= 0.2) {
+    barX = mid(ls.x, rs.x) / videoW
+    barY = Math.min(ls.y, rs.y) / videoH - 0.04
+    wristSpread = Math.abs(ls.x - rs.x) / videoW * 0.85
+    wristMidX = barX
+    wristMidY = barY
+  } else {
+    return null
+  }
+
+  const shoulderSpread = ls && rs ? Math.abs(ls.x - rs.x) / videoW : undefined
   return {
     t: 0,
     barX: clamp01(barX),
@@ -324,8 +427,10 @@ function extractSample(pose: Pose, videoW: number, videoH: number): BarbellSampl
     shoulderMidY: shoulderMidY != null ? clamp01(shoulderMidY) : undefined,
     elbowMidX: elbowMidX != null ? clamp01(elbowMidX) : undefined,
     elbowMidY: elbowMidY != null ? clamp01(elbowMidY) : undefined,
-    wristMidX: clamp01(wristMidX),
-    wristMidY: clamp01(wristMidY)
+    wristMidX: wristMidX != null ? clamp01(wristMidX) : undefined,
+    wristMidY: wristMidY != null ? clamp01(wristMidY) : undefined,
+    wristSpread: wristSpread != null ? clamp01(wristSpread) : undefined,
+    shoulderSpread: shoulderSpread != null ? clamp01(shoulderSpread) : undefined
   }
 }
 
@@ -341,8 +446,8 @@ function filterActiveLiftWindow(samples: BarbellSample[]): BarbellSample[] {
     const dt = Math.max(0.001, s.t - prev.t)
     return { i, vY: (s.barY - prev.barY) / dt }
   })
-  const upThreshold = -0.025
-  const downThreshold = 0.018
+  const upThreshold = -0.02
+  const downThreshold = 0.015
   const startIdx = withVel.findIndex(v => v.vY < upThreshold)
   if (startIdx <= 0) return samples
   let peakIdx = startIdx
@@ -351,12 +456,16 @@ function filterActiveLiftWindow(samples: BarbellSample[]): BarbellSample[] {
   }
   let stopIdx = samples.length - 1
   for (let i = peakIdx + 1; i < withVel.length; i++) {
-    if (withVel[i]!.vY > downThreshold && samples[i]!.barY >= samples[startIdx]!.barY - 0.03) {
+    if (withVel[i]!.vY > downThreshold && samples[i]!.barY >= samples[startIdx]!.barY - 0.04) {
       stopIdx = i
       break
     }
   }
-  return samples.slice(startIdx, stopIdx + 1)
+  const slice = samples.slice(startIdx, stopIdx + 1)
+  if (slice.length >= 10) return slice
+  // Zbyt agresywne okno — zwróć szerszy fragment (np. przy kącie 3/4 i mało klatek)
+  const pad = Math.max(2, Math.floor(samples.length * 0.08))
+  return samples.slice(Math.max(0, startIdx - pad), Math.min(samples.length, stopIdx + pad + 1))
 }
 
 function stabilizeSamplesToHipLine(samples: BarbellSample[]): BarbellSample[] {
@@ -456,13 +565,157 @@ const displaySamples = computed(() => {
   return stabilizeToHips.value ? stabilizeSamplesToHipLine(out) : out
 })
 
+async function prepareSyncedPlaybackPreview() {
+  const v = videoRef.value
+  const pts = displaySamples.value
+  if (!v || pts.length < 2) return
+
+  pathPlaybackRange.value = {
+    start: pts[0]!.t,
+    end: pts[pts.length - 1]!.t
+  }
+
+  try {
+    v.pause()
+  } catch {
+    /* ignore */
+  }
+
+  const startT = Math.max(0, pathPlaybackRange.value.start - 0.04)
+  try {
+    v.currentTime = startT
+  } catch {
+    /* ignore */
+  }
+
+  await new Promise<void>((resolve) => {
+    if (Math.abs(v.currentTime - startT) < 0.05) {
+      resolve()
+      return
+    }
+    const onSeeked = () => {
+      v.removeEventListener('seeked', onSeeked)
+      resolve()
+    }
+    v.addEventListener('seeked', onSeeked, { once: true })
+    window.setTimeout(resolve, 400)
+  })
+
+  currentPlaybackSec.value = v.currentTime
+  drawPathForDisplay(pts, v.currentTime)
+  emit('playbackTime', v.currentTime)
+}
+
+async function playSyncedPlayback() {
+  const v = videoRef.value
+  if (!v || displaySamples.value.length < 2) return
+
+  if (!pathPlaybackRange.value) {
+    await prepareSyncedPlaybackPreview()
+  }
+
+  const range = pathPlaybackRange.value
+  if (range && (v.currentTime >= range.end - 0.05 || v.currentTime < range.start - 0.1)) {
+    v.currentTime = Math.max(0, range.start - 0.04)
+    await new Promise<void>((resolve) => {
+      const onSeeked = () => {
+        v.removeEventListener('seeked', onSeeked)
+        resolve()
+      }
+      v.addEventListener('seeked', onSeeked, { once: true })
+      window.setTimeout(resolve, 400)
+    })
+    drawPathForDisplay(displaySamples.value, v.currentTime)
+  }
+
+  try {
+    applyVideoPlaybackSpeed(v)
+    await v.play()
+    isPlaybackPlaying.value = true
+    startPlaybackOverlayLoop()
+  } catch {
+    toast.add({
+      title: 'Nie udało się odtworzyć wideo',
+      description: 'Kliknij play na odtwarzaczu lub sprawdź blokadę autoplay w przeglądarce.',
+      color: 'warning'
+    })
+  }
+}
+
+function pauseSyncedPlayback() {
+  const v = videoRef.value
+  try {
+    v?.pause()
+  } catch {
+    /* ignore */
+  }
+  isPlaybackPlaying.value = false
+  stopPlaybackOverlayLoop()
+}
+
+function toggleSyncedPlayback() {
+  if (isPlaybackPlaying.value) {
+    pauseSyncedPlayback()
+  } else {
+    void playSyncedPlayback()
+  }
+}
+
+let playbackOverlayRaf: number | null = null
+
+function startPlaybackOverlayLoop() {
+  stopPlaybackOverlayLoop()
+  const tick = () => {
+    const v = videoRef.value
+    if (!v || v.paused || displaySamples.value.length < 2) {
+      playbackOverlayRaf = null
+      isPlaybackPlaying.value = false
+      return
+    }
+    const t = v.currentTime
+    currentPlaybackSec.value = t
+    drawPathForDisplay(displaySamples.value, t)
+    emit('playbackTime', t)
+
+    const range = pathPlaybackRange.value
+    if (range && t >= range.end + 0.08) {
+      try {
+        v.pause()
+      } catch {
+        /* ignore */
+      }
+      isPlaybackPlaying.value = false
+      playbackOverlayRaf = null
+      drawPathForDisplay(displaySamples.value, range.end)
+      emit('playbackTime', range.end)
+      return
+    }
+
+    playbackOverlayRaf = window.requestAnimationFrame(tick)
+  }
+  playbackOverlayRaf = window.requestAnimationFrame(tick)
+}
+
+function stopPlaybackOverlayLoop() {
+  if (playbackOverlayRaf != null) {
+    window.cancelAnimationFrame(playbackOverlayRaf)
+    playbackOverlayRaf = null
+  }
+}
+
+function syncOverlayToVideoTime() {
+  const v = videoRef.value
+  if (!v || displaySamples.value.length < 2) return
+  const t = v.currentTime
+  currentPlaybackSec.value = t
+  drawPathForDisplay(displaySamples.value, t)
+  emit('playbackTime', t)
+}
+
 function redrawNow() {
   const v = videoRef.value
   if (!v || displaySamples.value.length < 2) return
-  const ref = pathSource.value === 'ai' && rawAlgorithmSamples.value.length >= 2
-    ? rawAlgorithmSamples.value
-    : undefined
-  drawPath(displaySamples.value, v.currentTime, ref)
+  syncOverlayToVideoTime()
 }
 
 function drawPathForDisplay(samples: BarbellSample[], untilSec?: number) {
@@ -553,9 +806,11 @@ async function waitVideoDecoded(v: HTMLVideoElement, timeoutMs: number): Promise
     function cleanup() {
       clearTimeout(to)
       v.removeEventListener('loadeddata', onData)
+      v.removeEventListener('canplay', onData)
       v.removeEventListener('error', onErr)
     }
     v.addEventListener('loadeddata', onData, { once: true })
+    v.addEventListener('canplay', onData, { once: true })
     v.addEventListener('error', onErr, { once: true })
     if (v.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
       cleanup()
@@ -608,18 +863,63 @@ async function seekToTime(v: HTMLVideoElement, timeSec: number, timeoutMs: numbe
   await waitForVideoFrame(v)
 }
 
-/** Po seeku — poczekaj na zdekodowaną klatkę (timeline + MoveNet). */
-async function waitForVideoFrame(v: HTMLVideoElement): Promise<void> {
+/** Po seeku — poczekaj na klatkę (z timeoutem; RVFC potrafi nigdy nie wrócić). */
+async function waitForVideoFrame(v: HTMLVideoElement, timeoutMs = 4_000): Promise<void> {
   await yieldToBrowser()
-  if (typeof v.requestVideoFrameCallback === 'function') {
-    await new Promise<void>((resolve) => {
-      v.requestVideoFrameCallback(() => resolve())
+  await new Promise<void>((resolve) => {
+    let settled = false
+    const finish = () => {
+      if (settled) return
+      settled = true
+      clearTimeout(to)
+      resolve()
+    }
+    const to = window.setTimeout(finish, timeoutMs)
+    if (typeof v.requestVideoFrameCallback === 'function') {
+      try {
+        v.requestVideoFrameCallback(() => finish())
+      } catch {
+        finish()
+      }
+      return
+    }
+    requestAnimationFrame(() => requestAnimationFrame(() => finish()))
+  })
+}
+
+async function estimatePosesWithTimeout(
+  det: PoseDetector,
+  source: HTMLCanvasElement | HTMLVideoElement,
+  timeoutMs = 15_000
+) {
+  return Promise.race([
+    det.estimatePoses(source, { maxPoses: 1, flipHorizontal: false }),
+    new Promise<never>((_, reject) => {
+      window.setTimeout(() => reject(new Error('MoveNet — timeout detekcji klatki')), timeoutMs)
     })
+  ])
+}
+
+/**
+ * Przygotuj pierwszą klatkę — czasem `loadeddata` już minęło, a `readyState` wisi na METADATA.
+ */
+async function ensureVideoReadyForAnalysis(v: HTMLVideoElement, timeoutMs: number): Promise<void> {
+  if (v.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA && v.videoWidth > 0) {
     return
   }
-  await new Promise<void>((resolve) => {
-    requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
-  })
+  await waitVideoDecoded(v, timeoutMs)
+  if (v.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA && v.videoWidth > 0) {
+    return
+  }
+  try {
+    v.pause()
+  } catch {
+    /* ignore */
+  }
+  await seekToTime(v, 0.001, Math.min(timeoutMs, 12_000))
+  if (v.videoWidth === 0) {
+    throw new Error('Nie udało się zdekodować wideo (brak wymiarów klatki). Użyj MP4 (H.264).')
+  }
 }
 
 const ANALYSIS_PROGRESS_START = MODEL_PROGRESS_READY
@@ -651,6 +951,9 @@ async function analyzeVideo() {
   analyzedSamples.value = []
   rawAlgorithmSamples.value = []
   pathSource.value = 'algorithm'
+  pathPlaybackRange.value = null
+  isPlaybackPlaying.value = false
+  stopPlaybackOverlayLoop()
 
   try {
     const det = await ensureDetector((pct) => {
@@ -660,8 +963,13 @@ async function analyzeVideo() {
 
     phaseStep.value = 2
     busyLabel.value = 'Wczytywanie i dekodowanie wideo…'
-    progress.value = Math.max(progress.value, ANALYSIS_PROGRESS_START)
-    await waitVideoDecoded(v, 60_000)
+    progress.value = Math.max(progress.value, ANALYSIS_PROGRESS_START + 1)
+    try {
+      v.pause()
+    } catch {
+      /* ignore */
+    }
+    await ensureVideoReadyForAnalysis(v, 60_000)
     if (runId !== analysisRunId) return
 
     let duration = Number.isFinite(v.duration) && v.duration > 0 ? v.duration : 0
@@ -679,8 +987,8 @@ async function analyzeVideo() {
       return
     }
 
-    const maxFrames = 96
-    const steps = Math.min(maxFrames, Math.max(18, Math.round(duration * 20)))
+    const maxFrames = 56
+    const steps = Math.min(maxFrames, Math.max(20, Math.round(duration * 12)))
     const raw: BarbellSample[] = []
 
     phaseStep.value = 3
@@ -689,32 +997,61 @@ async function analyzeVideo() {
 
     const vw = v.videoWidth || 640
     const vh = v.videoHeight || 360
+    const MAX_INFER_W = 448
+    const inferScale = vw > MAX_INFER_W ? MAX_INFER_W / vw : 1
+    const inferW = Math.max(1, Math.round(vw * inferScale))
+    const inferH = Math.max(1, Math.round(vh * inferScale))
+
+    const frameCanvas = document.createElement('canvas')
+    frameCanvas.width = inferW
+    frameCanvas.height = inferH
+    const frameCtx = frameCanvas.getContext('2d')
+    if (!frameCtx) {
+      throw new Error('Canvas 2D niedostępny — odśwież stronę.')
+    }
 
     const span = 100 - ANALYSIS_PROGRESS_START
 
     for (let i = 0; i <= steps; i++) {
       if (runId !== analysisRunId) return
       const targetT = (i / steps) * duration
-      await seekToTime(v, Math.min(targetT, Math.max(0, duration - 1 / 30)), 15_000)
+      frameProgress.value = { current: i, total: steps + 1 }
+      progress.value = ANALYSIS_PROGRESS_START + Math.round((i / Math.max(1, steps)) * span)
+      busyLabel.value = `MoveNet — klatka ${i + 1}/${steps + 1}…`
+
+      try {
+        await seekToTime(v, Math.min(targetT, Math.max(0, duration - 1 / 30)), 6_000)
+      } catch (seekErr) {
+        console.warn('[MoveNet] seek skip', i, seekErr)
+        continue
+      }
       if (runId !== analysisRunId) return
 
       const sampleTime = Number.isFinite(v.currentTime) ? v.currentTime : targetT
-      const poses = await det.estimatePoses(v, { maxPoses: 1, flipHorizontal: false })
-      const pose = poses[0]
-      if (pose) {
-        const s = extractSample(pose, vw, vh)
-        if (s) {
-          raw.push({ ...s, t: sampleTime })
+      try {
+        frameCtx.drawImage(v, 0, 0, inferW, inferH)
+        const poses = await estimatePosesWithTimeout(det, frameCanvas, 8_000)
+        const pose = poses[0]
+        if (pose) {
+          const s = extractSample(pose, inferW, inferH)
+          if (s) {
+            raw.push({ ...s, t: sampleTime })
+          }
         }
+      } catch (poseErr) {
+        console.warn('[MoveNet] frame skip', i, poseErr)
       }
+
       frameProgress.value = { current: i + 1, total: steps + 1 }
-      progress.value = ANALYSIS_PROGRESS_START + Math.round((i / steps) * span)
-      if (i % 4 === 0) {
+      progress.value = ANALYSIS_PROGRESS_START + Math.round(((i + 1) / Math.max(1, steps + 1)) * span)
+      if (i % 5 === 0) {
         await yieldToBrowser()
       }
     }
 
     let activeLift = filterActiveLiftWindow(raw)
+    activeLift = projectToLiftPlane(activeLift)
+    cameraQuality.value = assessCameraQuality(activeLift)
     if (stabilizeToHips.value) {
       activeLift = stabilizeSamplesToHipLine(activeLift)
     }
@@ -749,13 +1086,57 @@ async function analyzeVideo() {
       if (runId !== analysisRunId) return
 
       try {
-        const frameTimes = pickFrameTimesFromSamples(activeLift, 10)
-        const frames = await captureVideoFrames(v, frameTimes)
+        const v = videoRef.value
+        if (v) {
+          try {
+            v.pause()
+          } catch {
+            /* ignore */
+          }
+        }
+
+        const provider = trackingProviderRef.value
+        const useVision = provider !== 'groq_numeric'
+        let frames: Awaited<ReturnType<typeof captureVideoFrames>> = []
+
+        if (useVision) {
+          const frameTimes = pickFrameTimesFromSamples(activeLift, 6)
+          busyLabel.value = `AI — klatki wideo (0/${frameTimes.length})…`
+          progress.value = 93
+
+          const { captureVideoFramesWithBudget } = await import('~/utils/barbellVideoFrames')
+          try {
+            frames = await captureVideoFramesWithBudget(v!, frameTimes, 40_000, {
+              maxWidth: 480,
+              quality: 0.68,
+              budgetMs: 40_000,
+              onProgress: (done, total) => {
+                busyLabel.value = `AI — klatki wideo (${done}/${total})…`
+                progress.value = 93 + Math.round((done / Math.max(1, total)) * 4)
+              }
+            })
+          } catch (frameErr) {
+            console.warn('[Barbell AI frames]', frameErr)
+            if (frames.length === 0) {
+              toast.add({
+                title: 'Klatki wideo pominięte',
+                description: 'Korekta toru AI bez vision (tylko numeryczna).',
+                color: 'warning'
+              })
+            }
+          }
+        }
+
+        busyLabel.value = frames.length
+          ? `AI — Groq Vision (${frames.length} klatek)…`
+          : 'AI — Groq numeric (korekta toru)…'
+        progress.value = 98
+        await yieldToBrowser()
         if (runId !== analysisRunId) return
 
         const refined = await refinePath({
           rawSamples: activeLift,
-          frames,
+          frames: frames.length ? frames : undefined,
           liftType: props.liftType
         })
 
@@ -780,22 +1161,30 @@ async function analyzeVideo() {
       }
     }
 
+    finalSamples = clampPathSamples(finalSamples)
     analyzedSamples.value = finalSamples
-    const display = displaySamples.value.length ? displaySamples.value : finalSamples
-    drawPathForDisplay(display)
-    feedback.value = buildBiomechanicalFeedback(display)
+    const display = clampPathSamples(
+      displaySamples.value.length >= 2 ? displaySamples.value : finalSamples
+    )
+    await prepareSyncedPlaybackPreview()
+    feedback.value = [
+      ...buildBiomechanicalFeedback(display),
+      ...(cameraQuality.value?.warnings ?? [])
+    ]
     metrics.value = buildTechniqueMetrics(display)
     emit('analyzed', {
       samples: display,
-      rawSamples: rawAlgorithmSamples.value,
+      rawSamples: clampPathSamples(rawAlgorithmSamples.value),
       metrics: metrics.value,
       feedback: feedback.value,
       pathSource: pathSource.value,
       refineMeta: lastRefineMeta.value,
-      refineNotes: refineNotesRef.value
+      refineNotes: refineNotesRef.value,
+      cameraQuality: cameraQuality.value
     })
     toast.add({
       title: pathSource.value === 'ai' ? 'Analiza zakończona (tor AI)' : 'Analiza zakończona',
+      description: 'Uruchom odtwarzanie — tor rysuje się na żywo wraz z ruchem sztangi.',
       color: 'success'
     })
   } catch (e) {
@@ -823,21 +1212,44 @@ let rafTimeUpdate: number | null = null
 function onVideoTimeUpdate() {
   const v = videoRef.value
   if (!v || displaySamples.value.length < 2) return
-  // timeupdate potrafi strzelać bardzo często — rysujemy max 1× per frame, żeby nie zatykać UI/routera.
+  if (isPlaybackPlaying.value) return
   if (rafTimeUpdate != null) return
   const t = v.currentTime
   rafTimeUpdate = window.requestAnimationFrame(() => {
     rafTimeUpdate = null
-    drawPathForDisplay(displaySamples.value, t)
-    if (props.labEmbed) {
-      emit('playbackTime', t)
-    }
+    syncOverlayToVideoTime()
   })
+}
+
+function onVideoSeeked() {
+  if (isPlaybackPlaying.value) return
+  syncOverlayToVideoTime()
+}
+
+function onVideoPlay() {
+  if (displaySamples.value.length < 2) return
+  if (!pathPlaybackRange.value) {
+    void prepareSyncedPlaybackPreview()
+  }
+  applyVideoPlaybackSpeed()
+  isPlaybackPlaying.value = true
+  startPlaybackOverlayLoop()
+}
+
+function onVideoPause() {
+  isPlaybackPlaying.value = false
+  stopPlaybackOverlayLoop()
+  syncOverlayToVideoTime()
 }
 
 function onVideoEnded() {
   if (displaySamples.value.length < 2) return
-  drawPathForDisplay(displaySamples.value)
+  isPlaybackPlaying.value = false
+  stopPlaybackOverlayLoop()
+  const range = pathPlaybackRange.value
+  const endT = range?.end ?? displaySamples.value[displaySamples.value.length - 1]!.t
+  drawPathForDisplay(displaySamples.value, endT)
+  emit('playbackTime', endT)
 }
 
 onMounted(() => {
@@ -846,6 +1258,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   analysisRunId++
+  stopPlaybackOverlayLoop()
   window.removeEventListener('resize', resizeCanvasToVideo)
   if (rafTimeUpdate != null) {
     window.cancelAnimationFrame(rafTimeUpdate)
@@ -870,12 +1283,16 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="space-y-8">
-    <!-- Karta główna narzędzia -->
+  <div :class="panelEmbed ? 'space-y-4' : 'space-y-8'">
     <div
-      class="overflow-hidden rounded-[1.75rem] border border-default/60 bg-card shadow-sm ring-1 ring-primary/10 sm:rounded-3xl"
+      :class="
+        panelEmbed
+          ? 'space-y-4'
+          : 'overflow-hidden rounded-[1.75rem] border border-default/60 bg-card shadow-sm ring-1 ring-primary/10 sm:rounded-3xl'
+      "
     >
       <div
+        v-if="!panelEmbed"
         class="relative border-b border-default/50 bg-linear-to-br from-primary/11 via-card to-card px-5 py-6 sm:px-8 sm:py-8"
       >
         <div class="pointer-events-none absolute -right-16 -top-20 size-56 rounded-full bg-primary/20 blur-3xl" />
@@ -897,7 +1314,7 @@ onBeforeUnmount(() => {
                 Analiza offline w przeglądarce
               </h2>
               <p class="mt-2 max-w-xl text-sm leading-relaxed text-muted">
-                Wybierz „Co śledzić” (nadgarstki / barki / łokcie / talerze). Plik nie jest wysyłany na serwer.
+                Gradient prędkości, fazy CLEAN/JERK, panel boczny toru. Plik nie jest wysyłany na serwer (poza opcjonalnym AI w Lab).
               </p>
             </div>
           </div>
@@ -906,12 +1323,12 @@ onBeforeUnmount(() => {
             variant="subtle"
             class="max-w-md shrink-0 rounded-2xl text-sm"
             title="Nagrywanie"
-            description="Profil od boku, całe podejście w kadrze. Pierwsze uruchomienie pobiera model — potem jest szybciej."
+            description="Profil boczny daje najlepszy wynik; lekki kąt 3/4 też działa (korekta perspektywy). Całe podejście w kadrze."
           />
         </div>
       </div>
 
-      <div class="space-y-6 p-5 sm:p-8">
+      <div :class="panelEmbed ? 'space-y-4' : 'space-y-6 p-5 sm:p-8'">
         <input
           ref="fileInputRef"
           type="file"
@@ -949,7 +1366,13 @@ onBeforeUnmount(() => {
           </div>
         </div>
 
-        <div class="flex flex-col gap-3 rounded-2xl border border-default/60 bg-muted/5 p-4 sm:flex-row sm:items-end sm:justify-between">
+        <div
+          :class="
+            panelEmbed
+              ? 'flex flex-col gap-2 rounded-xl border border-default/50 bg-muted/10 p-3 sm:flex-row sm:items-end sm:justify-between'
+              : 'flex flex-col gap-3 rounded-2xl border border-default/60 bg-muted/5 p-4 sm:flex-row sm:items-end sm:justify-between'
+          "
+        >
           <div class="min-w-0">
             <p class="text-[10px] font-bold uppercase tracking-[0.22em] text-muted">
               Co śledzić
@@ -1039,7 +1462,7 @@ onBeforeUnmount(() => {
               3 · Klatki
             </UBadge>
             <UBadge
-              v-if="labEmbed && aiRefinePath"
+              v-if="aiPanelEmbed && aiRefinePath"
               :color="phaseStep >= 4 ? 'primary' : 'neutral'"
               variant="subtle"
               size="sm"
@@ -1097,8 +1520,12 @@ onBeforeUnmount(() => {
             playsinline
             muted
             preload="auto"
+            :controls="playbackReady"
             @loadedmetadata="resizeCanvasToVideo"
             @timeupdate="onVideoTimeUpdate"
+            @seeked="onVideoSeeked"
+            @play="onVideoPlay"
+            @pause="onVideoPause"
             @ended="onVideoEnded"
           />
           <canvas
@@ -1109,8 +1536,53 @@ onBeforeUnmount(() => {
           />
         </div>
 
+        <div
+          v-if="playbackReady && !busy"
+          class="flex flex-wrap items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 px-3 py-3 sm:gap-4 sm:px-4"
+        >
+          <UButton
+            size="md"
+            color="primary"
+            :icon="isPlaybackPlaying ? 'i-lucide-pause' : 'i-lucide-play'"
+            class="min-h-10"
+            @click="toggleSyncedPlayback"
+          >
+            {{ isPlaybackPlaying ? 'Pauza' : 'Odtwórz tor na żywo' }}
+          </UButton>
+          <UButton
+            size="md"
+            variant="outline"
+            color="neutral"
+            icon="i-lucide-rotate-ccw"
+            class="min-h-10"
+            @click="prepareSyncedPlaybackPreview().then(() => playSyncedPlayback())"
+          >
+            Od początku podejścia
+          </UButton>
+          <div class="flex min-w-44 flex-col gap-1">
+            <span class="text-[10px] font-bold uppercase tracking-[0.18em] text-muted">
+              Tempo
+            </span>
+            <USelect
+              v-model="playbackSpeed"
+              size="sm"
+              :items="[...playbackSpeedItems]"
+              class="min-w-44"
+            />
+          </div>
+          <p class="text-xs leading-relaxed text-muted">
+            Linia toru rośnie synchronicznie z wideo — gradient prędkości pojawia się w miarę ruchu sztangi.
+            <span v-if="pathPlaybackRange">
+              Faza: {{ pathPlaybackRange.start.toFixed(1) }}–{{ pathPlaybackRange.end.toFixed(1) }} s
+            </span>
+            <span v-if="playbackSpeed < 1">
+              · Odtwarzanie {{ playbackSpeed.toLocaleString('pl-PL') }}× wolniej niż real-time.
+            </span>
+          </p>
+        </div>
+
         <p
-          v-if="samplesCount > 0 && !busy"
+          v-if="samplesCount > 0 && !busy && !panelEmbed"
           class="flex items-center gap-2 text-xs text-muted"
         >
           <UIcon
@@ -1120,17 +1592,18 @@ onBeforeUnmount(() => {
           Wykorzystano {{ samplesCount }} próbek z widoczną postacią (MoveNet).
         </p>
         <p
-          v-if="playbackReady && !busy"
+          v-if="playbackReady && !busy && !panelEmbed"
           class="text-xs text-muted"
         >
-          Odtwarzanie rysuje trajektorię w czasie rzeczywistym tylko dla fazy aktywnego podnoszenia (bez odkładania).
-          <span v-if="pathSource === 'ai'"> Szary przerywany = MoveNet, żółty = tor skorygowany przez AI.</span>
+          Odtwarzanie rysuje tor na żywo — linia pojawia się wraz z ruchem sztangi (przycisk powyżej, play na wideo lub wybór tempa).
+          <span v-if="aiPanelEmbed"> Gradient prędkości (czerwony = wolno, zielony = szybko). Wykres 2D synchronizuje się z odtwarzaniem.</span>
+          <span v-else-if="pathSource === 'ai'"> Szary przerywany = MoveNet, żółty = tor skorygowany przez AI.</span>
         </p>
       </div>
     </div>
 
     <UCard
-      v-if="feedback.length && !labEmbed"
+      v-if="feedback.length && !aiPanelEmbed && !panelEmbed"
       class="overflow-hidden rounded-3xl border-primary/25 bg-linear-to-br from-primary/8 via-card to-card ring-1 ring-primary/15"
     >
       <div class="space-y-4 p-5 sm:p-6">
@@ -1164,7 +1637,7 @@ onBeforeUnmount(() => {
     </UCard>
 
     <UCard
-      v-if="metrics && !labEmbed"
+      v-if="metrics && !aiPanelEmbed && !panelEmbed"
       class="rounded-3xl border-default/60"
     >
       <div class="grid gap-3 sm:grid-cols-5">

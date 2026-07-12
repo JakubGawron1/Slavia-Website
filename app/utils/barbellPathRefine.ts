@@ -1,4 +1,5 @@
 import type { BarbellSample } from '~/utils/barbellPathAnalysis'
+import { clampPathSamples } from '~/utils/barbellPathAnalysis'
 import type { BarbellVideoFrame } from '~/utils/barbellVideoFrames'
 
 export type BarbellPathRefineProvider = 'auto' | 'groq_numeric' | 'groq_vision'
@@ -35,8 +36,9 @@ export function sanitizeRefinedSamples(
 ): BarbellSample[] | null {
   if (!Array.isArray(refined) || refined.length < 4) return null
 
+  const limit = Math.min(refined.length, raw.length, 150)
   const out: BarbellSample[] = []
-  for (let i = 0; i < refined.length; i++) {
+  for (let i = 0; i < limit; i++) {
     const p = refined[i] as Record<string, unknown>
     const src = raw[Math.min(i, raw.length - 1)]!
     const t = typeof p.t === 'number' && Number.isFinite(p.t) ? p.t : src.t
@@ -51,6 +53,29 @@ export function sanitizeRefinedSamples(
     out.push({ t, barX, barY, hipMidX, shoulderMidX })
   }
   return out.length >= 4 ? out : null
+}
+
+/** Zawsze zwraca tablicę ≤ MAX_PATH_SAMPLES (nigdy surowy wynik AI bez limitu). */
+export function normalizeRefinedSamples(
+  raw: BarbellSample[],
+  refined: unknown
+): BarbellSample[] | null {
+  const sanitized = sanitizeRefinedSamples(raw, refined)
+  if (sanitized) return sanitized
+  if (!Array.isArray(refined) || refined.length < 4) return null
+  return clampPathSamples(
+    refined.map((p, i) => {
+      const pt = p as Record<string, unknown>
+      const src = raw[Math.min(i, raw.length - 1)]!
+      return {
+        t: typeof pt.t === 'number' ? pt.t : src.t,
+        barX: typeof pt.barX === 'number' ? clamp01(pt.barX as number) : src.barX,
+        barY: typeof pt.barY === 'number' ? clamp01(pt.barY as number) : src.barY,
+        hipMidX: typeof pt.hipMidX === 'number' ? clamp01(pt.hipMidX as number) : src.hipMidX,
+        shoulderMidX: typeof pt.shoulderMidX === 'number' ? clamp01(pt.shoulderMidX as number) : src.shoulderMidX
+      }
+    })
+  )
 }
 
 export function compactSamplesForApi(samples: BarbellSample[]) {

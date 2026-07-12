@@ -22,8 +22,7 @@ export const SUPERADMIN_SIDEBAR_GROUPS: { title: string, items: DashboardModuleL
     title: 'Narzędzia',
     items: [
       dashboardLink('Narzędzia developera', 'Diagnostyka API i PWA', 'i-lucide-terminal', '/superadmin/developer', 'text-violet-500', 'bg-violet-500/10'),
-      dashboardLink('Import danych', 'Federacje i CSV', 'i-lucide-file-up', '/superadmin/import', 'text-cyan-600', 'bg-cyan-500/10'),
-      dashboardLink('Barbell Lab', 'Eksperymenty wizji', 'i-lucide-beaker', '/superadmin/barbell-lab', 'text-pink-500', 'bg-pink-500/10')
+      dashboardLink('Import danych', 'Federacje i CSV', 'i-lucide-file-up', '/superadmin/import', 'text-cyan-600', 'bg-cyan-500/10')
     ]
   }
 ]
@@ -37,8 +36,7 @@ export const SUPERADMIN_ROUTE_BREADCRUMBS: Record<string, string> = {
   '/superadmin/workers': 'Workery cron',
   '/superadmin/developer': 'Narzędzia developera',
   '/superadmin/nawigacja-paneli': 'Nawigacja paneli',
-  '/superadmin/import': 'Import danych',
-  '/superadmin/barbell-lab': 'Barbell Lab'
+  '/superadmin/import': 'Import danych'
 }
 
 /** @deprecated Użyj buildSuperadminSidebarNavStructure */

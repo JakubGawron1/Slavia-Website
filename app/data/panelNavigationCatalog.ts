@@ -63,7 +63,7 @@ export const PANEL_NAV_MODULES: PanelNavModuleDef[] = [
   mod('athlete', 'aktualnosci', 'Klub i narzędzia', 'Aktualności', 'Komunikaty klubu', 'i-lucide-newspaper', PUBLIC_ROUTES.aktualnosci, 'text-warning', 'bg-warning/10'),
   mod('athlete', 'wyzwania', 'Klub i narzędzia', 'Wyzwania miesiąca', 'Ranking aktywności', 'i-lucide-flame', KLUB_SHARED_ROUTES.wyzwania, 'text-orange-600', 'bg-orange-500/12'),
   mod('athlete', 'ranking', 'Klub i narzędzia', 'Ranking zawodników', 'Wyniki w klubie', 'i-lucide-trophy', PUBLIC_ROUTES.zawodnicy, 'text-yellow-600', 'bg-yellow-500/12'),
-  mod('athlete', 'analiza_sztangi', 'Klub i narzędzia', 'Tor sztangi', 'Analiza nagrania', 'i-lucide-scan-line', '/athlete/analiza-sztangi', 'text-orange-600', 'bg-orange-500/12', true),
+  mod('athlete', 'analiza_sztangi', 'Klub i narzędzia', 'Tor sztangi', 'Analiza AI nagrania', 'i-lucide-scan-line', '/athlete/analiza-sztangi', 'text-orange-600', 'bg-orange-500/12', true),
   mod('athlete', 'exercises', 'Trening i progres', 'Inne ćwiczenia', 'Siła poza dwubojem — zgłoszenia i ranking', 'i-lucide-bar-chart-3', '/athlete/exercises', 'text-warning', 'bg-warning/10', true),
   mod('athlete', 'proporcje', 'Klub i narzędzia', 'Proporcje (ratio)', 'Kalkulator bojów', 'i-lucide-sigma', PUBLIC_ROUTES.proporcje, 'text-success', 'bg-success/12'),
 

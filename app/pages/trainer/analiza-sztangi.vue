@@ -9,19 +9,19 @@ useSeoMeta({
 const barbellAnalysisOn = useExperimentalFlag('barbell_pose_analysis')
 
 const BarbellLazy = defineAsyncComponent({
-  loader: () => import('~/components/club/BarbellPathAnalyzer.client.vue'),
+  loader: () => import('~/components/club/barbell/BarbellAnalysisPanel.client.vue'),
   delay: 80,
   timeout: 120_000
 })
 </script>
 
 <template>
-  <PanelPageLayout narrow>
+  <PanelPageLayout>
     <PanelPageHeader
       area="trainer"
       title="Analiza toru sztangi"
       icon="i-lucide-scan-line"
-      description="MoveNet w przeglądarce: tor z nadgarstków, heurystyki pod dwubój — materiał zostaje na urządzeniu."
+      description="MoveNet w przeglądarce: gradient prędkości, fazy CLEAN/JERK, wykres 2D — materiał zostaje na urządzeniu."
     >
       <template #actions>
         <UButton
