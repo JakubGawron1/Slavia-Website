@@ -4,5 +4,13 @@
   "installCommand": "git submodule update --init --recursive --remote && pnpm install",
   "env": {
     "NODE_OPTIONS": "--experimental-require-module"
-  }
+  },
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "destination": "https://nowa-strona.vercel.app/$1",
+      "permanent": true
+    }
+  ]
 }
+
